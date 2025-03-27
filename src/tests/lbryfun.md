@@ -1,4 +1,4 @@
-Lbry.Fun PRD
+lbry_fun PRD
 
 ### Purpose
 
@@ -16,14 +16,14 @@ Epochs follow harmonic growth, linking halving epochs to natural economic oscill
 
 This autonomously aligns token distribution/funding with actual product development in a way that cannot be manipulated.
 
-This model is currently open-source, but requires technical expertise to reproduce. The purpose of lbry.fun is to allow anyone to replicate this tokenomics with custom parameters in blackholed canisters.
+This model is currently open-source, but requires technical expertise to reproduce. The purpose of lbry_fun is to allow anyone to replicate this tokenomics with custom parameters in blackholed canisters.
 
 As is the nature of permissionless software, people can use it however they want, but a social-fi memecoin launchpad is not the intention. The design is for a methodical and robust approach to cunducting a fair launch. As an agnostic tool, it should not encourage, market or otherwise promote any token.
 
 
 ### Architecture
 
-lbry.fun logic is a simplified fork of lbry.app's core logic. It however makes no fork of Alexandria Tokens, and is designed to accrue all generated value back to $ALEX.
+lbry_fun logic is a simplified fork of lbry.app's core logic. It however makes no fork of Alexandria Tokens, and is designed to accrue all generated value back to $ALEX.
 
 #### Core Canisters:
 

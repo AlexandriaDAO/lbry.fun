@@ -1,20 +1,5 @@
 {
   "canisters": {
-    "vetkd": {
-      "type": "rust",
-      "package": "vetkd",
-      "candid": "src/vetkd/vetkd.did"
-    },
-    "alex_wallet": {
-      "type": "rust",
-      "package": "alex_wallet",
-      "candid": "src/alex_wallet/alex_wallet.did"
-    },
-    "system_api": {
-      "candid": "src/system_api/system_api.did",
-      "package": "system_api",
-      "type": "rust"
-    },
     "user": {
       "type": "rust",
       "package": "user",
@@ -25,40 +10,18 @@
       "package": "alex_backend",
       "type": "rust"
     },
-    "perpetua": {
-      "candid": "src/perpetua/perpetua.did",
-      "package": "perpetua",
-      "type": "rust",
-      "specified_id": "ya6k4-waaaa-aaaap-qkmpq-cai"
-    },
-    "asset_manager": {
-      "candid": "src/asset_manager/asset_manager.did",
-      "package": "asset_manager",
-      "type": "rust",
-      "specified_id": "zhcno-qqaaa-aaaap-qpv7a-cai"
-    },
     "icp_swap": {
       "candid": "src/icp_swap/icp_swap.did",
       "package": "icp_swap",
       "type": "rust",
-      "specified_id":"54fqz-5iaaa-aaaap-qkmqa-cai"
+      "specified_id": "54fqz-5iaaa-aaaap-qkmqa-cai"
     },
-    "icrc7": {
-      "main": "src/icrc7/main.mo",
-      "type": "motoko",
-      "specified_id": "53ewn-qqaaa-aaaap-qkmqq-cai"
+    "lbry_fun": {
+      "candid": "src/lbry_fun/lbry_fun.did",
+      "package": "lbry_fun",
+      "type": "rust"
     },
-    "icrc7_scion": {
-      "main": "src/icrc7_scion/main.mo",
-      "type": "motoko",
-      "specified_id": "uxyan-oyaaa-aaaap-qhezq-cai"
-    },
-    "nft_manager": {
-      "candid": "src/nft_manager/nft_manager.did",
-      "package": "nft_manager",
-      "type": "rust",
-      "specified_id":"5sh5r-gyaaa-aaaap-qkmra-cai"
-    },
+
     "internet_identity": {
       "type": "pull",
       "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
@@ -100,18 +63,7 @@
       },
       "specified_id": "ryjl3-tyaaa-aaaaa-aaaba-cai"
     },
-    "ic_siwe_provider": {
-      "type": "custom",
-      "candid": "https://github.com/kristoferlund/ic-siwe/releases/download/v0.1.1/ic_siwe_provider.did",
-      "wasm": "https://github.com/kristoferlund/ic-siwe/releases/download/v0.1.1/ic_siwe_provider.wasm.gz",
-      "specified_id": "w4vlu-paaaa-aaaaj-azxyq-cai"
-    },  
-    "ic_siws_provider": {
-      "type": "custom",
-      "candid": "https://github.com/kristoferlund/ic-siws/releases/download/v0.0.1/ic_siws_provider.did",
-      "wasm": "https://github.com/kristoferlund/ic-siws/releases/download/v0.0.1/ic_siws_provider.wasm.gz",
-      "specified_id": "w3una-cyaaa-aaaaj-azxya-cai"
-    },
+
     "emporium": {
       "candid": "src/emporium/emporium.did",
       "package": "emporium",
