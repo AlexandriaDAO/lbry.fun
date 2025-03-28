@@ -1,163 +1,198 @@
-use candid::{CandidType, Nat, Principal};
-use ic_cdk::api::management_canister::main::{
-    CanisterSettings, InstallCodeArgument,
+mod storage;
+pub use storage::{*};
+
+use candid::{CandidType, Encode, Nat, Principal};
+use ic_cdk::{
+    api::management_canister::main::{
+        create_canister, install_code, CanisterInstallMode, CreateCanisterArgument,
+        InstallCodeArgument,
+    },
+    caller,
 };
 use serde::{Deserialize, Serialize};
 
-// Precise type definitions matching the Candid interface
+
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 struct Account {
     owner: Principal,
     #[serde(skip_serializing_if = "Option::is_none")]
-    subaccount: Option<[u8; 32]>,
-}
-
-#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
-enum MetadataValue {
-    #[serde(rename = "Text")]
-    Text(String),
-    #[serde(rename = "Nat")]
-    Nat(Nat),
-}
-
-#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
-struct FeatureFlags {
-    icrc2: bool,
+    subaccount: Option<Vec<u8>>,
 }
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 struct ArchiveOptions {
-    num_blocks_to_archive: Nat,
-    max_transactions_per_response: Option<Nat>,
-    trigger_threshold: Nat,
-    max_message_size_bytes: Option<Nat>,
-    cycles_for_archive_creation: Option<Nat>,
-    node_max_memory_size_bytes: Option<Nat>,
+    num_blocks_to_archive: u64,
+    max_transactions_per_response: Option<u64>,
+    trigger_threshold: u64,
+    max_message_size_bytes: Option<u64>,
+    cycles_for_archive_creation: Option<u64>,
+    node_max_memory_size_bytes: Option<u64>,
     controller_id: Principal,
-    #[serde(skip_serializing_if = "Option::is_none")]
     more_controller_ids: Option<Vec<Principal>>,
 }
 
-#[derive(CandidType, Serialize, Deserialize, Debug)]
+#[derive(CandidType, Serialize, Deserialize)]
+struct FeatureFlags {
+    icrc2: bool,
+}
+
+#[derive(CandidType, Serialize, Deserialize)]
+enum MetadataValue {
+    Nat64(u64),
+    Text(String),
+}
+
+#[derive(CandidType, Serialize, Deserialize)]
 struct InitArgs {
     minting_account: Account,
-    #[serde(skip_serializing_if = "Option::is_none")]
     fee_collector_account: Option<Account>,
     transfer_fee: Nat,
-    #[serde(skip_serializing_if = "Option::is_none")]
     decimals: Option<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     max_memo_length: Option<u16>,
     token_symbol: String,
     token_name: String,
     metadata: Vec<(String, MetadataValue)>,
     initial_balances: Vec<(Account, Nat)>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     feature_flags: Option<FeatureFlags>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    maximum_number_of_accounts: Option<Nat>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    accounts_overflow_trim_quantity: Option<Nat>,
+    maximum_number_of_accounts: Option<u64>,
+    accounts_overflow_trim_quantity: Option<u64>,
     archive_options: ArchiveOptions,
+}
+
+#[derive(CandidType, Serialize, Deserialize)]
+struct UpgradeArgs {
+    metadata: Option<Vec<(String, MetadataValue)>>,
+    token_symbol: Option<String>,
+    token_name: Option<String>,
+    transfer_fee: Option<Nat>,
+    max_memo_length: Option<u16>,
+    feature_flags: Option<FeatureFlags>,
+    maximum_number_of_accounts: Option<u64>,
+    accounts_overflow_trim_quantity: Option<u64>,
+}
+
+#[derive(CandidType, Serialize, Deserialize)]
+enum LedgerArg {
+    Init(InitArgs),
+    Upgrade(Option<UpgradeArgs>),
 }
 
 #[ic_cdk::update]
 async fn create_token(
+    primary_token_symbol: String,
+    primary_token_name: String,
+    secondary_token_symbol: String,
+    secondary_token_name: String,
+) -> Result<String, String> {
+    let user_principal = ic_cdk::api::caller(); // Get the calling user's principal
+
+    // Create primary token
+    let primary_token_id = match create_icrc1_canister(
+        primary_token_symbol,
+        primary_token_name,
+        user_principal,
+        user_principal,
+    )
+    .await
+    {
+        Ok(canister_id) => {
+            ic_cdk::println!("Primary Token ID: {}", canister_id);
+            canister_id.to_string()
+        },
+        Err(e) => return Err(e.to_string()),
+    };
+
+    // Create secondary token
+    let secondary_token_id = match create_icrc1_canister(
+        secondary_token_symbol,
+        secondary_token_name,
+        user_principal,
+        user_principal,
+    )
+    .await
+    {
+        Ok(canister_id) => {
+            ic_cdk::println!("Secondary Token ID: {}", canister_id);
+            canister_id.to_string()
+        },
+        Err(e) => return Err(e.to_string()),    
+    };
+
+    // Store 
+    // TOKEN_STORAGE.with(|storage| {
+    //     storage.borrow_mut().insert(user_principal, (primary_token_id.clone(), secondary_token_id.clone()));
+    // });
+
+    Ok("Tokens created and stored!".to_string())
+}
+
+async fn create_icrc1_canister(
     token_symbol: String,
     token_name: String,
     minting_account_owner: Principal,
     archive_controller: Principal,
 ) -> Result<String, String> {
-    let caller = ic_cdk::caller();
-    
-    // Step 1: Create a new canister
-    let create_result: (CreateCanisterResult,) = ic_cdk::api::call::call_with_payment(
-        Principal::management_canister(),
-        "create_canister",
-        (CreateCanisterArgument {
-            settings: Some(CanisterSettings {
-                controllers: Some(vec![ic_cdk::api::id(), caller]),
-                compute_allocation: None,
-                memory_allocation: None,
-                freezing_threshold: None,
-                reserved_cycles_limit: None,
-            }),
-        },),
-        7_692_307_492, // Required cycles for canister creation
-    )
-    .await
-    .map_err(|e| format!("Failed to create canister: {}", e.1))?;
+    let create_args = CreateCanisterArgument { settings: None };
+    let canister_id_record = create_canister(create_args, 2_000_000_000)
+        .await
+        .map_err(|e| format!("Failed to create canister: {:?}", e))?;
 
-    let canister_id = create_result.0.canister_id;
-    ic_cdk::println!("Created new canister with ID: {}", canister_id);
+    let canister_id = canister_id_record.0.canister_id;
 
-    // Prepare initialization arguments
+    let wasm_bytes = include_bytes!("ic-icrc1-ledger.wasm");
+
+    let minter_account = Account {
+        owner: minting_account_owner,
+        subaccount: None,
+    };
+
+    let initial_owner_account = Account {
+        owner: caller(),
+        subaccount: None,
+    };
+
     let init_args = InitArgs {
-        minting_account: Account {
-            owner: minting_account_owner,
-            subaccount: None,
-        },
+        minting_account: minter_account.clone(),
         fee_collector_account: None,
-        transfer_fee: Nat::from(10_000 as u64),
+        transfer_fee: Nat::from(10_000 as u32),
         decimals: Some(8),
         max_memo_length: Some(32),
+        initial_balances: vec![(initial_owner_account, Nat::from(1_000_000 as u64))],
+        maximum_number_of_accounts: Some(1_000_000),
+        accounts_overflow_trim_quantity: Some(10_000),
         token_symbol: token_symbol.clone(),
         token_name: token_name.clone(),
-        metadata: vec![
-            ("icrc1:symbol".to_string(), MetadataValue::Text(token_symbol)),
-            ("icrc1:name".to_string(), MetadataValue::Text(token_name)),
-            ("icrc1:decimals".to_string(), MetadataValue::Nat(Nat::from(8 as u64))),
-            ("icrc1:fee".to_string(), MetadataValue::Nat(Nat::from(10_000 as u64))),
-        ],
-        initial_balances: vec![],
-        feature_flags: Some(FeatureFlags {
-            icrc2: true,
-        }),
-        maximum_number_of_accounts: Some(Nat::from(10_000_000 as u64)),
-        accounts_overflow_trim_quantity: Some(Nat::from(100_000 as u64)),
+        metadata: vec![(
+            "description".to_string(),
+            MetadataValue::Text("ICRC-1 token".to_string()),
+        )],
+        feature_flags: Some(FeatureFlags { icrc2: true }),
         archive_options: ArchiveOptions {
-            num_blocks_to_archive: Nat::from(3000 as u64),
+            num_blocks_to_archive: 1000,
             max_transactions_per_response: None,
-            trigger_threshold: Nat::from(6000 as u64),
+            trigger_threshold: 2000,
             max_message_size_bytes: None,
-            cycles_for_archive_creation: Some(Nat::from(10_000_000_000_000 as u64)),
+            cycles_for_archive_creation: None,
             node_max_memory_size_bytes: None,
             controller_id: archive_controller,
             more_controller_ids: None,
         },
     };
 
-    let encoded_args = candid::encode_one(init_args)
-        .map_err(|e| format!("Encoding error: {:?}", e))?;
+    // Encode as LedgerArg::Init
+    let encoded_args = Encode!(&LedgerArg::Init(init_args))
+        .map_err(|e| format!("Failed to encode init args: {:?}", e))?;
 
-    let wasm_module = include_bytes!("ic-icrc1-ledger.wasm");
+    let install_args = InstallCodeArgument {
+        mode: CanisterInstallMode::Install,
+        canister_id,
+        wasm_module: wasm_bytes.to_vec(),
+        arg: encoded_args,
+    };
 
-    match ic_cdk::api::call::call_with_payment::<(InstallCodeArgument,), ()>(
-        Principal::management_canister(),
-        "install_code",
-        (InstallCodeArgument {
-            mode: ic_cdk::api::management_canister::main::CanisterInstallMode::Install,
-            canister_id,
-            wasm_module: wasm_module.to_vec(),
-            arg: encoded_args,
-        },),
-        0,
-    )
-    .await
-    {
-        Ok(_) => Ok(format!("🎉 Token Deployed! Canister ID: {}", canister_id)),
-        Err(e) => Err(format!("Error during code installation: {:?}", e)),
-    }
+    install_code(install_args)
+        .await
+        .map_err(|e| format!("Failed to install ICRC-1 token: {:?}", e))?;
+
+    Ok(canister_id.to_string())
 }
-
-#[derive(CandidType, Serialize)]
-struct CreateCanisterArgument {
-    settings: Option<CanisterSettings>,
-}
-
-#[derive(CandidType, Deserialize)]
-struct CreateCanisterResult {
-    canister_id: Principal,
-}
-
-ic_cdk::export_candid!();
