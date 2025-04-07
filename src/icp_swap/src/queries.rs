@@ -1,7 +1,7 @@
 use crate::{
     storage::*,
     utils::{
-        principal_to_subaccount, DEFAULT_LBRY_RATIO, SCALING_FACTOR, STAKING_REWARD_PERCENTAGE,
+        principal_to_subaccount, DEFAULT_SECONDARY_RATIO, SCALING_FACTOR, STAKING_REWARD_PERCENTAGE,
     },
 };
 use candid::{CandidType, Principal};
@@ -57,12 +57,12 @@ pub fn get_current_staking_reward_percentage() -> String {
 }
 
 #[query]
-pub fn get_current_LBRY_ratio() -> u64 {
-    let lbry_ratio_map = get_lbry_ratio_mem();
+pub fn get_current_secondary_ratio() -> u64 {
+    let secondary_ratio_map = get_secondary_ratio_mem();
 
-    match lbry_ratio_map.get(&()) {
-        Some(lbry_ratio) => return lbry_ratio.ratio, // Return the ratio if it exists
-        None => return DEFAULT_LBRY_RATIO,           //defult case
+    match secondary_ratio_map.get(&()) {
+        Some(secondary_ratio) => return secondary_ratio.ratio, // Return the ratio if it exists
+        None => return DEFAULT_SECONDARY_RATIO,           //defult case
     }
 }
 
@@ -103,9 +103,9 @@ pub fn get_all_apy_values() -> Vec<(u32, u128)> {
             .iter()
             .map(|(day, daily_values)| {
                 // Extract the day and its corresponding reward value
-                let icp_reward_per_alex =
+                let icp_reward_per_primary =
                     daily_values.values.get(&day).cloned().unwrap_or_default();
-                (day, icp_reward_per_alex)
+                (day, icp_reward_per_primary)
             })
             .collect();
 
@@ -152,5 +152,12 @@ pub fn get_logs(page: Option<u64>, page_size: Option<u64>) -> PaginatedLogs {
             current_page: page,
             page_size,
         }
+    })
+}
+
+#[query]
+pub fn get_config() -> Configs {
+    CONFIGS.with(|c| {
+        c.borrow().get().clone()
     })
 }

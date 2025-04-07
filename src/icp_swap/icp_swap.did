@@ -1,4 +1,9 @@
 type ArchiveBalance = record { icp : nat64 };
+type Configs = record {
+  secondary_token_id : principal;
+  primary_token_id : principal;
+  tokenomics_cansiter_id : principal;
+};
 type DailyValues = record { values : vec record { nat32; nat } };
 type ExecutionError = variant {
   InvalidAmount : record { details : text; amount : nat64; reason : text };
@@ -60,7 +65,10 @@ type ExecutionError = variant {
 type InitArgs = record {
   apy : opt vec record { nat32; DailyValues };
   stakes : opt vec record { principal; Stake };
+  secondary_token_id : opt principal;
+  tokenomics_canister_id : opt principal;
   total_archived_balance : opt nat64;
+  primary_token_id : opt principal;
   archived_transaction_log : opt vec record { principal; ArchiveBalance };
   total_unclaimed_icp_reward : opt nat64;
   lbry_ratio : opt LbryRatio;
@@ -95,6 +103,7 @@ service : (opt InitArgs) -> {
       vec record { principal; ArchiveBalance },
     ) query;
   get_all_stakes : () -> (vec record { principal; Stake }) query;
+  get_config : () -> (Configs) query;
   get_current_LBRY_ratio : () -> (nat64) query;
   get_current_staking_reward_percentage : () -> (text) query;
   get_distribution_interval : () -> (nat32) query;

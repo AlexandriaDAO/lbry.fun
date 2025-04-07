@@ -1,28 +1,14 @@
-use std::{borrow::Cow, cell::RefCell};
+use candid::{types::principal, CandidType, Decode, Encode, Principal};
 use ic_stable_structures::{
-    memory_manager::{MemoryId, MemoryManager, VirtualMemory}, storable::Bound, DefaultMemoryImpl, StableBTreeMap, Storable
+    memory_manager::{MemoryId, MemoryManager, VirtualMemory},
+    storable::Bound,
+    DefaultMemoryImpl, StableBTreeMap, Storable,
 };
-use candid::{CandidType, Decode, Encode, Principal};
 use serde::{Deserialize, Serialize};
+use std::{borrow::Cow, cell::RefCell};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
-pub const MEM_ID: MemoryId = MemoryId::new(0);
-
-#[derive(CandidType, Serialize, Deserialize, Debug, Clone)]
-struct TokenIds(Vec<String>); 
-
-impl Storable for TokenIds {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
-    }
-
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
-    }
-
-    const BOUND: Bound = Bound::Unbounded;
-}
-
+pub const TOKEN_RECORD_MEM_ID: MemoryId = MemoryId::new(0);
 
 thread_local! {
     // Initialize memory manager
@@ -30,9 +16,35 @@ thread_local! {
         MemoryManager::init(DefaultMemoryImpl::default())
     );
 
-  pub  static TOKEN_STORAGE: RefCell<StableBTreeMap<Principal, TokenIds, Memory>> = RefCell::new(
+  pub static TOKENS: RefCell<StableBTreeMap<u64, TokenRecord, Memory>> = RefCell::new(
         StableBTreeMap::init(
-            MEMORY_MANAGER.with(|m| m.borrow().get(MEM_ID)) // Bind to VirtualMemory
+            MEMORY_MANAGER.with(|m| m.borrow().get(TOKEN_RECORD_MEM_ID)) // Bind to VirtualMemory
         )
     );
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct TokenRecord {
+    pub id: u64,
+
+    pub primary_token_id: Principal,
+    pub primary_token_name: String,
+    pub primary_token_symbol: String,
+    pub primary_token_max_supply: u64,
+
+    pub secondary_token_id: Principal,
+    pub secondary_token_name: String,
+    pub secondary_token_symbol: String,
+    pub secondary_token_max_supply: u64,
+    pub caller: Principal,
+}
+
+impl Storable for TokenRecord {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+    const BOUND: Bound = Bound::Unbounded;
 }

@@ -1,6 +1,8 @@
 use candid::Principal;
 use ic_cdk;
 use ic_ledger_types::Subaccount;
+mod script;
+pub use script::*;
 mod storage;
 pub use storage::*;
 mod queries;

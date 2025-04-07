@@ -8,6 +8,7 @@ use ic_stable_structures::{
 use serde::Deserialize;
 use std::borrow::Cow;
 use std::cell::RefCell;
+use ic_stable_structures::{ StableCell};
 
 use crate::ExecutionError;
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -58,6 +59,8 @@ pub const TOTAL_LBRY_BURNED_MEM_ID: MemoryId = MemoryId::new(0);
 pub const CURRENT_THRESHOLD_MEM_ID: MemoryId = MemoryId::new(1);
 pub const TOKEN_LOGS_MEM_ID: MemoryId = MemoryId::new(2);
 pub const LOGS_COUNTER_ID: MemoryId = MemoryId::new(3);
+pub const CONFIGS_MEM_ID: MemoryId = MemoryId::new(4);
+
 
 
 thread_local! {
@@ -78,6 +81,18 @@ thread_local! {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOKEN_LOGS_MEM_ID)))
     );
     pub static TOKEN_LOG_COUNTER: RefCell<u64> = RefCell::new(0);
+
+    pub static CONFIGS: RefCell<StableCell<Configs,Memory>> = RefCell::new(
+        StableCell::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(CONFIGS_MEM_ID)),
+            Configs {
+                // Default values
+                primary_token_id:Principal::anonymous(),
+                secondary_token_id: Principal::anonymous(),
+                swap_cansiter_id:Principal::anonymous()
+            }
+        ).unwrap()
+    );
 
 
 }
@@ -119,7 +134,25 @@ pub enum TokenLogType {
     },
 }
 
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct Configs {
+    pub primary_token_id: Principal,
+    pub secondary_token_id: Principal,
+    pub swap_cansiter_id: Principal,
+}
+
 impl Storable for TokenLogs {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
+}
+impl Storable for Configs {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }

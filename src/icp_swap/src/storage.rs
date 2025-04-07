@@ -1,20 +1,22 @@
-use candid::{ CandidType, Principal };
-use candid::{ Decode, Deserialize, Encode };
+use candid::{CandidType, Principal};
+use candid::{Decode, Deserialize, Encode};
 use ic_stable_structures::memory_manager::VirtualMemory;
 use ic_stable_structures::storable::Bound;
-use ic_stable_structures::{ memory_manager::{ MemoryId, MemoryManager }, StableBTreeMap };
-use ic_stable_structures::{ DefaultMemoryImpl, Storable };
+use ic_stable_structures::{ StableCell};
+use ic_stable_structures::StableBTreeMap;
+use ic_stable_structures::memory_manager::{MemoryId, MemoryManager};
+use ic_stable_structures::{ DefaultMemoryImpl, Storable};
 use std::borrow::Cow;
 use std::cell::RefCell;
-use std::collections::{ BTreeSet, HashMap };
+use std::collections::{BTreeSet, HashMap};
 
-use crate::utils::DEFAULT_LBRY_RATIO;
+use crate::utils::DEFAULT_SECONDARY_RATIO;
 use crate::ExecutionError;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 // Memory identifiers for each variable
 pub const TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID: MemoryId = MemoryId::new(0);
-pub const LBRY_RATIO_MEM_ID: MemoryId = MemoryId::new(1);
+pub const SECONDARY_RATIO_MEM_ID: MemoryId = MemoryId::new(1);
 pub const TOTAL_ARCHIVED_BALANCE_MEM_ID: MemoryId = MemoryId::new(2);
 pub const APY_MEM_ID: MemoryId = MemoryId::new(3);
 pub const STAKES_MEM_ID: MemoryId = MemoryId::new(4);
@@ -23,6 +25,7 @@ pub const ARCHIVED_TRANSACTION_LOG_MEM_ID: MemoryId = MemoryId::new(6);
 pub const DISTRIBUTION_INTERVALS_MEM_ID: MemoryId = MemoryId::new(7);
 pub const LOGS_MEM_ID: MemoryId = MemoryId::new(8);
 pub const LOGS_COUNTER_ID: MemoryId = MemoryId::new(9);
+pub const CONFIGS_MEM_ID: MemoryId = MemoryId::new(10);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
@@ -49,8 +52,8 @@ thread_local! {
             MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID))
         )
     );
-    pub static LBRY_RATIO: RefCell<StableBTreeMap<(), LbryRatio, Memory>> = RefCell::new(
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LBRY_RATIO_MEM_ID)))
+    pub static SECONDARY_RATIO: RefCell<StableBTreeMap<(), SecondaryRatio, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(SECONDARY_RATIO_MEM_ID)))
     );
     pub static TOTAL_ARCHIVED_BALANCE: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_ARCHIVED_BALANCE_MEM_ID)))
@@ -62,20 +65,33 @@ thread_local! {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LOGS_MEM_ID)))
     );
     pub static LOG_COUNTER: RefCell<u64> = RefCell::new(0);
-    pub static ALEX_FEE: RefCell<u64> = RefCell::new(0);
+    pub static PRIMARY_FEE: RefCell<u64> = RefCell::new(0);
+
+    pub static CONFIGS: RefCell<StableCell<Configs,Memory>> = RefCell::new(
+        StableCell::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(CONFIGS_MEM_ID)),
+            Configs {
+                // Default values
+                primary_token_id:Principal::anonymous(),
+                secondary_token_id: Principal::anonymous(),
+                tokenomics_cansiter_id:Principal::anonymous()
+            }
+        ).unwrap()
+    );
+
 }
 
 pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u64, Memory> {
     TOTAL_UNCLAIMED_ICP_REWARD.with(|reward_map| {
         StableBTreeMap::init(
-            MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID))
+            MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID)),
         )
     })
 }
 
-pub fn get_lbry_ratio_mem() -> StableBTreeMap<(), LbryRatio, Memory> {
-    LBRY_RATIO.with(|ratio_map| {
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LBRY_RATIO_MEM_ID)))
+pub fn get_secondary_ratio_mem() -> StableBTreeMap<(), SecondaryRatio, Memory> {
+    SECONDARY_RATIO.with(|ratio_map| {
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(SECONDARY_RATIO_MEM_ID)))
     })
 }
 pub fn get_total_archived_balance_mem() -> StableBTreeMap<(), u64, Memory> {
@@ -98,14 +114,14 @@ pub struct Stake {
 }
 
 #[derive(CandidType, Deserialize, Clone)]
-pub struct LbryRatio {
+pub struct SecondaryRatio {
     pub ratio: u64,
     pub time: u64,
 }
-impl Default for LbryRatio {
+impl Default for SecondaryRatio {
     fn default() -> Self {
-        LbryRatio {
-            ratio: DEFAULT_LBRY_RATIO, // Default value
+        SecondaryRatio {
+            ratio: DEFAULT_SECONDARY_RATIO, // Default value
             time: ic_cdk::api::time(), // Current timestamp
         }
     }
@@ -131,20 +147,23 @@ pub struct State {
 }
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct Log {
-    pub log_id:u64,
+    pub log_id: u64,
     pub timestamp: u64,
     pub caller: Principal,
     pub function: String,
     pub log_type: LogType,
 }
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct Configs {
+    pub primary_token_id: Principal,
+    pub secondary_token_id: Principal,
+    pub tokenomics_cansiter_id: Principal,
+}
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub enum LogType {
-    Info {
-        detail: String,
-    },
-    Error {
-        error: ExecutionError,
-    },
+    Info { detail: String },
+    Error { error: ExecutionError },
 }
 
 impl Storable for Stake {
@@ -170,7 +189,7 @@ impl Storable for ArchiveBalance {
 
     const BOUND: Bound = Bound::Unbounded;
 }
-impl Storable for LbryRatio {
+impl Storable for SecondaryRatio {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
@@ -194,6 +213,18 @@ impl Storable for DailyValues {
 }
 
 impl Storable for Log {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
+}
+
+impl Storable for Configs {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }

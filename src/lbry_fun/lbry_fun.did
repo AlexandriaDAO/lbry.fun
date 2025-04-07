@@ -1,2 +1,16 @@
 type Result = variant { Ok : text; Err : text };
-service : { create_token : (text, text, principal, principal) -> (Result) }
+type TokenRecord = record {
+  id : nat64;
+  secondary_token_symbol : text;
+  secondary_token_id : principal;
+  primary_token_name : text;
+  secondary_token_name : text;
+  primary_token_symbol : text;
+  primary_token_max_supply : nat64;
+  primary_token_id : principal;
+  secondary_token_max_supply : nat64;
+};
+service : {
+  create_token : (text, text, text, text, text, text) -> (Result);
+  get_all_token_record : () -> (vec record { nat64; TokenRecord }) query;
+}
