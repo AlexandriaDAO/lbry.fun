@@ -180,7 +180,7 @@ const Emporium = () => {
         }
     };
 
-    // intial
+    //  initial
     useEffect(() => {
         fetchMarketListings();
     }, []);

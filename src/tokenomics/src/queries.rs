@@ -1,5 +1,5 @@
 use crate::{
-    get_current_threshold_index_mem, get_principal, get_total_lbry_burned_mem, Logs, TokenLogs, ALEX_CANISTER_ID, ALEX_PER_THRESHOLD, LBRY_THRESHOLDS, LOGS, TOKEN_LOGS
+    get_current_threshold_index_mem, get_principal, get_total_lbry_burned_mem, Logs, TokenLogs, TokenomicsSchedule, ALEX_CANISTER_ID, ALEX_PER_THRESHOLD, LBRY_THRESHOLDS, LOGS, TOKENOMICS, TOKEN_LOGS
 };
 use candid::{CandidType, Nat, Principal};
 use ic_cdk::{
@@ -246,6 +246,14 @@ fn get_token_logs(page: Option<u64>, page_size: Option<u64>) -> PaginatedTokenLo
             current_page: page,
             page_size,
         }
+    })
+}
+#[ic_cdk::query]
+fn get_tokenomics_schedule() -> TokenomicsSchedule {
+    TOKENOMICS.with(|cell| {
+        let binding = cell.borrow();
+        let schedule = binding.get();
+        schedule.clone()
     })
 }
 

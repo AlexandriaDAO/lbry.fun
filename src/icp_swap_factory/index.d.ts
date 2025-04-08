@@ -28,7 +28,7 @@ export declare interface CreateActorOptions {
 }
 
 /**
- * Intializes an {@link ActorSubclass}, configured with the provided SERVICE interface of a canister.
+ *  initializes an {@link ActorSubclass}, configured with the provided SERVICE interface of a canister.
  * @constructs {@link ActorSubClass}
  * @param {string | Principal} canisterId - ID of the canister the {@link Actor} will talk to
  * @param {CreateActorOptions} options - see {@link CreateActorOptions}
@@ -44,7 +44,7 @@ export declare const createActor: (
 ) => ActorSubclass<_SERVICE>;
 
 /**
- * Intialized Actor using default settings, ready to talk to a canister using its candid interface
+ *  initialized Actor using default settings, ready to talk to a canister using its candid interface
  * @constructs {@link ActorSubClass}
  */
 export declare const icp_swap_factory: ActorSubclass<_SERVICE>;

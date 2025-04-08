@@ -18,6 +18,14 @@ type ExecutionError = variant {
     reason : text;
   };
 };
+type InitArgs = record {
+  max_primary_supply : nat64;
+  secondary_token_id : opt principal;
+  initial_primary_mint : nat64;
+  primary_token_id : opt principal;
+  swap_canister_id : opt principal;
+  initial_secondary_burn : nat64;
+};
 type Logs = record { log : text; time : nat64 };
 type PaginatedTokenLogs = record {
   page_size : nat64;
@@ -52,7 +60,11 @@ type TokenLogs = record {
   timestamp : nat64;
   caller : principal;
 };
-service : {
+type TokenomicsSchedule = record {
+  secondary_burn_thresholds : vec nat64;
+  primary_mint_per_threshold : vec nat64;
+};
+service : (opt InitArgs) -> {
   fetch_total_minted_ALEX : () -> (Result);
   get_current_ALEX_rate : () -> (nat64) query;
   get_current_LBRY_threshold : () -> (nat64) query;
@@ -60,6 +72,7 @@ service : {
   get_logs : () -> (vec Logs) query;
   get_max_stats : () -> (nat64, nat64) query;
   get_token_logs : (opt nat64, opt nat64) -> (PaginatedTokenLogs) query;
+  get_tokenomics_schedule : () -> (TokenomicsSchedule) query;
   get_total_LBRY_burn : () -> (nat64) query;
   get_two_random_nfts : () -> (Result_1);
   mint_ALEX : (nat64, principal, opt blob) -> (Result_2);
