@@ -6,8 +6,8 @@ use ic_cdk::caller;
 use crate::{
     get_current_threshold_index,
     get_current_threshold_index_mem,
-    get_total_LBRY_burn,
-    get_total_lbry_burned_mem,
+    get_total_secondary_burn,
+    get_total_secondary_burned_mem,
     ExecutionError,
     Logs,
     TokenLogType,
@@ -18,26 +18,20 @@ use crate::{
     TOKEN_LOG_COUNTER,
 };
 
-pub const ALEX_CANISTER_ID: &str = "ysy5f-2qaaa-aaaap-qkmmq-cai";
-pub const ICP_SWAP_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";
-pub const LIBRARIAN: &str = "xswc6-jimwj-wnqog-3gmkv-hglw4-aedfy-bqmr2-5uyut-cnbbg-4wvsk-bqe";
-pub const FRONTEND_CANISTER_ID: &str = "yj5ba-aiaaa-aaaap-qkmoa-cai";
-pub const MAX_ALEX: u64 = 2100000000000000; // 21 million
-pub const LBRY_CANISTER_ID: &str = "y33wz-myaaa-aaaap-qkmna-cai";
 pub const TOKEN_LOGS_LIMIT: u64 = 100_000;
 
 pub fn get_principal(id: &str) -> Principal {
     Principal::from_text(id).expect(&format!("Invalid principal: {}", id))
 }
-pub(crate) fn add_to_total_LBRY_burned(amount: u64) -> Result<(), ExecutionError> {
-    let current_total = get_total_LBRY_burn();
+pub(crate) fn add_to_total_secondary_burned(amount: u64) -> Result<(), ExecutionError> {
+    let current_total = get_total_secondary_burn();
     let new_total = current_total.checked_add(amount).ok_or_else(||
-        ExecutionError::new_with_log(caller(), "mint_ALEX", ExecutionError::AdditionOverflow {
+        ExecutionError::new_with_log(caller(), "mint_primary", ExecutionError::AdditionOverflow {
             operation: DEFAULT_ADDITION_OVERFLOW_ERROR.to_string(),
             details: format!("current_total: {} with amount: {}", current_total, amount),
         })
     )?;
-    let mut result = get_total_lbry_burned_mem();
+    let mut result = get_total_secondary_burned_mem();
     result.insert((), new_total);
     return Ok(());
 }

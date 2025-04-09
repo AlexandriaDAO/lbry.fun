@@ -13,55 +13,12 @@ use std::cell::RefCell;
 use crate::ExecutionError;
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
-pub const LBRY_THRESHOLDS: [u64; 18] = [
-    21_000,         // 21,000.00
-    42_000,         // 42,000.00
-    84_000,         // 84,000.00
-    168_000,        // 168,000.00
-    336_000,        // 336,000.00
-    672_000,        // 672,000.00
-    1_344_000,      // 1,344,000.00
-    2_688_000,      // 2,688,000.00
-    5_376_000,      // 5,376,000.00
-    10_752_000,     // 10,752,000.00
-    21_504_000,     // 21,504,000.00
-    43_008_000,     // 43,008,000.00
-    86_016_000,     // 86,016,000.00
-    172_032_000,    // 172,032,000.00
-    344_064_000,    // 344,064,000.00
-    688_128_000,    // 688,128,000.00
-    1_376_256_000,  // 1,376,256,000.00
-    61_632_592_000, // 61,632,592,000.00  61632592000
-];
-
-pub const ALEX_PER_THRESHOLD: [u64; 18] = [
-    //upto 4 decimals
-    50_000, // 5.0000
-    25_000, // 2.5000
-    12_500, // 1.2500
-    6_250,  // 0.6250
-    3_125,  // 0.3125
-    1_562,  // 0.1562
-    781,    // 0.0781
-    391,    // 0.0391
-    195,    // 0.0195
-    98,     // 0.0098
-    49,     // 0.0049
-    24,     // 0.0024
-    12,     // 0.0012
-    6,      // 0.0006
-    3,      // 0.0003
-    2,      // 0.0002
-    1,      // 0.0001
-    1,      // 0.0001
-];
-pub const TOTAL_LBRY_BURNED_MEM_ID: MemoryId = MemoryId::new(0);
+pub const TOTAL_SECONDARY_BURNED_MEM_ID: MemoryId = MemoryId::new(0);
 pub const CURRENT_THRESHOLD_MEM_ID: MemoryId = MemoryId::new(1);
 pub const TOKEN_LOGS_MEM_ID: MemoryId = MemoryId::new(2);
 pub const LOGS_COUNTER_ID: MemoryId = MemoryId::new(3);
 pub const CONFIGS_MEM_ID: MemoryId = MemoryId::new(4);
-pub const TOKENOMICS_MEM_ID:MemoryId=MemoryId::new(5);
-
+pub const TOKENOMICS_MEM_ID: MemoryId = MemoryId::new(5);
 
 thread_local! {
     //Tokenomics
@@ -69,8 +26,8 @@ thread_local! {
         MemoryManager::init(DefaultMemoryImpl::default())
     );
 
-    pub static TOTAL_LBRY_BURNED: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_LBRY_BURNED_MEM_ID)))
+    pub static TOTAL_SECONDARY_BURNED: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_SECONDARY_BURNED_MEM_ID)))
     );
     pub static CURRENT_THRESHOLD_INDEX: RefCell<StableBTreeMap<(), u32, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(CURRENT_THRESHOLD_MEM_ID)))
@@ -88,9 +45,10 @@ thread_local! {
             Configs {primary_token_id:Principal::anonymous(),
                 secondary_token_id:Principal::anonymous(),
                 swap_canister_id:Principal::anonymous(),
+                frontend_canister_id:Principal::anonymous(),
                 max_primary_supply:0,
                  initial_primary_mint: 0,
-                 initial_secondary_burn: 0
+                 initial_secondary_burn: 0,max_primary_phase:0,
             }
         ).unwrap()
     );
@@ -106,9 +64,9 @@ thread_local! {
 
 }
 
-pub fn get_total_lbry_burned_mem() -> StableBTreeMap<(), u64, Memory> {
-    TOTAL_LBRY_BURNED.with(|burned_map| {
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_LBRY_BURNED_MEM_ID)))
+pub fn get_total_secondary_burned_mem() -> StableBTreeMap<(), u64, Memory> {
+    TOTAL_SECONDARY_BURNED.with(|burned_map| {
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_SECONDARY_BURNED_MEM_ID)))
     })
 }
 
@@ -117,7 +75,6 @@ pub fn get_current_threshold_index_mem() -> StableBTreeMap<(), u32, Memory> {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(CURRENT_THRESHOLD_MEM_ID)))
     })
 }
-
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct Logs {
@@ -145,15 +102,16 @@ pub struct TokenomicsSchedule {
     pub primary_mint_per_threshold: Vec<u64>,
 }
 
-
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct Configs {
     pub primary_token_id: Principal,
     pub secondary_token_id: Principal,
     pub swap_canister_id: Principal,
+    pub frontend_canister_id: Principal,
     pub max_primary_supply: u64,
-    pub  initial_primary_mint: u64,
-    pub  initial_secondary_burn: u64,
+    pub initial_primary_mint: u64,
+    pub initial_secondary_burn: u64,
+    pub max_primary_phase:u64
 }
 
 impl Storable for TokenLogs {

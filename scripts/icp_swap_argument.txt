@@ -125,9 +125,11 @@ dfx deploy tokenomics --argument '(
     primary_token_id= opt principal "udymm-hs52j-wcuud-mzcav-iottd-4qw6p-hq67m-pa47o-lwq3b-4u6wy-aqe";
     secondary_token_id=opt principal "udymm-hs52j-wcuud-mzcav-iottd-4qw6p-hq67m-pa47o-lwq3b-4u6wy-aqe";
     swap_canister_id= opt principal "udymm-hs52j-wcuud-mzcav-iottd-4qw6p-hq67m-pa47o-lwq3b-4u6wy-aqe";
+    frontend_canister_id=opt principal "udymm-hs52j-wcuud-mzcav-iottd-4qw6p-hq67m-pa47o-lwq3b-4u6wy-aqe";
     max_primary_supply=2100000000000000;
     initial_primary_mint=50000;
     initial_secondary_burn=21000;
+    max_primary_phase=50;
   }
 )' 
 

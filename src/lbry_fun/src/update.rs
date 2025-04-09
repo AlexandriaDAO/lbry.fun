@@ -5,7 +5,7 @@ use ic_cdk::{
         create_canister, install_code, CanisterInstallMode, CreateCanisterArgument,
         InstallCodeArgument,
     },
-    caller,
+    caller, update,
 };
 use serde::{Deserialize, Serialize};
 
@@ -235,4 +235,58 @@ async fn create_a_canister()->Result<Principal,String>
 
     let canister_id = canister_id_record.0.canister_id;
     Ok(canister_id)
+}
+
+
+#[derive(CandidType)]
+struct TokenomicsInitArgs {
+    primary_token_id: Option<Principal>,
+    secondary_token_id: Option<Principal>,
+    swap_canister_id: Option<Principal>,
+    frontend_canister_id: Option<Principal>,
+    max_primary_supply: u128,
+    initial_primary_mint: u64,
+    initial_secondary_burn: u64,
+    max_primary_phase: u64,
+}
+
+#[update]
+async fn install_tokenomics_wasm_on_existing_canister(
+    canister_id: Principal,
+    primary_token_id: Option<Principal>,
+    secondary_token_id: Option<Principal>,
+    swap_canister_id: Option<Principal>,
+    frontend_canister_id: Option<Principal>,
+    max_primary_supply: u128,
+    initial_primary_mint: u64,
+    initial_secondary_burn: u64,
+    max_primary_phase: u64,
+) -> Result<(), String> {
+    let args = TokenomicsInitArgs {
+        primary_token_id,
+        secondary_token_id,
+        swap_canister_id,
+        frontend_canister_id,
+        max_primary_supply,
+        initial_primary_mint,
+        initial_secondary_burn,
+        max_primary_phase,
+    };
+
+    let encoded_args = Encode!(&Some(args)).map_err(|e| format!("Failed to encode args: {:?}", e))?;
+
+    let wasm_module = include_bytes!("tokenomics.wasm").to_vec(); // Path must be valid in your project
+
+    let install_args = InstallCodeArgument {
+        mode: CanisterInstallMode::Install,
+        canister_id,
+        wasm_module,
+        arg: encoded_args,
+    };
+
+    install_code(install_args)
+        .await
+        .map_err(|e| format!("Wasm install failed: {:?}", e))?;
+
+    Ok(())
 }

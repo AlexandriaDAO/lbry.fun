@@ -1,7 +1,9 @@
-use crate::{get_principal, ICP_SWAP_CANISTER_ID};
+use crate::get_config;
 
 pub fn is_allowed() -> Result<(), String> {
-    if ic_cdk::api::caller() == get_principal(ICP_SWAP_CANISTER_ID) {
+    let swap_canister_id = get_config().swap_canister_id;
+
+    if ic_cdk::api::caller() == swap_canister_id {
         Ok(())
     } else {
         Err("You are unauthorized to call this method.".to_string())
