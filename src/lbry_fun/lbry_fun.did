@@ -1,16 +1,50 @@
 type Result = variant { Ok : text; Err : text };
+type Result_1 = variant { Ok; Err : text };
 type TokenRecord = record {
   id : nat64;
   secondary_token_symbol : text;
   secondary_token_id : principal;
   primary_token_name : text;
+  tokenomics_canister_id : principal;
   secondary_token_name : text;
   primary_token_symbol : text;
+  icp_swap_canister_id : principal;
+  primary_max_phase_mint : nat64;
   primary_token_max_supply : nat64;
+  initial_primary_mint : nat64;
   primary_token_id : principal;
-  secondary_token_max_supply : nat64;
+  caller : principal;
+  initial_secondary_burn : nat64;
 };
 service : {
-  create_token : (text, text, text, text, text, text) -> (Result);
+  create_token : (
+      text,
+      text,
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      nat64,
+      nat64,
+      nat64,
+    ) -> (Result);
   get_all_token_record : () -> (vec record { nat64; TokenRecord }) query;
+  install_icp_swap_wasm_on_existing_canister : (
+      principal,
+      opt principal,
+      opt principal,
+      opt principal,
+    ) -> (Result_1);
+  install_tokenomics_wasm_on_existing_canister : (
+      principal,
+      opt principal,
+      opt principal,
+      opt principal,
+      opt principal,
+      nat64,
+      nat64,
+      nat64,
+      nat64,
+    ) -> (Result_1);
 }

@@ -1,3 +1,4 @@
+use std::mem::swap;
 
 use candid::{CandidType, Encode, Nat, Principal};
 use ic_cdk::{
@@ -9,7 +10,7 @@ use ic_cdk::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{TokenRecord, TOKENS};
+use crate::{get_principal, TokenRecord, TOKENS};
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 struct Account {
@@ -80,21 +81,25 @@ enum LedgerArg {
 async fn create_token(
     primary_token_symbol: String,
     primary_token_name: String,
-    primary_token_description:String,
-
+    primary_token_description: String,
     secondary_token_symbol: String,
     secondary_token_name: String,
-    secondary_token_description : String,
+    secondary_token_description: String,
+    primary_max_supply: u64,
+    initial_primary_mint: u64,
+    initial_secondary_burn: u64,
+    primary_max_phase_mint: u64,
 ) -> Result<String, String> {
     let user_principal = ic_cdk::api::caller(); // Get the calling user's principal
-    // icp_swap canister 
-    let swap_canister_id=create_a_canister().await?;
-    let tokenomics_canister_id=create_a_canister().await?;
+                                                // icp_swap canister
+    let swap_canister_id = create_a_canister().await?;
+    let tokenomics_canister_id = create_a_canister().await?;
+    let frontend_canister_id = create_a_canister().await?;
 
     // Create primary token
-    // ALEX 
+    // ALEX
 
-    // max supply from user 
+    // max supply from user
     //
     let primary_token_id = match create_icrc1_canister(
         primary_token_symbol.clone(),
@@ -128,26 +133,48 @@ async fn create_token(
         }
         Err(e) => return Err(e.to_string()),
     };
-
-
-     TOKENS.with(|tokens| {
+    ic_cdk::println!("I am heree !");
+    install_tokenomics_wasm_on_existing_canister(
+        tokenomics_canister_id,
+        Some(get_principal(&primary_token_id)),
+        Some(get_principal(&secondary_token_id)),
+        Some(swap_canister_id),
+        Some(frontend_canister_id),
+        primary_max_supply.into(),
+        initial_primary_mint,
+        initial_secondary_burn,
+        primary_max_phase_mint,
+    )
+    .await?;
+    install_icp_swap_wasm_on_existing_canister(
+        swap_canister_id,
+        Some(get_principal(&primary_token_id)),
+        Some(get_principal(&secondary_token_id)),
+        Some(tokenomics_canister_id),
+    )
+    .await?;
+    TOKENS.with(|tokens| {
         let mut tokens = tokens.borrow_mut();
         let token_id = tokens.len() as u64 + 1; // Generate a new token ID
         let token_record = TokenRecord {
             id: token_id,
-            primary_token_id: Principal::from_text(primary_token_id.clone()).unwrap(),
+            primary_token_id: get_principal(&primary_token_id),
             primary_token_name: primary_token_name.clone(),
             primary_token_symbol: primary_token_symbol.clone(),
-            primary_token_max_supply: 1_000_000, // Example max supply
-            secondary_token_id: Principal::from_text(secondary_token_id.clone()).unwrap(),
+            primary_token_max_supply: primary_max_supply,
+            secondary_token_id: get_principal(&secondary_token_id),
             secondary_token_name: secondary_token_name.clone(),
             secondary_token_symbol: secondary_token_symbol.clone(),
-            secondary_token_max_supply: 1_000_000, // Example max supply
+            icp_swap_canister_id: swap_canister_id,
+            tokenomics_canister_id,
+
+            initial_primary_mint,
+            initial_secondary_burn,
+            primary_max_phase_mint,
             caller: user_principal,
         };
         tokens.insert(token_id, token_record);
     });
-    
 
     Ok("Tokens created and stored!".to_string())
 }
@@ -224,10 +251,7 @@ async fn create_icrc1_canister(
     Ok(canister_id.to_string())
 }
 
-
-
-async fn create_a_canister()->Result<Principal,String>
-{
+async fn create_a_canister() -> Result<Principal, String> {
     let create_args = CreateCanisterArgument { settings: None };
     let canister_id_record = create_canister(create_args, 2_000_000_000)
         .await
@@ -237,17 +261,23 @@ async fn create_a_canister()->Result<Principal,String>
     Ok(canister_id)
 }
 
-
-#[derive(CandidType)]
+#[derive(CandidType, Serialize)]
 struct TokenomicsInitArgs {
     primary_token_id: Option<Principal>,
     secondary_token_id: Option<Principal>,
     swap_canister_id: Option<Principal>,
     frontend_canister_id: Option<Principal>,
-    max_primary_supply: u128,
+    max_primary_supply: u64,           
     initial_primary_mint: u64,
     initial_secondary_burn: u64,
     max_primary_phase: u64,
+}
+
+#[derive(CandidType)]
+struct IcpSwapInitArgs {
+    primary_token_id: Option<Principal>,
+    secondary_token_id: Option<Principal>,
+    tokenomics_canister_id: Option<Principal>,
 }
 
 #[update]
@@ -257,7 +287,7 @@ async fn install_tokenomics_wasm_on_existing_canister(
     secondary_token_id: Option<Principal>,
     swap_canister_id: Option<Principal>,
     frontend_canister_id: Option<Principal>,
-    max_primary_supply: u128,
+    max_primary_supply: u64,
     initial_primary_mint: u64,
     initial_secondary_burn: u64,
     max_primary_phase: u64,
@@ -272,10 +302,42 @@ async fn install_tokenomics_wasm_on_existing_canister(
         initial_secondary_burn,
         max_primary_phase,
     };
-
-    let encoded_args = Encode!(&Some(args)).map_err(|e| format!("Failed to encode args: {:?}", e))?;
+    let encoded_args =
+        Encode!(&Some(args)).map_err(|e: candid::Error| format!("Failed to encode args: {:?}", e))?;
 
     let wasm_module = include_bytes!("tokenomics.wasm").to_vec(); // Path must be valid in your project
+
+    let install_args = InstallCodeArgument {
+        mode: CanisterInstallMode::Install,
+        canister_id,
+        wasm_module,
+        arg: encoded_args,
+    };
+
+    install_code(install_args)
+        .await
+        .map_err(|e| format!("Wasm install failed: {:?}", e))?;
+
+    Ok(())
+}
+
+#[update]
+async fn install_icp_swap_wasm_on_existing_canister(
+    canister_id: Principal,
+    primary_token_id: Option<Principal>,
+    secondary_token_id: Option<Principal>,
+    tokenomics_canister_id: Option<Principal>,
+) -> Result<(), String> {
+    let args = IcpSwapInitArgs {
+        primary_token_id,
+        secondary_token_id,
+        tokenomics_canister_id,
+    };
+
+    let encoded_args =
+        Encode!(&Some(args)).map_err(|e| format!("Failed to encode args: {:?}", e))?;
+
+    let wasm_module = include_bytes!("icp_swap.wasm").to_vec(); // Path must be valid in your project
 
     let install_args = InstallCodeArgument {
         mode: CanisterInstallMode::Install,

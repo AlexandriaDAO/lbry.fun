@@ -134,3 +134,11 @@ dfx deploy tokenomics --argument '(
 )' 
 
 
+
+dfx deploy icp_swap --argument '(
+  opt record {
+    primary_token_id= opt principal "udymm-hs52j-wcuud-mzcav-iottd-4qw6p-hq67m-pa47o-lwq3b-4u6wy-aqe";
+    secondary_token_id=opt principal "udymm-hs52j-wcuud-mzcav-iottd-4qw6p-hq67m-pa47o-lwq3b-4u6wy-aqe";
+    tokenomics_canister_id= opt principal "udymm-hs52j-wcuud-mzcav-iottd-4qw6p-hq67m-pa47o-lwq3b-4u6wy-aqe";
+  }
+)' 
