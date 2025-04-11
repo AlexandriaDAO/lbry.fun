@@ -1,16 +1,16 @@
 import React from "react";
 import { ActorProvider } from "ic-use-actor";
-import { canisterId, idlFactory } from "../../../declarations/vetkd";
+import { canisterId, idlFactory } from "../../../declarations/SECONDARY";
 
-import { _SERVICE } from "../../../declarations/vetkd/vetkd.did";
+import { _SERVICE } from "../../../declarations/SECONDARY.did";
 
 import { ReactNode } from "react";
 import { useIdentity } from "@/hooks/useIdentity";
-import { VetkdContext } from "@/contexts/actors";
+import { LbryContext } from "@/contexts/actors";
 import { useActorErrorHandler } from "@/hooks/actors";
 import { AnonymousIdentity } from "@dfinity/agent";
 
-export default function VetkdActor({ children }: { children: ReactNode }) {
+export default function SecondaryActor({ children }: { children: ReactNode }) {
     const { identity, clear, isInitializing, isLoggingIn } = useIdentity();
     const { errorToast, handleRequest , handleResponse, handleResponseError} = useActorErrorHandler(clear);
 
@@ -20,7 +20,7 @@ export default function VetkdActor({ children }: { children: ReactNode }) {
 	return (
 		<ActorProvider<_SERVICE>
 			canisterId={canisterId}
-			context={VetkdContext}
+			context={LbryContext}
 			identity={identity || new AnonymousIdentity()}
 			idlFactory={idlFactory}
 			onRequest={handleRequest}
@@ -32,4 +32,3 @@ export default function VetkdActor({ children }: { children: ReactNode }) {
 		</ActorProvider>
 	);
 }
-

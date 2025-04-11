@@ -32,18 +32,7 @@
       "type": "rust",
       "id": "5abki-kiaaa-aaaap-qkmsa-cai"
     },
-    "LBRY": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/rs/rosetta-api/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/canisters/ic-icrc1-ledger.wasm.gz",
-      "id": "y33wz-myaaa-aaaap-qkmna-cai"
-    },
-    "ALEX": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/rs/rosetta-api/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/canisters/ic-icrc1-ledger.wasm.gz",
-      "id": "ysy5f-2qaaa-aaaap-qkmmq-cai"
-    },
+ 
     "alex_frontend": {
       "dependencies": ["alex_backend"],
       "frontend": {
@@ -62,13 +51,6 @@
         }
       },
       "specified_id": "ryjl3-tyaaa-aaaaa-aaaba-cai"
-    },
-
-    "emporium": {
-      "candid": "src/emporium/emporium.did",
-      "package": "emporium",
-      "type": "rust",
-      "specified_id": "zdcg2-dqaaa-aaaap-qpnha-cai"
     },
     "logs": {
       "candid": "src/logs/logs.did",

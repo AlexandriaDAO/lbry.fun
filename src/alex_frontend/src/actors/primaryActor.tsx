@@ -1,8 +1,9 @@
+
 import React from "react";
 import { ActorProvider } from "ic-use-actor";
-import { canisterId, idlFactory } from "../../../declarations/LBRY";
+import { canisterId, idlFactory } from "../../../declarations/PRIMARY";
 
-import { _SERVICE } from "../../../declarations/LBRY/LBRY.did";
+import { _SERVICE } from "../../../declarations/PRIMARY.did";
 
 import { ReactNode } from "react";
 import { useIdentity } from "@/hooks/useIdentity";
@@ -10,7 +11,7 @@ import { LbryContext } from "@/contexts/actors";
 import { useActorErrorHandler } from "@/hooks/actors";
 import { AnonymousIdentity } from "@dfinity/agent";
 
-export default function LbryActor({ children }: { children: ReactNode }) {
+export default function PrimaryActor({ children }: { children: ReactNode }) {
     const { identity, clear, isInitializing, isLoggingIn } = useIdentity();
     const { errorToast, handleRequest , handleResponse, handleResponseError} = useActorErrorHandler(clear);
 
