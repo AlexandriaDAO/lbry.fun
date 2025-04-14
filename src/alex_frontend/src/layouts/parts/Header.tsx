@@ -23,6 +23,7 @@ export const Entry = () => {
 	const { identity, isInitializing, isLoggingIn } = useIdentity();
 	const { user } = useAppSelector((state) => state.auth);
 	const { loading } = useAppSelector((state) => state.login);
+	console.log("actor is ",actor);
 	// const [countdown, setCountdown] = useState(60);
 
 	// // relevant logic in /src/providers/UserProvider/IIUserProvider.tsx

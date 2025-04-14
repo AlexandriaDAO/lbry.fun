@@ -8,18 +8,8 @@ import {
   createActor as createUserActor,
   user,
 } from "../../../../../declarations/user";
-import {
-  createActor as createIcrc7Actor,
-  icrc7,
-} from "../../../../../declarations/icrc7";
-import {
-  createActor as createIcrc7ScionActor,
-  icrc7_scion,
-} from "../../../../../declarations/icrc7_scion";
-import {
-  createActor as createNftManagerActor,
-  nft_manager,
-} from "../../../../../declarations/nft_manager";
+
+
 import {
   icp_swap,
   createActor as createActorSwap,
@@ -41,15 +31,7 @@ import {
   createActor as createActorAlex,
 } from "../../../../../declarations/ALEX";
 
-import {
-  vetkd,
-  createActor as createActorVetkd,
-} from "../../../../../declarations/vetkd";
 
-import {
-  emporium,
-  createActor as createActorEmporium,
-} from "../../../../../declarations/emporium";
 import {
   logs,
   createActor as createActorLogs,
@@ -58,20 +40,10 @@ import {
   icp_swap_factory,
   createActor as createActorIcpSwapFactory,
 } from "../../../../../icp_swap_factory";
-import {
-  createActor as createActorAssetCanister,
-  asset_canister,
-} from "../../../../../asset_canister"; 
 
-import {
-  asset_manager,
-  createActor as createActorAssetManager,
-} from "../../../../../declarations/asset_manager";
 
-import {
-  perpetua,
-  createActor as createActorPerpetua,
-} from "../../../../../declarations/perpetua";
+
+
 
 const isLocalDevelopment = process.env.DFX_NETWORK !== "ic";
 
@@ -151,14 +123,7 @@ export const getActorAlexBackend = () =>
 
 export const getUser = () => getActor(user_canister_id, createUserActor, user);
 
-export const getIcrc7Actor = () =>
-  getActor(icrc7_canister_id, createIcrc7Actor, icrc7);
 
-export const getIcrc7ScionActor = () =>
-  getActor(icrc7_scion_canister_id, createIcrc7ScionActor, icrc7_scion);
-
-export const getNftManagerActor = () =>
-  getActor(nft_manager_canister_id, createNftManagerActor, nft_manager);
 
 export const getActorSwap = () =>
   getActor(icp_swap_canister_id, createActorSwap, icp_swap);
@@ -175,14 +140,7 @@ export const getLbryActor = () =>
 export const getAlexActor = () =>
   getActor(alex_canister_id, createActorAlex, ALEX);
 
-export const getActorVetkd = () =>
-  getActor(vetkd_canister_id, createActorVetkd, vetkd);
 
-export const getActorEmporium = () =>
-  getActor(emporium_canister_id, createActorEmporium, emporium);
-
-export const getActorPerpetua = () =>
-  getActor(perpetua_canister_id, createActorPerpetua, perpetua);
 
 export const getLogs = () => getActor(log_canister_id, createActorLogs, logs);
 
@@ -192,8 +150,3 @@ export const getIcpSwapFactoryCanister = () =>
     createActorIcpSwapFactory,
     icp_swap_factory
   );
-export const getActorUserAssetCanister = (canisterId: string) =>
-  getActor(canisterId, createActorAssetCanister, asset_canister);
-
-export const getActorAssetManager = () =>
-  getActor(asset_manager_canister_id, createActorAssetManager, asset_manager);

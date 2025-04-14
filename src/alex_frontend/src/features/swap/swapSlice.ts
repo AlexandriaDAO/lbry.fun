@@ -13,8 +13,8 @@ import getALlStakesInfo from "./thunks/getAllStakesInfo";
 import getArchivedBal from "./thunks/getArchivedBal";
 import redeemArchivedBalance from "./thunks/redeemArchivedBalance";
 import fetchTransaction from "./thunks/lbryIcrc/getTransactions";
-import getSpendingBalance from "./thunks/lbryIcrc/getSpendingBalance";
-import getAlexSpendingBalance from "./thunks/alexIcrc/getAlexSpendingBalance";
+// import getSpendingBalance from "./thunks/lbryIcrc/getSpendingBalance";
+// import getAlexSpendingBalance from "./thunks/alexIcrc/getAlexSpendingBalance";
 
 import { TransactionType } from "./thunks/lbryIcrc/getTransactions";
 import getStakersCount from "./thunks/getStakersCount";
@@ -425,36 +425,36 @@ const swapSlice = createSlice({
           title: action.payload || "",
         };
       })
-      .addCase(getSpendingBalance.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getSpendingBalance.fulfilled, (state, action) => {
-        state.loading = false;
-        state.spendingBalance = action.payload;
-        state.error = null;
-      })
-      .addCase(getSpendingBalance.rejected, (state, action) => {
-        state.loading = false;
-        state.error = {
-          message: "",
-          title: action.payload || "",
-        };
-      })
-      .addCase(getAlexSpendingBalance.fulfilled, (state, action) => {
-        state.alexSpendingBalance = action.payload;
-        state.loading = false;
-      })
-      .addCase(getAlexSpendingBalance.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(getAlexSpendingBalance.rejected, (state, action) => {
-        state.loading = false;
-        state.error = state.error = {
-          message: "",
-          title: action.payload || "Failed to get ALEX spending balance ",
-        };
-      })
+      // .addCase(getSpendingBalance.pending, (state) => {
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+      // .addCase(getSpendingBalance.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.spendingBalance = action.payload;
+      //   state.error = null;
+      // })
+      // .addCase(getSpendingBalance.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = {
+      //     message: "",
+      //     title: action.payload || "",
+      //   };
+      // })
+      // .addCase(getAlexSpendingBalance.fulfilled, (state, action) => {
+      //   state.alexSpendingBalance = action.payload;
+      //   state.loading = false;
+      // })
+      // .addCase(getAlexSpendingBalance.pending, (state) => {
+      //   state.loading = true;
+      // })
+      // .addCase(getAlexSpendingBalance.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = state.error = {
+      //     message: "",
+      //     title: action.payload || "Failed to get ALEX spending balance ",
+      //   };
+      // })
       .addCase(getAllLogs.fulfilled, (state, action) => {
         state.logsData = action.payload;
         state.loading = false;

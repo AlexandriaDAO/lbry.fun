@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from "react";
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from "react-router";
 
-import TopProgressBar from "@/components/TopProgressBar";
+// import TopProgressBar from "@/components/TopProgressBar";
 import LayoutSkeleton from "@/layouts/skeletons/LayoutSkeleton";
 
 import BaseLayout from "@/layouts/BaseLayout";
@@ -9,56 +9,56 @@ import MainLayout from "@/layouts/MainLayout";
 import AuthGuard from "@/guards/AuthGuard";
 import MainPageSkeleton from "@/layouts/skeletons/MainPageSkeleton";
 import PinaxSkeleton from "@/layouts/skeletons/PinaxSkeleton";
-import UnauthorizedPage from "@/pages/UnauthorizedPage";
+// import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import Protected from "@/guards/Protected";
-import LibrarianGuard from "@/guards/LibrarianGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ROUTES } from "./routeConfig";
 
-const HomePage = lazy(()=>import("@/pages/HomePage"));
+// const HomePage = lazy(()=>import("@/pages/HomePage"));
 
-const DashboardLayout = lazy(()=>import("@/layouts/DashboardLayout"));
-const NotFoundPage = lazy(()=>import("@/pages/NotFoundPage"));
-const UpgradePage = lazy(()=>import("@/pages/dashboard/UpgradePage"));
-// const LibrarianLayout = lazy(()=>import("@/layouts/LibrarianLayout"));
-const LibrarianPage = lazy(()=>import("@/pages/librarian/"));
-const WalletsPage = lazy(()=>import("@/pages/librarian/WalletsPage"));
-const AssetSyncPage = lazy(()=>import("@/pages/dashboard/AssetSyncPage"));
-const ArweaveAssetsPage = lazy(()=>import("@/pages/dashboard/ArweaveAssetsPage"));
-const ICPAssetsPage = lazy(()=>import("@/pages/ICPAssetsPage"));
-// const FileUploadPage = lazy(()=>import("@/pages/dashboard/FileUploadPage"));
-const PinaxPage = lazy(()=>import("@/pages/PinaxPage"));
-// const UploadPage = lazy(()=>import("@/pages/dashboard/UploadPage"));
+// const DashboardLayout = lazy(()=>import("@/layouts/DashboardLayout"));
+// const NotFoundPage = lazy(()=>import("@/pages/NotFoundPage"));
+// const UpgradePage = lazy(()=>import("@/pages/dashboard/UpgradePage"));
+// // const LibrarianLayout = lazy(()=>import("@/layouts/LibrarianLayout"));
+// const LibrarianPage = lazy(()=>import("@/pages/librarian/"));
+// const WalletsPage = lazy(()=>import("@/pages/librarian/WalletsPage"));
+// const AssetSyncPage = lazy(()=>import("@/pages/dashboard/AssetSyncPage"));
+// const ArweaveAssetsPage = lazy(()=>import("@/pages/dashboard/ArweaveAssetsPage"));
+// const ICPAssetsPage = lazy(()=>import("@/pages/ICPAssetsPage"));
+// // const FileUploadPage = lazy(()=>import("@/pages/dashboard/FileUploadPage"));
+// const PinaxPage = lazy(()=>import("@/pages/PinaxPage"));
+// // const UploadPage = lazy(()=>import("@/pages/dashboard/UploadPage"));
 
-const ManagerPage = lazy(()=>import("@/pages/ManagerPage"));
-// const WhitepaperPage = lazy(()=>import("@/pages/WhitepaperPage"));
-// const FAQPage = lazy(()=>import("@/pages/FAQPage"));
-const InfoPage = lazy(()=>import("@/pages/InfoPage"));
-const Bibliotheca = lazy(()=>import("@/apps/app/Bibliotheca"));
-const Alexandrian = lazy(()=>import("@/apps/app/Alexandrian"));
-const Syllogos = lazy(()=>import("@/apps/app/Syllogos"));
-const Perpetua = lazy(()=>import("@/apps/app/Perpetua"));
-const Dialectica = lazy(()=>import("@/apps/app/Dialectica"));
-const Permasearch = lazy(()=>import("@/apps/app/Permasearch"));
-const Emporium = lazy(()=>import("@/apps/app/Emporium"));
-const SwapPage = lazy(()=>import("@/pages/swap"));
-const DetailTransaction = lazy(()=>import("@/features/swap/components/transactionHistory/detailTransaction"));
-// const DashboardPage = lazy(()=>import("@/pages/dashboard"));
-const ProfilePage = lazy(()=>import("@/pages/dashboard/ProfilePage"));
-const SettingsPage = lazy(()=>import("@/pages/dashboard/SettingsPage"));
-// const EnginesPage = lazy(()=>import("@/pages/dashboard/EnginesPage"));
-// const EngineOverviewPage = lazy(()=>import("@/pages/dashboard/EngineOverviewPage"));
-// const PublicEnginesPage = lazy(()=>import("@/pages/dashboard/PublicEnginesPage"));
-// const AssetsPage = lazy(()=>import("@/pages/dashboard/AssetsPage"));
-// const CollectionPage = lazy(()=>import("@/pages/dashboard/CollectionPage"));
-const SingleTokenView = lazy(() => import("@/apps/Modules/AppModules/blinks/SingleTokenView"));
+// const ManagerPage = lazy(()=>import("@/pages/ManagerPage"));
+// // const WhitepaperPage = lazy(()=>import("@/pages/WhitepaperPage"));
+// // const FAQPage = lazy(()=>import("@/pages/FAQPage"));
+// const InfoPage = lazy(()=>import("@/pages/InfoPage"));
+// const Bibliotheca = lazy(()=>import("@/apps/app/Bibliotheca"));
+// const Alexandrian = lazy(()=>import("@/apps/app/Alexandrian"));
+// const Syllogos = lazy(()=>import("@/apps/app/Syllogos"));
+// const Perpetua = lazy(()=>import("@/apps/app/Perpetua"));
+// const Dialectica = lazy(()=>import("@/apps/app/Dialectica"));
+// const Permasearch = lazy(()=>import("@/apps/app/Permasearch"));
+// const Emporium = lazy(()=>import("@/apps/app/Emporium"));
+// const SwapPage = lazy(()=>import("@/pages/swap"));
+// const DetailTransaction = lazy(()=>import("@/features/swap/components/transactionHistory/detailTransaction"));
+// // const DashboardPage = lazy(()=>import("@/pages/dashboard"));
+// const ProfilePage = lazy(()=>import("@/pages/dashboard/ProfilePage"));
+// const SettingsPage = lazy(()=>import("@/pages/dashboard/SettingsPage"));
+// // const EnginesPage = lazy(()=>import("@/pages/dashboard/EnginesPage"));
+// // const EngineOverviewPage = lazy(()=>import("@/pages/dashboard/EngineOverviewPage"));
+// // const PublicEnginesPage = lazy(()=>import("@/pages/dashboard/PublicEnginesPage"));
+// // const AssetsPage = lazy(()=>import("@/pages/dashboard/AssetsPage"));
+// // const CollectionPage = lazy(()=>import("@/pages/dashboard/CollectionPage"));
+// const SingleTokenView = lazy(() => import("@/apps/Modules/AppModules/blinks/SingleTokenView"));
+const CreateTokenPage=lazy(()=>import("@/pages/CreateTokenPage"));
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
-		<Route element={<ErrorBoundary><BaseLayout /></ErrorBoundary>}>
-			<Route path={ROUTES.HOME} element={<MainLayout />}>
-				<Route index element={<Suspense key="home" fallback={<TopProgressBar />}><HomePage /></Suspense>} />
-				<Route path={ROUTES.NFT} element={<Suspense key="nft" fallback={<TopProgressBar />}><SingleTokenView /></Suspense>} />
+		<Route >
+			<Route path={"/"} element={<MainLayout />}>
+				<Route index element={<Suspense key="home" ><CreateTokenPage /></Suspense>} />
+				{/* <Route path={ROUTES.NFT} element={<Suspense key="nft" fallback={<TopProgressBar />}><SingleTokenView /></Suspense>} />
 				<Route path={ROUTES.MANAGER} element={<Suspense key="manager" fallback={<TopProgressBar />}><ManagerPage /></Suspense>} />
 
 				<Route path={ROUTES.INFO}>
@@ -125,6 +125,7 @@ const router = createBrowserRouter(
 						<Route path="settings" element={<Suspense key="settings" fallback={<MainPageSkeleton />}><SettingsPage /></Suspense>} />
 					</Route>
 				</Route>
+			</Route> */}
 			</Route>
 		</Route>
 	)

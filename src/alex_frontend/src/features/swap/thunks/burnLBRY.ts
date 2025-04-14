@@ -56,7 +56,7 @@ const burnLbry = createAsyncThunk<
       }
 
       const actorSwap = await getActorSwap();
-      const result = await actorSwap.burn_LBRY(amountFormat, []);
+      const result = await actorSwap.burn_secondary(amountFormat, []);
       if ("Ok" in result) {
         dispatch(getCanisterBal());
         dispatch(getCanisterArchivedBal());

@@ -9,7 +9,7 @@ const getLBRYratio = createAsyncThunk<
 >("icp_swap/getLBRYratio", async (_, { rejectWithValue }) => {
   try {
     const actor = await getActorSwap();
-    const result = await actor.get_current_LBRY_ratio();
+    const result = await actor.get_current_secondary_ratio();
     return result.toString();
   } catch (error) {
     console.error("Failed to get LBRY_ratio:", error);

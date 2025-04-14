@@ -8,7 +8,6 @@ import {
     DropdownMenuSeparator,
 } from "@/lib/components/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { apps, type App } from "@/pages/HomePage";
 import { LayoutGrid, Wallet, ArrowLeftRight, CreditCard, Send, Download, Flame, CoinsIcon, RotateCcw, History, LineChart, HelpCircle, FileText, ShieldCheck } from "lucide-react";
 
 // Map icons to tab paths
@@ -81,7 +80,6 @@ export default function Tabs() {
         };
     };
 
-    const activeApps = apps.filter(app => !app.comingSoon);
 
     const baseStyles = `
         transition-all duration-100 
@@ -114,25 +112,6 @@ export default function Tabs() {
                     className="w-[200px] bg-gray-900 border-gray-800"
                     {...handleContentMouseEvents('apps')}
                 >
-                    {activeApps.map((app) => (
-                        <DropdownMenuItem
-                            key={app.name}
-                            className="flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-gray-800"
-                            onClick={() => navigate(app.path)}
-                        >
-                            {app.logo && (
-                                <img 
-                                    src={app.logo} 
-                                    alt={`${app.name} logo`} 
-                                    className="w-5 h-5 object-contain"
-                                />
-                            )}
-                            <div className="flex flex-col">
-                                <span className="text-white text-sm font-syne">{app.name}</span>
-                                <span className="text-gray-400 text-xs">{app.description}</span>
-                            </div>
-                        </DropdownMenuItem>
-                    ))}
                     <DropdownMenuSeparator className="bg-gray-800" />
                     <DropdownMenuItem
                         className="flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-gray-800"

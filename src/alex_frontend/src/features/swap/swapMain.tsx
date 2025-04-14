@@ -5,7 +5,6 @@ import "./style.css"
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import AccountCards from './components/balance/accountCards';
 import BalanceContent from './components/balance/balanceContent';
-import TopupContent from './components/topup/topupContent';
 import SwapContent from './components/swap/swapContent';
 import SendContent from './components/send/sendContent';
 import BurnContent from './components/burn/burnContent';
@@ -31,7 +30,7 @@ const SwapMain = () => {
     const tabs = [
         { id: 1, path: 'balance', label: 'Balance', hover: null, content: <BalanceContent /> },
         { id: 2, path: 'swap', label: 'Swap', hover: "Swap ICP for LBRY", content: <SwapContent /> },
-        { id: 3, path: 'topup', label: 'Topup', hover: "Allocate LBRY that can be spent in-app", content: <TopupContent /> },
+        // { id: 3, path: 'topup', label: 'Topup', hover: "Allocate LBRY that can be spent in-app", content: <TopupContent /> },
         { id: 4, path: 'send', label: 'Send', hover: null, content: <SendContent /> },
         { id: 5, path: 'receive', label: 'Receive', hover: null, content: <ReceiveContent /> },
         { id: 6, path: 'burn', label: 'Burn', hover: "Burn LBRY, get back ALEX and ICP", content: <BurnContent /> },

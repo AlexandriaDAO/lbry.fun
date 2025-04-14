@@ -1,7 +1,7 @@
-import { createActorContext } from "ic-use-actor";
+// import { createActorContext } from "ic-use-actor";
 
-import { _SERVICE } from "../../../../declarations/LBRY/LBRY.did";
+// import { _SERVICE } from "../../../../declarations/LBRY/LBRY.did";
 
-const LbryContext = createActorContext<_SERVICE>();
+// const LbryContext = createActorContext<_SERVICE>();
 
-export default LbryContext;
+// export default LbryContext;

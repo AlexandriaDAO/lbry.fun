@@ -9,7 +9,7 @@ const getAlexMintRate = createAsyncThunk<
 >("tokenomics/getAlexMintRate", async (_, { rejectWithValue }) => {
   try {
     const actor = await getTokenomicsActor();
-    const result = await actor.get_current_ALEX_rate();
+    const result = await actor.get_current_primary_rate();
     const LedgerServices = LedgerService();
     const fromatedBal = LedgerServices.e8sToIcp(
       result * BigInt(10000)

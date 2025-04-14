@@ -57,7 +57,7 @@ const stakeAlex = createAsyncThunk<
       }
 
       const actorSwap = await getActorSwap();
-      const result = await actorSwap.stake_ALEX(amountFormat, []);
+      const result = await actorSwap.stake_primary(amountFormat, []);
       console.log("result is is ",result);
       if ("Ok" in result) return "success";
       if ("Err" in result) {
