@@ -148,14 +148,14 @@ dfx deploy LBRY --specified-id y33wz-myaaa-aaaap-qkmna-cai --argument '(variant 
 record {
      token_symbol = "LBRY";
      token_name = "LBRY";
-     minting_account = record { owner = principal "'$(dfx canister id icp_swap)'" };
+     minting_account = record { owner = principal "'$(dfx canister id kong_user1)'" };
      transfer_fee = 4_000_000;
      metadata = vec {};
      initial_balances = vec {};
      archive_options = record {
          num_blocks_to_archive = 1000;
          trigger_threshold = 2000;
-         controller_id = principal "'$(dfx canister id icp_swap)'";
+         controller_id = principal "'$(dfx canister id kong_user1)'";
      };
      feature_flags = opt record {
         icrc2 = true;

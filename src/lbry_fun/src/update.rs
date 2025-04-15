@@ -2,15 +2,15 @@ use std::mem::swap;
 
 use candid::{CandidType, Encode, Nat, Principal};
 use ic_cdk::{
-    api::management_canister::main::{
+    api::{ management_canister::main::{
         create_canister, install_code, CanisterInstallMode, CreateCanisterArgument,
         InstallCodeArgument,
-    },
+    }},
     caller, update,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{get_principal, TokenRecord, TOKENS};
+use crate::{get_principal, AddTokenArgs, AddTokenResponse, TokenDetail, TokenRecord, KONG_BACKEND_CANISTER, TOKENS};
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 struct Account {
@@ -153,6 +153,10 @@ async fn create_token(
         Some(tokenomics_canister_id),
     )
     .await?;
+
+    add_token_to_swap(get_principal(&primary_token_id))
+        .await
+        .map_err(|e| format!("Failed to add token to swap: {:?}", e))?;
     TOKENS.with(|tokens| {
         let mut tokens = tokens.borrow_mut();
         let token_id = tokens.len() as u64 + 1; // Generate a new token ID
@@ -352,3 +356,30 @@ async fn install_icp_swap_wasm_on_existing_canister(
 
     Ok(())
 }
+
+
+
+#[ic_cdk::update]
+async fn add_token_to_swap(token_id: Principal) -> Result<String, String> {
+    let args = AddTokenArgs { token: "IC.".to_string() + token_id.to_string().as_str() };
+
+    let result: Result<(AddTokenResponse,), _> =
+    ic_cdk
+    ::call(get_principal(KONG_BACKEND_CANISTER), "add_token", (args,)).await;
+
+    match result {
+        Ok((AddTokenResponse::Ok(TokenDetail::IC(token_info)),)) => {
+            println!("Token added: {:?}", token_info);
+            Ok("ok".to_string())
+        }
+        Ok((AddTokenResponse::Err(err_msg),)) => {
+            Err(format!("Add token failed: {}", err_msg))
+        }
+        Err((e)) => {
+            ic_cdk::println!("Error: {:?}", e);
+            Err(format!("Call failed "))
+        }
+    }
+}
+
+
