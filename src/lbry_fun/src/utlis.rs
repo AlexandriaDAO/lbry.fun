@@ -1,6 +1,9 @@
-use candid::{CandidType, Principal};
+use candid::{CandidType, Nat, Principal};
 use serde::Deserialize;
 pub const KONG_BACKEND_CANISTER: &str = "2ipq2-uqaaa-aaaar-qailq-cai";
+pub const ICP_CANISTER_ID: &str = "nppha-riaaa-aaaal-ajf2q-cai";
+pub const INTITAL_PRIMARY_MINT: u64 = 200_000_000;
+
 pub fn get_principal(id: &str) -> Principal {
     Principal::from_text(id).expect(&format!("Invalid principal: {}", id))
 }
@@ -9,22 +12,6 @@ pub fn get_principal(id: &str) -> Principal {
 pub struct AddTokenArgs {
     pub token: String,
 }
-
-#[derive(CandidType, Deserialize, Debug)]
-pub struct TokenInfo {
-    pub fee: u64,
-    pub decimals: u8,
-    pub token_id: u32,
-    pub chain: String,
-    pub name: String,
-    pub canister_id: String,
-    pub icrc1: bool,
-    pub icrc2: bool,
-    pub icrc3: bool,
-    pub is_removed: bool,
-    pub symbol: String,
-}
-
 #[derive(CandidType, Deserialize, Debug)]
 pub enum AddTokenResponse {
     Ok(TokenDetail),
@@ -34,6 +21,47 @@ pub enum AddTokenResponse {
 #[derive(CandidType, Deserialize, Debug)]
 pub enum TokenDetail {
     IC(TokenInfo),
+}
+
+#[derive(CandidType, Deserialize, Debug)]
+pub enum AddTokenResult {
+    Ok(AddTokenReply),
+    Err(String),
+}
+
+#[derive(CandidType, Deserialize, Debug)]
+pub enum AddTokenReply {
+    IC(ICTokenReply),
+}
+
+#[derive(CandidType, Deserialize, Debug)]
+pub struct ICTokenReply {
+    pub token_id: u32,
+    pub chain: String,
+    pub canister_id: String,
+    pub name: String,
+    pub symbol: String,
+    pub decimals: u8,
+    pub fee: Nat,
+    pub icrc1: bool,
+    pub icrc2: bool,
+    pub icrc3: bool,
+    pub is_removed: bool,
+}
+
+#[derive(CandidType, Deserialize, Debug)]
+pub struct TokenInfo {
+    pub token_id: u32,
+    pub chain: String,
+    pub canister_id: String,
+    pub name: String,
+    pub symbol: String,
+    pub decimals: u8,
+    pub fee: u64, // backed by candid::Nat
+    pub icrc1: bool,
+    pub icrc2: bool,
+    pub icrc3: bool,
+    pub is_removed: bool,
 }
 
 //Add Pool

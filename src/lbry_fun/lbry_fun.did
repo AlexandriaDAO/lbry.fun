@@ -1,5 +1,20 @@
+type AddTokenResponse = variant { Ok : TokenDetail; Err : text };
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok; Err : text };
+type TokenDetail = variant { IC : TokenInfo };
+type TokenInfo = record {
+  fee : nat64;
+  decimals : nat8;
+  token_id : nat32;
+  chain : text;
+  name : text;
+  canister_id : text;
+  icrc1 : bool;
+  icrc2 : bool;
+  icrc3 : bool;
+  is_removed : bool;
+  symbol : text;
+};
 type TokenRecord = record {
   id : nat64;
   secondary_token_symbol : text;
@@ -17,6 +32,7 @@ type TokenRecord = record {
   initial_secondary_burn : nat64;
 };
 service : {
+  add_token_to_swap : (principal) -> (AddTokenResponse);
   create_token : (
       text,
       text,

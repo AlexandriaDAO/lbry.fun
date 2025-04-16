@@ -5,8 +5,10 @@ import { Textarea } from '@/lib/components/textarea';
 import { Label } from '@/lib/components/label';
 import { Card } from '@/lib/components/card';
 import { Slider } from '@/lib/components/slider';
+import { useDispatch } from 'react-redux';
+import createToken from '../thunks/createToken.thunk'
 
-interface TokenFormValues {
+export interface TokenFormValues {
   primary_token_symbol: string;
   primary_token_name: string;
   primary_token_description: string;
@@ -20,6 +22,7 @@ interface TokenFormValues {
 }
 
 const CreateTokenForm: React.FC = () => {
+  const dispatch= useDispatch();
   const [form, setForm] = useState<TokenFormValues>({
     primary_token_symbol: '',
     primary_token_name: '',
@@ -55,6 +58,7 @@ const CreateTokenForm: React.FC = () => {
       initial_secondary_burn: BigInt(form.initial_secondary_burn),
       primary_max_phase_mint: BigInt(form.primary_max_phase_mint)
     };
+    dispatch(createToken(formattedForm));
 
     console.log('Submitting:', formattedForm);
   };

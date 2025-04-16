@@ -9,7 +9,6 @@ import {
   user,
 } from "../../../../../declarations/user";
 
-
 import {
   icp_swap,
   createActor as createActorSwap,
@@ -31,7 +30,6 @@ import {
   createActor as createActorAlex,
 } from "../../../../../declarations/ALEX";
 
-
 import {
   logs,
   createActor as createActorLogs,
@@ -40,30 +38,23 @@ import {
   icp_swap_factory,
   createActor as createActorIcpSwapFactory,
 } from "../../../../../icp_swap_factory";
-
-
-
-
+import {
+  lbry_fun,
+  createActor as createActorLbryFun,
+} from "../../../../../declarations/lbry_fun";
 
 const isLocalDevelopment = process.env.DFX_NETWORK !== "ic";
 
 const alex_backend_canister_id = process.env.CANISTER_ID_ALEX_BACKEND!;
-const icrc7_canister_id = process.env.CANISTER_ID_ICRC7!;
-const icrc7_scion_canister_id = process.env.CANISTER_ID_ICRC7_SCION!;
-const nft_manager_canister_id = process.env.CANISTER_ID_NFT_MANAGER!;
 const icp_swap_canister_id = process.env.CANISTER_ID_ICP_SWAP!;
 const icp_ledger_canister_id = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 const tokenomics_canister_id = process.env.CANISTER_ID_TOKENOMICS!;
 const lbry_canister_id = process.env.CANISTER_ID_LBRY!;
 const alex_canister_id = process.env.CANISTER_ID_ALEX!;
 const user_canister_id = process.env.CANISTER_ID_USER!;
-const alex_wallet_canister_id = process.env.CANISTER_ID_ALEX_WALLET!;
-const vetkd_canister_id = process.env.CANISTER_ID_VETKD!;
-const emporium_canister_id = process.env.CANISTER_ID_EMPORIUM!;
 const log_canister_id = process.env.CANISTER_ID_LOGS!;
-const perpetua_canister_id = process.env.CANISTER_ID_PERPETUA!;
 const icp_swap_factory_canister_id = "ggzvv-5qaaa-aaaag-qck7a-cai";
-const asset_manager_canister_id = process.env.CANISTER_ID_ASSET_MANAGER!;
+const lbry_fun_canister_id = process.env.CANISTER_ID_LBRY_FUN!;
 
 export const getPrincipal = (client: AuthClient): string =>
   client.getIdentity().getPrincipal().toString();
@@ -123,8 +114,6 @@ export const getActorAlexBackend = () =>
 
 export const getUser = () => getActor(user_canister_id, createUserActor, user);
 
-
-
 export const getActorSwap = () =>
   getActor(icp_swap_canister_id, createActorSwap, icp_swap);
 
@@ -140,10 +129,9 @@ export const getLbryActor = () =>
 export const getAlexActor = () =>
   getActor(alex_canister_id, createActorAlex, ALEX);
 
-
-
 export const getLogs = () => getActor(log_canister_id, createActorLogs, logs);
-
+export const getLbryFunActor = () =>
+  getActor(lbry_fun_canister_id, createActorLbryFun, lbry_fun);
 export const getIcpSwapFactoryCanister = () =>
   getActor(
     icp_swap_factory_canister_id,
