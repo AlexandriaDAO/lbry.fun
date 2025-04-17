@@ -1,5 +1,5 @@
 import React from "react";
-import CreateTokenForm from "@/components/createToken";
+import CreateTokenForm from "@/features/create-token/createToken";
 const CreateTokenPage = () => {
     return (<>
             <CreateTokenForm />

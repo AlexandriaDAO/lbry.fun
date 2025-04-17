@@ -6,7 +6,9 @@ import { Label } from '@/lib/components/label';
 import { Card } from '@/lib/components/card';
 import { Slider } from '@/lib/components/slider';
 import { useDispatch } from 'react-redux';
-import createToken from '../thunks/createToken.thunk'
+import createToken from './thunk/createToken.thunk';
+import { useAppDispatch } from '@/store/hooks/useAppDispatch';
+import { useAppSelector } from '@/store/hooks/useAppSelector';
 
 export interface TokenFormValues {
   primary_token_symbol: string;
@@ -22,7 +24,8 @@ export interface TokenFormValues {
 }
 
 const CreateTokenForm: React.FC = () => {
-  const dispatch= useDispatch();
+  const dispatch = useAppDispatch();
+  const lbryFun = useAppSelector(state => state.lbryFun);
   const [form, setForm] = useState<TokenFormValues>({
     primary_token_symbol: '',
     primary_token_name: '',
@@ -53,15 +56,30 @@ const CreateTokenForm: React.FC = () => {
 
     const formattedForm = {
       ...form,
-      primary_max_supply: BigInt(form.primary_max_supply),
-      initial_primary_mint: BigInt(form.initial_primary_mint),
-      initial_secondary_burn: BigInt(form.initial_secondary_burn),
-      primary_max_phase_mint: BigInt(form.primary_max_phase_mint)
+      primary_max_supply: form.primary_max_supply,
+      initial_primary_mint: form.initial_primary_mint,
+      initial_secondary_burn: form.initial_secondary_burn,
+      primary_max_phase_mint: form.primary_max_phase_mint
     };
-    dispatch(createToken(formattedForm));
+    dispatch(createToken({ formData: formattedForm }));
 
     console.log('Submitting:', formattedForm);
   };
+  const handleImageUpload = (e:any) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm((prevForm) => ({
+        ...prevForm,
+        primary_token_logo_base64: reader.result,
+      }));
+    };
+  
+    reader.readAsDataURL(file);
+  };
+  
 
   return (
     <div className='container'>
@@ -84,6 +102,15 @@ const CreateTokenForm: React.FC = () => {
               <div className="md:col-span-2">
                 <Label htmlFor="primary_token_description">Description</Label>
                 <Textarea name="primary_token_description" value={form.primary_token_description} onChange={handleChange} />
+              </div>
+              <div>
+                <Label htmlFor="primary_token_image">Token Image (SVG/PNG)</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  name="primary_token_image"
+                  onChange={handleImageUpload}
+                />
               </div>
             </div>
           </Card>
