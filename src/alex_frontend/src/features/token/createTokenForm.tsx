@@ -1,31 +1,39 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { Button } from '@/lib/components/button';
 import { Input } from '@/lib/components/input';
 import { Textarea } from '@/lib/components/textarea';
 import { Label } from '@/lib/components/label';
 import { Card } from '@/lib/components/card';
 import { Slider } from '@/lib/components/slider';
-import { useDispatch } from 'react-redux';
 import createToken from './thunk/createToken.thunk';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
+import LoadingModal from '../swap/components/loadingModal';
+import { lbryFunFlagHandler } from './thunk/lbryFunSlice';
 
 export interface TokenFormValues {
   primary_token_symbol: string;
   primary_token_name: string;
   primary_token_description: string;
+  primary_token_logo_base64: string;
   secondary_token_symbol: string;
   secondary_token_name: string;
   secondary_token_description: string;
+  secondary_token_logo_base64: string;
   primary_max_supply: string;
   initial_primary_mint: string;
   initial_secondary_burn: string;
   primary_max_phase_mint: string;
+
 }
 
 const CreateTokenForm: React.FC = () => {
   const dispatch = useAppDispatch();
   const lbryFun = useAppSelector(state => state.lbryFun);
+  const [loadingModalV, setLoadingModalV] = useState(false);
+  const [successModalV, setSucessModalV] = useState(false);
+  const { user } = useAppSelector((state) => state.auth);
+
   const [form, setForm] = useState<TokenFormValues>({
     primary_token_symbol: '',
     primary_token_name: '',
@@ -33,10 +41,12 @@ const CreateTokenForm: React.FC = () => {
     secondary_token_symbol: '',
     secondary_token_name: '',
     secondary_token_description: '',
+    secondary_token_logo_base64: '',
     primary_max_supply: '1000',
     initial_primary_mint: '',
     initial_secondary_burn: '',
-    primary_max_phase_mint: ''
+    primary_max_phase_mint: '',
+    primary_token_logo_base64: ''
   });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -53,7 +63,9 @@ const CreateTokenForm: React.FC = () => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    if (!user) {
+      return;
+    }
     const formattedForm = {
       ...form,
       primary_max_supply: form.primary_max_supply,
@@ -61,25 +73,45 @@ const CreateTokenForm: React.FC = () => {
       initial_secondary_burn: form.initial_secondary_burn,
       primary_max_phase_mint: form.primary_max_phase_mint
     };
-    dispatch(createToken({ formData: formattedForm }));
+    dispatch(createToken({ formData: formattedForm, userPrincipal: user.principal }));
 
     console.log('Submitting:', formattedForm);
   };
-  const handleImageUpload = (e:any) => {
-    const file = e.target.files[0];
+  const handleImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: 'primary_token_logo_base64' | 'secondary_token_logo_base64'
+  ) => {
+    const file = e.target?.files?.[0];
     if (!file) return;
-  
+
     const reader = new FileReader();
     reader.onloadend = () => {
-      setForm((prevForm) => ({
-        ...prevForm,
-        primary_token_logo_base64: reader.result,
-      }));
+      if (typeof reader.result === 'string') {
+        setForm((prevForm) => ({
+          ...prevForm,
+          [field]: reader.result,
+        }));
+      }
     };
-  
+
     reader.readAsDataURL(file);
   };
-  
+  useEffect(() => {
+    if (lbryFun.loading === true) {
+      setLoadingModalV(true);
+    } else {
+      setLoadingModalV(false);
+    }
+    if (lbryFun.success === true) {
+      dispatch(lbryFunFlagHandler());
+      setLoadingModalV(false);
+      setSucessModalV(true);
+    } else {
+      setSucessModalV(false);
+    }
+
+  }, [lbryFun])
+
 
   return (
     <div className='container'>
@@ -104,13 +136,21 @@ const CreateTokenForm: React.FC = () => {
                 <Textarea name="primary_token_description" value={form.primary_token_description} onChange={handleChange} />
               </div>
               <div>
-                <Label htmlFor="primary_token_image">Token Image (SVG/PNG)</Label>
+                <Label htmlFor="primary_token_image">Primary Token Image (SVG)</Label>
                 <Input
                   type="file"
                   accept="image/*"
                   name="primary_token_image"
-                  onChange={handleImageUpload}
+                  onChange={(e) => { handleImageUpload(e, 'primary_token_logo_base64') }}
                 />
+                {form.primary_token_logo_base64 && (
+                  <img
+                    src={form.primary_token_logo_base64}
+                    alt="Token Logo Preview"
+                    className="mt-4 max-h-32 rounded border"
+                  />
+                )}
+
               </div>
             </div>
           </Card>
@@ -130,6 +170,24 @@ const CreateTokenForm: React.FC = () => {
               <div className="md:col-span-2">
                 <Label htmlFor="secondary_token_description">Description</Label>
                 <Textarea name="secondary_token_description" value={form.secondary_token_description} onChange={handleChange} />
+              </div>
+
+              <div>
+                <Label htmlFor="secondary_token_image">Secondary Token Image (SVG)</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  name="secondary_token_image"
+                  onChange={(e) => { handleImageUpload(e, 'secondary_token_logo_base64') }}
+                />
+                {form.secondary_token_logo_base64 && (
+                  <img
+                    src={form.secondary_token_logo_base64}
+                    alt="Token Logo Preview"
+                    className="mt-4 max-h-32 rounded border"
+                  />
+                )}
+
               </div>
             </div>
           </Card>
@@ -190,6 +248,9 @@ const CreateTokenForm: React.FC = () => {
           </div>
         </form>
       </div>
+
+      <LoadingModal show={loadingModalV} message1={"Creating Tokens"} message2={" This may take a few moments."} setShow={setLoadingModalV} />
+
     </div>
   );
 };

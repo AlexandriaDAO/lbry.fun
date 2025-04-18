@@ -47,7 +47,7 @@ const isLocalDevelopment = process.env.DFX_NETWORK !== "ic";
 
 const alex_backend_canister_id = process.env.CANISTER_ID_ALEX_BACKEND!;
 const icp_swap_canister_id = process.env.CANISTER_ID_ICP_SWAP!;
-const icp_ledger_canister_id = "ryjl3-tyaaa-aaaaa-aaaba-cai";
+const icp_ledger_canister_id = "nppha-riaaa-aaaal-ajf2q-cai";
 const tokenomics_canister_id = process.env.CANISTER_ID_TOKENOMICS!;
 const lbry_canister_id = process.env.CANISTER_ID_LBRY!;
 const alex_canister_id = process.env.CANISTER_ID_ALEX!;

@@ -31,7 +31,6 @@ pub struct TokenRecord {
     pub primary_token_name: String,
     pub primary_token_symbol: String,
     pub primary_token_max_supply: u64,
-
     pub secondary_token_id: Principal,
     pub secondary_token_name: String,
     pub secondary_token_symbol: String,

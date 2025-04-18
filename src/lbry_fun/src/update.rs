@@ -32,11 +32,11 @@ async fn create_token(
     initial_secondary_burn: u64,
 ) -> Result<String, String> {
     let user_principal = ic_cdk::api::caller(); // Get the calling user's principal
-    // payment
-    deposit_icp_in_canister(2_000_000_000, None)
+                                                // payment
+    deposit_icp_in_canister(200_000_000, None)
         .await
         .map_err(|e| format!("Failed to deposit ICP: {:?}", e))?;
-    
+
     let swap_canister_id = create_a_canister().await?;
     let tokenomics_canister_id = create_a_canister().await?;
     let frontend_canister_id = create_a_canister().await?;
@@ -82,7 +82,6 @@ async fn create_token(
         }
         Err(e) => return Err(e.to_string()),
     };
-    ic_cdk::println!("I am heree !");
     install_tokenomics_wasm_on_existing_canister(
         tokenomics_canister_id,
         Some(get_principal(&primary_token_id)),
@@ -122,6 +121,23 @@ async fn create_token(
     )
     .await?;
     ic_cdk::println!("Tokens approved!");
+    // Logic for scheduling within a 24-hour window:
+    //
+    // We have two options:
+    // 1. Run the scheduler once every 24 hours.
+    // 2. Run the scheduler every hour.
+    //
+    // Problem with option 1:
+    // Let's say the scheduler runs at 12:00 AM.
+    // A token is registered at 1:00 AM (1 hour later).
+    // The next scheduler run is 24 hours after the first (i.e., the next 12:00 AM).
+    // At that point, only 23 hours have passed since the token was registered.
+    // So the scheduler skips it, thinking it's not ready yet.
+    //
+    // As a result, the token gets picked up in the next run —
+    // which is **47 hours** after registration instead of 24.
+    // That’s a problem if we want token pools to be created **after exactly 24 hours**.
+    //
 
     create_pool_on_kong_swap(get_principal(&primary_token_id))
         .await

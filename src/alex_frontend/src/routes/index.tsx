@@ -51,13 +51,13 @@ import { ROUTES } from "./routeConfig";
 // // const AssetsPage = lazy(()=>import("@/pages/dashboard/AssetsPage"));
 // // const CollectionPage = lazy(()=>import("@/pages/dashboard/CollectionPage"));
 // const SingleTokenView = lazy(() => import("@/apps/Modules/AppModules/blinks/SingleTokenView"));
-const CreateTokenPage=lazy(()=>import("@/pages/CreateTokenPage"));
+const TokenPage = lazy(() => import("@/pages/tokenPage"));
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
 		<Route >
 			<Route path={"/"} element={<MainLayout />}>
-				<Route index element={<Suspense key="home" ><CreateTokenPage /></Suspense>} />
+				<Route index element={<Suspense key="home" ><TokenPage /></Suspense>} />
 				{/* <Route path={ROUTES.NFT} element={<Suspense key="nft" fallback={<TopProgressBar />}><SingleTokenView /></Suspense>} />
 				<Route path={ROUTES.MANAGER} element={<Suspense key="manager" fallback={<TopProgressBar />}><ManagerPage /></Suspense>} />
 
@@ -130,7 +130,7 @@ const router = createBrowserRouter(
 		</Route>
 	)
 );
-  
-export const AppRoutes = ()=>{
+
+export const AppRoutes = () => {
 	return <RouterProvider router={router} />;
 }
