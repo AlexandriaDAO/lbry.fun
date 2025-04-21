@@ -1,4 +1,4 @@
-use ic_cdk::query;
+use ic_cdk::{query, update};
 
 use crate::{TokenRecord, TOKENS};
 
@@ -14,4 +14,5 @@ pub fn get_all_token_record() -> Vec<(u64, TokenRecord)> {
             .collect()
     })
 }
+
 

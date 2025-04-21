@@ -2,13 +2,13 @@ import { ActionReducerMapBuilder, createSlice } from "@reduxjs/toolkit";
 import { toast } from "sonner";
 import createToken from "./createToken.thunk";
 import { TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
-import getTokenPools from "./getTokenPools.thunk";
+import getTokenPools, { TokenRecordStringified } from "./getTokenPools.thunk";
 
 // Define the interface for our node state
 export interface LbryFunState {
   loading: boolean;
   success: boolean;
-  tokenPools: [bigint, TokenRecord][];
+  tokenPools: [string, TokenRecordStringified][];
 
   error: string | null;
 }

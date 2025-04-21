@@ -1,12 +1,13 @@
 use candid::{Encode, Nat, Principal};
-use ic_cdk::api::management_canister::main::{
+use ic_cdk::{api::management_canister::main::{
     create_canister, install_code, CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument,
-};
-use ic_ledger_types::BlockIndex;
+}, update};
 use icrc_ledger_types::{
     icrc1::account::Account,
     icrc2::transfer_from::{TransferFromArgs, TransferFromError},
 };
+use num_bigint::BigUint;
+use icrc_ledger_types::icrc1::transfer::{ BlockIndex, TransferArg, TransferError };
 
 use crate::{
     get_principal, AddPoolArgs, AddPoolReply, AddPoolResult, AddTokenArgs, AddTokenReply,
@@ -33,9 +34,9 @@ async fn create_token(
 ) -> Result<String, String> {
     let user_principal = ic_cdk::api::caller(); // Get the calling user's principal
                                                 // payment
-    deposit_icp_in_canister(200_000_000, None)
-        .await
-        .map_err(|e| format!("Failed to deposit ICP: {:?}", e))?;
+    // deposit_icp_in_canister(100_000_000, None)
+    //     .await
+    //     .map_err(|e| format!("Failed to deposit ICP: {:?}", e))?;
 
     let swap_canister_id = create_a_canister().await?;
     let tokenomics_canister_id = create_a_canister().await?;
@@ -139,10 +140,10 @@ async fn create_token(
     // That’s a problem if we want token pools to be created **after exactly 24 hours**.
     //
 
-    create_pool_on_kong_swap(get_principal(&primary_token_id))
-        .await
-        .map_err(|e| format!("Failed to create pool on Kong swap: {}", e))?;
-    ic_cdk::println!("Pool created!");
+    // create_pool_on_kong_swap(get_principal(&primary_token_id))
+    //     .await
+    //     .map_err(|e| format!("Failed to create pool on Kong swap: {}", e))?;
+    // ic_cdk::println!("Pool created!");
 
     TOKENS.with(|tokens| {
         let mut tokens = tokens.borrow_mut();
@@ -158,11 +159,13 @@ async fn create_token(
             secondary_token_symbol: secondary_token_symbol.clone(),
             icp_swap_canister_id: swap_canister_id,
             tokenomics_canister_id,
-
             initial_primary_mint,
             initial_secondary_burn,
             primary_max_phase_mint,
             caller: user_principal,
+            created_time: ic_cdk::api::time(),
+            liquidity_provided_at: 0,
+            is_live: false,
         };
         tokens.insert(token_id, token_record);
     });
@@ -411,7 +414,7 @@ pub async fn approve_tokens_to_spender(
         ApproveResult::Err(e) => Err(format!("Approval failed: {:?}", e)),
     }
 }
-
+#[update]
 async fn deposit_icp_in_canister(
     amount: u64,
     from_subaccount: Option<[u8; 32]>,
@@ -441,10 +444,109 @@ async fn deposit_icp_in_canister(
         (transfer_args,),
     )
     .await
-    .map_err(|_| TransferFromError::GenericError {
-        message: "Call failed".to_string(),
+    .map_err(|e| TransferFromError::GenericError {
+        message: e.1.into(),
         error_code: Nat::from(0 as u32),
     })?;
 
     result // Return the inner Result<BlockIndex, TransferFromError>
+}
+
+
+
+
+
+async fn deposit_ksicp_in_canister(
+    amount: u64,
+    from_subaccount: Option<[u8; 32]>
+) -> Result<BlockIndex, TransferFromError> {
+    let canister_id: Principal = ic_cdk::api::id();
+
+    let big_int_amount: BigUint = BigUint::from(amount);
+    let amount: Nat = Nat(big_int_amount);
+
+    let transfer_from_args = TransferFromArgs {
+        from: Account {
+            owner: ic_cdk::caller(),
+            subaccount: from_subaccount,
+        },
+        // can be used to distinguish between transactions
+        memo: None,
+        // the amount we want to transfer
+        amount,
+        // the subaccount we want to spend the tokens from (in this case we assume the default subaccount has been approved)
+        spender_subaccount: None,
+        // if not specified, the default fee for the canister is used
+        fee: None,
+        // the account we want to transfer tokens to
+        to: canister_id.into(),
+        // a timestamp indicating when the transaction was created by the caller; if it is not specified by the caller then this is set to the current ICP time
+        created_at_time: None,
+    };
+
+    // 1. Asynchronously call another canister function using `ic_cdk::call`.
+    let (result,) = ic_cdk
+        ::call::<(TransferFromArgs,), (Result<BlockIndex, TransferFromError>,)>(
+            // 2. Convert a textual representation of a Principal into an actual `Principal` object. The principal is the one we specified in `dfx.json`.
+            //    `expect` will panic if the conversion fails, ensuring the code does not proceed with an invalid principal.
+            Principal::from_text(ICP_CANISTER_ID).expect("Could not decode the principal."),
+            // 3. Specify the method name on the target canister to be called, in this case, "icrc1_transfer".
+            "icrc2_transfer_from",
+            // 4. Provide the arguments for the call in a tuple, here `transfer_args` is encapsulated as a single-element tuple.
+            (transfer_from_args,)
+        ).await
+        .map_err(|_| TransferFromError::GenericError {
+            message: "Call failed".to_string(),
+            error_code: Nat::from(0 as u32),
+        })?;
+
+    result // Return the inner Result<BlockIndex, TransferFromError>
+}
+
+
+
+#[update]
+pub async fn check_recent_tokens() {
+    let time = ic_cdk::api::time(); // current time in nanoseconds
+    // 24 * 60 * 60
+    let twenty_four_hours_in_nanos: u64 = 1 * 1_000_000_000;
+    
+    let result = TOKENS.with(|tokens| {
+        let mut tokens_map = tokens.borrow_mut();
+        // Step 1: Get a list of token IDs
+        let keys: Vec<u64> = tokens_map.iter().map(|(id, _)| id).collect();
+
+        keys
+    });
+    
+    for token_id in result {
+        let token_opt = TOKENS.with(|tokens| {
+            let tokens_map = tokens.borrow();
+            tokens_map.get(&token_id)
+        });
+        
+        if let Some(mut token) = token_opt {
+            if token.created_time + twenty_four_hours_in_nanos <= time && !token.is_live {
+                match create_pool_on_kong_swap(token.primary_token_id).await {
+                    Ok(_) => {
+                        ic_cdk::println!("Pool created!");
+                        token.is_live = true;
+                        
+                        TOKENS.with(|tokens| {
+                            let mut tokens_map = tokens.borrow_mut();
+                            tokens_map.insert(token_id, token.clone());
+                        });
+                        
+                        ic_cdk::print(format!(
+                            "Token '{}' (ID {}) is now marked as live.",
+                            token.primary_token_name, token.id
+                        ));
+                    },
+                    Err(e) => {
+                        ic_cdk::print(format!("Failed to create pool on Kong swap: {}", e));
+                    }
+                }
+            }
+        }
+    }
 }

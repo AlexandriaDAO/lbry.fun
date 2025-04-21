@@ -1,7 +1,10 @@
 type Result = variant { Ok : text; Err : text };
+type Result_1 = variant { Ok : nat; Err : TransferFromError };
 type TokenRecord = record {
   id : nat64;
+  is_live : bool;
   secondary_token_symbol : text;
+  liquidity_provided_at : nat64;
   secondary_token_id : principal;
   primary_token_name : text;
   tokenomics_canister_id : principal;
@@ -13,9 +16,22 @@ type TokenRecord = record {
   initial_primary_mint : nat64;
   primary_token_id : principal;
   caller : principal;
+  created_time : nat64;
   initial_secondary_burn : nat64;
 };
+type TransferFromError = variant {
+  GenericError : record { message : text; error_code : nat };
+  TemporarilyUnavailable;
+  InsufficientAllowance : record { allowance : nat };
+  BadBurn : record { min_burn_amount : nat };
+  Duplicate : record { duplicate_of : nat };
+  BadFee : record { expected_fee : nat };
+  CreatedInFuture : record { ledger_time : nat64 };
+  TooOld;
+  InsufficientFunds : record { balance : nat };
+};
 service : {
+  check_recent_tokens : () -> ();
   create_token : (
       text,
       text,
@@ -30,5 +46,6 @@ service : {
       nat64,
       nat64,
     ) -> (Result);
+  deposit_icp_in_canister : (nat64, opt blob) -> (Result_1);
   get_all_token_record : () -> (vec record { nat64; TokenRecord }) query;
 }

@@ -66,16 +66,18 @@ const CreateTokenForm: React.FC = () => {
     if (!user) {
       return;
     }
-    const formattedForm = {
-      ...form,
-      primary_max_supply: form.primary_max_supply,
-      initial_primary_mint: form.initial_primary_mint,
-      initial_secondary_burn: form.initial_secondary_burn,
-      primary_max_phase_mint: form.primary_max_phase_mint
-    };
-    dispatch(createToken({ formData: formattedForm, userPrincipal: user.principal }));
+    
+      const formattedForm = {
+        ...form,
+        primary_max_supply: BigInt(form.primary_max_supply),
+        initial_primary_mint: BigInt(form.initial_primary_mint),
+        initial_secondary_burn: BigInt(form.initial_secondary_burn),
+        primary_max_phase_mint: BigInt(form.primary_max_phase_mint),
+      };
+    
+   dispatch(createToken({ formData: form, userPrincipal: user.principal }));
 
-    console.log('Submitting:', formattedForm);
+    console.log('Submitting:', form);
   };
   const handleImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
