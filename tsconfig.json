@@ -16,14 +16,14 @@
     "jsx": "react",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/alex_frontend/src/*"],
+      "@/*": ["src/lbry_fun_frontend/src/*"],
       "*": ["node_modules/*"]
     }
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/alex_frontend/src/types/*.d.ts"
+    "src/lbry_fun_frontend/src/types/*.d.ts"
   ],
   "exclude": [
     "node_modules/azle/src/lib/experimental/fetch/response.ts",

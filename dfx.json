@@ -33,12 +33,12 @@
       "id": "5abki-kiaaa-aaaap-qkmsa-cai"
     },
  
-    "alex_frontend": {
+    "lbry_fun_frontend": {
       "dependencies": ["alex_backend"],
       "frontend": {
-        "entrypoint": "src/alex_frontend/public/index.html"
+        "entrypoint": "src/lbry_fun_frontend/public/index.html"
       },
-      "source": ["dist/alex_frontend/"],
+      "source": ["dist/lbry_fun_frontend/"],
       "type": "assets"
     },
     "icp_ledger_canister": {

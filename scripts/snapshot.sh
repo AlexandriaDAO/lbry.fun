@@ -2,19 +2,19 @@
 # dfx canister snapshot list tokenomics --network ic
 
 # # Load snapshot
-# dfx canister stop alex_frontend --network ic
-# dfx canister snapshot load alex_frontend 00000000000000080000000001f0531c0101 --network ic
-# dfx canister start alex_frontend --network ic
+# dfx canister stop lbry_fun_frontend --network ic
+# dfx canister snapshot load lbry_fun_frontend 00000000000000080000000001f0531c0101 --network ic
+# dfx canister start lbry_fun_frontend --network ic
 
 set -x
 
 dfx identity use mainnet
 
 
-# alex_frontend
-dfx canister stop alex_frontend --network ic
-dfx canister snapshot create alex_frontend --replace 000000000000000b0000000001f0531c0101 --network ic
-dfx canister start alex_frontend --network ic
+# lbry_fun_frontend
+dfx canister stop lbry_fun_frontend --network ic
+dfx canister snapshot create lbry_fun_frontend --replace 000000000000000b0000000001f0531c0101 --network ic
+dfx canister start lbry_fun_frontend --network ic
 
 # alex_wallet (done)
 dfx canister stop alex_wallet --network ic

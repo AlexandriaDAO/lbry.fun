@@ -1,5 +1,5 @@
 TN:
-SF:src/alex_frontend/src/components/Alert.tsx
+SF:src/lbry_fun_frontend/src/components/Alert.tsx
 FN:52,Alert
 FNF:1
 FNH:1
@@ -19,7 +19,7 @@ BRF:5
 BRH:5
 end_of_record
 TN:
-SF:src/alex_frontend/src/components/Loading.tsx
+SF:src/lbry_fun_frontend/src/components/Loading.tsx
 FN:5,(anonymous_0)
 FN:9,(anonymous_1)
 FNF:2

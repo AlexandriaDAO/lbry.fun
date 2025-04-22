@@ -30,8 +30,7 @@ type TransferFromError = variant {
   TooOld;
   InsufficientFunds : record { balance : nat };
 };
-service : {
-  check_recent_tokens : () -> ();
+service : () -> {
   create_token : (
       text,
       text,
@@ -48,4 +47,6 @@ service : {
     ) -> (Result);
   deposit_icp_in_canister : (nat64, opt blob) -> (Result_1);
   get_all_token_record : () -> (vec record { nat64; TokenRecord }) query;
+  get_live : () -> (vec record { nat64; TokenRecord }) query;
+  get_upcomming : () -> (vec record { nat64; TokenRecord }) query;
 }

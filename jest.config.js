@@ -4,11 +4,11 @@ module.exports = {
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.js',
-    '^@/(.*)$': '<rootDir>/src/alex_frontend/src/$1',
+    '^@/(.*)$': '<rootDir>/src/lbry_fun_frontend/src/$1',
   },
   setupFilesAfterEnv: [
     '<rootDir>/jest.setup.js',
-    '<rootDir>/src/alex_frontend/src/__tests__/setup.ts'
+    '<rootDir>/src/lbry_fun_frontend/src/__tests__/setup.ts'
   ],
   testPathIgnorePatterns: ['/node_modules/', '/.dfx/', '/.azle/'],
   transform: {

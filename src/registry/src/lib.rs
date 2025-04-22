@@ -7,7 +7,7 @@ use candid::Principal;
 pub const ALEX: &str = "ysy5f-2qaaa-aaaap-qkmmq-cai";
 pub const LBRY: &str = "y33wz-myaaa-aaaap-qkmna-cai";
 pub const ALEX_BACKEND: &str = "y42qn-baaaa-aaaap-qkmnq-cai";
-pub const ALEX_FRONTEND: &str = "yj5ba-aiaaa-aaaap-qkmoa-cai";
+pub const lbry_fun_frontend: &str = "yj5ba-aiaaa-aaaap-qkmoa-cai";
 pub const USER: &str = "yo4hu-nqaaa-aaaap-qkmoq-cai";
 pub const ALEX_WALLET: &str = "yh7mi-3yaaa-aaaap-qkmpa-cai";
 pub const PERPETUA: &str = "ya6k4-waaaa-aaaap-qkmpq-cai";
@@ -28,7 +28,7 @@ pub fn get_registry_principal(canister_name: String) -> Principal {
         "ALEX" => get_principal(ALEX),
         "LBRY" => get_principal(LBRY),
         "ALEX_BACKEND" => get_principal(ALEX_BACKEND),
-        "ALEX_FRONTEND" => get_principal(ALEX_FRONTEND),
+        "lbry_fun_frontend" => get_principal(lbry_fun_frontend),
         "USER" => get_principal(USER),
         "ALEX_WALLET" => get_principal(ALEX_WALLET),
         "PERPETUA" => get_principal(PERPETUA),

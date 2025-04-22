@@ -1,6 +1,6 @@
 import { ActorSubclass } from "@dfinity/agent";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { _SERVICE } from "../../../../../../src/declarations/user/user.did";
+import { _SERVICE } from "../../../../../declarations/user/user.did";
 import { SerializedUser } from "../authSlice";
 import { serializeUser } from "../utils/user";
 

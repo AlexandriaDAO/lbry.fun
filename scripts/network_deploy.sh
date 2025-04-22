@@ -182,13 +182,13 @@
 # cp -r ic/canisters/ local/
 # cd ..
 
-# # cp .dfx/ic/canisters/alex_frontend/assetstorage.did .dfx/local/canisters/alex_frontend/
+# # cp .dfx/ic/canisters/lbry_fun_frontend/assetstorage.did .dfx/local/canisters/lbry_fun_frontend/
 # mkdir -p .dfx/local/canisters/LBRY
 # mkdir -p .dfx/local/canisters/ALEX
-# mkdir -p .dfx/local/canisters/alex_frontend/
+# mkdir -p .dfx/local/canisters/lbry_fun_frontend/
 
 # wget https://raw.githubusercontent.com/dfinity/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/rs/rosetta-api/icrc1/ledger/ledger.did -O .dfx/local/canisters/ALEX/ALEX.did
 # wget https://raw.githubusercontent.com/dfinity/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/rs/rosetta-api/icrc1/ledger/ledger.did -O .dfx/local/canisters/LBRY/LBRY.did
 
 # npm i
-# # dfx deploy alex_frontend --network ic
+# # dfx deploy lbry_fun_frontend --network ic

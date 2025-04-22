@@ -1,10 +1,10 @@
-use candid::{types::principal, CandidType, Decode, Encode, Principal};
+use candid::{ CandidType, Decode, Encode, Principal};
 use ic_stable_structures::{
     memory_manager::{MemoryId, MemoryManager, VirtualMemory},
     storable::Bound,
     DefaultMemoryImpl, StableBTreeMap, Storable,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::{borrow::Cow, cell::RefCell};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;

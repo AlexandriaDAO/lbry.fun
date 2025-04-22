@@ -243,7 +243,7 @@ mkdir -p src/icp_swap_factory && dfx canister --network ic metadata ggzvv-5qaaa-
 
 
 npm i
-dfx deploy alex_frontend --specified-id yj5ba-aiaaa-aaaap-qkmoa-cai
+dfx deploy lbry_fun_frontend --specified-id yj5ba-aiaaa-aaaap-qkmoa-cai
 
 ## Helpful extras for testing.
 # dfx ledger balance

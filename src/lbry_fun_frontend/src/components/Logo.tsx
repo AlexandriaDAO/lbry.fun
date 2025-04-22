@@ -21,10 +21,11 @@ function Logo({ className = "" }: LogoProps) {
             fontSize: '24px',
             fontStyle: 'normal',
             fontWeight: 800,
-            lineHeight: 'normal'
+            lineHeight: 'normal',
+            width: '120%',
           }}
         >
-          ALEX
+          Lbry Fun
         </span>
         <span
           style={{
@@ -34,7 +35,7 @@ function Logo({ className = "" }: LogoProps) {
             fontStyle: 'normal',
             fontWeight: 400,
             opacity: 0.6,
-            marginTop: '-4px'
+            marginTop: '4px'
           }}
         >
           pre-alpha

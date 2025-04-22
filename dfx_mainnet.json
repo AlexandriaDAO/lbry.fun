@@ -99,12 +99,12 @@
       "type": "rust",
       "id": "uxyan-oyaaa-aaaap-qhezq-cai"
     },
-    "alex_frontend": {
+    "lbry_fun_frontend": {
       "dependencies": ["alex_backend"],
       "frontend": {
-        "entrypoint": "src/alex_frontend/public/index.html"
+        "entrypoint": "src/lbry_fun_frontend/public/index.html"
       },
-      "source": ["dist/alex_frontend/"],
+      "source": ["dist/lbry_fun_frontend/"],
       "type": "assets"
     },
     "logs": {

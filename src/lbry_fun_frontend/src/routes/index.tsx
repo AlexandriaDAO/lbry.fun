@@ -9,15 +9,17 @@ import MainLayout from "@/layouts/MainLayout";
 import AuthGuard from "@/guards/AuthGuard";
 import MainPageSkeleton from "@/layouts/skeletons/MainPageSkeleton";
 import PinaxSkeleton from "@/layouts/skeletons/PinaxSkeleton";
-// import UnauthorizedPage from "@/pages/UnauthorizedPage";
+import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import Protected from "@/guards/Protected";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ROUTES } from "./routeConfig";
+import TopProgressBar from "@/components/TopProgressBar";
+import SwapPage from "@/pages/swap";
 
 // const HomePage = lazy(()=>import("@/pages/HomePage"));
 
 // const DashboardLayout = lazy(()=>import("@/layouts/DashboardLayout"));
-// const NotFoundPage = lazy(()=>import("@/pages/NotFoundPage"));
+const NotFoundPage = lazy(()=>import("@/pages/NotFoundPage"));
 // const UpgradePage = lazy(()=>import("@/pages/dashboard/UpgradePage"));
 // // const LibrarianLayout = lazy(()=>import("@/layouts/LibrarianLayout"));
 // const LibrarianPage = lazy(()=>import("@/pages/librarian/"));
@@ -84,7 +86,7 @@ const router = createBrowserRouter(
 					<Route path="permasearch" element={<Suspense key="permasearch" fallback={<TopProgressBar />}><Permasearch /></Suspense>} />
 
 					<Route path="emporium" element={<Suspense key="emporium" fallback={<TopProgressBar />}><Emporium /></Suspense>} />
-				</Route>
+				</Route> */}
 				<Route path="swap">
 					<Route index element={<Suspense key="swap" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="balance" element={<Suspense key="swap-balance" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
@@ -97,14 +99,14 @@ const router = createBrowserRouter(
 					<Route path="redeem" element={<Suspense key="swap-redeem" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="history" element={<Suspense key="swap-history" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="insights" element={<Suspense key="swap-insights" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="transaction" element={<Suspense key="transaction" fallback={<TopProgressBar />}><DetailTransaction /></Suspense>} />
+					{/* <Route path="transaction" element={<Suspense key="transaction" fallback={<TopProgressBar />}><DetailTransaction /></Suspense>} /> */}
 				</Route>
 
 				<Route path={ROUTES.UNAUTHORIZED} element={<Suspense key="401" fallback={<TopProgressBar />}><UnauthorizedPage /></Suspense>} />
 				<Route path={ROUTES.NOT_FOUND} element={<Suspense key="404" fallback={<TopProgressBar />}><NotFoundPage /></Suspense>} />
 			</Route>
 
-			<Route element={<AuthGuard />}>
+			{/* <Route element={<AuthGuard />}>
 				<Route element={<MainLayout />}>
 					<Route path={ROUTES.PINAX} element={<Suspense key="pinax" fallback={<PinaxSkeleton />}><PinaxPage /></Suspense>} />
 				</Route>
@@ -126,7 +128,7 @@ const router = createBrowserRouter(
 					</Route>
 				</Route>
 			</Route> */}
-			</Route>
+			
 		</Route>
 	)
 );

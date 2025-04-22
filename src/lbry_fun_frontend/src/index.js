@@ -44,7 +44,7 @@ loadingIndicator.innerHTML = `
     }
   </style>
   <div class="loading-spinner"></div>
-  <div class="loading-text">Loading Alexandria...</div>
+  <div class="loading-text">Loading Lbry.Fun...</div>
 `;
 document.body.appendChild(loadingIndicator);
 

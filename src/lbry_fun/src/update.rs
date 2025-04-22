@@ -7,7 +7,7 @@ use icrc_ledger_types::{
     icrc2::transfer_from::{TransferFromArgs, TransferFromError},
 };
 use num_bigint::BigUint;
-use icrc_ledger_types::icrc1::transfer::{ BlockIndex, TransferArg, TransferError };
+use icrc_ledger_types::icrc1::transfer::BlockIndex ;
 
 use crate::{
     get_principal, AddPoolArgs, AddPoolReply, AddPoolResult, AddTokenArgs, AddTokenReply,
@@ -374,7 +374,7 @@ pub async fn create_pool_on_kong_swap(primary_token_id: Principal) -> Result<Add
         token_0: format!("{}.{}", CHAIN_ID, primary_token_id),
         amount_0: (E8S).into(),
         token_1: format!("{}.{}", CHAIN_ID, ICP_CANISTER_ID), //ICP PAIR
-        amount_1: (E8S).into(),
+        amount_1: (10_000_000 as u64).into(),
         on_kong: true,
     };
 
@@ -505,11 +505,9 @@ async fn deposit_ksicp_in_canister(
 
 
 
-#[update]
-pub async fn check_recent_tokens() {
+pub async fn publish_eligible_tokens_on_kongswap() ->Result<String,String>{
     let time = ic_cdk::api::time(); // current time in nanoseconds
-    // 24 * 60 * 60
-    let twenty_four_hours_in_nanos: u64 = 1 * 1_000_000_000;
+    let twenty_four_hours_in_nanos: u64 = 24*60*60*1_000_000_000;
     
     let result = TOKENS.with(|tokens| {
         let mut tokens_map = tokens.borrow_mut();
@@ -544,9 +542,11 @@ pub async fn check_recent_tokens() {
                     },
                     Err(e) => {
                         ic_cdk::print(format!("Failed to create pool on Kong swap: {}", e));
+                        return Err(format!("Failed to create pool on Kong swap: {}", e));
                     }
                 }
             }
         }
     }
+    Ok("Published eligible tokens on KongSwap successfully.".to_string())
 }

@@ -1,4 +1,4 @@
-import { User } from "../../../../../../src/declarations/user/user.did";
+import { User } from "../../../../../declarations/user/user.did";
 import { SerializedUser } from "../authSlice";
 import { convertTimestamp } from "@/utils/general";
 

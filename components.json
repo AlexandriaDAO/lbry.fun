@@ -3,7 +3,7 @@
     "style": "default",
     "tailwind": {
       "config": "tailwind.config.js",
-      "css": "src/alex_frontend/src/styles/tailwind.css",
+      "css": "src/lbry_fun_frontend/src/styles/tailwind.css",
       "baseColor": "slate",
       "cssVariables": true
     },

@@ -16,7 +16,7 @@ import { User, Save, LoaderCircle, UserPlus } from "lucide-react";
 import { useUser } from "@/hooks/actors";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
-import { UsernameAvailabilityResponse } from "../../../../../../src/declarations/user/user.did";
+import { UsernameAvailabilityResponse } from "../../../../../declarations/user/user.did";
 import signup from "../thunks/signup";
 import { useTheme } from "@/providers/ThemeProvider";
 

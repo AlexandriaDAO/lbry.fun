@@ -16,3 +16,28 @@ pub fn get_all_token_record() -> Vec<(u64, TokenRecord)> {
 }
 
 
+#[query]
+pub fn get_upcomming() -> Vec<(u64, TokenRecord)> {
+    TOKENS.with(|tokens| {
+        let tokens_map = tokens.borrow();
+
+        tokens_map
+            .iter()
+            .filter(|(_, token)| token.is_live == false)
+            .map(|(id, token)| (id.clone(), token.clone()))
+            .collect()
+    })
+}
+#[query]
+pub fn get_live() -> Vec<(u64, TokenRecord)> {
+    TOKENS.with(|tokens| {
+        let tokens_map = tokens.borrow();
+
+        tokens_map
+            .iter()
+            .filter(|(_, token)| token.is_live == true)
+            .map(|(id, token)| (id.clone(), token.clone()))
+            .collect()
+    })
+}
+

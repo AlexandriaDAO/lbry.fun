@@ -687,7 +687,7 @@
 │   │       ├── source_cards.rs
 │   │       ├── utils.rs
 │   │       └── wallet_keys.rs
-│   ├── alex_frontend/
+│   ├── lbry_fun_frontend/
 │   │   ├── src/
 │   │   │   ├── App.tsx
 │   │   │   ├── apps/

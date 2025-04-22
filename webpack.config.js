@@ -9,7 +9,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
-const frontendDirectory = "alex_frontend";
+const frontendDirectory = "lbry_fun_frontend";
 
 const frontend_entry = path.join("src", frontendDirectory, "public", "index.html");
 
