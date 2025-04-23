@@ -13,9 +13,7 @@
     "icp_swap": {
       "candid": "src/icp_swap/icp_swap.did",
       "package": "icp_swap",
-      "type": "rust",
-      "specified_id": "54fqz-5iaaa-aaaap-qkmqa-cai"
-    },
+      "type": "rust"    },
     "lbry_fun": {
       "candid": "src/lbry_fun/lbry_fun.did",
       "package": "lbry_fun",
@@ -29,12 +27,10 @@
     "tokenomics": {
       "candid": "src/tokenomics/tokenomics.did",
       "package": "tokenomics",
-      "type": "rust",
-      "id": "5abki-kiaaa-aaaap-qkmsa-cai"
+      "type": "rust"
     },
  
     "lbry_fun_frontend": {
-      "dependencies": ["alex_backend"],
       "frontend": {
         "entrypoint": "src/lbry_fun_frontend/public/index.html"
       },

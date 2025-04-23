@@ -4,7 +4,7 @@ import {
   getLbryFunActor,
 } from "@/features/auth/utils/authUtils";
 import { ErrorMessage } from "@/features/swap/utlis/erorrs";
-import { TokenFormValues } from "@/features/token/createTokenForm";
+import { TokenFormValues } from "@/features/token/components/createTokenForm";
 import { Principal } from "@dfinity/principal/lib/cjs";
 
 // Define the thunk

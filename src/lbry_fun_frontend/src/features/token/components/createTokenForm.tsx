@@ -5,11 +5,11 @@ import { Textarea } from '@/lib/components/textarea';
 import { Label } from '@/lib/components/label';
 import { Card } from '@/lib/components/card';
 import { Slider } from '@/lib/components/slider';
-import createToken from './thunk/createToken.thunk';
+import createToken from '../thunk/createToken.thunk';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
-import LoadingModal from '../swap/components/loadingModal';
-import { lbryFunFlagHandler } from './thunk/lbryFunSlice';
+import LoadingModal from '../../swap/components/loadingModal';
+import { lbryFunFlagHandler } from '../thunk/lbryFunSlice';
 
 export interface TokenFormValues {
   primary_token_symbol: string;

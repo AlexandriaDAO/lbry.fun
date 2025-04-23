@@ -15,6 +15,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { ROUTES } from "./routeConfig";
 import TopProgressBar from "@/components/TopProgressBar";
 import SwapPage from "@/pages/swap";
+import SuccessPage from "@/pages/SuccessPage";
 
 // const HomePage = lazy(()=>import("@/pages/HomePage"));
 
@@ -60,6 +61,11 @@ const router = createBrowserRouter(
 		<Route >
 			<Route path={"/"} element={<MainLayout />}>
 				<Route index element={<Suspense key="home" ><TokenPage /></Suspense>} />
+				<Route path="/token">
+				<Route path="success" element={<Suspense key="success" fallback={<TopProgressBar />}><SuccessPage /></Suspense>} />
+
+
+				</Route>
 				{/* <Route path={ROUTES.NFT} element={<Suspense key="nft" fallback={<TopProgressBar />}><SingleTokenView /></Suspense>} />
 				<Route path={ROUTES.MANAGER} element={<Suspense key="manager" fallback={<TopProgressBar />}><ManagerPage /></Suspense>} />
 

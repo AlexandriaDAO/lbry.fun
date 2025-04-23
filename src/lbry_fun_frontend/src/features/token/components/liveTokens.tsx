@@ -1,15 +1,16 @@
 import React, { useEffect } from "react";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
-import getTokenPools from "./thunk/getTokenPools.thunk";
+import getUpcomming from "../thunk/getUpcommingTokens.thunk";
+import getLiveTokens from "../thunk/getLiveTokens.thunk copy";
 
-const GetTokenPools = () => {
+const GetLiveTokens = () => {
   const dispatch = useAppDispatch();
 
-  const { tokenPools, loading, error,success } = useAppSelector((state) => state.lbryFun);
+  const { liveTokens, loading, error,success } = useAppSelector((state) => state.lbryFun);
 
   useEffect(() => {
-    dispatch(getTokenPools());
+    dispatch(getLiveTokens());
   }, [success]);
 
   if (loading) return <p>Loading token pools...</p>;
@@ -23,11 +24,11 @@ const GetTokenPools = () => {
   return (
     <div className="space-y-4">
       <h3 className="text-xl font-semibold">Token Pools</h3>
-      {tokenPools.length === 0 ? (
+      {liveTokens.length === 0 ? (
         <p>No token pools found.</p>
       ) : (
         <ul className="space-y-2">
-          {tokenPools.map(([id, record]) => (
+          {liveTokens.map(([id, record]) => (
             <li key={id.toString()} className="border p-4 rounded shadow-sm">
               <p><strong>ID:</strong> {id.toString()}</p>
               <p><strong>Primary Canister id:</strong> {(record.primary_token_id).toString()}</p>
@@ -45,4 +46,4 @@ const GetTokenPools = () => {
   );
 };
 
-export default GetTokenPools;
+export default GetLiveTokens;

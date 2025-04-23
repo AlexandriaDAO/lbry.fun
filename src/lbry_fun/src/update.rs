@@ -33,10 +33,10 @@ async fn create_token(
     initial_secondary_burn: u64,
 ) -> Result<String, String> {
     let user_principal = ic_cdk::api::caller(); // Get the calling user's principal
-                                                // payment
-    // deposit_icp_in_canister(100_000_000, None)
-    //     .await
-    //     .map_err(|e| format!("Failed to deposit ICP: {:?}", e))?;
+    // payment
+    deposit_icp_in_canister(100_000_000, None)
+        .await
+        .map_err(|e| format!("Failed to deposit ICP: {:?}", e))?;
 
     let swap_canister_id = create_a_canister().await?;
     let tokenomics_canister_id = create_a_canister().await?;
