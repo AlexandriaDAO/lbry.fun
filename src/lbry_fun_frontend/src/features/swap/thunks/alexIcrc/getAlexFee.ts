@@ -1,4 +1,4 @@
-import { _SERVICE as _SERVICEALEX } from "../../../../../../declarations/ALEX/ALEX.did";
+import { _SERVICE as _SERVICEALEX } from "../../../../../../declarations/ICRC/ICRC.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import LedgerService from "@/utils/LedgerService";
 import { getAlexActor } from "@/features/auth/utils/authUtils";

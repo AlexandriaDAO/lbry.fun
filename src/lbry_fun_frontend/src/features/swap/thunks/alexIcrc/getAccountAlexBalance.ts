@@ -1,5 +1,5 @@
 import { ActorSubclass } from "@dfinity/agent";
-import { _SERVICE as _SERVICEALEX } from "../../../../../../declarations/ALEX/ALEX.did";
+import { _SERVICE as _SERVICEALEX } from "../../../../../../declarations/ICRC/ICRC.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import LedgerService from "@/utils/LedgerService";

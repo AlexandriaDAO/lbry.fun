@@ -1,5 +1,5 @@
 import { ActorSubclass } from "@dfinity/agent";
-import { _SERVICE as _SERVICELBRY } from "../../../../../../declarations/LBRY/LBRY.did";
+import { _SERVICE as _SERVICELBRY } from "../../../../../../declarations/ICRC/ICRC.did";
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";

@@ -1,9 +1,6 @@
 import { Actor, HttpAgent, Identity } from "@dfinity/agent";
 import { AuthClient } from "@dfinity/auth-client";
-import {
-  createActor as createAlexBackendActor,
-  alex_backend,
-} from "../../../../../declarations/alex_backend";
+
 import {
   createActor as createUserActor,
   user,
@@ -22,13 +19,10 @@ import {
   createActor as createActorTokenomics,
 } from "../../../../../declarations/tokenomics";
 import {
-  LBRY,
-  createActor as createActorLbry,
-} from "../../../../../declarations/LBRY";
-import {
-  ALEX,
-  createActor as createActorAlex,
-} from "../../../../../declarations/ALEX";
+  ICRC,
+  createActor as createActorICRC,
+} from "../../../../../ICRC";
+
 
 import {
   logs,
@@ -109,8 +103,7 @@ const getActor = async <T>(
   return defaultActor;
 };
 
-export const getActorAlexBackend = () =>
-  getActor(alex_backend_canister_id, createAlexBackendActor, alex_backend);
+
 
 export const getUser = () => getActor(user_canister_id, createUserActor, user);
 
@@ -124,10 +117,10 @@ export const getTokenomicsActor = () =>
   getActor(tokenomics_canister_id, createActorTokenomics, tokenomics);
 
 export const getLbryActor = () =>
-  getActor(lbry_canister_id, createActorLbry, LBRY);
+  getActor(lbry_canister_id, createActorICRC, ICRC);
 
 export const getAlexActor = () =>
-  getActor(alex_canister_id, createActorAlex, ALEX);
+  getActor(alex_canister_id, createActorICRC, ICRC);
 
 export const getLogs = () => getActor(log_canister_id, createActorLogs, logs);
 export const getLbryFunActor = () =>

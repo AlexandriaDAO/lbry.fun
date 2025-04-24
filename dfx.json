@@ -5,11 +5,7 @@
       "package": "user",
       "candid": "src/user/user.did"
     },
-    "alex_backend": {
-      "candid": "src/alex_backend/alex_backend.did",
-      "package": "alex_backend",
-      "type": "rust"
-    },
+  
     "icp_swap": {
       "candid": "src/icp_swap/icp_swap.did",
       "package": "icp_swap",
@@ -65,18 +61,7 @@
       "package": "icp_swap_factory",
       "candid": "src/icp_swap_factory/icp_swap_factory.did",
       "specified_id": "ggzvv-5qaaa-aaaag-qck7a-cai"
-    },
-    "LBRY": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/rs/rosetta-api/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/canisters/ic-icrc1-ledger.wasm.gz",
-      "id": "y33wz-myaaa-aaaap-qkmna-cai"
-    },
-    "ALEX": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/rs/rosetta-api/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/canisters/ic-icrc1-ledger.wasm.gz",
-      "id": "ysy5f-2qaaa-aaaap-qkmmq-cai"}
+    }
     
   },
   "defaults": {

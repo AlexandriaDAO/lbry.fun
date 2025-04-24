@@ -1,4 +1,4 @@
-import { _SERVICE as _SERVICELBRY } from "../../../../../../declarations/LBRY/LBRY.did";
+import { _SERVICE as _SERVICELBRY } from "../../../../../../ICRC/ICRC.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import LedgerService from "@/utils/LedgerService";
 import {

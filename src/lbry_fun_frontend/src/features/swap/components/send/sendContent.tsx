@@ -5,8 +5,8 @@ import transferICP from "@/features/icp-ledger/thunks/transferICP";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 
-import { _SERVICE as _SERVICELBRY } from '../../../../../../declarations/LBRY/LBRY.did';
-import { _SERVICE as _SERVICEALEX } from '../../../../../../declarations/ALEX/ALEX.did';
+import { _SERVICE as _SERVICELBRY } from '../../../../../../ICRC/ICRC.did';
+import { _SERVICE as _SERVICEALEX } from '../../../../../../ICRC/ICRC.did';
 import { _SERVICE as _SERVICEICPLEDGER } from '../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did'
 import transferALEX from "../../thunks/alexIcrc/transferALEX";
 import transferLBRY from "../../thunks/lbryIcrc/transferLBRY";

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swap/icp_swap.did'
-import { _SERVICE as _SERVICELBRY } from '../../../../../../declarations/LBRY/LBRY.did';
+import { _SERVICE as _SERVICELBRY } from '../../../../../../ICRC/ICRC.did'
 
 import { Link } from "react-router";
 import { flagHandler } from "../../swapSlice";

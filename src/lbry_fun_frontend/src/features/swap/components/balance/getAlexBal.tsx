@@ -3,7 +3,7 @@ import { useAppDispatch } from '../../../../store/hooks/useAppDispatch';
 import { useAppSelector } from "../../../../store/hooks/useAppSelector";
 
 import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swap/icp_swap.did';
-import { _SERVICE as _SERVICEALEX} from '../../../../../../declarations/ALEX/ALEX.did' 
+import { _SERVICE as _SERVICEALEX} from '../../../../../../ICRC/ICRC.did' 
 import getAccountAlexBalance from "../../thunks/alexIcrc/getAccountAlexBalance";
 
 const GetAlexBal = (user: string) => {

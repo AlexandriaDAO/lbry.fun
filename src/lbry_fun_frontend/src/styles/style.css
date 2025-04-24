@@ -56,7 +56,7 @@ input[type='range']::-webkit-slider-thumb {
     height: 20px;
     width: 20px;
     border-radius: 9999px;
-    background: white;
+    background: #F1F5F9;
     border: 3px solid #0F172A;
     
   }
@@ -72,5 +72,10 @@ input[type='range']::-webkit-slider-thumb {
   :where(.css-dev-only-do-not-override-1d4w9r2).ant-btn-variant-outlined:not(:disabled):not(.ant-btn-disabled):hover{
     color: unset;
     border-color: unset;
+    background: unset;
+  }
+  .dark :where(.css-dev-only-do-not-override-1d4w9r2).ant-btn-variant-outlined:not(:disabled):not(.ant-btn-disabled):hover{
+    color:#ffff;
+    border-color: 1px solid #ffff;
     background: unset;
   }

@@ -2,7 +2,7 @@ import { ActorSubclass } from "@dfinity/agent";
 import {
   _SERVICE as _SERVICELBRY,
   TransferArg,
-} from "../../../../../../declarations/LBRY/LBRY.did";
+} from "../../../../../../declarations/ICRC/ICRC.did";
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
