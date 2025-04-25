@@ -91,12 +91,12 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:none;stroke:none;stroke-width:0.012648px;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;stroke:none;strokeWidth:0.012648px;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 0,36.000002 H 36.000002 V 0 H 0 Z"
        id="path1581" />
     <path
        id="path1603"
-       style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;stroke:#000000;strokeWidth:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 29.001802,11.500386 H 16.500386 m 14.00103,1.498844 c 0.01703,-0.800343 -0.69522,-1.521847 -1.49956,-1.498805 m 1.49956,15.497263 V 12.99923 m -1.499614,15.497302 c 0.802181,0.02071 1.519528,-0.695618 1.499558,-1.49878 M 7.0028286,28.496532 H 29.001802 M 5.5032143,26.997688 c -0.022653,0.799348 0.6971091,1.526265 1.499615,1.498798 M 5.5032143,8.9976878 V 26.997688 M 7.0028286,7.4988442 C 6.2023524,7.4801683 5.4800688,8.1936615 5.5032146,8.9976792 M 15.000772,7.4988442 H 7.0028286 m 9.4975574,1.4988436 c 0.01893,-0.8015065 -0.696439,-1.5196059 -1.49968,-1.4988352 m 1.49968,4.0015334 V 8.9976878" />
   </g>
 </svg>

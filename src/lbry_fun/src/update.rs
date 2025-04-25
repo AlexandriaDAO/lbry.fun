@@ -34,7 +34,7 @@ async fn create_token(
 ) -> Result<String, String> {
     let user_principal = ic_cdk::api::caller(); // Get the calling user's principal
     // payment
-    deposit_icp_in_canister(100_000_000, None)
+    deposit_icp_in_canister(200_000_000, None)
         .await
         .map_err(|e| format!("Failed to deposit ICP: {:?}", e))?;
 

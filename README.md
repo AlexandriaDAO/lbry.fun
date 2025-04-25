@@ -1,19 +1,24 @@
-# lbry_fun
+# LBRY_FUN
 
 
-## Local Setup
-### Deploy Kongswap
+## Local Setup LBRY_FUN
+
+```bash
+# Navigate to the scripts directory
+cd scripts
+
+# Run the BUILD script
+./build.sh
+```
+
+
+
+## Deploy Kongswap
 
 - Go ahead and clone 
 
 
- ``` git clone https://github.com/KongSwap/kong.git  ```
-
-
-switch to branch alex 
-
-
-``` git switch feat/alex ```
+ ``` git clone https://github.com/AdilIrfanAs/icp-kong-swap  ```
 
 
 
@@ -26,10 +31,8 @@ cd scripts
 # Run the identity creation script
 ./create_identity.sh
 ```
-# Important 
-## open deploy_kong.sh and comment out line 36 to 45 local network and 81 internet identity canister
 
- Deploy Canisters
+#### Deploy Canisters
 
 Compile and deploy your canisters locally. This process may take some time.
 
@@ -55,18 +58,24 @@ Confrim ksICP balance
 You should see the ksICP balance for your user.
 
 
-### Deploy LbryFun
+## Test
 
-The Kongswap deployment script also deploys Internet Identity by default. However, due to compatibility issues, we need to delete it.
+switch back to lbry_fun repo(here)
 
-``` dfx canister delete rdmx6-jaaaa-aaaaa-aaadq-cai ```
+Since we're using Kongswap's ICP for testing, open the .env file and replace the value of CANISTER_ID_INTERNET_IDENTITY with the following:
+
+``` CANISTER_ID_INTERNET_IDENTITY='nppha-riaaa-aaaal-ajf2q-cai' ```
+
+
+start the frontend 
 
 
 
-```bash
-# Navigate to the Lbry_fun  directory
-cd scripts
+``` npm start ```
 
-# Run the build script
-./build.sh
-```
+
+
+Now before creating token make fund your frontend user principal
+
+
+ 

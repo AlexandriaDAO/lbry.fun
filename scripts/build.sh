@@ -1,7 +1,7 @@
 # EVAN VERSION OG
 
 set -x 
-
+dfx start --clean --background
 # Make mops accessible:
 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
 
@@ -48,7 +48,7 @@ dfx deploy user --specified-id yo4hu-nqaaa-aaaap-qkmoq-cai
 # For lbry_fun 
 cargo build --release --target wasm32-unknown-unknown --package lbry_fun
 candid-extractor target/wasm32-unknown-unknown/release/lbry_fun.wasm > src/lbry_fun/lbry_fun.did
-
+dfx deploy lbry_fun
 
 dfx ledger fabricate-cycles --canister zhcno-qqaaa-aaaap-qpv7a-cai --cycles 10000000000000000
 

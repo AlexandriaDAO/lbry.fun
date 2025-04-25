@@ -14,7 +14,7 @@ const UserICPBalance = () => {
       }
     }, [user]);
     return (<>
-        <div className="">
+        <div className="pb-5">
             <div className="py-4 border-b-2 border-b-[#FF9900] mb-4 px-2">
                 <h2 className="text-2xl font-bold mb-2 text-foreground">Balance</h2>
                 <p className="text-lg text-black font-semibold text-foreground">

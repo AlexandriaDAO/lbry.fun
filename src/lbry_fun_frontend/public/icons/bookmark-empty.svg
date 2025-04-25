@@ -97,11 +97,11 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:none;stroke:none;stroke-width:0.012648px;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;stroke:none;strokeWidth:0.012648px;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 0,36 H 36 V 0 H 0 Z"
        id="path840" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;stroke:#000000;strokeWidth:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 26.504378,28.500891 V 9 c 0.0078,-0.810794 -0.688895,-1.5099858 -1.501484,-1.5009047 l -14.000371,1.44e-5 C 10.190528,7.4898002 9.4931298,8.1879938 9.5009455,9.0000144 l 1.94e-5,19.5008766 8.5017071,-4.694956 z"
        id="path852"
        sodipodi:nodetypes="cccccccc" />

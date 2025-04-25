@@ -19,7 +19,6 @@ const createToken = createAsyncThunk<
       const actorIcpLedger = await getIcpLedgerActor();
       const actor = await getLbryFunActor();
 
-
       let amountFormatApprove: bigint = BigInt(
         Number((Number(2) + 0.0001) * 10 ** 8).toFixed(0)
       );
@@ -50,12 +49,15 @@ const createToken = createAsyncThunk<
           expires_at: [],
         });
         if ("Err" in resultIcpApprove) {
+          console.log("Error in icrc2_approve:", resultIcpApprove.Err);
           const error = resultIcpApprove.Err;
-          let errorMessage = "Unknown error"; // Default error message
-          if ("TemporarilyUnavailable" in error) {
-            errorMessage = "Service is temporarily unavailable";
-          }
-          throw new Error(errorMessage);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+
+          return rejectWithValue({
+            title: "Operation Failed",
+            message: errorMessage,
+          });
         }
       }
 
@@ -79,7 +81,7 @@ const createToken = createAsyncThunk<
         return true;
       } else {
         return rejectWithValue({
-          title: "Token creation failed",
+          title: "Token creation failed" + result.Err,
           message: result.Err,
         });
       }

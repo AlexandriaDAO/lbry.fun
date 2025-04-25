@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import getUpcomming from "../thunk/getUpcommingTokens.thunk";
-import getLiveTokens from "../thunk/getLiveTokens.thunk copy";
+import getLiveTokens from "../thunk/getLiveTokens.thunk";
 
 const GetLiveTokens = () => {
   const dispatch = useAppDispatch();

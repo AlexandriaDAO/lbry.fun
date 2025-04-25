@@ -4,7 +4,7 @@ import createToken from "./createToken.thunk";
 import { TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
 import getTokenPools, { TokenRecordStringified } from "./getTokenPools.thunk";
 import getUpcomming from "./getUpcommingTokens.thunk";
-import getLiveTokens from "./getLiveTokens.thunk copy";
+import getLiveTokens from "./getLiveTokens.thunk";
 
 // Define the interface for our node state
 export interface LbryFunState {
@@ -44,15 +44,13 @@ const lbryFunSlice = createSlice({
         state.error = null;
       })
       .addCase(createToken.fulfilled, (state, action) => {
-        state.success = action.payload;
+        state.success = true;
         state.loading = false;
         state.error = null;
       })
       .addCase(createToken.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload
-          ? (action.payload as unknown as string)
-          : "An unknown error occurred";
+        state.error = action.payload?.title ||"An unknown error occurred";
       })
       .addCase(getTokenPools.pending, (state) => {
         state.loading = true;

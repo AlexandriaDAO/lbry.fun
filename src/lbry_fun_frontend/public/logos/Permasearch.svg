@@ -1,13 +1,13 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M0 40C0 17.9086 17.9086 0 40 0H472C494.091 0 512 17.9086 512 40V472C512 494.091 494.091 512 472 512H40C17.9086 512 0 494.091 0 472V40Z" fill="url(#paint0_linear_3636_2617)" fill-opacity="0.2"/>
 <g filter="url(#filter0_d_3636_2617)">
-<path d="M171 190L295.9 300.982" stroke="url(#paint1_linear_3636_2617)" stroke-width="8" stroke-linecap="square"/>
-<path d="M320.49 302.023L260 249.5L330.584 183.142" stroke="url(#paint2_linear_3636_2617)" stroke-width="8" stroke-linecap="round"/>
-<path d="M79.3652 108L153.385 174.169" stroke="url(#paint3_linear_3636_2617)" stroke-width="8" stroke-linecap="round"/>
-<path d="M74 401.114L158.114 317" stroke="#989896" stroke-width="8" stroke-linecap="round"/>
-<path d="M435.714 389.204L365.02 317.405C364.6 316.978 363.901 317.014 363.527 317.482L355.847 327.081C355.516 327.495 355.565 328.095 355.959 328.449L365.69 337.206C366.115 337.589 366.133 338.251 365.728 338.657L362.687 341.697C362.299 342.085 362.297 342.713 362.681 343.104L421.156 402.683C421.33 402.861 421.571 402.968 421.819 402.98C432.526 403.507 435.784 400.692 436 389.924C436.005 389.657 435.902 389.394 435.714 389.204Z" fill="#ACABA9" stroke="#ACABA9" stroke-width="8" stroke-linecap="round"/>
-<path d="M387.145 239.218C387.145 308.239 331.192 364.192 262.171 364.192C193.15 364.192 137.197 308.239 137.197 239.218C137.197 170.197 193.15 114.244 262.171 114.244C331.192 114.244 387.145 170.197 387.145 239.218Z" stroke="url(#paint4_linear_3636_2617)" stroke-width="8"/>
-<circle cx="261.05" cy="238.096" r="108.151" stroke="url(#paint5_linear_3636_2617)" stroke-width="8"/>
+<path d="M171 190L295.9 300.982" stroke="url(#paint1_linear_3636_2617)" strokeWidth="8" stroke-linecap="square"/>
+<path d="M320.49 302.023L260 249.5L330.584 183.142" stroke="url(#paint2_linear_3636_2617)" strokeWidth="8" stroke-linecap="round"/>
+<path d="M79.3652 108L153.385 174.169" stroke="url(#paint3_linear_3636_2617)" strokeWidth="8" stroke-linecap="round"/>
+<path d="M74 401.114L158.114 317" stroke="#989896" strokeWidth="8" stroke-linecap="round"/>
+<path d="M435.714 389.204L365.02 317.405C364.6 316.978 363.901 317.014 363.527 317.482L355.847 327.081C355.516 327.495 355.565 328.095 355.959 328.449L365.69 337.206C366.115 337.589 366.133 338.251 365.728 338.657L362.687 341.697C362.299 342.085 362.297 342.713 362.681 343.104L421.156 402.683C421.33 402.861 421.571 402.968 421.819 402.98C432.526 403.507 435.784 400.692 436 389.924C436.005 389.657 435.902 389.394 435.714 389.204Z" fill="#ACABA9" stroke="#ACABA9" strokeWidth="8" stroke-linecap="round"/>
+<path d="M387.145 239.218C387.145 308.239 331.192 364.192 262.171 364.192C193.15 364.192 137.197 308.239 137.197 239.218C137.197 170.197 193.15 114.244 262.171 114.244C331.192 114.244 387.145 170.197 387.145 239.218Z" stroke="url(#paint4_linear_3636_2617)" strokeWidth="8"/>
+<circle cx="261.05" cy="238.096" r="108.151" stroke="url(#paint5_linear_3636_2617)" strokeWidth="8"/>
 </g>
 <defs>
 <filter id="filter0_d_3636_2617" x="60" y="94" width="398" height="331.042" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">

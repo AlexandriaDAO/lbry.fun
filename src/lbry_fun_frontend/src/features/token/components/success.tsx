@@ -1,10 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import GetTokenPools from "@/features/token/components/getTokenPools";
-import { useAppDispatch } from "@/store/hooks/useAppDispatch";
-import { useAppSelector } from "@/store/hooks/useAppSelector";
-import getIcpBal from "@/features/icp-ledger/thunks/getIcpBal";
-import { Button, Form, Input } from "antd/es";
-import UpcommingToken from "./upcommingTokens";
+
 
 const SuccessToken = () => {
 
@@ -19,7 +15,7 @@ const SuccessToken = () => {
                 </div>
             </div>
             <div className="container px-2">
-                <h2 className="text-2xl font-bold mb-4 text-foreground">All Tokens </h2>
+        
                  <GetTokenPools />
             </div>
 
