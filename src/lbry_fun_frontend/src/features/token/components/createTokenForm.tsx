@@ -136,12 +136,11 @@ const CreateTokenForm: React.FC = () => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // setLoadingModalV(true);
-    // if (!validateForm()) {
-    //   // Form has errors, don't submit
-    //   setLoadingModalV(false);
-    //   return;
-    // }
+    setLoadingModalV(true);
+    if (!validateForm()) {
+      setLoadingModalV(false);
+      return;
+    }
 
     if (!user) {
       setLoadingModalV(false);

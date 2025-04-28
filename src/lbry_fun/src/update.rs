@@ -507,7 +507,7 @@ async fn deposit_ksicp_in_canister(
 
 pub async fn publish_eligible_tokens_on_kongswap() ->Result<String,String>{
     let time = ic_cdk::api::time(); // current time in nanoseconds
-    let twenty_four_hours_in_nanos: u64 = 24*60*60*1_000_000_000;
+    let twenty_four_hours_in_nanos: u64 =1*60*1_000_000_000;// 24*60*60*1_000_000_000;
     
     let result = TOKENS.with(|tokens| {
         let mut tokens_map = tokens.borrow_mut();
@@ -529,6 +529,7 @@ pub async fn publish_eligible_tokens_on_kongswap() ->Result<String,String>{
                     Ok(_) => {
                         ic_cdk::println!("Pool created!");
                         token.is_live = true;
+                        token.liquidity_provided_at = time;
                         
                         TOKENS.with(|tokens| {
                             let mut tokens_map = tokens.borrow_mut();

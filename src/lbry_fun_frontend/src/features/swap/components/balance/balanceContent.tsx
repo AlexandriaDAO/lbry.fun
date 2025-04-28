@@ -5,8 +5,8 @@ import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 
 import getAccountAlexBalance from "../../thunks/alexIcrc/getAccountAlexBalance";
-import LbryBalanceCard from "./lbryBalanceCard";
-import getLbryBalance from "../../thunks/lbryIcrc/getLbryBalance";
+import SecondaryBalanceCard from "./secondaryBalanceCard";
+import getSecondaryBalance from "../../thunks/lbryIcrc/getSecondaryBalance";
 
 const BalanceContent: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -16,7 +16,7 @@ const BalanceContent: React.FC = () => {
     useEffect(() => {
         if (user) {
             dispatch(getAccountAlexBalance(user.principal))
-            dispatch(getLbryBalance(user.principal))
+            dispatch(getSecondaryBalance(user.principal))
         }
     }, [user])
 
@@ -29,7 +29,7 @@ const BalanceContent: React.FC = () => {
                 </div>
                 <div className="flex md:flex-row flex-col">
                     <AlexBalanceCard />
-                    <LbryBalanceCard />
+                    <SecondaryBalanceCard />
                 </div>
             </div>
         </>

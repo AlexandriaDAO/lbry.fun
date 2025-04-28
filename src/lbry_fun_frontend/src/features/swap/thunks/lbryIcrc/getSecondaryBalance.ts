@@ -4,18 +4,18 @@ import { _SERVICE as _SERVICELBRY } from "../../../../../../declarations/ICRC/IC
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import LedgerService from "@/utils/LedgerService";
-import { getLbryActor } from "@/features/auth/utils/authUtils";
+import { getICRCActor } from "@/features/auth/utils/authUtils";
 
 // Define the async thunk
-const getLbryBalance = createAsyncThunk<
+const getSecondaryBalance = createAsyncThunk<
   string, // This is the return type of the thunk's payload
-  string,
+  {account:string,canisterId:string}, // This is the argument type
   { rejectValue: string }
 >(
-  "icp_swap/getLbryBalance",
-  async (account, { rejectWithValue }) => {
+  "icp_swap/getSecondaryBalance",
+  async ({account,canisterId}, { rejectWithValue }) => {
     try {
-      const actor = await getLbryActor();
+      const actor = await getICRCActor(canisterId);
       const result = await actor.icrc1_balance_of({
         owner: Principal.fromText(account),
         subaccount: [],
@@ -40,4 +40,4 @@ const getLbryBalance = createAsyncThunk<
   }
 );
 
-export default getLbryBalance;
+export default getSecondaryBalance;

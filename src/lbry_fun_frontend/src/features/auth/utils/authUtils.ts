@@ -107,8 +107,8 @@ const getActor = async <T>(
 
 export const getUser = () => getActor(user_canister_id, createUserActor, user);
 
-export const getActorSwap = () =>
-  getActor(icp_swap_canister_id, createActorSwap, icp_swap);
+export const getActorSwap = (canisterId:string) =>
+  getActor(canisterId, createActorSwap, icp_swap);
 
 export const getIcpLedgerActor = () =>
   getActor(icp_ledger_canister_id, createActorIcpLedger, icp_ledger_canister);
@@ -116,8 +116,8 @@ export const getIcpLedgerActor = () =>
 export const getTokenomicsActor = () =>
   getActor(tokenomics_canister_id, createActorTokenomics, tokenomics);
 
-export const getLbryActor = () =>
-  getActor(lbry_canister_id, createActorICRC, ICRC);
+export const getICRCActor = (canisterId:string) =>
+  getActor(canisterId, createActorICRC, ICRC);
 
 export const getAlexActor = () =>
   getActor(alex_canister_id, createActorICRC, ICRC);

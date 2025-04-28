@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import LedgerService from "@/utils/LedgerService";
-import {getLbryActor } from "@/features/auth/utils/authUtils";
+import { getICRCActor } from "@/features/auth/utils/authUtils";
 
 // Define the asyn thunk
 const getLbryFee = createAsyncThunk<
@@ -11,7 +11,7 @@ const getLbryFee = createAsyncThunk<
   "icp_swap/getLbryFee",
   async (_, { rejectWithValue }) => {
     try {
-      const actor = await getLbryActor();
+      const actor = await getICRCActor();
       const result = await actor.icrc1_fee();
       const LedgerServices = LedgerService();
       const fromatedFee = (

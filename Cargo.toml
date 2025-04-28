@@ -5,7 +5,8 @@ members = [
     "src/xrc",
     "src/user",
     "src/logs",
-    "src/lbry_fun"
+    "src/lbry_fun",
+    "src/icp_swap"
 
 ]
 resolver = "2"

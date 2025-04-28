@@ -12,7 +12,7 @@ use ic_ledger_types::{
     Subaccount,
     Tokens,
     DEFAULT_SUBACCOUNT,
-    MAINNET_LEDGER_CANISTER_ID,
+  //  MAINNET_LEDGER_CANISTER_ID,
 };
 use icrc_ledger_types::icrc1::account::Account;
 use icrc_ledger_types::icrc1::transfer::{ BlockIndex, TransferArg, TransferError };
@@ -469,7 +469,7 @@ async fn deposit_icp_in_canister(
     };
 
     let (result,): (Result<BlockIndex, TransferFromError>,) = ic_cdk
-        ::call(MAINNET_LEDGER_CANISTER_ID, "icrc2_transfer_from", (transfer_args,)).await
+        ::call(get_principal(ICP_CANISTER_ID), "icrc2_transfer_from", (transfer_args,)).await
         .map_err(|_| TransferFromError::GenericError {
             message: "Call failed".to_string(),
             error_code: Nat::from(0 as u32),
@@ -495,7 +495,7 @@ async fn send_icp(
         created_at_time: None,
     };
     ic_ledger_types
-        ::transfer(MAINNET_LEDGER_CANISTER_ID, transfer_args).await
+        ::transfer(get_principal(ICP_CANISTER_ID), transfer_args).await
         .map_err(|e| format!("failed to call ledger: {:?}", e))?
         .map_err(|e: ic_ledger_types::TransferError| format!("ledger transfer error {:?}", e))
 }

@@ -1,9 +1,9 @@
 import { ActionReducerMapBuilder, createSlice } from "@reduxjs/toolkit";
 import { toast } from "sonner";
-import getLBRYratio from "./thunks/getLBRYratio";
-import swapLbry from "./thunks/swapLbry";
+import getSecondaryratio from "./thunks/getSecondaryratio";
+import swapSecondary from "./thunks/swapSecondary";
 import burnLbry from "./thunks/burnLBRY";
-import getLbryBalance from "./thunks/lbryIcrc/getLbryBalance";
+import getSecondaryBalance from "./thunks/lbryIcrc/getSecondaryBalance";
 import stakeAlex from "./thunks/stakeAlex";
 import getStakeInfo from "./thunks/getStakedInfo";
 import claimReward from "./thunks/claimReward";
@@ -23,6 +23,7 @@ import getAverageApy from "./thunks/getAverageApy";
 import getLbryFee from "./thunks/lbryIcrc/getLbryFee";
 import getAllLogs from "./thunks/insights/getAllLogs";
 import { ErrorMessage } from "./utlis/erorrs";
+import { TokenRecordStringified } from "../token/thunk/getTokenPools.thunk";
 // Define the interface for our node state
 export interface StakeInfo {
   stakedAlex: string;
@@ -35,9 +36,9 @@ export interface CanisterArchived {
 }
 
 export interface SwapState {
-  lbryRatio: string;
-  lbryBalance: string;
-  lbryFee: string;
+  secondaryRatio: string;
+  secondaryBalance: string;
+  secondaryFee: string;
   archivedBalance: string;
   maxLbryBurn: Number;
   stakeInfo: StakeInfo;
@@ -57,6 +58,7 @@ export interface SwapState {
   error: ErrorMessage | null;
   spendingBalance: string;
   alexSpendingBalance: string;
+  activeSwapPool: [string, TokenRecordStringified] | null;
   logsData: {
     chartData: {
       time: string;
@@ -73,9 +75,9 @@ export interface SwapState {
 
 // Define the initial state using the ManagerState interface
 const initialState: SwapState = {
-  lbryRatio: "0",
-  lbryFee: "0",
-  lbryBalance: "0",
+  secondaryRatio: "0",
+  secondaryFee: "0",
+  secondaryBalance: "0",
   archivedBalance: "0",
   maxLbryBurn: 0,
   stakeInfo: { stakedAlex: "0", rewardIcp: "0", unix_stake_time: "0" },
@@ -98,6 +100,7 @@ const initialState: SwapState = {
   logsData: {
     chartData: [],
   },
+  activeSwapPool: null,
 };
 
 const swapSlice = createSlice({
@@ -114,38 +117,37 @@ const swapSlice = createSlice({
       state.redeeemSuccess = false;
       state.error = null;
     },
+    setActiveSwapPool: (state, action) => {
+      state.activeSwapPool = action.payload;
+    }
   },
   extraReducers: (builder: ActionReducerMapBuilder<SwapState>) => {
     builder
-      .addCase(getLBRYratio.pending, (state) => {
-        // toast.info("Fetching LBRY ratio");
+      .addCase(getSecondaryratio.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getLBRYratio.fulfilled, (state, action) => {
-        // toast.success("LBRY ratio fetched.");
-        state.lbryRatio = action.payload;
+      .addCase(getSecondaryratio.fulfilled, (state, action) => {
+        state.secondaryRatio = action.payload;
         state.loading = false;
         state.error = null;
       })
-      .addCase(getLBRYratio.rejected, (state, action) => {
-        toast.error("LBRY ratio could not be fetched!");
+      .addCase(getSecondaryratio.rejected, (state, action) => {
+        toast.error("Secondary ratio could not be fetched!");
         state.loading = false;
         state.error = null; // action.payload as string;
       })
-      .addCase(getLbryBalance.pending, (state) => {
-        // toast.info("Fetching LBRY balance!");
+      .addCase(getSecondaryBalance.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getLbryBalance.fulfilled, (state, action) => {
-        // toast.success("Fetched LBRY balance!");
-        state.lbryBalance = action.payload;
+      .addCase(getSecondaryBalance.fulfilled, (state, action) => {
+        state.secondaryBalance = action.payload;
         state.loading = false;
         state.error = null;
       })
-      .addCase(getLbryBalance.rejected, (state, action) => {
-        toast.error("LBRY balance could not be fetched!");
+      .addCase(getSecondaryBalance.rejected, (state, action) => {
+        toast.error("Secondary balance could not be fetched!");
         state.loading = false;
         state.error = state.error = {
           message: "",
@@ -188,18 +190,18 @@ const swapSlice = createSlice({
           title: (action.payload as string) || "",
         };
       })
-      .addCase(swapLbry.pending, (state) => {
+      .addCase(swapSecondary.pending, (state) => {
         // toast.info("Swapping!");
         state.loading = true;
         state.error = null;
       })
-      .addCase(swapLbry.fulfilled, (state, action) => {
+      .addCase(swapSecondary.fulfilled, (state, action) => {
         toast.success("Successfully Swaped!");
         state.loading = false;
         state.swapSuccess = true;
         state.error = null;
       })
-      .addCase(swapLbry.rejected, (state, action) => {
+      .addCase(swapSecondary.rejected, (state, action) => {
         toast.error(action.payload?.message);
         state.loading = false;
         state.error = {
@@ -226,12 +228,12 @@ const swapSlice = createSlice({
         };
       })
       .addCase(burnLbry.pending, (state) => {
-        toast.info("Burning LBRY!");
+        toast.info("Burning!");
         state.loading = true;
         state.error = null;
       })
       .addCase(burnLbry.fulfilled, (state, action) => {
-        toast.success("Burned LBRY sucessfully!");
+        toast.success("Burned sucessfully!");
         state.burnSuccess = true;
         state.loading = false;
         state.error = null;
@@ -264,7 +266,6 @@ const swapSlice = createSlice({
         };
       })
       .addCase(unstake.pending, (state) => {
-        // toast.info("Unstaking!");
         state.loading = true;
         state.error = null;
       })
@@ -414,7 +415,7 @@ const swapSlice = createSlice({
         state.error = null;
       })
       .addCase(getLbryFee.fulfilled, (state, action) => {
-        state.lbryFee = action.payload;
+        state.secondaryFee = action.payload;
         state.loading = false;
         state.error = null;
       })
@@ -471,5 +472,5 @@ const swapSlice = createSlice({
       });
   },
 });
-export const { flagHandler } = swapSlice.actions;
+export const { flagHandler ,setActiveSwapPool} = swapSlice.actions;
 export default swapSlice.reducer;

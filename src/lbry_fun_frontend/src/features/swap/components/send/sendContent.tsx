@@ -19,7 +19,7 @@ import SuccessModal from "../successModal";
 import { alexFlagHandler } from "../../alexSlice";
 import getIcpBal from "@/features/icp-ledger/thunks/getIcpBal";
 import getAccountAlexBalance from "../../thunks/alexIcrc/getAccountAlexBalance";
-import getLbryBalance from "../../thunks/lbryIcrc/getLbryBalance";
+import getSecondaryBalance from "../../thunks/lbryIcrc/getSecondaryBalance";
 import ErrorModal from "../errorModal";
 import { Entry } from "@/layouts/parts/Header";
 import { Principal } from "@dfinity/principal";
@@ -103,7 +103,7 @@ const SendContent = () => {
         else if (selectedOption === "LBRY") {
             const userBal = Math.max(
                 0,
-                Number(swap.lbryBalance) - (Number(swap.lbryFee) * 1)
+                Number(swap.lbryBalance) - (Number(swap.secondaryFee) * 1)
             ).toFixed(4);
             setAmount(userBal);
         }
@@ -158,7 +158,7 @@ const SendContent = () => {
         else if (swap.transferSuccess === true) {
             setLoadingModalV(false);
             setSucessModalV(true);
-            dispatch(getLbryBalance(user.principal))
+            dispatch(getSecondaryBalance(user.principal))
             dispatch((flagHandler()));
         }
         else if (swap.error || alex.error || icpLedger.error) {

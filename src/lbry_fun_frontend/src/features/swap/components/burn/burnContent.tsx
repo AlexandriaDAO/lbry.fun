@@ -7,7 +7,7 @@ import { _SERVICE as _SERVICELBRY } from '../../../../../../ICRC/ICRC.did'
 import { Link } from "react-router";
 import { flagHandler } from "../../swapSlice";
 import burnLbry from "../../thunks/burnLBRY";
-import getLbryBalance from "../../thunks/lbryIcrc/getLbryBalance";
+import getSecondaryBalance from "../../thunks/lbryIcrc/getSecondaryBalance";
 import { LoaderCircle } from "lucide-react";
 import getCanisterBal from "@/features/icp-ledger/thunks/getCanisterBal";
 import getCanisterArchivedBal from "../../thunks/getCanisterArchivedBal";
@@ -47,17 +47,17 @@ const BurnContent = () => {
         if (Number(e.target.value) >= 0) {
 
             setAmountLBRY(Number(e.target.value));
-            setTentativeICP((Number(e.target.value) / Number(swap.lbryRatio)) / 2);
+            setTentativeICP((Number(e.target.value) / Number(swap.secondaryRatio)) / 2);
             setTentativeALEX(Number(e.target.value) * Number(tokenomics.alexMintRate));
         }
     }
     const handleMaxLbry = () => {
-        const userBal = Math.floor(Math.max(0, Number(swap.lbryBalance) - Number(swap.lbryFee))); // Ensure non-negative user balance
-        const lbryRatio = Number(swap.lbryRatio);
+        const userBal = Math.floor(Math.max(0, Number(swap.secondaryBalance) - Number(swap.secondaryFee))); // Ensure non-negative user balance
+        const secondaryRatio = Number(swap.secondaryRatio);
         const alexMintRate = Number(tokenomics.alexMintRate);
 
         setAmountLBRY(userBal);
-        setTentativeICP(userBal / (lbryRatio * 2));
+        setTentativeICP(userBal / (secondaryRatio * 2));
         setTentativeALEX(userBal * alexMintRate);
     };
 
@@ -65,13 +65,13 @@ const BurnContent = () => {
         if (!user) return;
         if (swap.burnSuccess === true) {
             dispatch(flagHandler())
-            dispatch(getLbryBalance(user.principal))
+            dispatch(getSecondaryBalance(user.principal))
             setLoadingModalV(false);
             setSucessModalV(true);
-            setMaxburnAllowed(calculateMaxBurnAllowed(swap.lbryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))
+            setMaxburnAllowed(calculateMaxBurnAllowed(swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))
         }
         if (swap.error) {
-            dispatch(getLbryBalance(user.principal));
+            dispatch(getSecondaryBalance(user.principal));
             setLoadingModalV(false);
             setErrorModalV({flag:true,title:swap.error.title,message:swap.error.message});
             dispatch(flagHandler());
@@ -81,7 +81,7 @@ const BurnContent = () => {
 
     useEffect(() => {
         if (user) {
-            dispatch(getLbryBalance(user.principal));
+            dispatch(getSecondaryBalance(user.principal));
         }
         dispatch(getCanisterBal());
         dispatch(getCanisterArchivedBal());
@@ -89,8 +89,8 @@ const BurnContent = () => {
 
 
     useEffect(() => {
-        setMaxburnAllowed(calculateMaxBurnAllowed(swap.lbryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))
-    }, [swap.canisterArchivedBal, swap.lbryRatio, icpLedger.canisterBalance])
+        setMaxburnAllowed(calculateMaxBurnAllowed(swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))
+    }, [swap.canisterArchivedBal, swap.secondaryRatio, icpLedger.canisterBalance])
     return (
         <>
             <div>

@@ -1,19 +1,20 @@
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import React from "react";
-import getLbryBalance from "../../thunks/lbryIcrc/getLbryBalance";
+import getSecondaryBalance from "../../thunks/lbryIcrc/getSecondaryBalance";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRotate } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "sonner";
 
-const LbryBalanceCard = () => {
+const SecondaryBalanceCard = () => {
     const dispatch = useAppDispatch();
     const icpSwap = useAppSelector(state => state.swap);
+    const activeSwapPool = useAppSelector(state => state.swap.activeSwapPool);
     const auth = useAppSelector((state) => state.auth);
 
     const handleRefresh = () => {
         if (!auth.user) return;
-        dispatch(getLbryBalance(auth.user.principal))
+        dispatch(getSecondaryBalance(auth.user.principal))
         toast.info("Refreshing balance!")
 
     }
@@ -25,8 +26,8 @@ const LbryBalanceCard = () => {
             <div className='bg-balancebox py-5 px-7 me-3 rounded-3xl mb-5'>
                 <div className='flex justify-between items-center mb-3'>
                     <div>
-                        <h4 className='text-2xl font-medium text-white'>LBRY</h4>
-                        <span className='text-sm font-regular text-lightgray '>Librarian Token</span>
+                        <h4 className='text-2xl font-medium text-white'>{activeSwapPool?.[1].secondary_token_symbol}</h4>
+                        <span className='text-sm font-regular text-lightgray '>{activeSwapPool?.[1].secondary_token_name}</span>
                     </div>
                     <div>
                         <img src="images/lbry-logo.svg" alt="lbry-logo" className="w-12 h-12"/>
@@ -44,4 +45,4 @@ const LbryBalanceCard = () => {
         </div>
     </>)
 }
-export default LbryBalanceCard;
+export default SecondaryBalanceCard;

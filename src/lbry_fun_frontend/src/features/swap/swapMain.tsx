@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import "./style.css"
 
 import { useAppSelector } from '@/store/hooks/useAppSelector';
@@ -9,7 +9,7 @@ import SwapContent from './components/swap/swapContent';
 import SendContent from './components/send/sendContent';
 import BurnContent from './components/burn/burnContent';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
-import getLBRYratio from './thunks/getLBRYratio';
+import getLBRYratio from './thunks/getSecondaryratio';
 import getAlexMintRate from './thunks/tokenomics/getAlexMintRate';
 import StakeContent from './components/stake/stakeContent';
 import ReceiveContent from './components/receive/receiveContent';
@@ -20,12 +20,18 @@ import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import getLbryFee from './thunks/lbryIcrc/getLbryFee';
 import getAlexFee from './thunks/alexIcrc/getAlexFee';
 import Insights from './components/insights/insights';
+import { TokenRecordStringified } from '../token/thunk/getTokenPools.thunk';
+import PoolCard from './components/balance/poolCard';
+import { setActiveSwapPool } from './swapSlice';
 
 const SwapMain = () => {
     const dispatch = useAppDispatch();
-    const swap = useAppSelector(state => state.swap);
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
+    const swap = useAppSelector(state => state.swap);
+    const { tokenPools } = useAppSelector((state) => state.lbryFun);
+    const id = searchParams.get("id");
 
     const tabs = [
         { id: 1, path: 'balance', label: 'Balance', hover: null, content: <BalanceContent /> },
@@ -59,18 +65,23 @@ const SwapMain = () => {
             dispatch(getLBRYratio());
         }
     }, [swap]);
+    useEffect(() => {
+        const pool = tokenPools.find((tokenPool) => tokenPool[0] === id);
+        dispatch(setActiveSwapPool(pool));
+    }, [id, tokenPools]);
 
     return (
         <div className='tabs py-10 2xl:py-20 xl:py-16 lg:py-14 md:py-12 sm:py-10'>
             <div className='container px-5'>
                 <AccountCards />
+                <PoolCard/>
                 <div className='tabs-content'>
                     <div className='tabs-content'>
                         <div className="flex mb-5 flex-wrap">
                             {tabs.map(tab => (
                                 <button
                                     key={tab.id}
-                                    onClick={() => navigate(`/swap/${tab.path}`)}
+                                    onClick={() => navigate(`/swap/${tab.path}?id=${id}`)}
                                     className={`px-2 py-2 flex items-center ${activeTab === tab.id
                                         ? 'text-base 2xl:text-xl bg-black text-white dark:bg-white dark:text-black px-5'
                                         : 'bg-white text-black dark:bg-black dark:text-white'} transition-colors duration-300 text-base font-semibold leading-6 min-w-24 h-11 border dark:border-gray-700 border-gray-400 rounded-2xl mr-3 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black px-5 mb-4 z-20`}
