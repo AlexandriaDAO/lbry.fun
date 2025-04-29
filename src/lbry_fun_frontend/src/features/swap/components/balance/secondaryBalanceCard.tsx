@@ -1,6 +1,6 @@
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import React from "react";
-import getSecondaryBalance from "../../thunks/lbryIcrc/getSecondaryBalance";
+import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRotate } from "@fortawesome/free-solid-svg-icons";
@@ -39,7 +39,7 @@ const SecondaryBalanceCard = () => {
                 </div>
                 
 
-                <h4 className='text-2xl font-medium mb-1 text-white'>{icpSwap.lbryBalance}</h4>
+                <h4 className='text-2xl font-medium mb-1 text-white'>{icpSwap.secondaryBalance}</h4>
                 {/* <span className='text-base text-lightgray font-medium'>= $10</span> */}
             </div>
         </div>

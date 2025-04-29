@@ -3,17 +3,17 @@ import {
   createSlice,
 } from "@reduxjs/toolkit";
 import { toast } from "sonner";
-import getAlexMintRate from "./thunks/tokenomics/getAlexMintRate";
+import getPrimaryMintRate from "./thunks/tokenomics/getPrimaryMintRate";
 // Define the interface for our node state
 export interface SwapState {
-  alexMintRate: string;
+  primaryMintRate: string;
   loading: boolean;
   error: string | null;
 }
 
 // Define the initial state using the ManagerState interface
 const initialState: SwapState = {
-  alexMintRate: "",
+  primaryMintRate: "",
   loading: false,
   error: null,
 };
@@ -24,18 +24,18 @@ const tokenomicsSlice = createSlice({
   reducers: {},
   extraReducers: (builder: ActionReducerMapBuilder<SwapState>) => {
     builder
-      .addCase(getAlexMintRate.pending, (state) => {
+      .addCase(getPrimaryMintRate.pending, (state) => {
         // toast.info("Fetching ALEX mint rate!");
         state.loading = true;
         state.error = null;
       })
-      .addCase(getAlexMintRate.fulfilled, (state, action) => {
+      .addCase(getPrimaryMintRate.fulfilled, (state, action) => {
         // toast.success("Fetched ALEX mint rate!");
-        state.alexMintRate = action.payload;
+        state.primaryMintRate = action.payload;
         state.loading = false;
         state.error = null;
       })
-      .addCase(getAlexMintRate.rejected, (state, action) => {
+      .addCase(getPrimaryMintRate.rejected, (state, action) => {
         toast.error("Could not fetched ALEX mint rate!");
         state.loading = false;
         state.error = action.payload as string;

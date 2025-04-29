@@ -1,21 +1,24 @@
-import { ActorSubclass } from "@dfinity/agent";
-import { _SERVICE as _SERVICELBRY } from "../../../../../../declarations/ICRC/ICRC.did";
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import LedgerService from "@/utils/LedgerService";
 import { getICRCActor } from "@/features/auth/utils/authUtils";
+import { RootState } from "@/store";
 
 // Define the async thunk
 const getSecondaryBalance = createAsyncThunk<
   string, // This is the return type of the thunk's payload
-  {account:string,canisterId:string}, // This is the argument type
-  { rejectValue: string }
+  string, // This is the argument type
+  { state: RootState,rejectValue: string }
 >(
   "icp_swap/getSecondaryBalance",
-  async ({account,canisterId}, { rejectWithValue }) => {
+  async (account, {getState, rejectWithValue }) => {
     try {
-      const actor = await getICRCActor(canisterId);
+      const state = getState();
+      if (!state.swap.activeSwapPool) {
+        throw new Error("No active swap pool found");
+      }
+      const actor = await getICRCActor(state.swap.activeSwapPool?.[1].secondary_token_id);
       const result = await actor.icrc1_balance_of({
         owner: Principal.fromText(account),
         subaccount: [],
@@ -35,7 +38,7 @@ const getSecondaryBalance = createAsyncThunk<
       }
     }
     return rejectWithValue(
-      "An unknown error occurred while getting LBRY balance"
+      "An unknown error occurred while getting Secondary balance"
     );
   }
 );

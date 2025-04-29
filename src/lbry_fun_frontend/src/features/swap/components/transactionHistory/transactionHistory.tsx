@@ -2,7 +2,7 @@ import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { faCheck, faExclamation } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect } from "react";
-import fetchTransaction, { TransactionType } from "../../thunks/lbryIcrc/getTransactions";
+// import fetchTransaction, { TransactionType } from "../../thunks/secondaryIcrc/getTransactions";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import TransactionHistoryObj from "./transactionHistoryObj";
 import { useTheme } from "@/providers/ThemeProvider";
@@ -16,7 +16,7 @@ const TransactionHistory = () => {
 
     useEffect(() => {
         if(!user) return;
-        dispatch(fetchTransaction(user.principal));
+        // dispatch(fetchTransaction(user.principal));
     }, [user]);
     return (<>
         <div className="overflow-x-auto lg:overflow-x-auto">
@@ -81,11 +81,11 @@ const TransactionHistory = () => {
                     </tr>
                 </thead>
                 <tbody className="text-foreground text-sm font-light">
-                    {swap.transactions?.map((trx: TransactionType, i) => {
+                    {/* {swap.transactions?.map((trx: TransactionType, i) => {
                         return (
                             <TransactionHistoryObj key={trx.timestamp} timestamp={trx.timestamp} amount={trx.amount} type={trx.type} from={trx.from} to={trx.to} fee={trx.fee} index={i} />
                         );
-                    })}
+                    })} */}
                 </tbody>
             </table>
         </div>

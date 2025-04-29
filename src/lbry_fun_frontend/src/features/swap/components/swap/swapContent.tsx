@@ -10,7 +10,7 @@ import swapSecondary from "../../thunks/swapSecondary";
 import { flagHandler } from "../../swapSlice";
 import { LoaderCircle } from "lucide-react";
 import { icp_fee, minimum_icp } from "@/utils/utils";
-import getSecondaryBalance from "../../thunks/lbryIcrc/getSecondaryBalance";
+import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance";
 import SuccessModal from "../successModal";
 import LoadingModal from "../loadingModal";
 import ErrorModal from "../errorModal";
@@ -24,7 +24,7 @@ const SwapContent: React.FC = () => {
   const swap = useAppSelector((state) => state.swap);
   const [amount, setAmount] = useState("");
   const [secondaryRatio, setSecondaryRatio] = useState(0.0);
-  const [tentativeLBRY, setTentativeLBRY] = useState(Number);
+  const [tentativeSecondary, setTentativeSecondary] = useState(Number);
   const [loadingModalV, setLoadingModalV] = useState(false);
   const [successModalV, setSucessModalV] = useState(false);
   const [errorModalV, setErrorModalV] = useState({ flag: false, title: "", message: "" });
@@ -44,7 +44,7 @@ const SwapContent: React.FC = () => {
       Number(icpLedger.accountBalance) - 2 * icp_fee
     ).toFixed(4);
     setAmount(userBal);
-    setTentativeLBRY(secondaryRatio * Number(userBal));
+    setTentativeSecondary(secondaryRatio * Number(userBal));
 
   };
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,25 +52,25 @@ const SwapContent: React.FC = () => {
 
     if (Number(e.target.value) >= 0) {
       setAmount(e.target.value);
-      setTentativeLBRY(secondaryRatio * Number(e.target.value));
+      setTentativeSecondary(secondaryRatio * Number(e.target.value));
       setShadow("border-[#bdbec4]");
     }
   };
   useEffect(() => {
     setSecondaryRatio(Number(swap.secondaryRatio));
-    setTentativeLBRY(
+    setTentativeSecondary(
       parseFloat((Number(swap.secondaryRatio) * Number(amount)).toFixed(4))
     );
   }, [swap.secondaryRatio]);
   useEffect(() => {
     if (!user ||!swap.activeSwapPool?.[1].secondary_token_id) return;
     if (swap.swapSuccess === true) {
-      dispatch(getSecondaryBalance({account:user.principal,canisterId: swap.activeSwapPool?.[1].secondary_token_id}));
+      dispatch(getSecondaryBalance(user.principal));
       dispatch(flagHandler());
       setLoadingModalV(false);
       setSucessModalV(true);
       setAmount("");
-      setTentativeLBRY(0);
+      setTentativeSecondary(0);
     }
   }, [user, swap.swapSuccess,swap.activeSwapPool]);
   useEffect(() => {
@@ -143,7 +143,7 @@ const SwapContent: React.FC = () => {
                   {swap.activeSwapPool?.[1].secondary_token_symbol}
                 </h2>
                 <h3 className="text-swapvalue text-right text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium dark:text-gray-200">
-                  {tentativeLBRY.toFixed(4)}
+                  {tentativeSecondary.toFixed(4)}
                 </h3>
               </div>
               <div className="flex justify-between">
@@ -210,12 +210,12 @@ const SwapContent: React.FC = () => {
                 Receive
               </strong>
               <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor dark:text-gray-200 break-all">
-                {tentativeLBRY.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}
+                {tentativeSecondary.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}
               </span>
             </li>
             <li className="flex justify-between mb-5">
               <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor dark:text-gray-200">
-                For each ICP you swap, you'll receive <span className="text-[#FF9900] dark:text-yellow-400">{tentativeLBRY}</span> {swap.activeSwapPool?.[1].secondary_token_symbol} tokens.
+                For each ICP you swap, you'll receive <span className="text-[#FF9900] dark:text-yellow-400">{tentativeSecondary}</span> {swap.activeSwapPool?.[1].secondary_token_symbol} tokens.
               </strong>
             </li>
             <li>

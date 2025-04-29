@@ -9,16 +9,16 @@ import SwapContent from './components/swap/swapContent';
 import SendContent from './components/send/sendContent';
 import BurnContent from './components/burn/burnContent';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
-import getLBRYratio from './thunks/getSecondaryratio';
-import getAlexMintRate from './thunks/tokenomics/getAlexMintRate';
+import getSecondaryratio from './thunks/getSecondaryratio';
+import getPrimaryMintRate from './thunks/tokenomics/getPrimaryMintRate';
 import StakeContent from './components/stake/stakeContent';
 import ReceiveContent from './components/receive/receiveContent';
 import RedeemContent from './components/redeem/redeemContent';
 import TransactionHistory from './components/transactionHistory/transactionHistory';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
-import getLbryFee from './thunks/lbryIcrc/getLbryFee';
-import getAlexFee from './thunks/alexIcrc/getAlexFee';
+import getSecondaryFee from './thunks/secondaryIcrc/getSecondaryFee';
+import getPrimaryFee from './thunks/primaryIcrc/getPrimaryFee';
 import Insights from './components/insights/insights';
 import { TokenRecordStringified } from '../token/thunk/getTokenPools.thunk';
 import PoolCard from './components/balance/poolCard';
@@ -35,11 +35,10 @@ const SwapMain = () => {
 
     const tabs = [
         { id: 1, path: 'balance', label: 'Balance', hover: null, content: <BalanceContent /> },
-        { id: 2, path: 'swap', label: 'Swap', hover: "Swap ICP for LBRY", content: <SwapContent /> },
-        // { id: 3, path: 'topup', label: 'Topup', hover: "Allocate LBRY that can be spent in-app", content: <TopupContent /> },
+        { id: 2, path: 'swap', label: 'Swap', hover: `Swap ICP for ${swap.activeSwapPool&&swap.activeSwapPool[1].secondary_token_symbol}`, content: <SwapContent /> },
         { id: 4, path: 'send', label: 'Send', hover: null, content: <SendContent /> },
         { id: 5, path: 'receive', label: 'Receive', hover: null, content: <ReceiveContent /> },
-        { id: 6, path: 'burn', label: 'Burn', hover: "Burn LBRY, get back ALEX and ICP", content: <BurnContent /> },
+        { id: 6, path: 'burn', label: 'Burn', hover: `Burn ${swap.activeSwapPool&&swap.activeSwapPool[1].secondary_token_symbol}, get back ${swap.activeSwapPool&&swap.activeSwapPool[1].primary_token_symbol} and ICP`, content: <BurnContent /> },
         { id: 7, path: 'stake', label: 'Stake', hover: null, content: <StakeContent /> },
         { id: 8, path: 'redeem', label: 'Redeem', hover: "Redeem ICP if your swap fails", content: <RedeemContent /> },
         { id: 9, path: 'history', label: 'Transaction history', hover: null, content: <TransactionHistory /> },
@@ -50,10 +49,10 @@ const SwapMain = () => {
     const activeTab = tabs.find(tab => tab.path === currentPath)?.id || 1;
 
     useEffect(() => {
-        dispatch(getLBRYratio());
-        dispatch(getAlexMintRate());
-        dispatch(getLbryFee());
-        dispatch(getAlexFee());
+        dispatch(getSecondaryratio());
+        dispatch(getPrimaryMintRate());
+        dispatch(getSecondaryFee());
+        dispatch(getPrimaryFee());
         if (localStorage.getItem("tab")) {
             navigate('/swap/stake');
             localStorage.removeItem("tab");
@@ -62,7 +61,7 @@ const SwapMain = () => {
 
     useEffect(() => {
         if (swap.burnSuccess === true) {
-            dispatch(getLBRYratio());
+            dispatch(getSecondaryratio());
         }
     }, [swap]);
     useEffect(() => {

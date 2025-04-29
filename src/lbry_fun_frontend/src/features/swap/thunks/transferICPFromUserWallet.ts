@@ -30,7 +30,7 @@ const transferICPFromUserWalletcanister = createAsyncThunk<
       return rejectWithValue(error.message);
     }
   }
-  return rejectWithValue("An unknown error occurred while burning LBRY");
+  return rejectWithValue("An unknown error occurred while burning Secondary");
 });
 
 export default transferICPFromUserWalletcanister;

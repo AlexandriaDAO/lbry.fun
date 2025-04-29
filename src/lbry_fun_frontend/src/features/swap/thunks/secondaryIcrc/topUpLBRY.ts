@@ -1,7 +1,7 @@
 // import { createAsyncThunk } from "@reduxjs/toolkit";
 // import { Principal } from "@dfinity/principal";
 // // import { getNftManagerActor } from "@/features/auth/utils/authUtils";
-// import transferLBRY from "./transferLBRY";
+// import transferSecondary from "./transferSecondary";
 
 // const topUpLBRY = createAsyncThunk<
 //   string,
@@ -30,16 +30,16 @@
 //       //   Principal.fromText(userPrincipal)
 //       // );
 
-//       // console.log("Dispatching transferLBRY", { amount, nftManagerId, subaccount });
+//       // console.log("Dispatching transferSecondary", { amount, nftManagerId, subaccount });
 //       // const result = await dispatch(
-//       //   transferLBRY({
+//       //   transferSecondary({
 //       //     amount,
 //       //     destination: nftManagerId,
 //       //     subaccount: Array.from(subaccount),
 //       //   })
 //       // ).unwrap();
 
-//       // console.log("transferLBRY result:", result);
+//       // console.log("transferSecondary result:", result);
 //       // return result;
 //     } catch (error) {
 //       console.error("TopUpLBRY error:", error);

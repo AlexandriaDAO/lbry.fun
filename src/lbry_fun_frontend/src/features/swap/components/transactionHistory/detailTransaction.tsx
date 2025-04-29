@@ -4,7 +4,7 @@ import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import { faAngleLeft, faAngleRight, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
-import { TransactionType } from "../../thunks/lbryIcrc/getTransactions";
+// import { TransactionType } from "../../thunks/secondaryIcrc/getTransactions";
 import MainLayout from "@/layouts/MainLayout";
 import { useTheme } from "@/providers/ThemeProvider";
 
@@ -12,17 +12,17 @@ const DetailTransaction = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const swap = useAppSelector(state => state.swap);
-    const [transactaion, setTransaction] = useState<TransactionType>();
+    // const [transactaion, setTransaction] = useState<TransactionType>();
     const { theme } = useTheme();
     const isDark = theme === "dark";
 
-    useEffect(() => {
-        const id = searchParams.get("id");
-        setTransaction(swap?.transactions[Number(id)] || null);
-        if (swap.transactions.length === 0) {
-            navigate("/swap");
-        }
-    }, [searchParams])
+    // useEffect(() => {
+    //     const id = searchParams.get("id");
+    //     // setTransaction(swap?.transactions[Number(id)] || null);
+    //     if (swap.transactions.length === 0) {
+    //         navigate("/swap");
+    //     }
+    // }, [searchParams])
 
     return (<>
         <>        
@@ -58,7 +58,7 @@ const DetailTransaction = () => {
                     <div className="table-content pb-5">
                         <h4 className="text-2xl text-foreground">Transaction</h4>
                     </div>
-                    <div className="tranication-table overflow-x-auto lg:overflow-x-auto">
+                    {/* <div className="tranication-table overflow-x-auto lg:overflow-x-auto">
                         <table className="min-w-full border-collapse">
                             <tbody>
                                 <tr className={`border-b ${isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-300 hover:bg-gray-100'}`}>
@@ -111,7 +111,7 @@ const DetailTransaction = () => {
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </div>

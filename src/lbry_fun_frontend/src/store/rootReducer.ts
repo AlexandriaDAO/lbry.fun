@@ -5,7 +5,7 @@ import signupReducer from "@/features/signup/signupSlice";
 import swapReducer from "@/features/swap/swapSlice"
 import icpLedgerReducer from "@/features/icp-ledger/icpLedgerSlice";
 import tokenomicsReducer from "@/features/swap/tokenomicsSilce";
-import alexReducer from "@/features/swap/alexSlice";
+import primaryReducer from "@/features/swap/primarySlice";
 import lbryFunReducer from "@/features/token/thunk/lbryFunSlice";
 
 
@@ -16,7 +16,7 @@ const rootReducer = combineReducers({
 	swap:swapReducer,
 	icpLedger:icpLedgerReducer,
 	tokenomics:tokenomicsReducer,
-	alex:alexReducer,
+	primary:primaryReducer,
 	lbryFun:lbryFunReducer
 });
 

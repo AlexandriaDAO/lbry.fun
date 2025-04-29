@@ -17,22 +17,22 @@ const BurnInfo: React.FC<BurnInfoProps> = ({ maxBurnAllowed }) => {
       <div className='border border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 py-5 px-5 rounded-2xl'>
         <ul className='ps-0'>
           <li className='flex justify-between mb-5'>
-            <strong className='lg:text-lg md:text-base sm:text-sm font-medium me-1 text-black dark:text-gray-200'>Max LBRY Burn allowed:</strong>
-            <span className='lg:text-lg md:text-base sm:text-sm font-medium text-black dark:text-gray-200'>{maxBurnAllowed.toFixed(4)} LBRY</span>
+            <strong className='lg:text-lg md:text-base sm:text-sm font-medium me-1 text-black dark:text-gray-200'>Max Secondary Burn allowed:</strong>
+            <span className='lg:text-lg md:text-base sm:text-sm font-medium text-black dark:text-gray-200'>{maxBurnAllowed.toFixed(4)} Secondary</span>
           </li>
           <li className='flex justify-between mb-5'>
-            <strong className='lg:text-lg md:text-base sm:text-sm font-medium me-1 text-black dark:text-gray-200'>{Number(swap.secondaryRatio).toFixed(4)} LBRY
+            <strong className='lg:text-lg md:text-base sm:text-sm font-medium me-1 text-black dark:text-gray-200'>{Number(swap.secondaryRatio).toFixed(4)} Secondary
               <span className='mx-2'><FontAwesomeIcon icon={faArrowRightLong} className="dark:text-gray-200" /></span>0.5 ICP/
             </strong>
           </li>
           <li className='flex justify-between mb-5'>
-            <strong className='lg:text-lg md:text-base sm:text-sm font-medium me-1 text-black dark:text-gray-200'>1 LBRY
-              <span className='mx-2'><FontAwesomeIcon icon={faArrowRightLong} className="dark:text-gray-200" /></span>{tokenomics.alexMintRate} ALEX
+            <strong className='lg:text-lg md:text-base sm:text-sm font-medium me-1 text-black dark:text-gray-200'>1 Secondary
+              <span className='mx-2'><FontAwesomeIcon icon={faArrowRightLong} className="dark:text-gray-200" /></span>{tokenomics.primaryMintRate} ALEX
             </strong>
           </li>
           <li className='flex justify-between'>
             <strong className='lg:text-lg md:text-base sm:text-sm font-medium me-1 text-black dark:text-gray-200'>Network Fees</strong>
-            <span className='lg:text-lg md:text-base sm:text-sm font-medium text-black dark:text-gray-200'><span className='text-multycolor dark:text-blue-400'>{swap.secondaryFee}</span> LBRY</span>
+            <span className='lg:text-lg md:text-base sm:text-sm font-medium text-black dark:text-gray-200'><span className='text-multycolor dark:text-blue-400'>{swap.secondaryFee}</span> Secondary</span>
           </li>
         </ul>
       </div>

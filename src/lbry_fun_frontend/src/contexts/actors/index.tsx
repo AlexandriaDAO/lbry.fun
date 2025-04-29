@@ -1,5 +1,4 @@
-// export { default as AlexBackendContext } from './AlexBackendContext';
-// export { default as AlexContext } from './AlexContext';
+
 // export { default as AssetCanisterContext } from './AssetCanisterContext';
 // export { default as AssetManagerContext } from './AssetManagerContext';
 export { default as IcpLedgerContext } from './IcpLedgerContext';
@@ -13,7 +12,6 @@ export { default as TokenomicsContext } from './TokenomicsContext';
 export { default as UserContext } from './UserContext';
 export { default as LbryFunContext } from './LbryFunContext';
 
-// export { default as AlexWalletContext } from './AlexWalletContext';
 // export { default as EmporiumContext } from './EmporiumContext';
 // export { default as PerpetuaContext } from './PerpetuaContext';
 

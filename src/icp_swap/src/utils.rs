@@ -6,7 +6,7 @@ use ic_cdk::api::call::RejectionCode;
 use ic_cdk::{ self, caller };
 use ic_ledger_types::AccountIdentifier;
 use ic_ledger_types::Subaccount;
-use ic_ledger_types::{ AccountBalanceArgs, DEFAULT_SUBACCOUNT, MAINNET_LEDGER_CANISTER_ID };
+use ic_ledger_types::{ AccountBalanceArgs, DEFAULT_SUBACCOUNT };
 use serde::Deserialize;
 
 pub const STAKING_REWARD_PERCENTAGE: u64 = 100; // 1%
@@ -307,13 +307,13 @@ pub(crate) async fn fetch_canister_icp_balance() -> Result<u64, ExecutionError> 
 
     // Call the ledger canister's `account_balance` method and extract the balance in e8s (u64)
     let result = ic_ledger_types
-        ::account_balance(MAINNET_LEDGER_CANISTER_ID, balance_args).await
+        ::account_balance(get_principal(ICP_CANISTER_ID), balance_args).await
         .map_err(|e|
             ExecutionError::new_with_log(
                 caller(),
                 "fetch_canister_icp_balance",
                 ExecutionError::CanisterCallFailed {
-                    canister: MAINNET_LEDGER_CANISTER_ID.to_string(),
+                    canister: ICP_CANISTER_ID.to_string(),
                     method: "account_balance".to_string(),
                     details: format!("Rejection call failed: {:?}", e),
                 }

@@ -2,17 +2,23 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import LedgerService from "@/utils/LedgerService";
 import { Principal } from "@dfinity/principal";
 import { getIcpLedgerActor } from "@/features/auth/utils/authUtils";
+import { RootState } from "@/store";
 
 // Define the async thunk
 const getCanisterBal = createAsyncThunk<
   {formatedAccountBal:string}, // This is the return type of the thunk's payload
   void,
-  { rejectValue: string }
->("icp_ledger/getCanisterBal", async ( _,{ rejectWithValue }) => {
+  { state: RootState,rejectValue: string }
+>("icp_ledger/getCanisterBal", async ( _,{ getState,rejectWithValue }) => {
   try {
-    const icp_swap_canister_id = process.env.CANISTER_ID_ICP_SWAP!;
+    const state = getState();
 
+    if (!state.swap.activeSwapPool) {
+      throw new Error("No active swap pool found");
+    }
     const actor = await getIcpLedgerActor();
+    const icp_swap_canister_id = state.swap.activeSwapPool?.[1].icp_swap_canister_id;
+
     let resultAccountBal = await actor.icrc1_balance_of({
       owner: Principal.fromText(icp_swap_canister_id),
       subaccount: []

@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 
-import AlexBalanceCard from "./alexBalanceCard";
+import PrimaryBalanceCard from "./primaryBalanceCard";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 
-import getAccountAlexBalance from "../../thunks/alexIcrc/getAccountAlexBalance";
+import getAccountPrimaryBalance from "../../thunks/primaryIcrc/getAccountPrimaryBalance";
 import SecondaryBalanceCard from "./secondaryBalanceCard";
-import getSecondaryBalance from "../../thunks/lbryIcrc/getSecondaryBalance";
+import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance";
 
 const BalanceContent: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -15,7 +15,7 @@ const BalanceContent: React.FC = () => {
 
     useEffect(() => {
         if (user) {
-            dispatch(getAccountAlexBalance(user.principal))
+            dispatch(getAccountPrimaryBalance(user.principal))
             dispatch(getSecondaryBalance(user.principal))
         }
     }, [user])
@@ -28,7 +28,7 @@ const BalanceContent: React.FC = () => {
                     <h3 className="text-tabsheading 2xl:text-xxltabsheading xl:text-xltabsheading lg:text-lgtabsheading md:text-mdtabsheading sm:text-smtabsheading font-bold">Balance</h3>
                 </div>
                 <div className="flex md:flex-row flex-col">
-                    <AlexBalanceCard />
+                    <PrimaryBalanceCard />
                     <SecondaryBalanceCard />
                 </div>
             </div>

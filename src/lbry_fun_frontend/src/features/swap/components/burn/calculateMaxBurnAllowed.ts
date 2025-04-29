@@ -4,6 +4,10 @@
   canisterArchivedBal: Number,
   canisterUnClaimedIcp: Number
 ) => {
+  console.log("secondaryRatio", secondaryRatio);
+  console.log("canisterBal", canisterBal);
+  console.log("canisterArchivedBal", canisterArchivedBal);
+  console.log("canisterUnClaimedIcp", canisterUnClaimedIcp);
   let lbryPerIcp = Number(secondaryRatio) * 2;
   let canisterBalance = Number(canisterBal);
   let totalArchivedBalance = Number(canisterArchivedBal);

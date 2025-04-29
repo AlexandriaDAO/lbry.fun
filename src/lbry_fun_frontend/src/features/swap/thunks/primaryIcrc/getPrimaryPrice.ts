@@ -2,8 +2,8 @@ import { getIcpSwapFactoryCanister } from "@/features/auth/utils/authUtils";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const getAlexPrice = createAsyncThunk<string, void, { rejectValue: string }>(
-  "alex/getAlexPrice",
+const getPrimaryPrice = createAsyncThunk<string, void, { rejectValue: string }>(
+  "primary/getPrimaryPrice",
   async (_, { rejectWithValue }) => {
     try {
       const factorySwapCanister = await getIcpSwapFactoryCanister();
@@ -23,4 +23,4 @@ const getAlexPrice = createAsyncThunk<string, void, { rejectValue: string }>(
   }
 );
 
-export default getAlexPrice;
+export default getPrimaryPrice;

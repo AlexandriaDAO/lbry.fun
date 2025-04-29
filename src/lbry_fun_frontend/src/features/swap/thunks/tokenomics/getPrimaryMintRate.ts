@@ -2,11 +2,11 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import LedgerService from "@/utils/LedgerService";
 import { getTokenomicsActor } from "@/features/auth/utils/authUtils";
 // Define the asyn thunk
-const getAlexMintRate = createAsyncThunk<
+const getPrimaryMintRate = createAsyncThunk<
   string, // This is the return type of the thunk's payload
   void,
   { rejectValue: string }
->("tokenomics/getAlexMintRate", async (_, { rejectWithValue }) => {
+>("tokenomics/getPrimaryMintRate", async (_, { rejectWithValue }) => {
   try {
     const actor = await getTokenomicsActor();
     const result = await actor.get_current_primary_rate();
@@ -25,4 +25,4 @@ const getAlexMintRate = createAsyncThunk<
   );
 });
 
-export default getAlexMintRate;
+export default getPrimaryMintRate;

@@ -221,6 +221,7 @@ pub async fn burn_secondary(
             return Err(e);
         }
     }
+    ic_cdk::println!("AVaiable balance is {}",total_icp_available);
     let total_archived_bal: u64 = get_total_archived_balance();
 
     let total_unclaimed_icp: u64 = get_total_unclaimed_icp_reward();

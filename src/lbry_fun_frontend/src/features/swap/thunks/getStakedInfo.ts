@@ -3,16 +3,23 @@ import { Principal } from "@dfinity/principal";
 import LedgerService from "@/utils/LedgerService";
 import { StakeInfo } from "../swapSlice";
 import { getActorSwap } from "@/features/auth/utils/authUtils";
-
+import { RootState } from "@/store";
 
 // Define the async thunk
 const getStakeInfo = createAsyncThunk<
   StakeInfo, // This is the return type of the thunk's payload
   string,
-  { rejectValue: string }
->("icp_swap/getStakeInfo", async (account, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("icp_swap/getStakeInfo", async (account, { getState, rejectWithValue }) => {
   try {
-    const actor = await getActorSwap();
+    const state = getState();
+
+    if (!state.swap.activeSwapPool) {
+      throw new Error("No active swap pool found");
+    }
+    const actor = await getActorSwap(
+      state.swap.activeSwapPool?.[1].icp_swap_canister_id
+    );
     const result = await actor.get_stake(Principal.fromText(account));
     if (result.length > 0) {
       // Stake exists
@@ -23,10 +30,12 @@ const getStakeInfo = createAsyncThunk<
       const formattedReward = result?.[0]?.reward_icp
         ? LedgerServices.e8sToIcp(result[0].reward_icp).toString()
         : "0";
-      const unix_stake_time = result?.[0]?.time ? result?.[0]?.time.toString() : "0";
+      const unix_stake_time = result?.[0]?.time
+        ? result?.[0]?.time.toString()
+        : "0";
 
       return {
-        stakedAlex: formattedStake,
+        stakedPrimary: formattedStake,
         rewardIcp: formattedReward,
         unix_stake_time,
       };
@@ -34,9 +43,9 @@ const getStakeInfo = createAsyncThunk<
     } else {
       // No stake found
       return {
-        stakedAlex: "0",
+        stakedPrimary: "0",
         rewardIcp: "0",
-        unix_stake_time:"0",
+        unix_stake_time: "0",
       };
     }
   } catch (error) {
