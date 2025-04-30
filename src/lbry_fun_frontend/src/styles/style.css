@@ -66,7 +66,7 @@ input[type='range']::-webkit-slider-thumb {
     width: 20px;
     border-radius: 9999px;
     background: white;
-    border: 3px solid #0F172A;
+    border: 3px solid #5555FF;
   }
 
   :where(.css-dev-only-do-not-override-1d4w9r2).ant-btn-variant-outlined:not(:disabled):not(.ant-btn-disabled):hover{

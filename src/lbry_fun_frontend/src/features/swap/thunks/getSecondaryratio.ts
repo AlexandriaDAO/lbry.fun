@@ -14,7 +14,8 @@ const getSecondaryratio = createAsyncThunk<
     
     const state = getState();
     if (!state.swap.activeSwapPool) {
-      throw new Error("No active swap pool found");
+      return "0";
+      //throw new Error("No active swap pool found");
     }
     const actor = await getActorSwap(state.swap.activeSwapPool?.[1].icp_swap_canister_id);
     const result = await actor.get_current_secondary_ratio();

@@ -66,7 +66,7 @@ const StakedInfo: React.FC<StakedInfoProps> = ({ setLoadingModalV, setActionType
                     </td>
                     <td className="block sm:table-cell py-3 sm:px-6 xs:px-2 text-left text-base font-medium text-radiocolor dark:text-white whitespace-nowrap">
                         <span className="block sm:hidden font-semibold dark:text-gray-400">Amount Staked:</span>
-                        {swap.stakeInfo.stakedPrimary} ALEX
+                        {swap.stakeInfo.stakedPrimary} {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}
                     </td>
                     <td className="block sm:table-cell py-3 sm:px-6 xs:px-2 text-left text-base font-medium text-radiocolor dark:text-white whitespace-nowrap">
                         <span className="block sm:hidden font-semibold dark:text-gray-400">Amount Earned:</span>

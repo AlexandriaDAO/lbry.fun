@@ -70,8 +70,8 @@ const createToken = createAsyncThunk<
         formData.secondary_token_name,
         formData.secondary_token_description,
         formData.secondary_token_logo_base64,
-        BigInt(formData.primary_max_supply),
-        BigInt(formData.initial_primary_mint),
+        BigInt(Number(formData.primary_max_supply)* 10 ** 8),
+        BigInt(Number(formData.initial_primary_mint)*10 ** 4),
         BigInt(formData.initial_secondary_burn),
         BigInt(formData.primary_max_phase_mint)
       );

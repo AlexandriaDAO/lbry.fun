@@ -66,5 +66,6 @@ export type TokenRecordStringified = {
   initial_secondary_burn: string;
   liquidity_provided_at: string | null;
   isLive: boolean;
+  primary_token_logo_base64?: string;
 
 };

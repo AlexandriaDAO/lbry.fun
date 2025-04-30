@@ -31,7 +31,7 @@ const PrimaryBalanceCard = () => {
         <div className="w-full"
         // className='grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1'
         >
-            <div className='bg-balancebox py-5 px-7 me-3 rounded-3xl mb-5'>
+            <div className='bg-[#5555FF] py-5 px-7 me-3 rounded-3xl mb-5'>
                 <div className='flex justify-between items-center mb-3'>
                     <div>
                         <h4 className='text-2xl font-medium text-white'>{swap.activeSwapPool&&swap.activeSwapPool[1].primary_token_name}</h4>

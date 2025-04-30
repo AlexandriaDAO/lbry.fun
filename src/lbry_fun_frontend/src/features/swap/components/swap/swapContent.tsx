@@ -161,9 +161,9 @@ const SwapContent: React.FC = () => {
               <button
                 type="button"
                 className={`w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 
-      ${parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? 'text-[#808080] cursor-not-allowed' : 'bg-balancebox text-white cursor-pointer'}`}
+      ${parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? 'text-[#fff] cursor-not-allowed' : 'bg-balancebox text-white cursor-pointer'}`}
                 style={{
-                  backgroundColor: parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? '#525252' : '', // when disabled
+                  backgroundColor: parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? '#5555FF' : '', // when disabled
                 }}
                 disabled={parseFloat(amount) === 0 || swap.loading || parseFloat(amount) < minimum_icp || amount === ""}
                 onClick={handleSubmit}

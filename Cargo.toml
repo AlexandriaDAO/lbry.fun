@@ -6,7 +6,8 @@ members = [
     "src/user",
     "src/logs",
     "src/lbry_fun",
-    "src/icp_swap"
+    "src/icp_swap",
+    "src/tokenomics",
 
 ]
 resolver = "2"

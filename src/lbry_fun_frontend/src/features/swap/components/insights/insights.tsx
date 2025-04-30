@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
-import getAllLogs from '../../thunks/insights/getAllLogs';
+// import getAllLogs from '../../thunks/insights/getAllLogs';
 import LbryBurnChart from './chart';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import LineChart from './chart';
@@ -12,7 +12,7 @@ const Insights: React.FC = () => {
     const chartData = useAppSelector((state) => state.swap.logsData);
 
     useEffect(() => {
-        dispatch(getAllLogs());
+        // dispatch(getAllLogs());
     }, [])
     return (
         <>

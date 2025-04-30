@@ -13,7 +13,8 @@ const getPrimaryFee = createAsyncThunk<
   try {
     const state = getState();
     if (!state.swap.activeSwapPool) {
-      throw new Error("No active swap pool found");
+      return "0";
+    //  throw new Error("No active swap pool found");
     }
     const actor = await getICRCActor(
       state.swap.activeSwapPool?.[1].primary_token_id

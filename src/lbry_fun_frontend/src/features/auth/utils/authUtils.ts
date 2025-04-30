@@ -111,8 +111,8 @@ export const getActorSwap = (canisterId:string) =>
 export const getIcpLedgerActor = () =>
   getActor(icp_ledger_canister_id, createActorIcpLedger, icp_ledger_canister);
 
-export const getTokenomicsActor = () =>
-  getActor(tokenomics_canister_id, createActorTokenomics, tokenomics);
+export const getTokenomicsActor = (canisterId:string) =>
+  getActor(canisterId, createActorTokenomics, tokenomics);
 
 export const getICRCActor = (canisterId:string) =>
   getActor(canisterId, createActorICRC, ICRC);

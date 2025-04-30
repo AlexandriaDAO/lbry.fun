@@ -104,7 +104,7 @@ export default function Tabs() {
                         {...handleMouseEvents('apps')}
                         className={`${baseStyles} ${location.pathname === '/' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
                     >
-                        APPS
+                        Token
                     </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
@@ -128,7 +128,7 @@ export default function Tabs() {
             >
                 LBRY
             </button> */}
-            <DropdownMenu open={openDropdown === 'swap'} onOpenChange={(open) => setOpenDropdown(open ? 'swap' : null)}>
+            {/* <DropdownMenu open={openDropdown === 'swap'} onOpenChange={(open) => setOpenDropdown(open ? 'swap' : null)}>
                 <DropdownMenuTrigger asChild>
                     <button
                         onClick={() => navigate('/swap')}
@@ -164,7 +164,7 @@ export default function Tabs() {
                         <span className="text-white text-sm font-syne">View All Options</span>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
             <DropdownMenu open={openDropdown === 'info'} onOpenChange={(open) => setOpenDropdown(open ? 'info' : null)}>
                 <DropdownMenuTrigger asChild>
                     <button

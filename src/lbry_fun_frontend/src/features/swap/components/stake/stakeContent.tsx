@@ -131,7 +131,7 @@ const StakeContent = () => {
                         <div className='border border-gray-400 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white py-5 px-7 rounded-borderbox mb-3'>
                             <h2 className='sm:text-2xl xs:text-xl text-radiocolor dark:text-white flex justify-between mb-5'>
                                 <span className='flex font-extrabold'>Staked</span>
-                                <span className='font-semibold flex'>{swap.stakeInfo.stakedPrimary} ALEX</span>
+                                <span className='font-semibold flex'>{swap.stakeInfo.stakedPrimary}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span>
                             </h2>
                             <ul className='ps-0'>
                                 <li className='mb-4'>
@@ -159,7 +159,7 @@ const StakeContent = () => {
                                 <li className='mb-4'>
                                     <div className='flex justify-between'>
                                         <strong className='sm:text-lg xs:text-sm text-radiocolor dark:text-white font-semibold me-1'>Cumulative Stake by Community</strong>
-                                        <strong className='sm:text-lg xs:text-sm text-radiocolor dark:text-white font-semibold me-1'>{swap.totalStaked} ALEX</strong>
+                                        <strong className='sm:text-lg xs:text-sm text-radiocolor dark:text-white font-semibold me-1'>{swap.totalStaked}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</strong>
                                     </div>
                                 </li>
                                 <li>
@@ -188,7 +188,7 @@ const StakeContent = () => {
                                 </div>
                                 <div className='flex justify-between'>
                                     <div className='flex items-center'>
-                                        <strong className='text-base text-multygray dark:text-gray-400 font-medium me-2'>Available Balance:<span className='text-base text-darkgray dark:text-white ms-2'>{primary.primaryBal} ALEX</span></strong>
+                                        <strong className='text-base text-multygray dark:text-gray-400 font-medium me-2'>Available Balance:<span className='text-base text-darkgray dark:text-white ms-2'>{primary.primaryBal}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span></strong>
                                         <img className='w-5 h-5' src="images/alex-logo.svg" alt="alex" />
                                     </div>
                                     <Link to="" role="button" className='text-[#A7B1D7] dark:text-gray-400 underline text-base font-bold hover:text-[#8494C7] dark:hover:text-gray-300' onClick={() => handleMaxPrimary()} >Max</Link>
@@ -198,9 +198,9 @@ const StakeContent = () => {
                         <div>
                             {user ? <button
                                 type="button"
-                                className={`bg-balancebox text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 ${parseFloat(amount) === 0 || swap.loading ? 'text-[#808080] cursor-not-allowed' : 'bg-balancebox text-white cursor-pointer'}`}
+                                className={`bg-[#5555FF] text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 ${parseFloat(amount) === 0 || swap.loading ? 'text-[#808080] cursor-not-allowed' : 'bg-balancebox text-white cursor-pointer'}`}
                                 style={{
-                                    backgroundColor: parseFloat(amount) === 0 || swap.loading ? '#525252' : '', // when disabled
+                                    backgroundColor: parseFloat(amount) === 0 || swap.loading ? '#bg-[#5555FF]' : '', // when disabled
                                 }}
                                 disabled={parseFloat(amount) === 0 || swap.loading === true}
                                 onClick={(e) => {

@@ -20,8 +20,7 @@ import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import getSecondaryFee from './thunks/secondaryIcrc/getSecondaryFee';
 import getPrimaryFee from './thunks/primaryIcrc/getPrimaryFee';
 import Insights from './components/insights/insights';
-import { TokenRecordStringified } from '../token/thunk/getTokenPools.thunk';
-import PoolCard from './components/balance/poolCard';
+
 import { setActiveSwapPool } from './swapSlice';
 
 const SwapMain = () => {
@@ -73,7 +72,6 @@ const SwapMain = () => {
         <div className='tabs py-10 2xl:py-20 xl:py-16 lg:py-14 md:py-12 sm:py-10'>
             <div className='container px-5'>
                 <AccountCards />
-                <PoolCard/>
                 <div className='tabs-content'>
                     <div className='tabs-content'>
                         <div className="flex mb-5 flex-wrap">
@@ -82,8 +80,8 @@ const SwapMain = () => {
                                     key={tab.id}
                                     onClick={() => navigate(`/swap/${tab.path}?id=${id}`)}
                                     className={`px-2 py-2 flex items-center ${activeTab === tab.id
-                                        ? 'text-base 2xl:text-xl bg-black text-white dark:bg-white dark:text-black px-5'
-                                        : 'bg-white text-black dark:bg-black dark:text-white'} transition-colors duration-300 text-base font-semibold leading-6 min-w-24 h-11 border dark:border-gray-700 border-gray-400 rounded-2xl mr-3 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black px-5 mb-4 z-20`}
+                                        ? 'text-base 2xl:text-xl bg-[#5555FF] text-white dark:bg-white dark:text-black px-5'
+                                        : 'bg-white text-black dark:bg-black dark:text-white'} transition-colors duration-300 text-base font-semibold leading-6 min-w-24 h-11 border dark:border-gray-700 border-gray-400 rounded-2xl mr-3 hover:bg-[#5555FF] hover:text-white dark:hover:bg-white dark:hover:text-black px-5 mb-4 z-20`}
                                 >
                                     {tab.label}
                                     {tab.hover === null ? (<></>) : (<div className='relative group'>
