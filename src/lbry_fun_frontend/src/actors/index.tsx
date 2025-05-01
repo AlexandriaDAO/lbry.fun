@@ -1,5 +1,3 @@
-// export { default as AlexActor } from './AlexActor';
-// export { default as AlexBackendActor } from './AlexBackendActor';
 // export { default as AssetCanisterActor } from './AssetCanisterActor';
 // export { default as AssetManagerActor } from './AssetManagerActor';
 // export { default as IcpLedgerActor } from './IcpLedgerActor';
@@ -12,5 +10,4 @@
 // export { default as VetkdActor } from './VetkdActor';
 export { default as UserActor } from './UserActor';
 export {default as LbryFunActor} from './LbryFunActor';
-// export { default as AlexWalletActor } from './AlexWalletActor';
 // export { default as PerpetuaActor } from './PerpetuaActor';

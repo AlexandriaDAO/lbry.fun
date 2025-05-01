@@ -5,11 +5,11 @@
       "package": "user",
       "candid": "src/user/user.did"
     },
-  
     "icp_swap": {
       "candid": "src/icp_swap/icp_swap.did",
       "package": "icp_swap",
-      "type": "rust"    },
+      "type": "rust"
+    },
     "lbry_fun": {
       "candid": "src/lbry_fun/lbry_fun.did",
       "package": "lbry_fun",
@@ -25,7 +25,7 @@
       "package": "tokenomics",
       "type": "rust"
     },
- 
+
     "lbry_fun_frontend": {
       "frontend": {
         "entrypoint": "src/lbry_fun_frontend/public/index.html"
@@ -62,7 +62,6 @@
       "candid": "src/icp_swap_factory/icp_swap_factory.did",
       "specified_id": "ggzvv-5qaaa-aaaag-qck7a-cai"
     }
-    
   },
   "defaults": {
     "build": {

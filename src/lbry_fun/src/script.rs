@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use crate::publish_eligible_tokens_on_kongswap;
 
-pub const INTERVAL: Duration = Duration::from_secs(60*60); // 1 hour.
+pub const INTERVAL: Duration = Duration::from_secs(60); // 1 hour.
 
 #[post_upgrade]
 fn post_upgrade() {

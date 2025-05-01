@@ -136,12 +136,11 @@ const CreateTokenForm: React.FC = () => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // setLoadingModalV(true);
-    // if (!validateForm()) {
-    //   // Form has errors, don't submit
-    //   setLoadingModalV(false);
-    //   return;
-    // }
+    setLoadingModalV(true);
+    if (!validateForm()) {
+      setLoadingModalV(false);
+      return;
+    }
 
     if (!user) {
       setLoadingModalV(false);
@@ -441,7 +440,7 @@ const CreateTokenForm: React.FC = () => {
             <div className="text-center">
               <Button
                 type="submit"
-                className="inline-flex gap-2 items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all duration-100 ease-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 bg-[#0F172A] lg:h-14 md:h-12 sm:h-10 xs:h-10 lg:px-7 md:px-5 sm:px-4 xs:px-2 text-white lg:text-lg md:text-base text-sm border-2 border-[#353535] rounded-xl hover:bg-white hover:text-[#353535] dark:bg-[#353230] dark:border-[#353230] dark:text-[#fff] hover:dark:border-[#353230] hover:dark:text-[#fff] hover:dark:bg-[transparent] min-w-[300px] hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
+                className="inline-flex gap-2 items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all duration-100 ease-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 bg-[#5555FF] lg:h-14 md:h-12 sm:h-10 xs:h-10 lg:px-7 md:px-5 sm:px-4 xs:px-2 text-white lg:text-lg md:text-base text-sm border-2 border-[#5555FF] rounded-xl hover:bg-transparent hover:text-[#5555FF] dark:bg-[#353230] dark:border-[#353230] dark:text-[#fff] hover:dark:border-[#5555FF] hover:dark:text-[#fff] hover:dark:bg-[#5555FF] min-w-[300px] dark:hover:bg-[#5555ff] dark:hover:text-white"
               >
                 Create Token
               </Button>

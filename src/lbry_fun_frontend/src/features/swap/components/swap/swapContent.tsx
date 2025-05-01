@@ -6,15 +6,16 @@ import { _SERVICE as _SERVICESWAP } from "../../../../../../declarations/icp_swa
 import { _SERVICE as _SERVICEICPLEDGER } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 
 import { Link } from "react-router";
-import swapLbry from "../../thunks/swapLbry";
+import swapSecondary from "../../thunks/swapSecondary";
 import { flagHandler } from "../../swapSlice";
 import { LoaderCircle } from "lucide-react";
 import { icp_fee, minimum_icp } from "@/utils/utils";
-import getLbryBalance from "../../thunks/lbryIcrc/getLbryBalance";
+import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance";
 import SuccessModal from "../successModal";
 import LoadingModal from "../loadingModal";
 import ErrorModal from "../errorModal";
 import { Entry } from "@/layouts/parts/Header";
+
 
 const SwapContent: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -22,8 +23,8 @@ const SwapContent: React.FC = () => {
   const icpLedger = useAppSelector((state) => state.icpLedger);
   const swap = useAppSelector((state) => state.swap);
   const [amount, setAmount] = useState("");
-  const [lbryRatio, setLbryRatio] = useState(0.0);
-  const [tentativeLBRY, setTentativeLBRY] = useState(Number);
+  const [secondaryRatio, setSecondaryRatio] = useState(0.0);
+  const [tentativeSecondary, setTentativeSecondary] = useState(Number);
   const [loadingModalV, setLoadingModalV] = useState(false);
   const [successModalV, setSucessModalV] = useState(false);
   const [errorModalV, setErrorModalV] = useState({ flag: false, title: "", message: "" });
@@ -31,9 +32,9 @@ const SwapContent: React.FC = () => {
   const [shadow, setShadow] = useState('shadow-[0px_0px_13px_4px_#abbddb8a] border-[#C5CFF9] ');
 
   const handleSubmit = () => {
-    if (!user?.principal) return;
+    if (!user?.principal||!swap.activeSwapPool?.[1].icp_swap_canister_id) return;
     let amountAfterFees = (Number(amount)).toFixed(4);
-    dispatch(swapLbry({ amount: amountAfterFees, userPrincipal: user?.principal }));
+    dispatch(swapSecondary({ amount: amountAfterFees, userPrincipal: user?.principal, canisterId: swap.activeSwapPool?.[1].icp_swap_canister_id }));
     setLoadingModalV(true);
   };
 
@@ -43,7 +44,7 @@ const SwapContent: React.FC = () => {
       Number(icpLedger.accountBalance) - 2 * icp_fee
     ).toFixed(4);
     setAmount(userBal);
-    setTentativeLBRY(lbryRatio * Number(userBal));
+    setTentativeSecondary(secondaryRatio * Number(userBal));
 
   };
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,27 +52,27 @@ const SwapContent: React.FC = () => {
 
     if (Number(e.target.value) >= 0) {
       setAmount(e.target.value);
-      setTentativeLBRY(lbryRatio * Number(e.target.value));
+      setTentativeSecondary(secondaryRatio * Number(e.target.value));
       setShadow("border-[#bdbec4]");
     }
   };
   useEffect(() => {
-    setLbryRatio(Number(swap.lbryRatio));
-    setTentativeLBRY(
-      parseFloat((Number(swap.lbryRatio) * Number(amount)).toFixed(4))
+    setSecondaryRatio(Number(swap.secondaryRatio));
+    setTentativeSecondary(
+      parseFloat((Number(swap.secondaryRatio) * Number(amount)).toFixed(4))
     );
-  }, [swap.lbryRatio]);
+  }, [swap.secondaryRatio]);
   useEffect(() => {
-    if (!user) return;
+    if (!user ||!swap.activeSwapPool?.[1].secondary_token_id) return;
     if (swap.swapSuccess === true) {
-      dispatch(getLbryBalance(user.principal));
+      dispatch(getSecondaryBalance(user.principal));
       dispatch(flagHandler());
       setLoadingModalV(false);
       setSucessModalV(true);
       setAmount("");
-      setTentativeLBRY(0);
+      setTentativeSecondary(0);
     }
-  }, [user, swap.swapSuccess]);
+  }, [user, swap.swapSuccess,swap.activeSwapPool]);
   useEffect(() => {
     if (swap.error) {
       setLoadingModalV(false);
@@ -139,15 +140,15 @@ const SwapContent: React.FC = () => {
             <div className="bg-white dark:bg-gray-800 border border-[#bdbec4] dark:border-gray-700 py-5 px-7 rounded-borderbox me-0 2xl:ms-2 xl:ms-2 lg:ms-2 md:ms-2 sm:me-0 w-full 2xl:w-6/12 xl:w-6/12 lg:w-6/12 md:w-6/12 sm:w-full">
               <div className="flex justify-between mb-5 flex-wrap break-all">
                 <h2 className="text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-black dark:text-gray-200">
-                  LBRY
+                  {swap.activeSwapPool?.[1].secondary_token_symbol}
                 </h2>
                 <h3 className="text-swapvalue text-right text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium dark:text-gray-200">
-                  {tentativeLBRY.toFixed(4)}
+                  {tentativeSecondary.toFixed(4)}
                 </h3>
               </div>
               <div className="flex justify-between">
                 <strong className="text-base text-[#353535] dark:text-gray-300 font-medium me-1">
-                  Balance: {swap.lbryBalance} LBRY
+                  Balance: {swap.secondaryBalance} {swap.activeSwapPool?.[1].secondary_token_symbol}
                 </strong>
               </div>
             </div>
@@ -160,9 +161,9 @@ const SwapContent: React.FC = () => {
               <button
                 type="button"
                 className={`w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 
-      ${parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? 'text-[#808080] cursor-not-allowed' : 'bg-balancebox text-white cursor-pointer'}`}
+      ${parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? 'text-[#fff] cursor-not-allowed' : 'bg-balancebox text-white cursor-pointer'}`}
                 style={{
-                  backgroundColor: parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? '#525252' : '', // when disabled
+                  backgroundColor: parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? '#5555FF' : '', // when disabled
                 }}
                 disabled={parseFloat(amount) === 0 || swap.loading || parseFloat(amount) < minimum_icp || amount === ""}
                 onClick={handleSubmit}
@@ -209,12 +210,12 @@ const SwapContent: React.FC = () => {
                 Receive
               </strong>
               <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor dark:text-gray-200 break-all">
-                {tentativeLBRY.toFixed(4)} LBRY
+                {tentativeSecondary.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}
               </span>
             </li>
             <li className="flex justify-between mb-5">
               <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor dark:text-gray-200">
-                For each ICP you swap, you'll receive <span className="text-[#FF9900] dark:text-yellow-400">{tentativeLBRY}</span> LBRY tokens.
+                For each ICP you swap, you'll receive <span className="text-[#FF9900] dark:text-yellow-400">{tentativeSecondary}</span> {swap.activeSwapPool?.[1].secondary_token_symbol} tokens.
               </strong>
             </li>
             <li>
@@ -227,7 +228,7 @@ const SwapContent: React.FC = () => {
       </div>
 
 
-      <LoadingModal show={loadingModalV} message1={"Swap in Progress"} message2={"Your transaction from ICP to LBRY is being processed. This may take a few moments."} setShow={setLoadingModalV} />
+      <LoadingModal show={loadingModalV} message1={"Swap in Progress"} message2={`Your transaction from ICP to  ${swap.activeSwapPool?.[1].secondary_token_symbol}  is being processed. This may take a few moments`} setShow={setLoadingModalV} />
       <SuccessModal show={successModalV} setShow={setSucessModalV} />
       <ErrorModal show={errorModalV.flag} setShow={setErrorModalV} title={errorModalV.title} message={errorModalV.message} />
     </div>

@@ -5,21 +5,19 @@ import transferICP from "@/features/icp-ledger/thunks/transferICP";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 
-import { _SERVICE as _SERVICELBRY } from '../../../../../../ICRC/ICRC.did';
-import { _SERVICE as _SERVICEALEX } from '../../../../../../ICRC/ICRC.did';
 import { _SERVICE as _SERVICEICPLEDGER } from '../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did'
-import transferALEX from "../../thunks/alexIcrc/transferALEX";
-import transferLBRY from "../../thunks/lbryIcrc/transferLBRY";
+import transferPrimary from "../../thunks/primaryIcrc/transferPrimary";
+import transferSecondary from "../../thunks/secondaryIcrc/transferSecondary";
 import { icpLedgerFlagHandler } from "@/features/icp-ledger/icpLedgerSlice";
 import { flagHandler } from "../../swapSlice";
 import { icp_fee, options } from "@/utils/utils";
 import { LoaderCircle } from "lucide-react";
 import LoadingModal from "../loadingModal";
 import SuccessModal from "../successModal";
-import { alexFlagHandler } from "../../alexSlice";
+import { primaryFlagHandler } from "../../primarySlice";
 import getIcpBal from "@/features/icp-ledger/thunks/getIcpBal";
-import getAccountAlexBalance from "../../thunks/alexIcrc/getAccountAlexBalance";
-import getLbryBalance from "../../thunks/lbryIcrc/getLbryBalance";
+import getAccountPrimaryBalance from "../../thunks/primaryIcrc/getAccountPrimaryBalance";
+import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance";
 import ErrorModal from "../errorModal";
 import { Entry } from "@/layouts/parts/Header";
 import { Principal } from "@dfinity/principal";
@@ -29,7 +27,7 @@ const SendContent = () => {
 
     const { user } = useAppSelector(state => state.auth);
     const icpLedger = useAppSelector((state) => state.icpLedger);
-    const alex = useAppSelector((state) => state.alex);
+    const primary = useAppSelector((state) => state.primary);
     const swap = useAppSelector((state) => state.swap);
 
     const [isOpen, setIsOpen] = useState(false);
@@ -76,9 +74,9 @@ const SendContent = () => {
         setSelectedOption(option.label);
         setIsOpen(false);
         let img = "images/8-logo.png";
-        if (option.label === "ALEX") {
+        if (option.label === "PRIMARY") {
             img = "images/alex-logo.svg";
-        } else if (option.label === "LBRY") {
+        } else if (option.label === "SECONDARY") {
             img = "images/lbry-logo.svg";
         }
         setSelectedImage(img);
@@ -93,17 +91,17 @@ const SendContent = () => {
      
             setAmount(userBal);
         }
-        else if (selectedOption === "ALEX") {
+        else if (selectedOption === "PRIMARY") {
             const userBal = Math.max(
                 0,
-                Number(alex.alexBal) - (Number(alex.alexFee) * 1)
+                Number(primary.primaryBal) - (Number(primary.primaryFee) * 1)
             ).toFixed(4);
             setAmount(userBal);
         }
-        else if (selectedOption === "LBRY") {
+        else if (selectedOption === "SECONDARY") {
             const userBal = Math.max(
                 0,
-                Number(swap.lbryBalance) - (Number(swap.lbryFee) * 1)
+                Number(swap.secondaryBalance) - (Number(swap.secondaryFee) * 1)
             ).toFixed(4);
             setAmount(userBal);
         }
@@ -117,11 +115,11 @@ const SendContent = () => {
         if (selectedOption === "ICP") {
             dispatch(transferICP({ amount, destination: destinationPrincipal, accountType: "principal" }));
         }
-        else if (selectedOption === "ALEX") {
-            dispatch(transferALEX({ amount, destination: destinationPrincipal }));
+        else if (selectedOption === "PRIMARY") {
+            dispatch(transferPrimary({ amount, destination: destinationPrincipal }));
         }
-        else if (selectedOption === "LBRY") {
-            dispatch(transferLBRY({ amount, destination: destinationPrincipal }));
+        else if (selectedOption === "SECONDARY") {
+            dispatch(transferSecondary({ amount, destination: destinationPrincipal }));
         }
         setLoadingModalV(true);
     }
@@ -130,13 +128,13 @@ const SendContent = () => {
         if (selectedOption === "ICP") {
             setAvailableBalnce(icpLedger.accountBalance + " " + selectedOption);
         }
-        else if (selectedOption === "ALEX") {
-            setAvailableBalnce(alex.alexBal + " " + selectedOption);
+        else if (selectedOption === "PRIMARY") {
+            setAvailableBalnce(primary.primaryBal + " " + selectedOption);
         }
-        else if (selectedOption === "LBRY") {
-            setAvailableBalnce(swap.lbryBalance + " " + selectedOption);
+        else if (selectedOption === "SECONDARY") {
+            setAvailableBalnce(swap.secondaryBalance + " " + selectedOption);
         }
-    }, [selectedOption, icpLedger.accountBalance, alex.alexBal, swap.lbryBalance])
+    }, [selectedOption, icpLedger.accountBalance, primary.primaryBal, swap.secondaryBalance])
 
     useEffect(() => {
         if(!user) return;
@@ -147,28 +145,28 @@ const SendContent = () => {
             dispatch(icpLedgerFlagHandler());
 
         }
-        else if (alex.transferSuccess === true) {
+        else if (primary.transferSuccess === true) {
             setLoadingModalV(false);
             setSucessModalV(true);
-            dispatch(getAccountAlexBalance(user.principal))
+            dispatch(getAccountPrimaryBalance(user.principal))
 
-            dispatch((alexFlagHandler()));
+            dispatch((primaryFlagHandler()));
 
         }
         else if (swap.transferSuccess === true) {
             setLoadingModalV(false);
             setSucessModalV(true);
-            dispatch(getLbryBalance(user.principal))
+            dispatch(getSecondaryBalance(user.principal))
             dispatch((flagHandler()));
         }
-        else if (swap.error || alex.error || icpLedger.error) {
+        else if (swap.error || primary.error || icpLedger.error) {
             setLoadingModalV(false);
             setErrorModalV(true);
             dispatch(flagHandler());
 
 
         }
-    }, [user, icpLedger, swap, alex])
+    }, [user, icpLedger, swap, primary])
 
     return (<>
         <div>
@@ -198,9 +196,9 @@ const SendContent = () => {
                             <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg">
                                 {options.map((option, index) => {
                                     let logoSrc = "images/8-logo.png";
-                                    if (option.label === "ALEX") {
+                                    if (option.label === "PRIMARY") {
                                         logoSrc = "images/alex-logo.svg";
-                                    } else if (option.label === "LBRY") {
+                                    } else if (option.label === "SECONDARY") {
                                         logoSrc = "images/lbry-logo.svg";
                                     }
                                     return (
@@ -249,8 +247,8 @@ const SendContent = () => {
                                 <div className='flex items-center'>
                                     <strong className='text-base text-multygray dark:text-gray-300 font-medium me-2'>Available Balance:<span className='text-base text-darkgray dark:text-gray-200 ms-2'>{availableBalance}</span></strong>
                                     {selectedOption === "ICP" && <img className='w-5 h-5' src="images/8-logo.png" alt="icp" />}
-                                    {selectedOption === "ALEX" && <img className='w-5 h-5' src="images/alex-logo.svg" alt="alex" />}
-                                    {selectedOption === "LBRY" && <img className='w-5 h-5' src="images/lbry-logo.svg" alt="lbry" />}
+                                    {selectedOption === "PRIMARY" && <img className='w-5 h-5' src="images/alex-logo.svg" alt="alex" />}
+                                    {selectedOption === "SECONDARY" && <img className='w-5 h-5' src="images/lbry-logo.svg" alt="lbry" />}
                                 </div>
                                 <Link role="button" to="" className='text-[#A7B1D7] dark:text-blue-400 underline text-base font-medium' onClick={() => { handleMax() }}>Max</Link>
                             </div>

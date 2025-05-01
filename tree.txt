@@ -1065,9 +1065,9 @@
 │   │   │   │   │   ├── swapSlice.ts
 │   │   │   │   │   ├── thunks/
 │   │   │   │   │   │   ├── alexIcrc/
-│   │   │   │   │   │   │   ├── getAccountAlexBalance.ts
-│   │   │   │   │   │   │   └── transferALEX.ts
-│   │   │   │   │   │   ├── burnLBRY.ts
+│   │   │   │   │   │   │   ├── getAccountPrimaryBalance.ts
+│   │   │   │   │   │   │   └── transferPrimary.ts
+│   │   │   │   │   │   ├── burnSecondary.ts
 │   │   │   │   │   │   ├── claimReward.ts
 │   │   │   │   │   │   ├── getAllStakesInfo.ts
 │   │   │   │   │   │   ├── getArchivedBal.ts
@@ -1078,7 +1078,7 @@
 │   │   │   │   │   │   ├── lbryIcrc/
 │   │   │   │   │   │   │   ├── getLbryBalance.ts
 │   │   │   │   │   │   │   ├── getTransactions.ts
-│   │   │   │   │   │   │   └── transferLBRY.ts
+│   │   │   │   │   │   │   └── transferSecondary.ts
 │   │   │   │   │   │   ├── redeemArchivedBalance.ts
 │   │   │   │   │   │   ├── stakeAlex.ts
 │   │   │   │   │   │   ├── swapLbry.ts

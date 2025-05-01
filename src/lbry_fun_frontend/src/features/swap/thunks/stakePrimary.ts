@@ -3,25 +3,33 @@ import { _SERVICE as _SERVICESWAP } from "../../../../../declarations/icp_swap/i
 import { _SERVICE as _SERVICEALEX } from "../../../../../declarations/ICRC/ICRC.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
-import { getActorSwap, getAlexActor } from "@/features/auth/utils/authUtils";
+import { getActorSwap, getICRCActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage, getErrorMessage } from "../utlis/erorrs";
+import { RootState } from "@/store";
 
 // Define the async thunk
-const stakeAlex = createAsyncThunk<
+const stakePrimary = createAsyncThunk<
   string, // This is the return type of the thunk's payload
   { amount: string; userPrincipal: string },
-  { rejectValue: ErrorMessage }
+  { state: RootState; rejectValue: ErrorMessage }
 >(
-  "icp_swap/stakeAlex",
-  async ({ amount, userPrincipal }, { rejectWithValue }) => {
+  "icp_swap/stakePrimary",
+  async ({ amount, userPrincipal }, { getState, rejectWithValue }) => {
     try {
-      const actorAlex = await getAlexActor();
-      const icp_swap_canister_id = process.env.CANISTER_ID_ICP_SWAP!;
+      const state = getState();
+      if (!state.swap.activeSwapPool) {
+        throw new Error("No active swap pool found");
+      }
+      const actor = await getICRCActor(
+        state.swap.activeSwapPool?.[1].primary_token_id
+      );
+      const icp_swap_canister_id =       state.swap.activeSwapPool?.[1].icp_swap_canister_id;
+      
       let amountFormat: bigint = BigInt(
         Number(Number(amount) * 10 ** 8).toFixed(0)
       );
 
-      const checkApproval = await actorAlex.icrc2_allowance({
+      const checkApproval = await actor.icrc2_allowance({
         account: {
           owner: Principal.fromText(userPrincipal),
           subaccount: [],
@@ -33,7 +41,7 @@ const stakeAlex = createAsyncThunk<
       });
 
       if (checkApproval.allowance < amountFormat) {
-        const resultAlexApprove = await actorAlex.icrc2_approve({
+        const resultPrimaryApprove = await actor.icrc2_approve({
           spender: {
             owner: Principal.fromText(icp_swap_canister_id),
             subaccount: [],
@@ -46,8 +54,8 @@ const stakeAlex = createAsyncThunk<
           expected_allowance: [],
           expires_at: [],
         });
-        if ("Err" in resultAlexApprove) {
-          const error = resultAlexApprove.Err;
+        if ("Err" in resultPrimaryApprove) {
+          const error = resultPrimaryApprove.Err;
           let errorMessage = "Insufficent funds"; // Default error message
           if ("TemporarilyUnavailable" in error) {
             errorMessage = "Service is temporarily unavailable";
@@ -56,9 +64,9 @@ const stakeAlex = createAsyncThunk<
         }
       }
 
-      const actorSwap = await getActorSwap();
+      const actorSwap = await getActorSwap(icp_swap_canister_id);
       const result = await actorSwap.stake_primary(amountFormat, []);
-      console.log("result is is ",result);
+      console.log("result is is ", result);
       if ("Ok" in result) return "success";
       if ("Err" in result) {
         const errorMessage = getErrorMessage(result.Err);
@@ -76,4 +84,4 @@ const stakeAlex = createAsyncThunk<
   }
 );
 
-export default stakeAlex;
+export default stakePrimary;

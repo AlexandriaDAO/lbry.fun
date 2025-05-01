@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRotate } from "@fortawesome/free-solid-svg-icons";
 import { Entry } from "@/layouts/parts/Header";
 import { toast } from "sonner";
+import PoolCard from "./poolCard";
 
 const AccountCards: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -83,7 +84,7 @@ const AccountCards: React.FC = () => {
             <div className="grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 mb-3 2xl:mb-12 xl:mb-10 lg:mb-7 md:mb-6 sm:mb-5">
                 <div
                     style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-                    className="bg-gray-900 text-white py-10 xxl:px-14 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3 ">
+                    className="bg-[#5555FF] text-white py-10 xxl:px-14 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3 ">
                     <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-3  2xl:mb-3  xl:mb-3">
                         Principal Account
                     </h4>
@@ -127,7 +128,7 @@ const AccountCards: React.FC = () => {
                                     </h4>
                                 </div>
                                 <div className="mb-3 xxl:mb-3">
-                                    <h4 className="text-2xl 2xl:text-2xl font-medium mb-3 text-multygray">
+                                    <h4 className="text-2xl 2xl:text-2xl font-medium mb-3 text-[#FF9900]">
                                         ≈ $ {icpLedger?.accountBalanceUSD}
                                     </h4>
                                 </div>
@@ -141,6 +142,8 @@ const AccountCards: React.FC = () => {
                         </div>
                     )}
                 </div>
+                <PoolCard/>
+
             </div>
         </>
     );

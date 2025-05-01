@@ -43,8 +43,6 @@ const alex_backend_canister_id = process.env.CANISTER_ID_ALEX_BACKEND!;
 const icp_swap_canister_id = process.env.CANISTER_ID_ICP_SWAP!;
 const icp_ledger_canister_id = "nppha-riaaa-aaaal-ajf2q-cai";
 const tokenomics_canister_id = process.env.CANISTER_ID_TOKENOMICS!;
-const lbry_canister_id = process.env.CANISTER_ID_LBRY!;
-const alex_canister_id = process.env.CANISTER_ID_ALEX!;
 const user_canister_id = process.env.CANISTER_ID_USER!;
 const log_canister_id = process.env.CANISTER_ID_LOGS!;
 const icp_swap_factory_canister_id = "ggzvv-5qaaa-aaaag-qck7a-cai";
@@ -107,20 +105,18 @@ const getActor = async <T>(
 
 export const getUser = () => getActor(user_canister_id, createUserActor, user);
 
-export const getActorSwap = () =>
-  getActor(icp_swap_canister_id, createActorSwap, icp_swap);
+export const getActorSwap = (canisterId:string) =>
+  getActor(canisterId, createActorSwap, icp_swap);
 
 export const getIcpLedgerActor = () =>
   getActor(icp_ledger_canister_id, createActorIcpLedger, icp_ledger_canister);
 
-export const getTokenomicsActor = () =>
-  getActor(tokenomics_canister_id, createActorTokenomics, tokenomics);
+export const getTokenomicsActor = (canisterId:string) =>
+  getActor(canisterId, createActorTokenomics, tokenomics);
 
-export const getLbryActor = () =>
-  getActor(lbry_canister_id, createActorICRC, ICRC);
+export const getICRCActor = (canisterId:string) =>
+  getActor(canisterId, createActorICRC, ICRC);
 
-export const getAlexActor = () =>
-  getActor(alex_canister_id, createActorICRC, ICRC);
 
 export const getLogs = () => getActor(log_canister_id, createActorLogs, logs);
 export const getLbryFunActor = () =>

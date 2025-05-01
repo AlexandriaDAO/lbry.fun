@@ -1,26 +1,37 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
-import LedgerService from "@/utils/LedgerService";
-import { getActorSwap, getLbryActor } from "@/features/auth/utils/authUtils";
+import { getActorSwap, getICRCActor } from "@/features/auth/utils/authUtils";
 import getCanisterBal from "@/features/icp-ledger/thunks/getCanisterBal";
 import getCanisterArchivedBal from "./getCanisterArchivedBal";
 import { ErrorMessage, getErrorMessage } from "../utlis/erorrs";
+import { RootState } from "@/store";
 
 // Define the async thunk
-const burnLbry = createAsyncThunk<
+const burnSecondary = createAsyncThunk<
   string, // This is the return type of the thunk's payload
   { amount: string; userPrincipal: string },
-  { rejectValue: ErrorMessage }
+  { state: RootState; rejectValue: ErrorMessage }
 >(
-  "icp_swap/burnLBRY",
-  async ({ amount, userPrincipal }, { dispatch, rejectWithValue }) => {
+  "icp_swap/burnSecondary",
+  async (
+    { amount, userPrincipal },
+    { getState, dispatch, rejectWithValue }
+  ) => {
     try {
-      const actorLbry = await getLbryActor();
-      const icp_swap_canister_id = process.env.CANISTER_ID_ICP_SWAP!;
+      const state = getState();
+
+      if (!state.swap.activeSwapPool) {
+        throw new Error("No active swap pool found");
+      }
+      const actor = await getICRCActor(
+        state.swap.activeSwapPool?.[1].secondary_token_id
+      );
+      const icp_swap_canister_id =
+        state.swap.activeSwapPool?.[1].icp_swap_canister_id;
       let amountFormat: bigint = BigInt(Number(amount));
       let amountFormate8s: bigint = BigInt(Number(amount) * 10 ** 8);
 
-      const checkApproval = await actorLbry.icrc2_allowance({
+      const checkApproval = await actor.icrc2_allowance({
         account: {
           owner: Principal.fromText(userPrincipal),
           subaccount: [],
@@ -31,7 +42,7 @@ const burnLbry = createAsyncThunk<
         },
       });
       if (checkApproval.allowance < amountFormate8s) {
-        const resultLbryApprove = await actorLbry.icrc2_approve({
+        const resultLbryApprove = await actor.icrc2_approve({
           spender: {
             owner: Principal.fromText(icp_swap_canister_id),
             subaccount: [],
@@ -55,13 +66,16 @@ const burnLbry = createAsyncThunk<
         }
       }
 
-      const actorSwap = await getActorSwap();
+      const actorSwap = await getActorSwap(
+        state.swap.activeSwapPool?.[1].icp_swap_canister_id
+      );
       const result = await actorSwap.burn_secondary(amountFormat, []);
       if ("Ok" in result) {
         dispatch(getCanisterBal());
         dispatch(getCanisterArchivedBal());
         return "success";
       } else if ("Err" in result) {
+        console.log(result.Err);
         const errorMessage = getErrorMessage(result.Err);
         return rejectWithValue(errorMessage);
       }
@@ -79,4 +93,4 @@ const burnLbry = createAsyncThunk<
   }
 );
 
-export default burnLbry;
+export default burnSecondary;

@@ -1,10 +1,14 @@
  const calculateMaxBurnAllowed = (
-  lbryRatio: string,
+  secondaryRatio: string,
   canisterBal: string,
   canisterArchivedBal: Number,
   canisterUnClaimedIcp: Number
 ) => {
-  let lbryPerIcp = Number(lbryRatio) * 2;
+  console.log("secondaryRatio", secondaryRatio);
+  console.log("canisterBal", canisterBal);
+  console.log("canisterArchivedBal", canisterArchivedBal);
+  console.log("canisterUnClaimedIcp", canisterUnClaimedIcp);
+  let lbryPerIcp = Number(secondaryRatio) * 2;
   let canisterBalance = Number(canisterBal);
   let totalArchivedBalance = Number(canisterArchivedBal);
   let totalUnclaimedBalance = Number(canisterUnClaimedIcp);

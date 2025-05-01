@@ -23,7 +23,6 @@ export const Entry = () => {
 	const { identity, isInitializing, isLoggingIn } = useIdentity();
 	const { user } = useAppSelector((state) => state.auth);
 	const { loading } = useAppSelector((state) => state.login);
-	console.log("actor is ",actor);
 	// const [countdown, setCountdown] = useState(60);
 
 	// // relevant logic in /src/providers/UserProvider/IIUserProvider.tsx
@@ -106,7 +105,7 @@ function Header() {
 	// bg-gray-900
 
 	return (
-		<div className="flex-grow-0 flex-shrink-0 bg-gray-900 basis-24 flex flex-col justify-center items-stretch lg:px-10 md:px-8 sm:px-6 xs:px-4 relative z-50">
+		<div className="flex-grow-0 flex-shrink-0 bg-[#5555FF] basis-24 flex flex-col justify-center items-stretch lg:px-10 md:px-8 sm:px-6 xs:px-4 relative z-50">
 			<div className="flex-grow-0 flex-shrink-0 flex basis-24 justify-between items-center w-full">
 				<Logo />
 				<div className="md:flex sm:hidden xs:hidden w-full justify-between">

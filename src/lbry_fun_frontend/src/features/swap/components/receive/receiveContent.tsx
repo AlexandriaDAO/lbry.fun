@@ -26,7 +26,7 @@ const ReceiveContent = () => {
         let img = "images/8-logo.png";
         if (option.label === "ALEX") {
             img = "images/alex-logo.svg";
-        } else if (option.label === "LBRY") {
+        } else if (option.label === "Secondary") {
             img = "images/lbry-logo.svg";
         }
         setSelectedImage(img);
@@ -68,7 +68,7 @@ const ReceiveContent = () => {
                                     let logoSrc = "images/8-logo.png";
                                     if (option.label === "ALEX") {
                                         logoSrc = "images/alex-logo.svg";
-                                    } else if (option.label === "LBRY") {
+                                    } else if (option.label === "Secondary") {
                                         logoSrc = "images/lbry-logo.svg";
                                     }
                                     return (

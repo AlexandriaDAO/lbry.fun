@@ -4,5 +4,5 @@ export const minimum_icp=0.1;
 export const options = [
     { value: "ICP", label: "ICP", img: "images/icp-logo.png", fee: icp_fee },
     { value: "ALEX", label: "ALEX", img: "images/icp-logo.png" },
-    { value: "LBRY", label: "LBRY", img: "images/icp-logo.png"},
+    { value: "Secondary", label: "Secondary", img: "images/icp-logo.png"},
 ];

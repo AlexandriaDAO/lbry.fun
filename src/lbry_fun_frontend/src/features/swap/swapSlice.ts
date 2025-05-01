@@ -1,31 +1,32 @@
 import { ActionReducerMapBuilder, createSlice } from "@reduxjs/toolkit";
 import { toast } from "sonner";
-import getLBRYratio from "./thunks/getLBRYratio";
-import swapLbry from "./thunks/swapLbry";
-import burnLbry from "./thunks/burnLBRY";
-import getLbryBalance from "./thunks/lbryIcrc/getLbryBalance";
-import stakeAlex from "./thunks/stakeAlex";
+import getSecondaryratio from "./thunks/getSecondaryratio";
+import swapSecondary from "./thunks/swapSecondary";
+import burnSecondary from "./thunks/burnSecondary";
+import getSecondaryBalance from "./thunks/secondaryIcrc/getSecondaryBalance";
+import stakePrimary from "./thunks/stakePrimary";
 import getStakeInfo from "./thunks/getStakedInfo";
 import claimReward from "./thunks/claimReward";
 import unstake from "./thunks/unstake";
-import transferLBRY from "./thunks/lbryIcrc/transferLBRY";
+import transferSecondary from "./thunks/secondaryIcrc/transferSecondary";
 import getALlStakesInfo from "./thunks/getAllStakesInfo";
 import getArchivedBal from "./thunks/getArchivedBal";
 import redeemArchivedBalance from "./thunks/redeemArchivedBalance";
-import fetchTransaction from "./thunks/lbryIcrc/getTransactions";
+// import fetchTransaction from "./thunks/secondaryIcrc/getTransactions";
 // import getSpendingBalance from "./thunks/lbryIcrc/getSpendingBalance";
-// import getAlexSpendingBalance from "./thunks/alexIcrc/getAlexSpendingBalance";
+// import getPrimarySpendingBalance from "./thunks/alexIcrc/getPrimarySpendingBalance";
 
-import { TransactionType } from "./thunks/lbryIcrc/getTransactions";
+// import { TransactionType } from "./thunks/secondaryIcrc/getTransactions";
 import getStakersCount from "./thunks/getStakersCount";
 import getCanisterArchivedBal from "./thunks/getCanisterArchivedBal";
 import getAverageApy from "./thunks/getAverageApy";
-import getLbryFee from "./thunks/lbryIcrc/getLbryFee";
-import getAllLogs from "./thunks/insights/getAllLogs";
+import getSecondaryFee from "./thunks/secondaryIcrc/getSecondaryFee";
+// import getAllLogs from "./thunks/insights/getAllLogs";
 import { ErrorMessage } from "./utlis/erorrs";
+import { TokenRecordStringified } from "../token/thunk/getTokenPools.thunk";
 // Define the interface for our node state
 export interface StakeInfo {
-  stakedAlex: string;
+  stakedPrimary: string;
   rewardIcp: string;
   unix_stake_time: string;
 }
@@ -35,9 +36,9 @@ export interface CanisterArchived {
 }
 
 export interface SwapState {
-  lbryRatio: string;
-  lbryBalance: string;
-  lbryFee: string;
+  secondaryRatio: string;
+  secondaryBalance: string;
+  secondaryFee: string;
   archivedBalance: string;
   maxLbryBurn: Number;
   stakeInfo: StakeInfo;
@@ -52,20 +53,20 @@ export interface SwapState {
   unstakeSuccess: boolean;
   transferSuccess: boolean;
   redeeemSuccess: boolean;
-  transactions: TransactionType[];
+  // transactions: TransactionType[];
   averageAPY: number;
   error: ErrorMessage | null;
   spendingBalance: string;
-  alexSpendingBalance: string;
+  activeSwapPool: [string, TokenRecordStringified] | null;
   logsData: {
     chartData: {
       time: string;
       lbry: number;
-      alex: number;
+      primary: number;
       nft: number;
-      totalAlexStaked: number;
+      totalPrimaryStaked: number;
       stakerCount: number;
-      alexRate: number;
+      primaryRate: number;
       totalLbryBurn: number;
     }[];
   };
@@ -73,12 +74,12 @@ export interface SwapState {
 
 // Define the initial state using the ManagerState interface
 const initialState: SwapState = {
-  lbryRatio: "0",
-  lbryFee: "0",
-  lbryBalance: "0",
+  secondaryRatio: "0",
+  secondaryFee: "0",
+  secondaryBalance: "0",
   archivedBalance: "0",
   maxLbryBurn: 0,
-  stakeInfo: { stakedAlex: "0", rewardIcp: "0", unix_stake_time: "0" },
+  stakeInfo: { stakedPrimary: "0", rewardIcp: "0", unix_stake_time: "0" },
   totalStakers: "0",
   canisterArchivedBal: { canisterUnClaimedIcp: 0, canisterArchivedBal: 0 },
   totalStaked: "0",
@@ -89,15 +90,15 @@ const initialState: SwapState = {
   successClaimReward: false,
   unstakeSuccess: false,
   transferSuccess: false,
-  transactions: [],
+  // transactions: [],
   loading: false,
   averageAPY: 0,
   error: null,
   spendingBalance: "0",
-  alexSpendingBalance: "0",
   logsData: {
     chartData: [],
   },
+  activeSwapPool: null,
 };
 
 const swapSlice = createSlice({
@@ -114,38 +115,37 @@ const swapSlice = createSlice({
       state.redeeemSuccess = false;
       state.error = null;
     },
+    setActiveSwapPool: (state, action) => {
+      state.activeSwapPool = action.payload;
+    }
   },
   extraReducers: (builder: ActionReducerMapBuilder<SwapState>) => {
     builder
-      .addCase(getLBRYratio.pending, (state) => {
-        // toast.info("Fetching LBRY ratio");
+      .addCase(getSecondaryratio.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getLBRYratio.fulfilled, (state, action) => {
-        // toast.success("LBRY ratio fetched.");
-        state.lbryRatio = action.payload;
+      .addCase(getSecondaryratio.fulfilled, (state, action) => {
+        state.secondaryRatio = action.payload;
         state.loading = false;
         state.error = null;
       })
-      .addCase(getLBRYratio.rejected, (state, action) => {
-        toast.error("LBRY ratio could not be fetched!");
+      .addCase(getSecondaryratio.rejected, (state, action) => {
+        toast.error("Secondary ratio could not be fetched!");
         state.loading = false;
         state.error = null; // action.payload as string;
       })
-      .addCase(getLbryBalance.pending, (state) => {
-        // toast.info("Fetching LBRY balance!");
+      .addCase(getSecondaryBalance.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getLbryBalance.fulfilled, (state, action) => {
-        // toast.success("Fetched LBRY balance!");
-        state.lbryBalance = action.payload;
+      .addCase(getSecondaryBalance.fulfilled, (state, action) => {
+        state.secondaryBalance = action.payload;
         state.loading = false;
         state.error = null;
       })
-      .addCase(getLbryBalance.rejected, (state, action) => {
-        toast.error("LBRY balance could not be fetched!");
+      .addCase(getSecondaryBalance.rejected, (state, action) => {
+        toast.error("Secondary balance could not be fetched!");
         state.loading = false;
         state.error = state.error = {
           message: "",
@@ -188,18 +188,18 @@ const swapSlice = createSlice({
           title: (action.payload as string) || "",
         };
       })
-      .addCase(swapLbry.pending, (state) => {
+      .addCase(swapSecondary.pending, (state) => {
         // toast.info("Swapping!");
         state.loading = true;
         state.error = null;
       })
-      .addCase(swapLbry.fulfilled, (state, action) => {
+      .addCase(swapSecondary.fulfilled, (state, action) => {
         toast.success("Successfully Swaped!");
         state.loading = false;
         state.swapSuccess = true;
         state.error = null;
       })
-      .addCase(swapLbry.rejected, (state, action) => {
+      .addCase(swapSecondary.rejected, (state, action) => {
         toast.error(action.payload?.message);
         state.loading = false;
         state.error = {
@@ -207,17 +207,17 @@ const swapSlice = createSlice({
           title: action.payload?.title || "",
         };
       })
-      .addCase(stakeAlex.pending, (state) => {
+      .addCase(stakePrimary.pending, (state) => {
         toast.info("Staking!");
         state.loading = true;
         state.error = null;
       })
-      .addCase(stakeAlex.fulfilled, (state, action) => {
+      .addCase(stakePrimary.fulfilled, (state, action) => {
         toast.success("Successfully staked!");
         state.loading = false;
         state.successStake = true;
       })
-      .addCase(stakeAlex.rejected, (state, action) => {
+      .addCase(stakePrimary.rejected, (state, action) => {
         toast.error("Error while staking!");
         state.loading = false;
         state.error = {
@@ -225,18 +225,18 @@ const swapSlice = createSlice({
           title: action.payload?.title || "",
         };
       })
-      .addCase(burnLbry.pending, (state) => {
-        toast.info("Burning LBRY!");
+      .addCase(burnSecondary.pending, (state) => {
+        toast.info("Burning!");
         state.loading = true;
         state.error = null;
       })
-      .addCase(burnLbry.fulfilled, (state, action) => {
-        toast.success("Burned LBRY sucessfully!");
+      .addCase(burnSecondary.fulfilled, (state, action) => {
+        toast.success("Burned sucessfully!");
         state.burnSuccess = true;
         state.loading = false;
         state.error = null;
       })
-      .addCase(burnLbry.rejected, (state, action) => {
+      .addCase(burnSecondary.rejected, (state, action) => {
         toast.error(action.payload?.message);
         state.loading = false;
         state.error = {
@@ -264,7 +264,6 @@ const swapSlice = createSlice({
         };
       })
       .addCase(unstake.pending, (state) => {
-        // toast.info("Unstaking!");
         state.loading = true;
         state.error = null;
       })
@@ -283,19 +282,19 @@ const swapSlice = createSlice({
         };
       })
 
-      .addCase(transferLBRY.pending, (state) => {
-        toast.info("Processing LBRY transfer!");
+      .addCase(transferSecondary.pending, (state) => {
+        toast.info("Processing Secondary transfer!");
         state.loading = true;
         state.error = null;
       })
-      .addCase(transferLBRY.fulfilled, (state, action) => {
-        toast.success("Successfully transfered LBRY!");
+      .addCase(transferSecondary.fulfilled, (state, action) => {
+        toast.success("Successfully transfered Secondary!");
         state.transferSuccess = true;
         state.loading = false;
         state.error = null;
       })
-      .addCase(transferLBRY.rejected, (state, action) => {
-        toast.error("Error while transfering LBRY");
+      .addCase(transferSecondary.rejected, (state, action) => {
+        toast.error("Error while transfering Secondary");
         state.loading = false;
         state.error = {
           message: action?.payload || "",
@@ -339,25 +338,25 @@ const swapSlice = createSlice({
           title: action.payload?.title || "",
         };
       })
-      .addCase(fetchTransaction.pending, (state) => {
-        // toast.info("Fetching!");
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchTransaction.fulfilled, (state, action) => {
-        // toast.success("Fetched Transactions!");
-        state.loading = false;
-        state.transactions = action.payload;
-        state.error = null;
-      })
-      .addCase(fetchTransaction.rejected, (state, action) => {
-        toast.error("Error while fetching transactions!");
-        state.loading = false;
-        state.error = {
-          message: "",
-          title: action.payload || "",
-        };
-      })
+      // .addCase(fetchTransaction.pending, (state) => {
+      //   // toast.info("Fetching!");
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+      // .addCase(fetchTransaction.fulfilled, (state, action) => {
+      //   // toast.success("Fetched Transactions!");
+      //   state.loading = false;
+      //   state.transactions = action.payload;
+      //   state.error = null;
+      // })
+      // .addCase(fetchTransaction.rejected, (state, action) => {
+      //   toast.error("Error while fetching transactions!");
+      //   state.loading = false;
+      //   state.error = {
+      //     message: "",
+      //     title: action.payload || "",
+      //   };
+      // })
       .addCase(getStakersCount.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -409,67 +408,39 @@ const swapSlice = createSlice({
           title: action.payload || "",
         };
       })
-      .addCase(getLbryFee.pending, (state) => {
+      .addCase(getSecondaryFee.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getLbryFee.fulfilled, (state, action) => {
-        state.lbryFee = action.payload;
+      .addCase(getSecondaryFee.fulfilled, (state, action) => {
+        state.secondaryFee = action.payload;
         state.loading = false;
         state.error = null;
       })
-      .addCase(getLbryFee.rejected, (state, action) => {
+      .addCase(getSecondaryFee.rejected, (state, action) => {
         state.loading = false;
         state.error = {
           message: "",
           title: action.payload || "",
         };
       })
-      // .addCase(getSpendingBalance.pending, (state) => {
-      //   state.loading = true;
-      //   state.error = null;
-      // })
-      // .addCase(getSpendingBalance.fulfilled, (state, action) => {
-      //   state.loading = false;
-      //   state.spendingBalance = action.payload;
-      //   state.error = null;
-      // })
-      // .addCase(getSpendingBalance.rejected, (state, action) => {
-      //   state.loading = false;
-      //   state.error = {
-      //     message: "",
-      //     title: action.payload || "",
-      //   };
-      // })
-      // .addCase(getAlexSpendingBalance.fulfilled, (state, action) => {
-      //   state.alexSpendingBalance = action.payload;
+
+      // .addCase(getAllLogs.fulfilled, (state, action) => {
+      //   state.logsData = action.payload;
       //   state.loading = false;
       // })
-      // .addCase(getAlexSpendingBalance.pending, (state) => {
+      // .addCase(getAllLogs.pending, (state) => {
       //   state.loading = true;
       // })
-      // .addCase(getAlexSpendingBalance.rejected, (state, action) => {
+      // .addCase(getAllLogs.rejected, (state, action) => {
       //   state.loading = false;
       //   state.error = state.error = {
       //     message: "",
-      //     title: action.payload || "Failed to get ALEX spending balance ",
+      //     title: action.payload || "Failed to get log data",
       //   };
       // })
-      .addCase(getAllLogs.fulfilled, (state, action) => {
-        state.logsData = action.payload;
-        state.loading = false;
-      })
-      .addCase(getAllLogs.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(getAllLogs.rejected, (state, action) => {
-        state.loading = false;
-        state.error = state.error = {
-          message: "",
-          title: action.payload || "Failed to get log data",
-        };
-      });
+      ;
   },
 });
-export const { flagHandler } = swapSlice.actions;
+export const { flagHandler ,setActiveSwapPool} = swapSlice.actions;
 export default swapSlice.reducer;

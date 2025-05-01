@@ -1,16 +1,22 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import LedgerService from "@/utils/LedgerService";
 import { getActorSwap } from "@/features/auth/utils/authUtils";
+import { RootState } from "@/store";
 
 
 // Define the async thunk
 const getStakersCount = createAsyncThunk<
   string,
   void,
-  { rejectValue: string }
->("icp_swap/getTotalStakerCount", async (_, { rejectWithValue }) => {
+  {state: RootState, rejectValue: string }
+>("icp_swap/getTotalStakerCount", async (_, { getState,rejectWithValue }) => {
   try {
-    const actor = await getActorSwap();
+    const state = getState();
+
+    if (!state.swap.activeSwapPool) {
+      throw new Error("No active swap pool found");
+    }
+    const actor = await getActorSwap(state.swap.activeSwapPool?.[1].icp_swap_canister_id);
    
     const result = await actor.get_stakers_count();
     

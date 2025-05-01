@@ -6,15 +6,15 @@ import {
 } from "@/features/auth/utils/authUtils";
 import { ErrorMessage, getErrorMessage } from "../utlis/erorrs";
 // Define the async thunk
-const swapLbry = createAsyncThunk<
+const swapSecondary = createAsyncThunk<
   string, // This is the return type of the thunk's payload
-  { amount: string; userPrincipal: string },
+  { amount: string; userPrincipal: string,canisterId:string },
   { rejectValue: ErrorMessage }
 >(
-  "icp_swap/swapLbry",
-  async ({ amount, userPrincipal }, { rejectWithValue }) => {
+  "icp_swap/swapSecondary",
+  async ({ amount, userPrincipal,canisterId }, { rejectWithValue }) => {
     try {
-      const actorSwap = await getActorSwap();
+      const actorSwap = await getActorSwap(canisterId);
       const actorIcpLedger = await getIcpLedgerActor();
       let amountFormat: bigint = BigInt(
         Number(Number(amount) * 10 ** 8).toFixed(0)
@@ -23,21 +23,20 @@ const swapLbry = createAsyncThunk<
         Number((Number(amount) + 0.0001) * 10 ** 8).toFixed(0)
       );
 
-      const icp_swap_canister_id = process.env.CANISTER_ID_ICP_SWAP!;
       const checkApproval = await actorIcpLedger.icrc2_allowance({
         account: {
           owner: Principal.fromText(userPrincipal),
           subaccount: [],
         },
         spender: {
-          owner: Principal.fromText(icp_swap_canister_id),
+          owner: Principal.fromText(canisterId),
           subaccount: [],
         },
       });
       if (checkApproval.allowance < amountFormatApprove) {
         const resultIcpApprove = await actorIcpLedger.icrc2_approve({
           spender: {
-            owner: Principal.fromText(icp_swap_canister_id),
+            owner: Principal.fromText(canisterId),
             subaccount: [],
           },
           amount: amountFormatApprove,
@@ -75,4 +74,4 @@ const swapLbry = createAsyncThunk<
   }
 );
 
-export default swapLbry;
+export default swapSecondary;

@@ -2,14 +2,22 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import LedgerService from "@/utils/LedgerService";
 import { getActorSwap } from "@/features/auth/utils/authUtils";
+import { RootState } from "@/store";
 
 const getArchivedBal = createAsyncThunk<
   string,
   string,
-  { rejectValue: string }
->("icp_swap/getArchivedBal", async (account, { rejectWithValue }) => {
+  { state: RootState; rejectValue: string }
+>("icp_swap/getArchivedBal", async (account, { getState, rejectWithValue }) => {
   try {
-    const actor = await getActorSwap();
+    const state = getState();
+
+    if (!state.swap.activeSwapPool) {
+      throw new Error("No active swap pool found");
+    }
+    const actor = await getActorSwap(
+      state.swap.activeSwapPool?.[1].icp_swap_canister_id
+    );
     const result = await actor.get_user_archive_balance(
       Principal.fromText(account)
     );

@@ -1,31 +1,32 @@
-import { ActorSubclass } from "@dfinity/agent";
-import {
-  _SERVICE as _SERVICELBRY,
-  TransferArg,
-} from "../../../../../../declarations/ICRC/ICRC.did";
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import { Account } from "@dfinity/ledger-icp";
-import { getLbryActor } from "@/features/auth/utils/authUtils";
+import { getICRCActor } from "@/features/auth/utils/authUtils";
+import { RootState } from "@/store";
+import { TransferArg } from "../../../../../../declarations/ICRC/ICRC.did";
 
 // Define the async thunk
-const transferLBRY = createAsyncThunk<
+const transferSecondary = createAsyncThunk<
   string,
   {
     amount: string;
     destination: string;
     subaccount?: number[];
   },
-  { rejectValue: string }
+  { state: RootState, rejectValue: string }
 >(
-  "icp_swap/transferLBRY",
+  "icp_swap/transferSecondary",
   async (
     { amount, destination, subaccount },
-    { rejectWithValue }
+    {getState, rejectWithValue }
   ) => {
     try {
-      const actorLbry = await getLbryActor();
+      const state = getState();
+      if (!state.swap.activeSwapPool) {
+        throw new Error("No active swap pool found");
+      }
+      const actor = await getICRCActor(state.swap.activeSwapPool?.[1].secondary_token_id);
       const amountFormat = BigInt(Math.floor(Number(amount) * 10 ** 8));
       let recipientAccount: Account;
       
@@ -42,7 +43,7 @@ const transferLBRY = createAsyncThunk<
         created_at_time: [],
         amount: amountFormat
       };
-      const result = await actorLbry.icrc1_transfer(transferArg);
+      const result = await actor.icrc1_transfer(transferArg);
       if ("Ok" in result) return "success";
       else {
         console.log("error is ", result.Err);
@@ -55,9 +56,9 @@ const transferLBRY = createAsyncThunk<
       }
     }
     return rejectWithValue(
-      "An unknown error occurred while transfering LBRY"
+      "An unknown error occurred while transfering Secondary"
     );
   }
 );
 
-export default transferLBRY;
+export default transferSecondary;

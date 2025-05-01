@@ -27,10 +27,11 @@ const TokenPage = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab)}
-              className={`flex items-center transition-colors duration-300 text-base font-semibold leading-6 min-w-24 h-11 border dark:border-gray-700 border-gray-400 rounded-2xl hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black px-5 m-0 whitespace-nowrap ${activeTab === tab
-                ? '2xl:text-xl bg-black text-white dark:bg-white dark:text-black'
-                : ''
-                }`}
+              className={`flex items-center transition-colors duration-300 text-base font-semibold leading-6 min-w-24 h-11 border dark:border-gray-700 border-gray-400 rounded-2xl hover:bg-[#5555FF] hover:text-white dark:hover:bg-white dark:hover:text-black px-5 m-0 whitespace-nowrap mr-3 ${
+                activeTab.id === tab.id
+                  ? '!bg-[#5555FF] text-white 2xl:text-xl dark:bg-white dark:text-black'
+                  : ''
+              }`}
             >
               {tab.label}
             </button>
