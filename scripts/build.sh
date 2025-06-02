@@ -65,18 +65,28 @@ export MINTER_ACCOUNT_ID=$(dfx ledger account-id)
 
 #Kongswap already deployed its ksICP will be using it, so need to deploy our own icp
 
-# # Step 6: Deploy the ICP 
 dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argument "  
   (variant {  
     Init = record {  
       minting_account = \"$MINTER_ACCOUNT_ID\";  
       initial_values = vec {  
         record {  
-          \"$MINTER_ACCOUNT_ID\";  
+          \"$DEFAULT_ACCOUNT_ID\";  
           record {  
             e8s = 8_681_981_000_000_000 : nat64;  
           };  
-         
+          \"$ALICE_ACCOUNT_ID\";  
+          record {  
+            e8s = 1_000_000_000 : nat64;  
+          };
+          \"$BOB_ACCOUNT_ID\";
+          record {
+            e8s = 1_000_000_000 : nat64;
+          };
+          \"$CHARLIE_ACCOUNT_ID\";
+          record {
+            e8s = 1_000_000_000 : nat64;
+          };
         };  
       };  
       send_whitelist = vec {};  
@@ -92,11 +102,11 @@ dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argu
 
 
 
-
-
 # For icp_swap_factory
 mkdir -p src/icp_swap_factory && dfx canister --network ic metadata ggzvv-5qaaa-aaaag-qck7a-cai candid:service > src/icp_swap_factory/icp_swap_factory.did
 
+echo "Generating type declarations..."
+dfx generate
 
 npm i
 dfx deploy lbry_fun_frontend --specified-id yn33w-uaaaa-aaaap-qpk5q-cai
