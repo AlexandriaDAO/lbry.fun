@@ -1,10 +1,9 @@
-
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import { Account } from "@dfinity/ledger-icp";
 import { getICRCActor } from "@/features/auth/utils/authUtils";
 import { RootState } from "@/store";
-import { TransferArg } from "../../../../../../declarations/ICRC/ICRC.did";
+import { TransferArg } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 
 // Define the async thunk
 const transferSecondary = createAsyncThunk<

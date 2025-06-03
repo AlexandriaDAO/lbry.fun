@@ -1,4 +1,4 @@
-import { TransferArg } from "../../../../../../declarations/ICRC/ICRC.did";
+import { TransferArg } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";

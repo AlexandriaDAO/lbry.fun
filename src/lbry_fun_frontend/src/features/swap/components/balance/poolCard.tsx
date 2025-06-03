@@ -15,6 +15,10 @@ import { Entry } from "@/layouts/parts/Header";
 import { toast } from "sonner";
 import { TokenRecordStringified } from "@/features/token/thunk/getTokenPools.thunk";
 import { useSearchParams } from "react-router-dom";
+import { Principal } from "@dfinity/principal";
+import { Actor, HttpAgent } from "@dfinity/agent";
+import { idlFactory as icrc1IdlFactory } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did.js";
+import type { Value as Icrc1Value } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did.d.ts";
 
 const PoolCard: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -27,6 +31,8 @@ const PoolCard: React.FC = () => {
     const [activeSwapPool, setActiveSwapPool] = React.useState<[string, TokenRecordStringified] | undefined>();
     const id = searchParams.get("id");
 
+    const [primaryLogo, setPrimaryLogo] = useState<string | undefined>();
+    const [secondaryLogo, setSecondaryLogo] = useState<string | undefined>();
 
     // icp ledger
     useEffect(() => {
@@ -50,11 +56,69 @@ const PoolCard: React.FC = () => {
         }
     }, [user, swap, icpLedger]);
 
-
     useEffect(() => {
         const pool = tokenPools.find((tokenPool) => tokenPool[0] === id);
         setActiveSwapPool(pool);
+        // Reset logos when pool changes
+        setPrimaryLogo(undefined);
+        setSecondaryLogo(undefined);
     }, [id, tokenPools]);
+
+    useEffect(() => {
+        if (activeSwapPool && activeSwapPool[1]) {
+            const primaryTokenId = activeSwapPool[1].primary_token_id;
+            const secondaryTokenId = activeSwapPool[1].secondary_token_id;
+
+            const fetchLogo = async (tokenIdString: string, setLogo: React.Dispatch<React.SetStateAction<string | undefined>>) => {
+                try {
+                    if (!tokenIdString) return;
+                    
+                    const network = process.env.DFX_NETWORK || process.env.REACT_APP_DFX_NETWORK;
+                    const localReplicaHost = network === 'local' ? 'http://localhost:4943' : 'https://ic0.app';
+
+                    const agent = new HttpAgent({ host: localReplicaHost });
+
+                    await agent.fetchRootKey().catch(err => {
+                        console.warn("Unable to fetch root key. Swallowing error.", err);
+                    });
+
+                    const tokenActor = Actor.createActor(icrc1IdlFactory, {
+                        agent,
+                        canisterId: Principal.fromText(tokenIdString),
+                    });
+
+                    const metadata = await tokenActor.icrc1_metadata() as Array<[string, Icrc1Value]>;
+                    
+                    let logoEntry = metadata.find(item => item[0] === "logo");
+                    if (!logoEntry) {
+                        logoEntry = metadata.find(item => item[0] === "icrc1:logo");
+                    }
+
+                    if (logoEntry && logoEntry[1] && ('Text' in logoEntry[1])) {
+                        let svgData = logoEntry[1].Text;
+                        const duplicatedPrefix = "data:image/svg+xml;base64,data:image/svg+xml;base64,";
+                        if (svgData.startsWith(duplicatedPrefix)) {
+                            svgData = "data:image/svg+xml;base64," + svgData.substring(duplicatedPrefix.length);
+                        }
+                        setLogo(svgData);
+                    } else {
+                        setLogo(undefined);
+                    }
+                } catch (error) {
+                    console.error(`Failed to fetch logo for ${tokenIdString}:`, error);
+                    setLogo(undefined);
+                }
+            };
+
+            if (primaryTokenId) {
+                fetchLogo(primaryTokenId, setPrimaryLogo);
+            }
+            if (secondaryTokenId) {
+                fetchLogo(secondaryTokenId, setSecondaryLogo);
+            }
+        }
+    }, [activeSwapPool]);
+
     return (
         <>
             {/* <div className="grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 mb-3 2xl:mb-12 xl:mb-10 lg:mb-7 md:mb-6 sm:mb-5"> */}
@@ -104,17 +168,32 @@ const PoolCard: React.FC = () => {
                                     <span className="font-semibold text-gray-300">Pool ID:</span>
                                     <span className="text-white">{activeSwapPool[0]}</span>
                                 </div>
-                                <div className="flex justify-between">
+                                <div className="flex justify-between items-center">
                                     <span className="font-semibold text-gray-300">Primary Token:</span>
-                                    <span className="text-white">
-                                        {activeSwapPool[1].primary_token_name} ({activeSwapPool[1].primary_token_symbol})
-                                    </span>
+                                    <div className="flex items-center">
+                                        {primaryLogo && <img src={primaryLogo} alt="Primary token logo" className="w-6 h-6 mr-2" />}
+                                        <span className="text-white">
+                                            {activeSwapPool[1].primary_token_name} ({activeSwapPool[1].primary_token_symbol})
+                                        </span>
+                                    </div>
                                 </div>
                                 <div className="flex justify-between">
+                                    <span className="font-semibold text-gray-300">Primary Token ID:</span>
+                                    <span className="text-white break-all">{activeSwapPool[1].primary_token_id}</span>
+                                </div>
+
+                                <div className="flex justify-between items-center">
                                     <span className="font-semibold text-gray-300">Secondary Token:</span>
-                                    <span className="text-white">
-                                        {activeSwapPool[1].secondary_token_name} ({activeSwapPool[1].secondary_token_symbol})
-                                    </span>
+                                    <div className="flex items-center">
+                                        {secondaryLogo && <img src={secondaryLogo} alt="Secondary token logo" className="w-6 h-6 mr-2" />}
+                                        <span className="text-white">
+                                            {activeSwapPool[1].secondary_token_name} ({activeSwapPool[1].secondary_token_symbol})
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-semibold text-gray-300">Secondary Token ID:</span>
+                                    <span className="text-white break-all">{activeSwapPool[1].secondary_token_id}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-semibold text-gray-300">Is Live:</span>

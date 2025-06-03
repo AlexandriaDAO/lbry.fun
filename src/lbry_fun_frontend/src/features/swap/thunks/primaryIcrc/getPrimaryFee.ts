@@ -1,4 +1,4 @@
-import { _SERVICE as _SERVICEALEX } from "../../../../../../declarations/ICRC/ICRC.did";
+import { _SERVICE as _SERVICEALEX } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import LedgerService from "@/utils/LedgerService";
 import {  getICRCActor } from "@/features/auth/utils/authUtils";

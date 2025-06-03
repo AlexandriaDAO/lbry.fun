@@ -17,6 +17,8 @@ use crate::{
     KONG_BACKEND_CANISTER, TOKENS,
 };
 
+const CANISTER_CREATION_CYCLES: u128 = 20_000_000_000u128;
+
 #[ic_cdk::update]
 async fn create_token(
     primary_token_name: String,
@@ -38,9 +40,9 @@ async fn create_token(
         .await
         .map_err(|e| format!("Failed to deposit ICP: {:?}", e))?;
 
-    let swap_canister_id = create_a_canister().await?;
-    let tokenomics_canister_id = create_a_canister().await?;
-    let frontend_canister_id = create_a_canister().await?;
+    let swap_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
+    let tokenomics_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
+    let frontend_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
 
     // Create primary token
     // ALEX
@@ -55,6 +57,7 @@ async fn create_token(
         tokenomics_canister_id,
         INTITAL_PRIMARY_MINT,
         primary_logo,
+        CANISTER_CREATION_CYCLES,
     )
     .await
     {
@@ -74,6 +77,7 @@ async fn create_token(
         swap_canister_id,
         0,
         secondary_logo,
+        CANISTER_CREATION_CYCLES,
     )
     .await
     {
@@ -137,7 +141,7 @@ async fn create_token(
     //
     // As a result, the token gets picked up in the next run —
     // which is **47 hours** after registration instead of 24.
-    // That’s a problem if we want token pools to be created **after exactly 24 hours**.
+    // That's a problem if we want token pools to be created **after exactly 24 hours**.
     //
 
     // create_pool_on_kong_swap(get_principal(&primary_token_id))
@@ -181,9 +185,10 @@ async fn create_icrc1_canister(
     archive_controller: Principal,
     intital_amount: u64,
     logo: String,
+    cycles: u128,
 ) -> Result<String, String> {
     let create_args = CreateCanisterArgument { settings: None };
-    let canister_id_record = create_canister(create_args, 2_000_000_000)
+    let canister_id_record = create_canister(create_args, cycles)
         .await
         .map_err(|e| format!("Failed to create canister: {:?}", e))?;
 
@@ -253,9 +258,9 @@ async fn create_icrc1_canister(
     Ok(canister_id.to_string())
 }
 
-async fn create_a_canister() -> Result<Principal, String> {
+async fn create_a_canister(cycles: u128) -> Result<Principal, String> {
     let create_args = CreateCanisterArgument { settings: None };
-    let canister_id_record = create_canister(create_args, 2_000_000_000)
+    let canister_id_record = create_canister(create_args, cycles)
         .await
         .map_err(|e| format!("Failed to create canister: {:?}", e))?;
 

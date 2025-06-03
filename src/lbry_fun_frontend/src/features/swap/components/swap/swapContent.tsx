@@ -113,7 +113,6 @@ const SwapContent: React.FC = () => {
                   <input
                     className="text-black dark:text-gray-200 text-right text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading bg-transparent placeholder-black dark:placeholder-gray-400 focus:outline-none focus:border-transparent w-full caret-[#D8DDF7] dark:caret-blue-400"
                     type="text"
-                    defaultValue={amount}
                     value={amount + ""}
                     min="0"
                     onChange={(e) => {

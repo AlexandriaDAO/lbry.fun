@@ -1,6 +1,6 @@
 import { ActorSubclass } from "@dfinity/agent";
 import { _SERVICE as _SERVICESWAP } from "../../../../../declarations/icp_swap/icp_swap.did";
-import { _SERVICE as _SERVICEALEX } from "../../../../../declarations/ICRC/ICRC.did";
+import { _SERVICE as _SERVICEALEX } from "../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import { getActorSwap, getICRCActor } from "@/features/auth/utils/authUtils";

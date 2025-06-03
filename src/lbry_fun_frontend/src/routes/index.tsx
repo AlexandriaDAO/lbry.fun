@@ -17,43 +17,7 @@ import TopProgressBar from "@/components/TopProgressBar";
 import SwapPage from "@/pages/swap";
 import SuccessPage from "@/pages/SuccessPage";
 
-// const HomePage = lazy(()=>import("@/pages/HomePage"));
-
-// const DashboardLayout = lazy(()=>import("@/layouts/DashboardLayout"));
 const NotFoundPage = lazy(()=>import("@/pages/NotFoundPage"));
-// const UpgradePage = lazy(()=>import("@/pages/dashboard/UpgradePage"));
-// // const LibrarianLayout = lazy(()=>import("@/layouts/LibrarianLayout"));
-// const LibrarianPage = lazy(()=>import("@/pages/librarian/"));
-// const WalletsPage = lazy(()=>import("@/pages/librarian/WalletsPage"));
-// const AssetSyncPage = lazy(()=>import("@/pages/dashboard/AssetSyncPage"));
-// const ArweaveAssetsPage = lazy(()=>import("@/pages/dashboard/ArweaveAssetsPage"));
-// const ICPAssetsPage = lazy(()=>import("@/pages/ICPAssetsPage"));
-// // const FileUploadPage = lazy(()=>import("@/pages/dashboard/FileUploadPage"));
-// const PinaxPage = lazy(()=>import("@/pages/PinaxPage"));
-// // const UploadPage = lazy(()=>import("@/pages/dashboard/UploadPage"));
-
-// const ManagerPage = lazy(()=>import("@/pages/ManagerPage"));
-// // const WhitepaperPage = lazy(()=>import("@/pages/WhitepaperPage"));
-// // const FAQPage = lazy(()=>import("@/pages/FAQPage"));
-// const InfoPage = lazy(()=>import("@/pages/InfoPage"));
-// const Bibliotheca = lazy(()=>import("@/apps/app/Bibliotheca"));
-// const Alexandrian = lazy(()=>import("@/apps/app/Alexandrian"));
-// const Syllogos = lazy(()=>import("@/apps/app/Syllogos"));
-// const Perpetua = lazy(()=>import("@/apps/app/Perpetua"));
-// const Dialectica = lazy(()=>import("@/apps/app/Dialectica"));
-// const Permasearch = lazy(()=>import("@/apps/app/Permasearch"));
-// const Emporium = lazy(()=>import("@/apps/app/Emporium"));
-// const SwapPage = lazy(()=>import("@/pages/swap"));
-// const DetailTransaction = lazy(()=>import("@/features/swap/components/transactionHistory/detailTransaction"));
-// // const DashboardPage = lazy(()=>import("@/pages/dashboard"));
-// const ProfilePage = lazy(()=>import("@/pages/dashboard/ProfilePage"));
-// const SettingsPage = lazy(()=>import("@/pages/dashboard/SettingsPage"));
-// // const EnginesPage = lazy(()=>import("@/pages/dashboard/EnginesPage"));
-// // const EngineOverviewPage = lazy(()=>import("@/pages/dashboard/EngineOverviewPage"));
-// // const PublicEnginesPage = lazy(()=>import("@/pages/dashboard/PublicEnginesPage"));
-// // const AssetsPage = lazy(()=>import("@/pages/dashboard/AssetsPage"));
-// // const CollectionPage = lazy(()=>import("@/pages/dashboard/CollectionPage"));
-// const SingleTokenView = lazy(() => import("@/apps/Modules/AppModules/blinks/SingleTokenView"));
 const TokenPage = lazy(() => import("@/pages/tokenPage"));
 
 const router = createBrowserRouter(
@@ -66,33 +30,6 @@ const router = createBrowserRouter(
 
 
 				</Route>
-				{/* <Route path={ROUTES.NFT} element={<Suspense key="nft" fallback={<TopProgressBar />}><SingleTokenView /></Suspense>} />
-				<Route path={ROUTES.MANAGER} element={<Suspense key="manager" fallback={<TopProgressBar />}><ManagerPage /></Suspense>} />
-
-				<Route path={ROUTES.INFO}>
-					<Route index element={<Suspense key="info" fallback={<TopProgressBar />}><InfoPage /></Suspense>} />
-					<Route path="faq" element={<Suspense key="faq" fallback={<TopProgressBar />}><InfoPage /></Suspense>} />
-					<Route path="whitepaper" element={<Suspense key="whitepaper" fallback={<TopProgressBar />}><InfoPage /></Suspense>} />
-					<Route path="audit" element={<Suspense key="audit" fallback={<TopProgressBar />}><InfoPage /></Suspense>} />
-				</Route>
-
-				<Route path="app">
-					<Route path="bibliotheca" element={<Suspense key="bibliotheca" fallback={<TopProgressBar />}><Bibliotheca /></Suspense>} />
-					<Route path="alexandrian" element={<Suspense key="alexandrian" fallback={<TopProgressBar />}><Alexandrian /></Suspense>} />
-					<Route path="syllogos" element={<Suspense key="syllogos" fallback={<TopProgressBar />}><Syllogos /></Suspense>} />
-					<Route path="perpetua" element={<Suspense key="perpetua" fallback={<TopProgressBar />}><Perpetua /></Suspense>}>
-						<Route index element={<Suspense key="perpetua-home" fallback={<TopProgressBar />}><Perpetua /></Suspense>} />
-						<Route path="shelf/:shelfId" element={<Suspense key="perpetua-shelf" fallback={<TopProgressBar />}><Perpetua /></Suspense>} />
-						<Route path="item/:itemId" element={<Suspense key="perpetua-item" fallback={<TopProgressBar />}><Perpetua /></Suspense>} />
-						<Route path="user/:userId" element={<Suspense key="perpetua-user" fallback={<TopProgressBar />}><Perpetua /></Suspense>} />
-						<Route path="user/:userId/shelf/:shelfId" element={<Suspense key="perpetua-user-shelf" fallback={<TopProgressBar />}><Perpetua /></Suspense>} />
-						<Route path="user/:userId/item/:itemId" element={<Suspense key="perpetua-user-item" fallback={<TopProgressBar />}><Perpetua /></Suspense>} />
-					</Route>
-					<Route path="dialectica" element={<Suspense key="dialectica" fallback={<TopProgressBar />}><Dialectica /></Suspense>} />
-					<Route path="permasearch" element={<Suspense key="permasearch" fallback={<TopProgressBar />}><Permasearch /></Suspense>} />
-
-					<Route path="emporium" element={<Suspense key="emporium" fallback={<TopProgressBar />}><Emporium /></Suspense>} />
-				</Route> */}
 				<Route path="swap">
 					<Route index element={<Suspense key="swap" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="balance" element={<Suspense key="swap-balance" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
@@ -111,29 +48,6 @@ const router = createBrowserRouter(
 				<Route path={ROUTES.UNAUTHORIZED} element={<Suspense key="401" fallback={<TopProgressBar />}><UnauthorizedPage /></Suspense>} />
 				<Route path={ROUTES.NOT_FOUND} element={<Suspense key="404" fallback={<TopProgressBar />}><NotFoundPage /></Suspense>} />
 			</Route>
-
-			{/* <Route element={<AuthGuard />}>
-				<Route element={<MainLayout />}>
-					<Route path={ROUTES.PINAX} element={<Suspense key="pinax" fallback={<PinaxSkeleton />}><PinaxPage /></Suspense>} />
-				</Route>
-				<Route element={<Protected route />}>
-					<Route path={ROUTES.DASHBOARD_ROUTES.BASE} element={<Suspense key="dashboard_layout" fallback={<LayoutSkeleton />}><DashboardLayout /></Suspense>}>
-						<Route element={<LibrarianGuard />}>
-							<Route index element={<Suspense key="dashboard_page" fallback={<MainPageSkeleton />}><LibrarianPage /></Suspense>} />
-							<Route path="wallets" element={<Suspense key="wallets" fallback={<MainPageSkeleton />}><WalletsPage /></Suspense>} />
-						</Route>
-
-						<Route path="asset-sync" element={<Suspense key="asset-sync" fallback={<MainPageSkeleton />}><AssetSyncPage /></Suspense>} />
-						<Route path="arweave-assets" element={<Suspense key="arweave-assets" fallback={<MainPageSkeleton />}><ArweaveAssetsPage /></Suspense>} />
-						<Route path="icp-assets" element={<Suspense key="icp-assets" fallback={<MainPageSkeleton />}><ICPAssetsPage /></Suspense>} />
-						<Route path="profile">
-							<Route index element={<Suspense key="profile" fallback={<MainPageSkeleton />}><ProfilePage /></Suspense>} />
-							<Route path="upgrade" element={<Suspense key="upgrade" fallback={<MainPageSkeleton />}><UpgradePage /></Suspense>} />
-						</Route>
-						<Route path="settings" element={<Suspense key="settings" fallback={<MainPageSkeleton />}><SettingsPage /></Suspense>} />
-					</Route>
-				</Route>
-			</Route> */}
 			
 		</Route>
 	)

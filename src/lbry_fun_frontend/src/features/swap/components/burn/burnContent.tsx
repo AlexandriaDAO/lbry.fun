@@ -61,14 +61,14 @@ const BurnContent = () => {
 
     useEffect(() => {
         if (!user) return;
-        if (swap.burnSuccess === true) {
+        if (swap.burnSuccess === true && swap.activeSwapPool) {
             dispatch(flagHandler())
             dispatch(getSecondaryBalance(user.principal))
             setLoadingModalV(false);
             setSucessModalV(true);
             setMaxburnAllowed(calculateMaxBurnAllowed(swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))
         }
-        if (swap.error) {
+        if (swap.error && swap.activeSwapPool) {
             dispatch(getSecondaryBalance(user.principal));
             setLoadingModalV(false);
             setErrorModalV({flag:true,title:swap.error.title,message:swap.error.message});
@@ -78,12 +78,12 @@ const BurnContent = () => {
     }, [user, swap])
 
     useEffect(() => {
-        if (user) {
+        if (user && swap.activeSwapPool) {
             dispatch(getSecondaryBalance(user.principal));
         }
         dispatch(getCanisterBal());
         dispatch(getCanisterArchivedBal());
-    }, [user])
+    }, [user, swap.activeSwapPool])
 
 
     useEffect(() => {
@@ -100,7 +100,7 @@ const BurnContent = () => {
                         <div className='bg-white dark:bg-gray-800 border dark:border-gray-700 py-5 px-5 rounded-borderbox mb-7'>
                             <div className='flex justify-between mb-3'>
                                 <h4 className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-multygray dark:text-gray-300'>Amount</h4>
-                                <input className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-darkgray dark:text-gray-200 text-right bg-transparent w-full placeholder-darkgray dark:placeholder-gray-400 focus:outline-none focus:border-transparent' type='integer' value={amountSecondary + ""} defaultValue={0} min={0} onChange={(e) => {
+                                <input className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-darkgray dark:text-gray-200 text-right bg-transparent w-full placeholder-darkgray dark:placeholder-gray-400 focus:outline-none focus:border-transparent' type='integer' value={amountSecondary + ""} min={0} onChange={(e) => {
                                     handleAmountSecondaryChange(e)
                                 }} />
                             </div>

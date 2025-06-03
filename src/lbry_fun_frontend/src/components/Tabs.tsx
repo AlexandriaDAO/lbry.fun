@@ -166,7 +166,7 @@ export default function Tabs() {
                 </DropdownMenuContent>
             </DropdownMenu> */}
             <DropdownMenu open={openDropdown === 'info'} onOpenChange={(open) => setOpenDropdown(open ? 'info' : null)}>
-                <DropdownMenuTrigger asChild>
+                {/* <DropdownMenuTrigger asChild>
                     <button
                         onClick={() => navigate('/info')}
                         {...handleMouseEvents('info')}
@@ -174,7 +174,7 @@ export default function Tabs() {
                     >
                         INFO
                     </button>
-                </DropdownMenuTrigger>
+                </DropdownMenuTrigger> */}
                 <DropdownMenuContent 
                     align="center" 
                     className="w-[200px] bg-gray-900 border-gray-800"

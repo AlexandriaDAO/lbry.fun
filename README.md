@@ -52,7 +52,7 @@ switch id
 
 Confrim ksICP balance
 
-``` dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_balance_of '(record { owner = principal "YOUR_KONG_USER1_PRINCIPAL" })' ```
+``` dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_balance_of '(record { owner = principal "ffeoe-v7spt-7deo5-ujnp4-w5bgd-k7naw-pe36z-j54s6-eqip6-dquta-fae" })' ```
 
 
 You should see the ksICP balance for your user.
