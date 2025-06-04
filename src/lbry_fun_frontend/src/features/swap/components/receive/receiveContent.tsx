@@ -3,10 +3,11 @@ import { useAppSelector } from "@/store/hooks/useAppSelector";
 import CopyHelper from "../copyHelper";
 import { options as staticOptions } from "@/utils/utils";
 import QRCode from "react-qr-code";
+import { RootState } from "@/store";
 
 const ReceiveContent = () => {
-    const auth = useAppSelector((state) => state.auth);
-    const swap = useAppSelector((state) => state.swap);
+    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+    const swap = useAppSelector((state: RootState) => state.swap);
     const [isOpen, setIsOpen] = useState(false);
     const [networkOpen, setNetworkOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState("Select an option");
@@ -148,20 +149,20 @@ const ReceiveContent = () => {
                         <strong className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium'>Your Address</strong>
                     </div>
                     <div className="flex items-center">
-                        <div style={{ height: "120px", marginRight: "20px", width: "120px" }}>
-                            {auth.user && <QRCode
+                        <div style={{ height: "120px", marginRight: "20px", width: "120px", background: "white", padding: "8px", borderRadius: "4px" }}>
+                            {isAuthenticated && principal && <QRCode
                                 size={256}
-                                style={{ height: "100%", maxWidth: "100%", width: "100%" }}
-                                value={auth.user.principal}
-                                viewBox={`0 0 100% 100%`}
+                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                value={principal}
+                                viewBox={`0 0 256 256`}
                             />}
                         </div>
                         <div className="w-[calc(100%-140px)]">
                             <label className='mb-2 text-xl font-medium dark:text-white'>ICP Address</label>
                             <div className='border border-gray-400 dark:border-gray-600 py-5 px-5 rounded-borderbox flex items-center justify-between bg-white dark:bg-gray-800'>
-                                <p className='truncate text-lg font-medium text-radiocolor dark:text-gray-300 me-5'>{auth.user?.principal.toString()}</p>
+                                <p className='truncate text-lg font-medium text-radiocolor dark:text-gray-300 me-5'>{principal ? principal.toString() : ""}</p>
                                 <div>
-                                    {auth.user && <CopyHelper account={auth.user.principal} /> }
+                                    {isAuthenticated && principal && <CopyHelper account={principal} />}
                                 </div>
                             </div>
                         </div>

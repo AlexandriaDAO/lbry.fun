@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAppDispatch } from '../../../../store/hooks/useAppDispatch';
 import { useAppSelector } from "../../../../store/hooks/useAppSelector";
 import { useTheme } from "@/providers/ThemeProvider";
+import { RootState } from "@/store";
 
 import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swap/icp_swap.did';
 import getStakeInfo from "../../thunks/getStakedInfo";
@@ -10,6 +11,7 @@ import Unstake from "./unstake";
 import getALlStakesInfo from "../../thunks/getAllStakesInfo";
 import getStakersCount from "../../thunks/getStakersCount";
 import getAverageApy from "../../thunks/getAverageApy";
+
 interface StakedInfoProps {
     setLoadingModalV: any;
     setActionType: any;
@@ -17,25 +19,23 @@ interface StakedInfoProps {
 }
 const StakedInfo: React.FC<StakedInfoProps> = ({ setLoadingModalV, setActionType,userEstimateReward }) => {
     const dispatch = useAppDispatch();
-    const swap = useAppSelector((state) => state.swap);
-    const { user } = useAppSelector((state) => state.auth);
+    const swap = useAppSelector((state: RootState) => state.swap);
+    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
     const { theme } = useTheme();
 
     useEffect(() => {
-
-        if(user) dispatch(getStakeInfo(user.principal));
+        if(isAuthenticated && principal) dispatch(getStakeInfo(principal));
         dispatch(getStakersCount());
         dispatch(getALlStakesInfo());
         dispatch(getAverageApy());
-
-    }, [user])
+    }, [isAuthenticated, principal, dispatch])
     useEffect(() => {
         if (swap.successStake === true || swap.unstakeSuccess === true || swap.successClaimReward === true) {
-            if(user) dispatch(getStakeInfo(user.principal))
+            if(isAuthenticated && principal) dispatch(getStakeInfo(principal))
             dispatch(getALlStakesInfo())
             dispatch(getStakersCount())
         }
-    }, [user, swap])
+    }, [isAuthenticated, principal, swap, dispatch])
 
     return (
         <div >

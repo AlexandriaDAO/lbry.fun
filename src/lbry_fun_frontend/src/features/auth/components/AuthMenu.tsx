@@ -1,94 +1,78 @@
 import React from "react";
-
 import {
-	LayoutDashboard,
-	LoaderCircle,
+	LogIn,
 	LogOut,
-	Settings,
-	User,
+	UserCircle,
 } from "lucide-react";
 
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuGroup,
 	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/lib/components/dropdown-menu";
-import { NavLink } from "react-router";
 import { useLogout } from "@/hooks/useLogout";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
-import Protected from "@/guards/Protected";
+import { useIdentity } from "@/hooks/useIdentity";
+import { Button } from "@/lib/components/button";
+import { Skeleton } from "@/lib/components/skeleton";
+import { principalToString } from "@/utils/principal";
 
 export default function AuthMenu() {
 	const logout = useLogout();
+	const { login, isLoggingIn, identity } = useIdentity();
+	const { 
+		isAuthenticated, 
+		principal, 
+		isLoading: authReduxLoading, 
+		isInitialized: authReduxInitialized 
+	} = useAppSelector(state => state.auth);
 
-	const {user} = useAppSelector(state=>state.auth)
+	const handleLogin = () => {
+		if (login) {
+			login();
+		}
+	};
+
+	const isMenuLoading = !authReduxInitialized || authReduxLoading || isLoggingIn;
+
+	if (isMenuLoading) {
+		return <Skeleton className="h-[42px] w-[42px] rounded-full" />;
+	}
+
+	if (!isAuthenticated) {
+		return (
+			<Button 
+				onClick={handleLogin} 
+				variant="outline" 
+				className="rounded-full p-2 h-[42px] w-[42px]"
+				disabled={!login}
+			>
+				<LogIn size={18} />
+			</Button>
+		);
+	}
+
+	const displayPrincipal = principal ? principalToString(principal) : "Principal ID";
 
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				{user?.avatar ? (
-					<div className="w-[42px] h-[42px] border border-white rounded-full cursor-pointer overflow-hidden">
-						<div className="w-full h-full relative">
-							<div className="absolute inset-0 flex items-center justify-center">
-								<LoaderCircle color="white" size={18} className="animate animate-spin"/>
-							</div>
-							<img
-								src={user.avatar}
-								alt={user.username}
-								className="w-full h-full object-cover"
-								onLoad={(e) => {
-									(e.currentTarget.previousElementSibling as HTMLElement).style.display = 'none';
-								}}
-								onError={(e) => {
-									(e.currentTarget as HTMLElement).style.display = 'none';
-									(e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
-								}}
-							/>
-							<div className="hidden w-full h-full bg-primary items-center justify-center text-white text-xl font-medium">
-								{user.username.charAt(0).toUpperCase()}
-							</div>
-						</div>
-					</div>
-				) : (
-					<div className="w-[42px] h-[42px] border border-white rounded-full cursor-pointer bg-[#0172A] dark:bg-white flex items-center justify-center">
-						<span className="text-xl text-white dark:text-[#0F172A] font-medium">
-							{user?.username.charAt(0).toUpperCase()}
-						</span>
-					</div>
-				)}
+				<div className="w-[42px] h-[42px] border border-white dark:border-gray-700 rounded-full cursor-pointer bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+					<UserCircle size={24} className="text-gray-700 dark:text-gray-300" />
+				</div>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent className="w-40" side="bottom" align="end">
-				<DropdownMenuLabel className="text-center">@{user?.username}</DropdownMenuLabel>
-				<DropdownMenuSeparator />
-				<Protected>
-					<DropdownMenuGroup>
-						<NavLink to='/dashboard'>
-							<DropdownMenuItem className="cursor-pointer">
-								<LayoutDashboard />
-								<span>Dashboard</span>
-							</DropdownMenuItem>
-						</NavLink>
-						<NavLink to='/dashboard/profile'>
-						<DropdownMenuItem className="cursor-pointer">
-							<User />
-							<span>Profile</span>
-						</DropdownMenuItem>
-						</NavLink>
-						<NavLink to='/dashboard/settings'>
-							<DropdownMenuItem className="cursor-pointer">
-								<Settings />
-								<span>Settings</span>
-							</DropdownMenuItem>
-						</NavLink>
-					</DropdownMenuGroup>
-				</Protected>
+			<DropdownMenuContent className="w-56" side="bottom" align="end">
+				{principal && (
+					<DropdownMenuLabel className="text-center truncate">
+						{displayPrincipal}
+					</DropdownMenuLabel>
+				)}
 				<DropdownMenuSeparator />
 				<DropdownMenuItem className="cursor-pointer" onClick={logout}>
-					<LogOut />
+					<LogOut className="mr-2 h-4 w-4" />
 					<span>Log out</span>
 				</DropdownMenuItem>
 			</DropdownMenuContent>

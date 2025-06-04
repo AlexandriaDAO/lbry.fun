@@ -18,7 +18,7 @@ import { Entry } from "@/layouts/parts/Header";
 const RedeemContent: React.FC = () => {
   const { theme } = useTheme();
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
+  const { principal, isAuthenticated } = useAppSelector((state) => state.auth);
   const swap = useAppSelector((state) => state.swap);
   const [loadingModalV, setLoadingModalV] = useState(false);
   const [successModalV, setSucessModalV] = useState(false);
@@ -30,12 +30,13 @@ const RedeemContent: React.FC = () => {
   };
 
   useEffect(() => {
-    if(!user) return;
-    dispatch(getArchivedBal(user.principal))
-  }, [user]);
+    if(!isAuthenticated || !principal) return;
+    dispatch(getArchivedBal(principal));
+  }, [isAuthenticated, principal, dispatch]);
+
   useEffect(() => {
     if (swap.redeeemSuccess === true) {
-      if(user) dispatch(getArchivedBal(user.principal));
+      if(isAuthenticated && principal) dispatch(getArchivedBal(principal));
       dispatch(flagHandler());
       setLoadingModalV(false);
       setSucessModalV(true);
@@ -43,11 +44,8 @@ const RedeemContent: React.FC = () => {
       setLoadingModalV(false);
       setErrorModalV({ flag: true, title: swap.error.title, message: swap.error.message });
       dispatch(flagHandler());
-
-
     }
-
-  }, [user, swap]);
+  }, [isAuthenticated, principal, swap, dispatch]);
 
   return (
     <div>
@@ -70,11 +68,15 @@ const RedeemContent: React.FC = () => {
             </div>
           </div>
           <div>
-            {user ? <button
+            {isAuthenticated ? <button
               type="button"
               className="bg-balancebox text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6"
               onClick={() => {
-                handleSubmit();
+                if (principal) {
+                  handleSubmit();
+                } else {
+                  console.error("User is authenticated but principal is null.");
+                }
               }}
             >
               {swap.loading ? (<>

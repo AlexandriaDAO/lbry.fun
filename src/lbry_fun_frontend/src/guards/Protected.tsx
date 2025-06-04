@@ -8,13 +8,17 @@ interface ProtectedProps {
 }
 
 const Protected = ({ children, route = false }: ProtectedProps) => {
-	const { user } = useAppSelector((state) => state.auth);
+	const { isAuthenticated, isLoading, isInitialized } = useAppSelector((state) => state.auth);
 
-	const allowed = user?.username === "evanmcfarland" || user?.username === "zeeshan" || user?.username === "asdfasdf" || user?.username === "adill323";
+	if (isLoading || !isInitialized) {
+		return null;
+	}
 
-	if(route) return allowed ? <Outlet /> : <Navigate to="/401" replace />;
+	const allowed = isAuthenticated;
 
-	return allowed ? <>{children}</> : <></>;
+	if(route) return allowed ? <Outlet /> : <Navigate to="/" replace />;
+
+	return allowed ? <>{children}</> : null;
 };
 
 export default Protected;

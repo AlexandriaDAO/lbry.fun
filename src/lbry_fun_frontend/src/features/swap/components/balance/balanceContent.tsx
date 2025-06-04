@@ -7,19 +7,18 @@ import { useAppSelector } from "@/store/hooks/useAppSelector";
 import getAccountPrimaryBalance from "../../thunks/primaryIcrc/getAccountPrimaryBalance";
 import SecondaryBalanceCard from "./secondaryBalanceCard";
 import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance";
+import { RootState } from "@/store";
 
 const BalanceContent: React.FC = () => {
     const dispatch = useAppDispatch();
-    const {user} = useAppSelector((state) => state.auth);
-
+    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
 
     useEffect(() => {
-        if (user) {
-            dispatch(getAccountPrimaryBalance(user.principal))
-            dispatch(getSecondaryBalance(user.principal))
+        if (isAuthenticated && principal) {
+            dispatch(getAccountPrimaryBalance(principal));
+            dispatch(getSecondaryBalance(principal));
         }
-    }, [user])
-
+    }, [isAuthenticated, principal, dispatch]);
 
     return (
         <>

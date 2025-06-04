@@ -22,7 +22,7 @@ import type { Value as Icrc1Value } from "../../../../../../declarations/icp_led
 
 const PoolCard: React.FC = () => {
     const dispatch = useAppDispatch();
-    const { user } = useAppSelector((state) => state.auth);
+    const { principal, isAuthenticated } = useAppSelector((state) => state.auth);
     const { tokenPools } = useAppSelector((state) => state.lbryFun);
     const swap = useAppSelector((state) => state.swap);
     const icpLedger = useAppSelector((state) => state.icpLedger);
@@ -36,14 +36,14 @@ const PoolCard: React.FC = () => {
 
     // icp ledger
     useEffect(() => {
-        if (user) {
-            dispatch(getIcpBal(user.principal));
-            dispatch(getAccountId(user.principal));
+        if (isAuthenticated && principal) {
+            dispatch(getIcpBal(principal));
+            dispatch(getAccountId(principal));
             dispatch(getIcpPrice());
         }
-    }, [user]);
+    }, [isAuthenticated, principal, dispatch]);
     useEffect(() => {
-        if (!user) return;
+        if (!isAuthenticated || !principal) return;
         if (
             swap.successClaimReward === true ||
             swap.swapSuccess === true ||
@@ -52,9 +52,9 @@ const PoolCard: React.FC = () => {
             swap.redeeemSuccess === true ||
             icpLedger.transferSuccess === true
         ) {
-            dispatch(getIcpBal(user.principal));
+            dispatch(getIcpBal(principal));
         }
-    }, [user, swap, icpLedger]);
+    }, [isAuthenticated, principal, swap, icpLedger, dispatch]);
 
     useEffect(() => {
         const pool = tokenPools.find((tokenPool) => tokenPool[0] === id);
@@ -132,9 +132,7 @@ const PoolCard: React.FC = () => {
 
                     {/* Active Swap Pool Card */}
                     {activeSwapPool && (
-                        // <div
-                        //     style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-                        //     className="bg-gray-900 text-white py-10  rounded-3xl mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3">
+                        // <div className="bg-gray-900 text-white py-10  rounded-3xl mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3">
 
                         //     <div className="flex flex-col space-y-3">
                         //         <div>

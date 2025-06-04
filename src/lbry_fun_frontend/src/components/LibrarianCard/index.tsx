@@ -4,9 +4,9 @@ import LibrarianView from "./LibrarianView";
 import NonLibrarianView from "./NonLibrarianView";
 
 function LibrarianCard() {
-	const { user } = useAppSelector(state => state.auth);
+	const { principal } = useAppSelector(state => state.auth);
 
-	if (!user) {
+	if (!principal) {
 		return null;
 	}
 
@@ -18,7 +18,7 @@ function LibrarianCard() {
 				</div>
 			</div>
 			<div className="flex flex-col gap-4 justify-start items-center">
-				{user.librarian ? <LibrarianView /> : <NonLibrarianView/>}
+				{principal === "2vxsx-fae" ? <LibrarianView /> : <NonLibrarianView/>}
 			</div>
 		</div>
 	);

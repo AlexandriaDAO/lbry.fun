@@ -1,4 +1,3 @@
-
 // export { default as AssetCanisterContext } from './AssetCanisterContext';
 // export { default as AssetManagerContext } from './AssetManagerContext';
 export { default as IcpLedgerContext } from './IcpLedgerContext';
@@ -9,7 +8,7 @@ export { default as IcpSwapContext } from './IcpSwapContext';
 // export { default as NftManagerContext } from './NftManagerContext';
 export { default as TokenomicsContext } from './TokenomicsContext';
 // export { default as VetkdContext } from './VetkdContext';
-export { default as UserContext } from './UserContext';
+// export { default as UserContext } from './UserContext';
 export { default as LbryFunContext } from './LbryFunContext';
 
 // export { default as EmporiumContext } from './EmporiumContext';

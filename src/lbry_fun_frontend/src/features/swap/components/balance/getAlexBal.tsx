@@ -1,27 +1,28 @@
 import React, { useEffect } from "react";
 import { useAppDispatch } from '../../../../store/hooks/useAppDispatch';
 import { useAppSelector } from "../../../../store/hooks/useAppSelector";
+import { RootState } from "@/store";
 
 import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swap/icp_swap.did';
 import { _SERVICE as _SERVICEALEX} from '../../../../../../ICRC/ICRC.did' 
 import getAccountPrimaryBalance from "../../thunks/primaryIcrc/getAccountPrimaryBalance";
 
-const GetPrimaryBal = (user: string) => {
+const GetPrimaryBal = () => {
     const dispatch = useAppDispatch();
-    const primary = useAppSelector((state) => state.primary);
-    const auth = useAppSelector((state) => state.auth);
-    const swap = useAppSelector((state) => state.swap);
+    const primary = useAppSelector((state: RootState) => state.primary);
+    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+    const swap = useAppSelector((state: RootState) => state.swap);
 
     useEffect(() => {
-        if(!auth.user) return;
-        dispatch(getAccountPrimaryBalance(auth.user.principal))
-    }, [auth.user])
+        if(!isAuthenticated || !principal) return;
+        dispatch(getAccountPrimaryBalance(principal))
+    }, [isAuthenticated, principal, dispatch])
     useEffect(() => {
-        if(!auth.user) return;
+        if(!isAuthenticated || !principal) return;
         if (swap.successStake === true||swap.unstakeSuccess === true||swap.burnSuccess === true ||swap.successClaimReward===true) {
-            dispatch(getAccountPrimaryBalance(auth.user.principal))
+            dispatch(getAccountPrimaryBalance(principal))
         }
-    }, [auth.user, swap])
+    }, [isAuthenticated, principal, swap, dispatch])
     return (<div className="account-wrapper">
         Primary Balance :{primary.primaryBal}
     </div>);

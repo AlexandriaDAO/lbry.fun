@@ -2,17 +2,18 @@ import getIcpBal from "@/features/icp-ledger/thunks/getIcpBal";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import React, { useEffect } from "react";
+import { RootState } from "@/store";
 
 const UserICPBalance = () => {
-    const { user } = useAppSelector((state) => state.auth);
+    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
     const dispatch = useAppDispatch();
-    const icp = useAppSelector((state) => state.icpLedger);
+    const icp = useAppSelector((state: RootState) => state.icpLedger);
     
     useEffect(() => {
-      if (user?.principal) {
-        dispatch(getIcpBal(user.principal));
+      if (isAuthenticated && principal) {
+        dispatch(getIcpBal(principal));
       }
-    }, [user]);
+    }, [isAuthenticated, principal, dispatch]);
     return (<>
         <div className="pb-5">
             <div className="py-4 border-b-2 border-b-[#FF9900] mb-4 px-2">

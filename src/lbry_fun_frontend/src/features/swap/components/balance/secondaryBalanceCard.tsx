@@ -13,8 +13,8 @@ const SecondaryBalanceCard = () => {
     const auth = useAppSelector((state) => state.auth);
 
     const handleRefresh = () => {
-        if (!auth.user) return;
-        dispatch(getSecondaryBalance(auth.user.principal))
+        if (!auth.isAuthenticated || !auth.principal) return;
+        dispatch(getSecondaryBalance(auth.principal))
         toast.info("Refreshing balance!")
     }
 

@@ -19,8 +19,8 @@ const PrimaryBalanceCard = () => {
     const [primaryBalUsd, setPrimaryBalUsd] = useState(0);
 
     const handleRefresh = () => {
-        if (!auth.user) return;
-        dispatch(getAccountPrimaryBalance(auth.user.principal))
+        if (!auth.isAuthenticated || !auth.principal) return;
+        dispatch(getAccountPrimaryBalance(auth.principal))
         toast.info("Refreshing balance!")
     }
     useEffect(() => {

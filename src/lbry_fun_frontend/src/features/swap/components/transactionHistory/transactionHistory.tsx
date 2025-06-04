@@ -6,18 +6,19 @@ import React, { useEffect } from "react";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import TransactionHistoryObj from "./transactionHistoryObj";
 import { useTheme } from "@/providers/ThemeProvider";
+import { RootState } from "@/store";
 
 const TransactionHistory = () => {
     const dispatch = useAppDispatch();
-    const { user } = useAppSelector((state) => state.auth);
-    const swap = useAppSelector((state) => state.swap);
+    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+    const swap = useAppSelector((state: RootState) => state.swap);
     const { theme } = useTheme();
     const isDark = theme === "dark";
 
     useEffect(() => {
-        if(!user) return;
-        // dispatch(fetchTransaction(user.principal));
-    }, [user]);
+        if(!isAuthenticated || !principal) return;
+        // dispatch(fetchTransaction(principal));
+    }, [isAuthenticated, principal, dispatch]);
     return (<>
         <div className="overflow-x-auto lg:overflow-x-auto">
             <table className="min-w-full border-collapse">

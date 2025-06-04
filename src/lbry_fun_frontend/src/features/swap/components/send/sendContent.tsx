@@ -20,14 +20,15 @@ import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance"
 import ErrorModal from "../errorModal";
 import { Entry } from "@/layouts/parts/Header";
 import { Principal } from "@dfinity/principal";
+import { RootState } from "@/store";
 
 const SendContent = () => {
     const dispatch = useAppDispatch();
 
-    const { user } = useAppSelector(state => state.auth);
-    const icpLedger = useAppSelector((state) => state.icpLedger);
-    const primary = useAppSelector((state) => state.primary);
-    const swap = useAppSelector((state) => state.swap);
+    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+    const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
+    const primary = useAppSelector((state: RootState) => state.primary);
+    const swap = useAppSelector((state: RootState) => state.swap);
 
     const [isOpen, setIsOpen] = useState(false);
     const [loadingModalV, setLoadingModalV] = useState(false);
@@ -165,23 +166,23 @@ const SendContent = () => {
     }, [selectedOption, icpLedger.accountBalance, primary.primaryBal, swap.secondaryBalance, swap.activeSwapPool]);
 
     useEffect(() => {
-        if(!user) return;
+        if(!isAuthenticated || !principal) return;
         if (icpLedger.transferSuccess === true) {
             setLoadingModalV(false);
             setSucessModalV(true);
-            dispatch(getIcpBal(user.principal));
+            dispatch(getIcpBal(principal));
             dispatch(icpLedgerFlagHandler());
         }
         else if (primary.transferSuccess === true) {
             setLoadingModalV(false);
             setSucessModalV(true);
-            dispatch(getAccountPrimaryBalance(user.principal))
+            dispatch(getAccountPrimaryBalance(principal));
             dispatch((primaryFlagHandler()));
         }
         else if (swap.transferSuccess === true) {
             setLoadingModalV(false);
             setSucessModalV(true);
-            dispatch(getSecondaryBalance(user.principal))
+            dispatch(getSecondaryBalance(principal));
             dispatch((flagHandler()));
         }
         else if (swap.error || primary.error || icpLedger.error) {
@@ -191,7 +192,7 @@ const SendContent = () => {
             dispatch(primaryFlagHandler());
             dispatch(icpLedgerFlagHandler());
         }
-    }, [user, icpLedger, swap, primary, dispatch]);
+    }, [isAuthenticated, principal, icpLedger, swap, primary, dispatch]);
 
     return (<>
         <div>
@@ -290,7 +291,7 @@ const SendContent = () => {
                             </div>
                         </div>
                     </div>
-                    {user ? <button
+                    {isAuthenticated ? <button
                         type="button"
                         className={`w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2
                             ${parseFloat(amount) === 0 || icpLedger.loading || primary.loading || swap.loading ? 'text-[#808080] cursor-not-allowed' : 'bg-balancebox text-white cursor-pointer'}`} style={{

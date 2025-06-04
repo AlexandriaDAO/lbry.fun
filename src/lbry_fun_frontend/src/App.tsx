@@ -8,9 +8,9 @@ import "./styles/style.css";
 
 import "nprogress/nprogress.css";
 
-import AuthProvider from "./providers/AuthProvider";
+import InternetIdentityProvider from "./providers/AuthProvider/IIProvider";
 // import ActorProvider from "./providers/ActorProvider";
-import UserProvider from "./providers/UserProvider";
+// import UserProvider from "./providers/UserProvider";
 import { AppRoutes } from "./routes";
 import { ThemeProvider } from "./providers/ThemeProvider";
 
@@ -31,11 +31,10 @@ export default function App() {
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <ReduxProvider>
-                <AuthProvider>
-                    <UserProvider>
-                        {isReady ? <AppRoutes /> : null}
-                    </UserProvider>
-                </AuthProvider>
+                <InternetIdentityProvider>
+                    {/* <UserProvider> Removed </UserProvider> */}
+                    {isReady ? <AppRoutes /> : null}
+                </InternetIdentityProvider>
             </ReduxProvider>
         </ThemeProvider>
     )

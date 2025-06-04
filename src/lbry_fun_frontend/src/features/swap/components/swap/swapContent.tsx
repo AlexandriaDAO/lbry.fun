@@ -15,13 +15,14 @@ import SuccessModal from "../successModal";
 import LoadingModal from "../loadingModal";
 import ErrorModal from "../errorModal";
 import { Entry } from "@/layouts/parts/Header";
+import { RootState } from "@/store";
 
 
 const SwapContent: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
-  const icpLedger = useAppSelector((state) => state.icpLedger);
-  const swap = useAppSelector((state) => state.swap);
+  const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+  const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
+  const swap = useAppSelector((state: RootState) => state.swap);
   const [amount, setAmount] = useState("");
   const [secondaryRatio, setSecondaryRatio] = useState(0.0);
   const [tentativeSecondary, setTentativeSecondary] = useState(Number);
@@ -32,9 +33,9 @@ const SwapContent: React.FC = () => {
   const [shadow, setShadow] = useState('shadow-[0px_0px_13px_4px_#abbddb8a] border-[#C5CFF9] ');
 
   const handleSubmit = () => {
-    if (!user?.principal||!swap.activeSwapPool?.[1].icp_swap_canister_id) return;
+    if (!isAuthenticated || !principal || !swap.activeSwapPool?.[1].icp_swap_canister_id) return;
     let amountAfterFees = (Number(amount)).toFixed(4);
-    dispatch(swapSecondary({ amount: amountAfterFees, userPrincipal: user?.principal, canisterId: swap.activeSwapPool?.[1].icp_swap_canister_id }));
+    dispatch(swapSecondary({ amount: amountAfterFees, userPrincipal: principal, canisterId: swap.activeSwapPool?.[1].icp_swap_canister_id }));
     setLoadingModalV(true);
   };
 
@@ -63,16 +64,16 @@ const SwapContent: React.FC = () => {
     );
   }, [swap.secondaryRatio]);
   useEffect(() => {
-    if (!user ||!swap.activeSwapPool?.[1].secondary_token_id) return;
+    if (!isAuthenticated || !principal || !swap.activeSwapPool?.[1].secondary_token_id) return;
     if (swap.swapSuccess === true) {
-      dispatch(getSecondaryBalance(user.principal));
+      dispatch(getSecondaryBalance(principal));
       dispatch(flagHandler());
       setLoadingModalV(false);
       setSucessModalV(true);
       setAmount("");
       setTentativeSecondary(0);
     }
-  }, [user, swap.swapSuccess,swap.activeSwapPool]);
+  }, [isAuthenticated, principal, swap.swapSuccess, swap.activeSwapPool, dispatch]);
   useEffect(() => {
     if (swap.error) {
       setLoadingModalV(false);
@@ -156,7 +157,7 @@ const SwapContent: React.FC = () => {
             <p className="text-lg font-semibold pr-5 text-[#525252] dark:text-gray-300 w-9/12">{parseFloat(amount) < minimum_icp ? <>Please enter at least the minimum amount to proceed</> : <></>}</p>
           </div>
           <div>
-            {user ? (
+            {isAuthenticated ? (
               <button
                 type="button"
                 className={`w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 

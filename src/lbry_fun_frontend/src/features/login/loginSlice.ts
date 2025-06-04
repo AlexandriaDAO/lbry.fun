@@ -1,5 +1,5 @@
 import { ActionReducerMapBuilder, createSlice } from "@reduxjs/toolkit";
-import login from "./thunks/login";
+// import login from "./thunks/login";
 
 
 // Define the interface for our auth state
@@ -31,22 +31,22 @@ const loginSlice = createSlice({
 			state.open = action.payload;
 		},
 	},
-	extraReducers: (builder: ActionReducerMapBuilder<LoginState>) => {
-		builder
-			// login.ts
-			.addCase(login.pending, (state) => {
-				state.loading = true;
-				state.error = null;
-			})
-			.addCase(login.fulfilled, (state) => {
-				state.loading = false;
-				state.error = null;
-			})
-			.addCase(login.rejected, (state, action) => {
-				state.loading = false;
-				state.error = action.payload as string;
-			})
-		}
+	// extraReducers: (builder: ActionReducerMapBuilder<LoginState>) => {
+	// \tbuilder
+	// \t\t// login.ts
+	// \t\t.addCase(login.pending, (state) => {
+	// \t\t\tstate.loading = true;
+	// \t\t\tstate.error = null;
+	// \t\t})
+	// \t\t.addCase(login.fulfilled, (state) => {
+	// \t\t\tstate.loading = false;
+	// \t\t\tstate.error = null;
+	// \t\t})
+	// \t\t.addCase(login.rejected, (state, action) => {
+	// \t\t\tstate.loading = false;
+	// \t\t\tstate.error = action.payload as string;
+	// \t\t})
+	// \t}
 });
 
 export const {setError, setLoading, setOpen} = loginSlice.actions;

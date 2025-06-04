@@ -1,4 +1,4 @@
-- Get rid of the need for the user canister.
+- Cant navigate to 'swap' unless logged in?
 
 
 

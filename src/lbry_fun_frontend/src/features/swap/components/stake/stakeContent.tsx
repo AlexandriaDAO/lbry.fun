@@ -14,15 +14,16 @@ import LoadingModal from "../loadingModal";
 import SuccessModal from "../successModal";
 import ErrorModal from "../errorModal";
 import { Entry } from "@/layouts/parts/Header";
+import { RootState } from "@/store";
 
 const StakeContent = () => {
     const { theme } = useTheme();
     const dispatch = useAppDispatch();
 
-    const swap = useAppSelector((state) => state.swap);
-    const { user } = useAppSelector((state) => state.auth);
-    const primary = useAppSelector((state) => state.primary);
-    const icpLedger = useAppSelector((state) => state.icpLedger);
+    const swap = useAppSelector((state: RootState) => state.swap);
+    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+    const primary = useAppSelector((state: RootState) => state.primary);
+    const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
 
     const [amount, setAmount] = useState("0");
     const [loadingModalV, setLoadingModalV] = useState(false);
@@ -36,8 +37,8 @@ const StakeContent = () => {
 
     const handleSubmit = (event: any) => {
         event.preventDefault();
-        if (!user?.principal) return;
-        dispatch(stakePrimary({ amount, userPrincipal: user?.principal }));
+        if (!isAuthenticated || !principal) return;
+        dispatch(stakePrimary({ amount, userPrincipal: principal }));
         setActionType("Stake");
         setLoadingModalV(true);
     }
@@ -73,16 +74,16 @@ const StakeContent = () => {
 
 
     useEffect(() => {
-        if (user) {
-            dispatch(getAccountPrimaryBalance(user.principal))
+        if (isAuthenticated && principal) {
+            dispatch(getAccountPrimaryBalance(principal))
         }
-    }, [user])
+    }, [isAuthenticated, principal, dispatch])
 
     useEffect(() => {
 
         if (swap.successStake === true || swap.unstakeSuccess === true || swap.burnSuccess === true || swap.successClaimReward === true) {
             dispatch(flagHandler());
-            if (user) dispatch(getAccountPrimaryBalance(user.principal))
+            if (isAuthenticated && principal) dispatch(getAccountPrimaryBalance(principal))
             setLoadingModalV(false);
             setSucessModalV(true);
         }
@@ -98,7 +99,7 @@ const StakeContent = () => {
             dispatch(flagHandler());
 
         }
-    }, [user, swap])
+    }, [isAuthenticated, principal, swap, dispatch])
 
     const primaryTokenLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
 
@@ -199,7 +200,7 @@ const StakeContent = () => {
                             </div>
                         </div>
                         <div>
-                            {user ? <button
+                            {isAuthenticated ? <button
                                 type="button"
                                 className={`bg-[#5555FF] text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 ${parseFloat(amount) === 0 || swap.loading ? 'text-[#808080] cursor-not-allowed' : 'bg-balancebox text-white cursor-pointer'}`}
                                 style={{

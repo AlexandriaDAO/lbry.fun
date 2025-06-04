@@ -17,13 +17,14 @@ import ErrorModal from "../errorModal";
 import BurnInfo from "./burnInfo";
 import calculateMaxBurnAllowed from "./calculateMaxBurnAllowed";
 import { Entry } from "@/layouts/parts/Header";
+import { RootState } from "@/store";
 
 const BurnContent = () => {
     const dispatch = useAppDispatch();
-    const { user } = useAppSelector((state) => state.auth);
-    const swap = useAppSelector((state) => state.swap);
-    const icpLedger = useAppSelector((state) => state.icpLedger);
-    const tokenomics = useAppSelector((state) => state.tokenomics);
+    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+    const swap = useAppSelector((state: RootState) => state.swap);
+    const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
+    const tokenomics = useAppSelector((state: RootState) => state.tokenomics);
 
     const [amountSecondary, setAmountSecondary] = useState(0);
     const [tentativeICP, setTentativeICP] = useState(Number);
@@ -35,10 +36,9 @@ const BurnContent = () => {
 
     const handleSubmit = (event: any) => {
         event.preventDefault();
-        if (!user?.principal) return;
-        dispatch(burnSecondary({ amount: amountSecondary.toString(), userPrincipal: user.principal }));
+        if (!isAuthenticated || !principal) return;
+        dispatch(burnSecondary({ amount: amountSecondary.toString(), userPrincipal: principal }));
         setLoadingModalV(true);
-
     }
     const handleAmountSecondaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
@@ -60,31 +60,29 @@ const BurnContent = () => {
     };
 
     useEffect(() => {
-        if (!user) return;
+        if (!isAuthenticated || !principal) return;
         if (swap.burnSuccess === true && swap.activeSwapPool) {
             dispatch(flagHandler())
-            dispatch(getSecondaryBalance(user.principal))
+            dispatch(getSecondaryBalance(principal))
             setLoadingModalV(false);
             setSucessModalV(true);
             setMaxburnAllowed(calculateMaxBurnAllowed(swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))
         }
         if (swap.error && swap.activeSwapPool) {
-            dispatch(getSecondaryBalance(user.principal));
+            dispatch(getSecondaryBalance(principal));
             setLoadingModalV(false);
             setErrorModalV({flag:true,title:swap.error.title,message:swap.error.message});
             dispatch(flagHandler());
-
         }
-    }, [user, swap])
+    }, [isAuthenticated, principal, swap, icpLedger.canisterBalance, tokenomics.primaryMintRate, dispatch]);
 
     useEffect(() => {
-        if (user && swap.activeSwapPool) {
-            dispatch(getSecondaryBalance(user.principal));
+        if (isAuthenticated && principal && swap.activeSwapPool) {
+            dispatch(getSecondaryBalance(principal));
         }
         dispatch(getCanisterBal());
         dispatch(getCanisterArchivedBal());
-    }, [user, swap.activeSwapPool])
-
+    }, [isAuthenticated, principal, swap.activeSwapPool, dispatch]);
 
     useEffect(() => {
         setMaxburnAllowed(calculateMaxBurnAllowed(swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))
@@ -159,7 +157,7 @@ const BurnContent = () => {
                                 </h3>
                             </div>
                         </div>
-                        {user ? <button
+                        {isAuthenticated ? <button
                             type="button"
                             className={`bg-[#5555FF] text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-4 ${parseInt(amountSecondary.toString()) === 0 ||
                                     swap.loading ||

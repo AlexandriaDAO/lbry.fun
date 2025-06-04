@@ -22,9 +22,9 @@ const TokenPage = lazy(() => import("@/pages/tokenPage"));
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
-		<Route >
+		<Route element={<AuthGuard />}>
 			<Route path={"/"} element={<MainLayout />}>
-				<Route index element={<Suspense key="home" ><TokenPage /></Suspense>} />
+				<Route index element={<Suspense key="home" fallback={<TopProgressBar />}><TokenPage /></Suspense>} />
 				<Route path="/token">
 				<Route path="success" element={<Suspense key="success" fallback={<TopProgressBar />}><SuccessPage /></Suspense>} />
 

@@ -1,139 +1,69 @@
-import React, { Suspense } from "react";
-import { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import Logo from "@/components/Logo";
 import Tabs from "@/components/Tabs";
 import { useIdentity } from "@/hooks/useIdentity";
-import { InlineLogin } from "@/features/login";
-import Processing from "@/components/Processing";
-import { useUser } from "@/hooks/actors";
-
-import { lazy } from "react";
 import { ModeToggle } from "@/lib/components/mode-toggle";
-
-const InlineSignup = lazy(() =>
-	import("@/features/signup").then((module) => ({
-		default: module.InlineSignup,
-	}))
-);
-const Auth = lazy(() => import("@/features/auth"));
+import AuthMenu from "@/features/auth/components/AuthMenu";
 
 export const Entry = () => {
-	const { actor } = useUser();
-	const { identity, isInitializing, isLoggingIn } = useIdentity();
-	const { user } = useAppSelector((state) => state.auth);
-	const { loading } = useAppSelector((state) => state.login);
-	// const [countdown, setCountdown] = useState(60);
+	const { isInitializing, isLoggingIn } = useIdentity();
+	const { isAuthenticated, isLoading: authLoading, error: authError } = useAppSelector((state) => state.auth);
+	const { loading: loginUiLoading, error: loginUiError } = useAppSelector((state) => state.login);
+	
+	const isLoading = isInitializing || isLoggingIn || authLoading || loginUiLoading;
 
-	// // relevant logic in /src/providers/UserProvider/IIUserProvider.tsx
-	// // Handle countdown timer and page refresh
-	// useEffect(() => {
-	// 	let timerInterval = null;
-
-	// 	// Only start countdown if in a loading state
-	// 	if (isLoggingIn) {
-	// 		timerInterval = setInterval(() => {
-	// 		setCountdown(prev => {
-	// 			if (prev <= 1) { 
-	// 				return 0;
-	// 			}
-	// 			return prev - 1;
-	// 		});
-	// 		}, 1000);
-	// 	} else {
-	// 		// Reset countdown when not in loading state
-	// 		setCountdown(60);
-	// 	}
-
-	// 	return () => {
-	// 		if (timerInterval) clearInterval(timerInterval);
-	// 	};
-	// }, [isLoggingIn]);
-
-	// sequence matters
-
-	// First, check initialization state
-	if (isInitializing) return <Processing message="Initializing..." />;
-
-	// Show loading state during login on frontend
-	if (isLoggingIn) return <Processing message="Logging in..." />;
-
-	// // Show loading state during login on frontend with countdown
-	// if (isLoggingIn) return (
-	// 	<>
-	// 		<div className="flex-shrink h-auto flex justify-between gap-1 px-4 py-2 items-center border border-white text-[#828282] rounded-full cursor-not-allowed">
-	// 			<span className="w-max text-base font-normal font-roboto-condensed tracking-wider">Page refreshes in {countdown}s</span>
-	// 		</div>
-	// 		<Processing message={`Logging in...`} />
-	// 	</>
-	// );
-
-	// Then check if we have an identity
-	if (!identity) return <InlineLogin />;
-
-	// Show loading state while waiting for actor
-	if (!actor) return <Processing message="Loading Actor..." />;
-
-	// Show loading state during login with backend
-	if (loading) return <Processing message="Authenticating..." />;
-
-	// If we have identity and actor but no user, show signup
-	if (!user)
-		return (
-			// load signup module only when needed
-			<Suspense fallback={<Processing message="Loading User..." />}>
-				<InlineSignup />
-			</Suspense>
-		);
-
-	// Finally, show the authenticated component
-	// load auth module only when needed
 	return (
-		<Suspense fallback={<Processing message="Loading Auth..." />}>
-			<Auth />
-		</Suspense>
+		<div className="flex items-center gap-2">
+			<ModeToggle />
+			<AuthMenu />
+		</div>
 	);
 };
 
-function Header() {
+const Header = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 
 	const toggleMenu = () => {
 		setIsMenuOpen(!isMenuOpen);
 	};
 
-	// bg-gray-900
-
 	return (
-		<div className="flex-grow-0 flex-shrink-0 bg-[#5555FF] basis-24 flex flex-col justify-center items-stretch lg:px-10 md:px-8 sm:px-6 xs:px-4 relative z-50">
-			<div className="flex-grow-0 flex-shrink-0 flex basis-24 justify-between items-center w-full">
+		<header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+			<div className="container flex h-14 max-w-screen-2xl items-center">
 				<Logo />
-				<div className="md:flex sm:hidden xs:hidden w-full justify-between">
-					{/* expensive component */}
+				<div className="hidden md:flex flex-1 items-center justify-between ml-4">
 					<Tabs />
-
-					<div className="flex gap-2 justify-between items-center">
+					<nav className="flex items-center">
 						<Entry />
-						<ModeToggle />
-					</div>
+					</nav>
 				</div>
-				<div className="hidden md:hidden sm:block xs:block">
-					<button className="w-6 text-foreground" onClick={toggleMenu}>
-						<img src="images/menu.svg" alt="menu-icon" />
+				<div className="md:hidden flex flex-1 justify-end items-center">
+					<button onClick={toggleMenu} className="p-2">
+						{isMenuOpen ? (
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+								<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						) : (
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+								<path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+							</svg>
+						)}
 					</button>
 				</div>
 			</div>
 			{isMenuOpen && (
-				<div className="flex flex-col pb-4">
-					<Tabs />
-					<div className="flex gap-2 justify-between">
-						<Entry />
-						<ModeToggle />
-					</div>
+				<div className="md:hidden">
+					<nav className="flex flex-col items-center px-2 py-4 border-t border-border/40">
+						<Tabs />
+						<div className="mt-4">
+							<Entry />
+						</div>
+					</nav>
 				</div>
 			)}
-		</div>
+		</header>
 	);
-}
+};
 
 export default Header;

@@ -14,31 +14,32 @@ import { faRotate } from "@fortawesome/free-solid-svg-icons";
 import { Entry } from "@/layouts/parts/Header";
 import { toast } from "sonner";
 import PoolCard from "./poolCard";
+import { RootState } from "@/store";
 
 const AccountCards: React.FC = () => {
     const dispatch = useAppDispatch();
-    const { user } = useAppSelector((state) => state.auth);
-    const swap = useAppSelector((state) => state.swap);
-    const icpLedger = useAppSelector((state) => state.icpLedger);
+    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+    const swap = useAppSelector((state: RootState) => state.swap);
+    const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
     const [formattedPrincipal, setFormattedPrincipal] = useState("");
     const [formattedAccountId, setFormattedAccountId] = useState("");
 
     const handleRefresh = () => {
-        if (!user) return;
-        dispatch(getIcpBal(user.principal));
+        if (!isAuthenticated || !principal) return;
+        dispatch(getIcpBal(principal));
         dispatch(getIcpPrice());
         toast.info("Refreshing balance!")
     }
     // icp ledger
     useEffect(() => {
-        if (user) {
-            dispatch(getIcpBal(user.principal));
-            dispatch(getAccountId(user.principal));
+        if (isAuthenticated && principal) {
+            dispatch(getIcpBal(principal));
+            dispatch(getAccountId(principal));
             dispatch(getIcpPrice());
         }
-    }, [user]);
+    }, [isAuthenticated, principal, dispatch]);
     useEffect(() => {
-        if (!user) return;
+        if (!isAuthenticated || !principal) return;
         if (
             swap.successClaimReward === true ||
             swap.swapSuccess === true ||
@@ -47,24 +48,24 @@ const AccountCards: React.FC = () => {
             swap.redeeemSuccess === true ||
             icpLedger.transferSuccess === true
         ) {
-            dispatch(getIcpBal(user.principal));
+            dispatch(getIcpBal(principal));
         }
-    }, [user, swap, icpLedger]);
+    }, [isAuthenticated, principal, swap, icpLedger, dispatch]);
 
     //style
     useEffect(() => {
-        if (!user || !icpLedger) return;
+        if (!isAuthenticated || !principal || !icpLedger.accountId) return;
         const handleResize = () => {
             if (window.innerWidth < 1000) {
                 setFormattedPrincipal(
-                    user.principal.slice(0, 3) + "..." + user.principal.slice(-3)
+                    principal.slice(0, 3) + "..." + principal.slice(-3)
                 );
                 setFormattedAccountId(
                     icpLedger.accountId.slice(0, 3) + "..." + icpLedger.accountId.slice(-3)
                 );
             } else {
                 setFormattedPrincipal(
-                    user.principal.slice(0, 5) + "..." + user.principal.slice(-20)
+                    principal.slice(0, 5) + "..." + principal.slice(-20)
                 );
                 setFormattedAccountId(
                     icpLedger.accountId.slice(0, 5) + "..." + icpLedger.accountId.slice(-20)
@@ -77,7 +78,7 @@ const AccountCards: React.FC = () => {
         window.addEventListener("resize", handleResize);
 
         return () => window.removeEventListener("resize", handleResize);
-    }, [user, icpLedger]);
+    }, [isAuthenticated, principal, icpLedger.accountId, dispatch]);
 
     return (
         <>
@@ -89,7 +90,7 @@ const AccountCards: React.FC = () => {
                         Principal Account
                     </h4>
 
-                    {user ? (
+                    {isAuthenticated && principal ? (
                         <>
                             <div className="md:mb-20 sm:mb-16 xs:mb-10">
                                 <div className="flex justify-between mb-3 xxl:mb-3">
@@ -101,7 +102,7 @@ const AccountCards: React.FC = () => {
                                             (Connected)
                                         </span>
                                     </div>
-                                    <CopyHelper account={user.principal} />
+                                    {principal && <CopyHelper account={principal} />}
                                 </div>
                                 <h4 className="text-2xl xl:text-xl font-medium mb-3  2xl:mb-3  xl:mb-3">
                                     Account Id:
@@ -115,7 +116,7 @@ const AccountCards: React.FC = () => {
                                             (Connected)
                                         </span>
                                     </div>
-                                    <CopyHelper account={icpLedger.accountId} />
+                                    {icpLedger.accountId && <CopyHelper account={icpLedger.accountId} />}
                                 </div>
                             </div>
                             <h4 className="text-2xl 2xl:text-2xl font-medium mb-3 flex text-center justify-between">

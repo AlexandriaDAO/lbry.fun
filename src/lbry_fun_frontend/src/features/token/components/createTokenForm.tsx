@@ -15,6 +15,7 @@ import UserICPBalance from './userICPBalance';
 import SuccessModal from '@/features/swap/components/successModal';
 import ErrorModal from '@/features/swap/components/errorModal';
 import { useNavigate } from 'react-router-dom';
+import { RootState } from "@/store";
 
 export interface TokenFormValues {
   primary_token_symbol: string;
@@ -37,15 +38,13 @@ interface FormErrors {
 
 const CreateTokenForm: React.FC = () => {
   const dispatch = useAppDispatch();
-  const navigate=useNavigate();
-  const lbryFun = useAppSelector(state => state.lbryFun);
+  const navigate = useNavigate();
+  const lbryFun = useAppSelector((state: RootState) => state.lbryFun);
   const [loadingModalV, setLoadingModalV] = useState(false);
   const [successModalV, setSucessModalV] = useState(false);    
   const [errorModalV, setErrorModalV] = useState({ flag: false, title: "", message: "" });
   
-  
-
-  const { user } = useAppSelector((state) => state.auth);
+  const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
   const [errors, setErrors] = useState<FormErrors>({});
 
   const [form, setForm] = useState<TokenFormValues>({
@@ -142,16 +141,13 @@ const CreateTokenForm: React.FC = () => {
       return;
     }
 
-    if (!user) {
+    if (!isAuthenticated || !principal) {
       setLoadingModalV(false);
-
+      setErrorModalV({ flag: true, title: "Authentication Error", message: "Please log in to create a token." });
       return;
     }
 
-    setLoadingModalV(true);
-
-   
-    dispatch(createToken({ formData: form, userPrincipal: user.principal }));
+    dispatch(createToken({ formData: form, userPrincipal: principal }));
     console.log('Submitting:', form);
   };
 

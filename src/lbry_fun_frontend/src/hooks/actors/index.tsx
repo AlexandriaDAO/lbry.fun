@@ -3,7 +3,7 @@ export { default as useActorErrorHandler } from './useActorErrorHandler';
 
 // export { default as useAssetCanister } from './useAssetCanister';
 // export { default as useAssetManager } from './useAssetManager';
-export { default as useUser } from './useUser';
+// export { default as useUser } from './useUser';
 // export { default as useIcpLedger } from './useIcpLedger';
 // export { default as useIcpSwap } from './useIcpSwap';
 // export { default as useIcrc7 } from './useIcrc7';
