@@ -21,6 +21,7 @@ import getSecondaryFee from './thunks/secondaryIcrc/getSecondaryFee';
 import getPrimaryFee from './thunks/primaryIcrc/getPrimaryFee';
 import Insights from './components/insights/insights';
 
+import getTokenPools from '../token/thunk/getTokenPools.thunk';
 import { setActiveSwapPool } from './swapSlice';
 import fetchTokenLogosForPool from '../token/thunk/fetchTokenLogosForPoolThunk';
 
@@ -30,8 +31,8 @@ const SwapMain = () => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
     const swap = useAppSelector(state => state.swap);
-    const { tokenPools } = useAppSelector((state) => state.lbryFun);
-    const id = searchParams.get("id");
+    const { tokenPools, loading: lbryFunLoading, error: lbryFunError, success: lbryFunSuccess } = useAppSelector((state) => state.lbryFun);
+    const idFromUrl = searchParams.get("id");
 
     const tabs = [
         { id: 1, path: 'balance', label: 'Balance', hover: null, content: <BalanceContent /> },
@@ -60,25 +61,50 @@ const SwapMain = () => {
     }, []);
 
     useEffect(() => {
+        if (tokenPools.length === 0 && !lbryFunLoading && !lbryFunError) {
+            dispatch(getTokenPools());
+        }
+    }, [dispatch, tokenPools.length, lbryFunLoading, lbryFunError]);
+
+    useEffect(() => {
         if (swap.burnSuccess === true) {
             dispatch(getSecondaryratio());
         }
     }, [swap]);
+
     useEffect(() => {
-        const pool = tokenPools.find((tokenPool) => tokenPool[0] === id);
-        dispatch(setActiveSwapPool(pool));
+        if (!idFromUrl) {
+            if (swap.activeSwapPool !== null) {
+                dispatch(setActiveSwapPool(null));
+            }
+            return;
+        }
+
+        if (lbryFunLoading || lbryFunError) {
+            return;
+        }
+
+        const pool = tokenPools.find((p) => p[0] === idFromUrl);
+
         if (pool) {
-            const poolData = pool[1];
-            if ((poolData.primary_token_id && !poolData.primary_token_logo_base64) || 
-                (poolData.secondary_token_id && !poolData.secondary_token_logo_base64)) {
-                dispatch(fetchTokenLogosForPool({
-                    poolId: pool[0],
-                    primaryTokenId: poolData.primary_token_id,
-                    secondaryTokenId: poolData.secondary_token_id,
-                }));
+            if (!swap.activeSwapPool || swap.activeSwapPool[0] !== pool[0]) {
+                dispatch(setActiveSwapPool(pool));
+                const poolData = pool[1];
+                if ((poolData.primary_token_id && !poolData.primary_token_logo_base64) || 
+                    (poolData.secondary_token_id && !poolData.secondary_token_logo_base64)) {
+                    dispatch(fetchTokenLogosForPool({
+                        poolId: pool[0],
+                        primaryTokenId: poolData.primary_token_id,
+                        secondaryTokenId: poolData.secondary_token_id,
+                    }));
+                }
+            }
+        } else {
+            if (swap.activeSwapPool !== null) {
+                dispatch(setActiveSwapPool(null));
             }
         }
-    }, [id, tokenPools, dispatch]);
+    }, [idFromUrl, tokenPools, lbryFunLoading, lbryFunError, dispatch, swap.activeSwapPool]);
 
     return (
         <div className='tabs py-10 2xl:py-20 xl:py-16 lg:py-14 md:py-12 sm:py-10'>
@@ -90,7 +116,7 @@ const SwapMain = () => {
                             {tabs.map(tab => (
                                 <button
                                     key={tab.id}
-                                    onClick={() => navigate(`/swap/${tab.path}?id=${id}`)}
+                                    onClick={() => navigate(`/swap/${tab.path}?id=${idFromUrl}`)}
                                     className={`px-2 py-2 flex items-center ${activeTab === tab.id
                                         ? 'text-base 2xl:text-xl bg-[#5555FF] text-white dark:bg-white dark:text-black px-5'
                                         : 'bg-white text-black dark:bg-black dark:text-white'} transition-colors duration-300 text-base font-semibold leading-6 min-w-24 h-11 border dark:border-gray-700 border-gray-400 rounded-2xl mr-3 hover:bg-[#5555FF] hover:text-white dark:hover:bg-white dark:hover:text-black px-5 mb-4 z-20`}

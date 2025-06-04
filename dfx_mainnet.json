@@ -15,11 +15,6 @@
       "package": "system_api",
       "type": "rust"
     },
-    "user": {
-      "type": "rust",
-      "package": "user",
-      "candid": "src/user/user.did"
-    },
     "alex_backend": {
       "candid": "src/alex_backend/alex_backend.did",
       "package": "alex_backend",

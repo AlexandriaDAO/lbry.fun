@@ -16,11 +16,20 @@ import { toast } from "sonner";
 import PoolCard from "./poolCard";
 import { RootState } from "@/store";
 
+const ICP_PRICE_STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes (should match thunk)
+
 const AccountCards: React.FC = () => {
     const dispatch = useAppDispatch();
     const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
     const swap = useAppSelector((state: RootState) => state.swap);
-    const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
+    const { 
+        icpPrice, 
+        icpPriceTimestamp, 
+        accountId: icpLedgerAccountId, // Renamed to avoid conflict
+        accountBalance: icpLedgerAccountBalance, // Renamed
+        accountBalanceUSD: icpLedgerAccountBalanceUSD, // Renamed
+        transferSuccess: icpLedgerTransferSuccess // Renamed
+    } = useAppSelector((state: RootState) => state.icpLedger);
     const [formattedPrincipal, setFormattedPrincipal] = useState("");
     const [formattedAccountId, setFormattedAccountId] = useState("");
 
@@ -35,9 +44,15 @@ const AccountCards: React.FC = () => {
         if (isAuthenticated && principal) {
             dispatch(getIcpBal(principal));
             dispatch(getAccountId(principal));
-            dispatch(getIcpPrice());
+            // Check if ICP price is needed
+            if (!icpPrice || !icpPriceTimestamp || (Date.now() - icpPriceTimestamp > ICP_PRICE_STALE_THRESHOLD_MS)) {
+                console.log("AccountCards: dispatching getIcpPrice due to stale/missing data.");
+                dispatch(getIcpPrice());
+            } else {
+                console.log("AccountCards: using existing fresh ICP price from store.");
+            }
         }
-    }, [isAuthenticated, principal, dispatch]);
+    }, [isAuthenticated, principal, dispatch, icpPrice, icpPriceTimestamp]);
     useEffect(() => {
         if (!isAuthenticated || !principal) return;
         if (
@@ -46,29 +61,29 @@ const AccountCards: React.FC = () => {
             swap.burnSuccess === true ||
             swap.transferSuccess === true ||
             swap.redeeemSuccess === true ||
-            icpLedger.transferSuccess === true
+            icpLedgerTransferSuccess === true // Used renamed variable
         ) {
             dispatch(getIcpBal(principal));
         }
-    }, [isAuthenticated, principal, swap, icpLedger, dispatch]);
+    }, [isAuthenticated, principal, swap, icpLedgerTransferSuccess, dispatch]); // Used renamed variable
 
     //style
     useEffect(() => {
-        if (!isAuthenticated || !principal || !icpLedger.accountId) return;
+        if (!isAuthenticated || !principal || !icpLedgerAccountId) return;
         const handleResize = () => {
             if (window.innerWidth < 1000) {
                 setFormattedPrincipal(
                     principal.slice(0, 3) + "..." + principal.slice(-3)
                 );
                 setFormattedAccountId(
-                    icpLedger.accountId.slice(0, 3) + "..." + icpLedger.accountId.slice(-3)
+                    icpLedgerAccountId.slice(0, 3) + "..." + icpLedgerAccountId.slice(-3)
                 );
             } else {
                 setFormattedPrincipal(
                     principal.slice(0, 5) + "..." + principal.slice(-20)
                 );
                 setFormattedAccountId(
-                    icpLedger.accountId.slice(0, 5) + "..." + icpLedger.accountId.slice(-20)
+                    icpLedgerAccountId.slice(0, 5) + "..." + icpLedgerAccountId.slice(-20)
                 );
 
             }
@@ -78,7 +93,7 @@ const AccountCards: React.FC = () => {
         window.addEventListener("resize", handleResize);
 
         return () => window.removeEventListener("resize", handleResize);
-    }, [isAuthenticated, principal, icpLedger.accountId, dispatch]);
+    }, [isAuthenticated, principal, icpLedgerAccountId, dispatch]);
 
     return (
         <>
@@ -116,7 +131,7 @@ const AccountCards: React.FC = () => {
                                             (Connected)
                                         </span>
                                     </div>
-                                    {icpLedger.accountId && <CopyHelper account={icpLedger.accountId} />}
+                                    {icpLedgerAccountId && <CopyHelper account={icpLedgerAccountId} />}
                                 </div>
                             </div>
                             <h4 className="text-2xl 2xl:text-2xl font-medium mb-3 flex text-center justify-between">
@@ -125,12 +140,12 @@ const AccountCards: React.FC = () => {
                             <div className="flex text-center justify-between">
                                 <div>
                                     <h4 className="text-2xl 2xl:text-2xl font-medium mb-3 ">
-                                        ≈ ICP {icpLedger?.accountBalance}
+                                        ≈ ICP {icpLedgerAccountBalance}
                                     </h4>
                                 </div>
                                 <div className="mb-3 xxl:mb-3">
                                     <h4 className="text-2xl 2xl:text-2xl font-medium mb-3 text-[#FF9900]">
-                                        ≈ $ {icpLedger?.accountBalanceUSD}
+                                        ≈ $ {icpLedgerAccountBalanceUSD}
                                     </h4>
                                 </div>
                             </div>

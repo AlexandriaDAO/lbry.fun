@@ -2,11 +2,6 @@ import { Actor, HttpAgent, Identity } from "@dfinity/agent";
 import { AuthClient } from "@dfinity/auth-client";
 
 import {
-  createActor as createUserActor,
-  user,
-} from "../../../../../declarations/user";
-
-import {
   icp_swap,
   createActor as createActorSwap,
 } from "../../../../../declarations/icp_swap";
@@ -102,8 +97,6 @@ const getActor = async <T>(
 };
 
 
-
-export const getUser = () => getActor(user_canister_id, createUserActor, user);
 
 export const getActorSwap = (canisterId:string) =>
   getActor(canisterId, createActorSwap, icp_swap);

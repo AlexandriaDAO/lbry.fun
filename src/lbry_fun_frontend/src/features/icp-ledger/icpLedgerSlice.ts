@@ -18,6 +18,7 @@ export interface icpLedgerState {
   transferSuccess: boolean;
   accountId: string;
   icpPrice: Number;
+  icpPriceTimestamp: number | null;
   error: string | null;
 }
 
@@ -30,6 +31,7 @@ const initialState: icpLedgerState = {
   transferSuccess: false,
   accountId: "N/A",
   icpPrice: 0,
+  icpPriceTimestamp: null,
   error: null,
 };
 
@@ -101,6 +103,7 @@ const icpLedgerSlice = createSlice({
       .addCase(getIcpPrice.fulfilled, (state, action) => {
         state.loading = false;
         state.icpPrice = action.payload;
+        state.icpPriceTimestamp = Date.now();
         state.accountBalanceUSD = (
           Number(state.accountBalance) * Number(action.payload)
         ).toFixed(4);

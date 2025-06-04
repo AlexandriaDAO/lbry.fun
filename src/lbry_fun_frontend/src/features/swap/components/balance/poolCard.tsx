@@ -6,30 +6,24 @@ import { _SERVICE as _SERVICEICPLEDGER } from "../../../../../../declarations/ic
 
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import getIcpBal from "@/features/icp-ledger/thunks/getIcpBal";
-import CopyHelper from "../copyHelper";
 import getAccountId from "@/features/icp-ledger/thunks/getAccountId";
 import getIcpPrice from "../../../icp-ledger/thunks/getIcpPrice";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faRotate } from "@fortawesome/free-solid-svg-icons";
-import { Entry } from "@/layouts/parts/Header";
-import { toast } from "sonner";
-import { TokenRecordStringified } from "@/features/token/thunk/getTokenPools.thunk";
 import { useSearchParams } from "react-router-dom";
 import { Principal } from "@dfinity/principal";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { idlFactory as icrc1IdlFactory } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did.js";
 import type { Value as Icrc1Value } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did.d.ts";
+import { setActiveSwapPool } from '@/features/swap/swapSlice';
 
 const PoolCard: React.FC = () => {
     const dispatch = useAppDispatch();
     const { principal, isAuthenticated } = useAppSelector((state) => state.auth);
-    const { tokenPools } = useAppSelector((state) => state.lbryFun);
+    const { loading: lbryFunLoading, error: lbryFunError } = useAppSelector((state) => state.lbryFun);
     const swap = useAppSelector((state) => state.swap);
+    const activeSwapPoolFromRedux = useAppSelector((state) => state.swap.activeSwapPool);
     const icpLedger = useAppSelector((state) => state.icpLedger);
     const [searchParams] = useSearchParams();
-
-    const [activeSwapPool, setActiveSwapPool] = React.useState<[string, TokenRecordStringified] | undefined>();
-    const id = searchParams.get("id");
+    const idFromUrl = searchParams.get("id");
 
     const [primaryLogo, setPrimaryLogo] = useState<string | undefined>();
     const [secondaryLogo, setSecondaryLogo] = useState<string | undefined>();
@@ -57,17 +51,9 @@ const PoolCard: React.FC = () => {
     }, [isAuthenticated, principal, swap, icpLedger, dispatch]);
 
     useEffect(() => {
-        const pool = tokenPools.find((tokenPool) => tokenPool[0] === id);
-        setActiveSwapPool(pool);
-        // Reset logos when pool changes
-        setPrimaryLogo(undefined);
-        setSecondaryLogo(undefined);
-    }, [id, tokenPools]);
-
-    useEffect(() => {
-        if (activeSwapPool && activeSwapPool[1]) {
-            const primaryTokenId = activeSwapPool[1].primary_token_id;
-            const secondaryTokenId = activeSwapPool[1].secondary_token_id;
+        if (activeSwapPoolFromRedux && activeSwapPoolFromRedux[1]) {
+            const primaryTokenId = activeSwapPoolFromRedux[1].primary_token_id;
+            const secondaryTokenId = activeSwapPoolFromRedux[1].secondary_token_id;
 
             const fetchLogo = async (tokenIdString: string, setLogo: React.Dispatch<React.SetStateAction<string | undefined>>) => {
                 try {
@@ -102,7 +88,13 @@ const PoolCard: React.FC = () => {
                         }
                         setLogo(svgData);
                     } else {
-                        setLogo(undefined);
+                        if (tokenIdString === activeSwapPoolFromRedux?.[1]?.primary_token_id && activeSwapPoolFromRedux?.[1]?.primary_token_logo_base64) {
+                            setLogo(activeSwapPoolFromRedux[1].primary_token_logo_base64);
+                        } else if (tokenIdString === activeSwapPoolFromRedux?.[1]?.secondary_token_id && activeSwapPoolFromRedux?.[1]?.secondary_token_logo_base64) {
+                            setLogo(activeSwapPoolFromRedux[1].secondary_token_logo_base64);
+                        } else {
+                            setLogo(undefined);
+                        }
                     }
                 } catch (error) {
                     console.error(`Failed to fetch logo for ${tokenIdString}:`, error);
@@ -110,14 +102,81 @@ const PoolCard: React.FC = () => {
                 }
             };
 
-            if (primaryTokenId) {
+            if (primaryTokenId && !activeSwapPoolFromRedux[1].primary_token_logo_base64) {
                 fetchLogo(primaryTokenId, setPrimaryLogo);
+            } else if (activeSwapPoolFromRedux[1].primary_token_logo_base64) {
+                setPrimaryLogo(activeSwapPoolFromRedux[1].primary_token_logo_base64);
             }
-            if (secondaryTokenId) {
+
+            if (secondaryTokenId && !activeSwapPoolFromRedux[1].secondary_token_logo_base64) {
                 fetchLogo(secondaryTokenId, setSecondaryLogo);
+            } else if (activeSwapPoolFromRedux[1].secondary_token_logo_base64) {
+                setSecondaryLogo(activeSwapPoolFromRedux[1].secondary_token_logo_base64);
             }
+        } else {
+            setPrimaryLogo(undefined);
+            setSecondaryLogo(undefined);
         }
-    }, [activeSwapPool]);
+    }, [activeSwapPoolFromRedux]);
+
+    // Skeleton Loader Component
+    const PoolCardSkeleton: React.FC = () => (
+        <div
+            style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
+            className="bg-[#5555FF] text-white py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3 animate-pulse"
+        >
+            <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6 bg-gray-400 h-8 w-3/4 rounded"></h4>
+            <div className="flex flex-col space-y-4">
+                {[...Array(7)].map((_, index) => (
+                    <div key={index} className="flex justify-between items-center">
+                        <span className="font-semibold bg-gray-400 h-5 w-1/3 rounded"></span>
+                        <span className="bg-gray-300 h-5 w-1/2 rounded"></span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+
+    // Conditional Rendering Logic
+    if (idFromUrl) {
+        if (lbryFunLoading && !activeSwapPoolFromRedux) {
+            return (
+                <div className="">
+                    <PoolCardSkeleton />
+                </div>
+            );
+        }
+        if (!lbryFunLoading && lbryFunError) {
+            return (
+                <div className="">
+                    <div
+                        style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
+                        className="bg-[#5555FF] text-white py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3"
+                    >
+                        <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6">
+                            Active Swap Pool
+                        </h4>
+                        <p className="text-red-300">Error loading pool information: {typeof lbryFunError === 'string' ? lbryFunError : JSON.stringify(lbryFunError)}</p>
+                    </div>
+                </div>
+            );
+        }
+        if (!lbryFunLoading && !lbryFunError && !activeSwapPoolFromRedux) {
+            return (
+                <div className="">
+                    <div
+                        style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
+                        className="bg-[#5555FF] text-white py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3"
+                    >
+                        <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6">
+                            Active Swap Pool
+                        </h4>
+                        <p>Pool with ID '{idFromUrl}' not found.</p>
+                    </div>
+                </div>
+            );
+        }
+    }
 
     return (
         <>
@@ -131,53 +190,27 @@ const PoolCard: React.FC = () => {
                     </h4>
 
                     {/* Active Swap Pool Card */}
-                    {activeSwapPool && (
-                        // <div className="bg-gray-900 text-white py-10  rounded-3xl mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3">
-
-                        //     <div className="flex flex-col space-y-3">
-                        //         <div>
-                        //             <strong>Pool ID:</strong> {activeSwapPool[0]}
-                        //         </div>
-                        //         <div>
-                        //             <strong>Primary Token:</strong> {activeSwapPool[1].primary_token_name} ({activeSwapPool[1].primary_token_symbol})
-                        //         </div>
-                        //         <div>
-                        //             <strong>Secondary Token:</strong> {activeSwapPool[1].secondary_token_name} ({activeSwapPool[1].secondary_token_symbol})
-                        //         </div>
-                        //         <div>
-                        //             <strong>Is Live?:</strong> {activeSwapPool[1].isLive ? "Yes" : "No"}
-                        //         </div>
-                        //         <div>
-                        //             <strong>Initial Primary Mint:</strong> {activeSwapPool[1].initial_primary_mint}
-                        //         </div>
-                        //         <div>
-                        //             <strong>Initial Secondary Burn:</strong> {activeSwapPool[1].initial_secondary_burn}
-                        //         </div>
-                        //         <div>
-                        //             <strong>Liquidity Provided At:</strong> {activeSwapPool[1].liquidity_provided_at ?? "Not Provided"}
-                        //         </div>
-                        //     </div>
-                        // </div>
+                    {activeSwapPoolFromRedux && (
                         <div
                             className=""
                         >
                             <div className="flex flex-col space-y-4">
                                 <div className="flex justify-between">
                                     <span className="font-semibold text-gray-300">Pool ID:</span>
-                                    <span className="text-white">{activeSwapPool[0]}</span>
+                                    <span className="text-white">{activeSwapPoolFromRedux[0]}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="font-semibold text-gray-300">Primary Token:</span>
                                     <div className="flex items-center">
                                         {primaryLogo && <img src={primaryLogo} alt="Primary token logo" className="w-6 h-6 mr-2" />}
                                         <span className="text-white">
-                                            {activeSwapPool[1].primary_token_name} ({activeSwapPool[1].primary_token_symbol})
+                                            {activeSwapPoolFromRedux[1].primary_token_name} ({activeSwapPoolFromRedux[1].primary_token_symbol})
                                         </span>
                                     </div>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-semibold text-gray-300">Primary Token ID:</span>
-                                    <span className="text-white break-all">{activeSwapPool[1].primary_token_id}</span>
+                                    <span className="text-white break-all">{activeSwapPoolFromRedux[1].primary_token_id}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center">
@@ -185,31 +218,31 @@ const PoolCard: React.FC = () => {
                                     <div className="flex items-center">
                                         {secondaryLogo && <img src={secondaryLogo} alt="Secondary token logo" className="w-6 h-6 mr-2" />}
                                         <span className="text-white">
-                                            {activeSwapPool[1].secondary_token_name} ({activeSwapPool[1].secondary_token_symbol})
+                                            {activeSwapPoolFromRedux[1].secondary_token_name} ({activeSwapPoolFromRedux[1].secondary_token_symbol})
                                         </span>
                                     </div>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-semibold text-gray-300">Secondary Token ID:</span>
-                                    <span className="text-white break-all">{activeSwapPool[1].secondary_token_id}</span>
+                                    <span className="text-white break-all">{activeSwapPoolFromRedux[1].secondary_token_id}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-semibold text-gray-300">Is Live:</span>
-                                    <span className="text-white">{activeSwapPool[1].isLive ? "Yes" : "No"}</span>
+                                    <span className="text-white">{activeSwapPoolFromRedux[1].isLive ? "Yes" : "No"}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-semibold text-gray-300">Initial Primary Mint:</span>
-                                    <span className="text-white">{activeSwapPool[1].initial_primary_mint}</span>
+                                    <span className="text-white">{activeSwapPoolFromRedux[1].initial_primary_mint}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-semibold text-gray-300">Initial Secondary Burn:</span>
-                                    <span className="text-white">{activeSwapPool[1].initial_secondary_burn}</span>
+                                    <span className="text-white">{activeSwapPoolFromRedux[1].initial_secondary_burn}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-semibold text-gray-300">Liquidity Provided At:</span>
                                     <span className="text-white">
-                                        {activeSwapPool[1].liquidity_provided_at
-                                            ? new Date(Number(activeSwapPool[1].liquidity_provided_at) / 1_000_000).toLocaleString()
+                                        {activeSwapPoolFromRedux[1].liquidity_provided_at
+                                            ? new Date(Number(activeSwapPoolFromRedux[1].liquidity_provided_at) / 1_000_000).toLocaleString()
                                             : "Not Provided"}
                                     </span>
                                 </div>

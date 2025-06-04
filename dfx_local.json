@@ -1,11 +1,5 @@
 {
   "canisters": {
-    "user": {
-      "type": "rust",
-      "package": "user",
-      "candid": "src/user/user.did"
-    },
-  
   
     "lbry_fun": {
       "candid": "src/lbry_fun/lbry_fun.did",

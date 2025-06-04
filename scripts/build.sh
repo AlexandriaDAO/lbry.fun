@@ -33,10 +33,6 @@ candid-extractor target/wasm32-unknown-unknown/release/icp_swap.wasm > src/icp_s
 # For tokenomics
 cargo build --release --target wasm32-unknown-unknown --package tokenomics
 candid-extractor target/wasm32-unknown-unknown/release/tokenomics.wasm > src/tokenomics/tokenomics.did
-# for user
-cargo build --release --target wasm32-unknown-unknown --package user
-candid-extractor target/wasm32-unknown-unknown/release/user.wasm > src/user/user.did
-dfx deploy user --specified-id yo4hu-nqaaa-aaaap-qkmoq-cai
 
 
 
@@ -110,20 +106,3 @@ dfx generate
 
 npm i
 dfx deploy lbry_fun_frontend --specified-id yn33w-uaaaa-aaaap-qpk5q-cai
-
-## Helpful extras for testing.
-# dfx ledger balance
-# dfx ledger transfer <to_account> --icp <amount> --memo 0
-# dfx ledger transfer --icp 99 --memo 0 $(dfx ledger account-id --of-principal yvjik-zehkk-qo7nr-t4r7a-2aomx-mnp6e-htymf-r2adf-d7gjm-bpu3e-aae)
-
-# # Load canister IDs from canister_ids.json
-# ALEX_CANISTER_ID=$(jq -r '.ALEX.ic' canister_ids.json)
-# LBRY_CANISTER_ID=$(jq -r '.LBRY.ic' canister_ids.json)
-# TOKENOMICS_CANISTER_ID=$(jq -r '.tokenomics.ic' canister_ids.json)
-# XRC_CANISTER_ID=$(jq -r '.xrc.ic' canister_ids.json)
-
-# # Export canister IDs as environment variables
-# export ALEX_CANISTER_ID
-# export LBRY_CANISTER_ID
-# export TOKENOMICS_CANISTER_ID
-# export XRC_CANISTER_ID

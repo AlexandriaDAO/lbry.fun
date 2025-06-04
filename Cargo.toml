@@ -3,7 +3,6 @@ members = [
     "src/registry",
     "src/logs",
     "src/xrc",
-    "src/user",
     "src/logs",
     "src/lbry_fun",
     "src/icp_swap",

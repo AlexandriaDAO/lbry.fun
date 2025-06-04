@@ -4,6 +4,7 @@ import { useAppSelector } from "@/store/hooks/useAppSelector";
 import getTokenPools from "../thunk/getTokenPools.thunk";
 import { Button } from "antd/es";
 import { useNavigate } from "react-router-dom";
+import { lbryFunFlagHandler } from '@/features/token/lbryFunSlice'; // If you need to reset flags
 
 const GetTokenPools = () => {
   const dispatch = useAppDispatch();
@@ -11,8 +12,16 @@ const GetTokenPools = () => {
   const { tokenPools, loading, error, success } = useAppSelector((state) => state.lbryFun);
 
   useEffect(() => {
-    dispatch(getTokenPools());
-  }, [success]);
+    // Fetch if pools are not loaded, not currently loading, and there was no previous persistent error
+    // This condition prevents re-fetching if already loaded or if an error state needs manual reset.
+    if (tokenPools.length === 0 && !loading && !error) {
+      dispatch(getTokenPools());
+    }
+    // Or, if you want to re-fetch if 'success' was reset by lbryFunFlagHandler:
+    // if (!success && !loading && !error) {
+    //    dispatch(getTokenPools());
+    // }
+  }, [dispatch, tokenPools.length, loading, error, success]);
 
   if (loading) return <p className="text-gray-500">Loading token pools...</p>;
 

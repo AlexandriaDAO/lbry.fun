@@ -1,10 +1,5 @@
 {
   "canisters": {
-    "user": {
-      "type": "rust",
-      "package": "user",
-      "candid": "src/user/user.did"
-    },
     "icp_swap": {
       "candid": "src/icp_swap/icp_swap.did",
       "package": "icp_swap",
