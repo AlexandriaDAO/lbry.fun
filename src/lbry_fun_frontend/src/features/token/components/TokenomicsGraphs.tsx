@@ -181,8 +181,8 @@ const TokenomicsGraphs: React.FC<TokenomicsGraphsProps> = ({
   const isDarkMode = false;
 
   return (
-    <div className="space-y-8 mt-10">
-      <div>
+    <div className="space-y-8 mt-10 md:grid md:grid-cols-2 md:gap-x-8 md:space-y-0">
+      <div className="md:mb-8">
         <div className="flex items-center mb-2">
           <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cumulative Primary Supply vs. Burn</h3>
           <TooltipIcon text="This graph shows the total amount of Primary Token that will be minted as more Secondary Tokens are burned. Look for how quickly the supply cap is reached. A steeper curve means faster minting in early stages. The line flattens when the Primary Max Supply is hit." />
@@ -196,7 +196,7 @@ const TokenomicsGraphs: React.FC<TokenomicsGraphsProps> = ({
           gardientColor="rgba(136, 132, 216, 0.3)"
         />
       </div>
-      <div>
+      <div className="md:mb-8">
         <div className="flex items-center mb-2">
             <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Primary Tokens Minted per Tier</h3>
             <TooltipIcon text="This chart displays how many new Primary Tokens are created at each burn tier. Typically, earlier tiers (left) will mint more tokens than later tiers (right), showing that early burners are rewarded more. A rapid decrease indicates a faster reduction in minting rewards per tier." />

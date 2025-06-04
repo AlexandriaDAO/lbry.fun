@@ -9,7 +9,8 @@
 - Consistent slider and input option for all 4 parameters with default values.
 
 
-
+Rules:
+- Pool is actually 
 
 
 

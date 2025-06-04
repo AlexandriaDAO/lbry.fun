@@ -12,13 +12,13 @@ const TokenPage = () => {
 
   if (activeTabId === 'CreateToken') {
     contentToRender = <CreateTokenForm />;
-    contentClassName = "max-w-3xl mx-auto space-y-8";
+    contentClassName = "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8";
   } else if (activeTabId === 'TokenPools') {
     contentToRender = <GetTokenPools />;
     contentClassName = "container px-2";
   } else {
     contentToRender = <CreateTokenForm />;
-    contentClassName = "max-w-3xl mx-auto space-y-8";
+    contentClassName = "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8";
   }
 
   return (

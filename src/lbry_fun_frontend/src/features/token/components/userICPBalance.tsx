@@ -14,21 +14,38 @@ const UserICPBalance = () => {
         dispatch(getIcpBal(principal));
       }
     }, [isAuthenticated, principal, dispatch]);
+
     return (<>
         <div className="pb-5">
-            <div className="py-4 border-b-2 border-b-[#FF9900] mb-4 px-2">
-                <h2 className="text-2xl font-bold mb-2 text-foreground">Balance</h2>
-                <p className="text-lg text-black font-semibold text-foreground">
-                    {/* {icp.accountBalance ?? "Loading..."} */}
-                    <span className="text-[#5EBF82]">{icp.accountBalance}</span>  ICP
-                </p>
-            </div>
+            <div className="py-4 border-b-2 border-b-[#FF9900] mb-4 px-2 md:flex md:items-center md:justify-between">
+                <div>
+                    <h2 className="text-2xl font-bold mb-2 text-foreground">Balance</h2>
+                    <p className="text-lg text-black font-semibold text-foreground">
+                        <span className="text-[#5EBF82]">{icp.accountBalance}</span> ICP
+                    </p>
+                </div>
 
-            <div className="border-b-2 border-b-[#64748B] bg-[#EEFFEC] dark:bg-[#42403A]">
-
-                <div className="mb-2 py-4 px-2">
-                    <p className="font-semibold text-black text-foreground text-lg mb-4">Notice:</p>
-                    <p className="text-base text-[#334155] text-foreground font-normal"><strong>2 ICP </strong> is required to create new tokens.</p>
+                <div className="mt-4 md:mt-0 md:ml-6 flex items-start">
+                    <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        strokeWidth={1.5} 
+                        stroke="currentColor" 
+                        className="flex-shrink-0 w-5 h-5 text-blue-500 mr-2"
+                    >
+                        <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" 
+                        />
+                    </svg>
+                    <div>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold">Notice:</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                            <strong>2 ICP</strong> is required to create new tokens.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

@@ -57,16 +57,29 @@ const CreateTokenForm: React.FC = () => {
     secondary_token_name: '',
     secondary_token_description: '',
     secondary_token_logo_base64: '',
-    primary_max_supply: '1000',
-    initial_primary_mint: '',
-    initial_secondary_burn: '',
-    primary_max_phase_mint: '',
+    primary_max_supply: '1000000',
+    initial_primary_mint: '10000',
+    initial_secondary_burn: '50000',
+    primary_max_phase_mint: '1000',
     primary_token_logo_base64: ''
   });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    const numericFieldNames: Array<keyof TokenFormValues> = [
+      'primary_max_supply',
+      'initial_primary_mint',
+      'initial_secondary_burn',
+      'primary_max_phase_mint'
+    ];
+    if (numericFieldNames.includes(name as keyof TokenFormValues)) {
+      if (value === '' || /^[0-9]+$/.test(value)) {
+        setForm(prev => ({ ...prev, [name]: value }));
+      }
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
+
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -76,11 +89,18 @@ const CreateTokenForm: React.FC = () => {
     }
   };
 
-  const handleSliderChange = (value: number[]) => {
+  const handleSliderChange = (fieldName: keyof TokenFormValues, newValue: number[]) => {
     setForm(prev => ({
       ...prev,
-      primary_max_supply: value[0].toString()
+      [fieldName]: newValue[0].toString()
     }));
+    if (errors[fieldName]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
   };
 
   const validateForm = (): boolean => {
@@ -112,7 +132,8 @@ const CreateTokenForm: React.FC = () => {
     const numericFields: Array<keyof TokenFormValues> = [
       'initial_primary_mint',
       'initial_secondary_burn',
-      'primary_max_phase_mint'
+      'primary_max_phase_mint',
+      'primary_max_supply'
     ];
     numericFields.forEach(field => {
       if (form[field] && isNaN(Number(form[field]))) {
@@ -187,7 +208,7 @@ const CreateTokenForm: React.FC = () => {
   };
 
   return (
-    <div className='container'>
+    <div className='w-full px-4 sm:px-6 lg:px-8'>
       {/* Header */}
       <div className="text-center px-2 pb-8">
         <h1 className="text-5xl font-bold text-black text-foreground mb-6">Create Token</h1>
@@ -196,176 +217,192 @@ const CreateTokenForm: React.FC = () => {
 
       <UserICPBalance />
 
+      {/* Form tag now wraps all input sections and the submit button */}
       <form onSubmit={handleSubmit}>
-        <div className="border-b-2 border-b-[#E2E8F0] pb-6">
-          <h2 className="text-2xl font-bold mb-4 text-foreground">Primary Token</h2>
-          <div className="mb-4">
-            <Label className="block text-lg font-medium text-foreground mb-4">
-              Token Name<span className="text-red-500">* :</span>
-            </Label>
-            <Input
-              name="primary_token_name"
-              type="text"
-              className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.primary_token_name ? 'border-red-500' : 'border-gray-400'}`}
-              placeholder="Enter Name for your token"
-              value={form.primary_token_name}
-              onChange={handleChange}
-            />
-            {renderError('primary_token_name')}
-          </div>
-          <div className="mb-4">
-            <Label className="block text-lg font-medium text-foreground mb-4">
-              Token Ticker<span className="text-red-500">*:</span>
-            </Label>
-            <Input
-              name="primary_token_symbol"
-              type="text"
-              className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.primary_token_symbol ? 'border-red-500' : 'border-gray-400'}`}
-              placeholder="Enter the ticker (3–5 uppercase letters)"
-              value={form.primary_token_symbol}
-              onChange={handleChange}
-            />
-            {renderError('primary_token_symbol')}
-          </div>
-          <div className="mb-4">
-            <Label className="block text-lg font-medium text-foreground mb-4">
-              Description<span className="text-red-500">*:</span>
-            </Label>
-            <Textarea
-              rows={4}
-              className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 ${errors.primary_token_description ? 'border-red-500' : 'border-gray-400'}`}
-              placeholder="Enter your description here"
-              name='primary_token_description'
-              value={form.primary_token_description}
-              onChange={handleChange}
-            />
-            {renderError('primary_token_description')}
-          </div>
-          <div className="mb-4">
-            <h4 className="text-[#64748B] dark-text-[#000] text-sm text-foreground mb-4">Describe what your token represents or how it's intended to be used</h4>
-            <div className="flex align-items-center">
-              <div className="w-[100px] h-[100px] me-4">
-                <img className="w-full object-contain" src={form.primary_token_logo_base64 || "images/thumbnail.png"} alt="thumbnail" />
-              </div>
-              <div className="">
-                <h5 className="mb-4 text-foreground text-sm text-[#000] dark:text-[white]">Primary Token Image (.svg) *</h5>
-                <div className="flex flex-col">
-                  <label className="inline-block text-sm text-[#3C3C3C] font-semibold rounded cursor-pointer">
-                    <span className="bg-[#E2E8F0] text-[#000] dark:text-white dark:bg-[#444] px-4 py-2 rounded-xl hover:bg-[#CBD5E1] dark:hover:bg-[#555] transition">
-                      Choose File
-                    </span>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      name="primary_token_image"
-                      onChange={(e) => handleImageUpload(e, 'primary_token_logo_base64')}
-                      className="hidden"
-                    />
-                  </label>
-                  {renderError('primary_token_logo_base64')}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-b-2 border-b-[#E2E8F0] py-6">
-          <h2 className="text-2xl font-bold mb-4 text-foreground">Secondary Token</h2>
-          <div className="mb-4">
-            <Label className="block text-lg font-medium text-foreground mb-4">
-              Token Name<span className="text-red-500">* :</span>
-            </Label>
-            <Input
-              name="secondary_token_name"
-              type="text"
-              className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.secondary_token_name ? 'border-red-500' : 'border-gray-400'}`}
-              placeholder="Enter Name for your token"
-              value={form.secondary_token_name}
-              onChange={handleChange}
-            />
-            {renderError('secondary_token_name')}
-          </div>
-          <div className="mb-4">
-            <Label className="block text-lg font-medium text-foreground mb-4">
-              Token Ticker<span className="text-red-500">*:</span>
-            </Label>
-            <Input
-              name="secondary_token_symbol"
-              type="text"
-              className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.secondary_token_symbol ? 'border-red-500' : 'border-gray-400'}`}
-              placeholder="Enter the ticker (3–5 uppercase letters)"
-              value={form.secondary_token_symbol}
-              onChange={handleChange}
-            />
-            {renderError('secondary_token_symbol')}
-          </div>
-          <div className="mb-4">
-            <Label className="block text-lg font-medium text-foreground mb-4">
-              Description<span className="text-red-500">*:</span>
-            </Label>
-            <Textarea
-              rows={4}
-              className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 ${errors.secondary_token_description ? 'border-red-500' : 'border-gray-400'}`}
-              placeholder="Enter your description here"
-              name='secondary_token_description'
-              value={form.secondary_token_description}
-              onChange={handleChange}
-            />
-            {renderError('secondary_token_description')}
-          </div>
-          <div className="mb-4">
-            <h4 className="text-[#64748B] text-sm text-foreground mb-4">Describe what your token represents or how it's intended to be used</h4>
-            <div className="flex align-items-center">
-              <div className="w-[100px] h-[100px] me-4">
-                <img className="w-full object-contain" src={form.secondary_token_logo_base64 || "images/thumbnail.png"} alt="thumbnail" />
-              </div>
-              <div className="">
-                <h5 className="mb-4 text-foreground text-sm text-[#000]">Secondary Token Image (.svg) *</h5>
-                <div className="flex flex-col">
-                  <label className="inline-block text-sm text-[#3C3C3C] font-semibold rounded cursor-pointer">
-                    <span className="bg-[#E2E8F0] text-[#000] dark:text-white dark:bg-[#444] px-4 py-2 rounded-xl hover:bg-[#CBD5E1] dark:hover:bg-[#555] transition">
-                      Choose File
-                    </span>
-                    <Input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      name="secondary_token_image"
-                      onChange={(e) => { handleImageUpload(e, 'secondary_token_logo_base64') }}
-                    />
-                  </label>
-                  {renderError('secondary_token_logo_base64')}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Supply Settings */}
-        <div className="py-6">
-          <h2 className="text-2xl font-bold mb-4 text-foreground">Supply Settings</h2>
-          <div className="mb-10">
+        {/* Wrapper for Primary and Secondary Token Sections (Side-by-Side on Desktop) */}
+        <div className="md:flex md:space-x-8">
+          {/* Primary Token Section */}
+          <div className="md:w-1/2 border-b-2 border-b-[#E2E8F0] pb-6 md:border-b-0 md:border-r-2 md:border-r-[#E2E8F0] md:pr-8">
+            <h2 className="text-2xl font-bold mb-4 text-foreground">Primary Token</h2>
             <div className="mb-4">
-              <div className="flex items-center mb-4">
+              <Label className="block text-lg font-medium text-foreground mb-4">
+                Token Name<span className="text-red-500">* :</span>
+              </Label>
+              <Input
+                name="primary_token_name"
+                type="text"
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.primary_token_name ? 'border-red-500' : 'border-gray-400'}`}
+                placeholder="Enter Name for your token"
+                value={form.primary_token_name}
+                onChange={handleChange}
+              />
+              {renderError('primary_token_name')}
+            </div>
+            <div className="mb-4">
+              <Label className="block text-lg font-medium text-foreground mb-4">
+                Token Ticker<span className="text-red-500">*:</span>
+              </Label>
+              <Input
+                name="primary_token_symbol"
+                type="text"
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.primary_token_symbol ? 'border-red-500' : 'border-gray-400'}`}
+                placeholder="Enter the ticker (3–5 uppercase letters)"
+                value={form.primary_token_symbol}
+                onChange={handleChange}
+              />
+              {renderError('primary_token_symbol')}
+            </div>
+            <div className="mb-4">
+              <Label className="block text-lg font-medium text-foreground mb-4">
+                Description<span className="text-red-500">*:</span>
+              </Label>
+              <Textarea
+                rows={4}
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 ${errors.primary_token_description ? 'border-red-500' : 'border-gray-400'}`}
+                placeholder="Enter your description here"
+                name='primary_token_description'
+                value={form.primary_token_description}
+                onChange={handleChange}
+              />
+              {renderError('primary_token_description')}
+            </div>
+            <div className="mb-4">
+              <h4 className="text-[#64748B] dark-text-[#000] text-sm text-foreground mb-4">Describe what your token represents or how it's intended to be used</h4>
+              <div className="flex align-items-center">
+                <div className="w-[100px] h-[100px] me-4">
+                  <img className="w-full object-contain" src={form.primary_token_logo_base64 || "images/thumbnail.png"} alt="thumbnail" />
+                </div>
+                <div className="">
+                  <h5 className="mb-4 text-foreground text-sm text-[#000] dark:text-[white]">Primary Token Image (.svg) *</h5>
+                  <div className="flex flex-col">
+                    <label className="inline-block text-sm text-[#3C3C3C] font-semibold rounded cursor-pointer">
+                      <span className="bg-[#E2E8F0] text-[#000] dark:text-white dark:bg-[#444] px-4 py-2 rounded-xl hover:bg-[#CBD5E1] dark:hover:bg-[#555] transition">
+                        Choose File
+                      </span>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        name="primary_token_image"
+                        onChange={(e) => handleImageUpload(e, 'primary_token_logo_base64')}
+                        className="hidden"
+                      />
+                    </label>
+                    {renderError('primary_token_logo_base64')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary Token Section */}
+          <div className="md:w-1/2 border-b-2 border-b-[#E2E8F0] py-6 md:border-b-0 md:pt-0 md:pl-8">
+            <h2 className="text-2xl font-bold mb-4 text-foreground">Secondary Token</h2>
+            <div className="mb-4">
+              <Label className="block text-lg font-bold text-foreground mb-4">
+                Token Name<span className="text-red-500">* :</span>
+              </Label>
+              <Input
+                name="secondary_token_name"
+                type="text"
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.secondary_token_name ? 'border-red-500' : 'border-gray-400'}`}
+                placeholder="Enter Name for your token"
+                value={form.secondary_token_name}
+                onChange={handleChange}
+              />
+              {renderError('secondary_token_name')}
+            </div>
+            <div className="mb-4">
+              <Label className="block text-lg font-medium text-foreground mb-4">
+                Token Ticker<span className="text-red-500">*:</span>
+              </Label>
+              <Input
+                name="secondary_token_symbol"
+                type="text"
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.secondary_token_symbol ? 'border-red-500' : 'border-gray-400'}`}
+                placeholder="Enter the ticker (3–5 uppercase letters)"
+                value={form.secondary_token_symbol}
+                onChange={handleChange}
+              />
+              {renderError('secondary_token_symbol')}
+            </div>
+            <div className="mb-4">
+              <Label className="block text-lg font-medium text-foreground mb-4">
+                Description<span className="text-red-500">*:</span>
+              </Label>
+              <Textarea
+                rows={4}
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 ${errors.secondary_token_description ? 'border-red-500' : 'border-gray-400'}`}
+                placeholder="Enter your description here"
+                name='secondary_token_description'
+                value={form.secondary_token_description}
+                onChange={handleChange}
+              />
+              {renderError('secondary_token_description')}
+            </div>
+            <div className="mb-4">
+              <h4 className="text-[#64748B] text-sm text-foreground mb-4">Describe what your token represents or how it's intended to be used</h4>
+              <div className="flex align-items-center">
+                <div className="w-[100px] h-[100px] me-4">
+                  <img className="w-full object-contain" src={form.secondary_token_logo_base64 || "images/thumbnail.png"} alt="thumbnail" />
+                </div>
+                <div className="">
+                  <h5 className="mb-4 text-foreground text-sm text-[#000]">Secondary Token Image (.svg) *</h5>
+                  <div className="flex flex-col">
+                    <label className="inline-block text-sm text-[#3C3C3C] font-semibold rounded cursor-pointer">
+                      <span className="bg-[#E2E8F0] text-[#000] dark:text-white dark:bg-[#444] px-4 py-2 rounded-xl hover:bg-[#CBD5E1] dark:hover:bg-[#555] transition">
+                        Choose File
+                      </span>
+                      <Input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        name="secondary_token_image"
+                        onChange={(e) => { handleImageUpload(e, 'secondary_token_logo_base64') }}
+                      />
+                    </label>
+                    {renderError('secondary_token_logo_base64')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Supply Settings Inputs first */}
+        <div className="py-6 border-t-2 border-t-[#E2E8F0] md:border-t-0">
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Supply Settings</h2>
+          {/* This div becomes the grid container for supply parameters */}
+          <div className="md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-6">
+            {/* primary_max_supply input and slider - Grid Item 1 */}
+            <div className="mb-4 md:mb-0"> {/* Adjusted margin for grid layout */}
+              <div className="flex items-center mb-1">
                 <Label className="block text-lg font-medium text-foreground me-2">
                   Primary Max Supply <span className="text-red-500">* :</span>
                 </Label>
                 <TooltipIcon 
                   text="The absolute maximum number of Primary Tokens that can ever exist. This includes initial minting and all tokens from the burning schedule."
                 />
-                <div className="border border-[#E2E8F0] min-w-[70px] min-h-[50px] rounded-2xl p-4 d-flex align-items-center justify-content-center ml-auto">
-                  <p className="text-[#64748B] text-sm text-foreground">{parseInt(form.primary_max_supply)}</p>
-                </div>
               </div>
+              <Input
+                name="primary_max_supply"
+                type="text"
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.primary_max_supply ? 'border-red-500' : 'border-gray-400'}`}
+                placeholder="e.g. 1000000"
+                value={form.primary_max_supply}
+                onChange={handleChange}
+              />
+              {renderError('primary_max_supply')}
               <Slider
                 min={1000}
                 max={100000000}
                 step={1000}
-                value={[parseInt(form.primary_max_supply)]}
-                onValueChange={handleSliderChange}
+                value={[parseInt(form.primary_max_supply) || 0]}
+                onValueChange={(value) => handleSliderChange('primary_max_supply', value)}
+                disabled={!form.primary_max_supply}
               />
             </div>
-            <div className="mb-4">
+            {/* initial_primary_mint input and slider - Grid Item 2 */}
+            <div className="mb-4 md:mb-0"> {/* Adjusted margin for grid layout */}
               <div className="flex items-center mb-1">
                 <Label className="block text-lg font-medium text-foreground me-2">
                   Initial Primary Mint <span className="text-red-500">*:</span>
@@ -377,14 +414,23 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 name='initial_primary_mint'
                 type="text"
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.initial_primary_mint ? 'border-red-500' : 'border-gray-400'}`}
-                placeholder="e.g. 1000 tokens to creator at launch"
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.initial_primary_mint ? 'border-red-500' : 'border-gray-400'}`}
+                placeholder="e.g. 10000 tokens"
                 value={form.initial_primary_mint}
                 onChange={handleChange}
               />
               {renderError('initial_primary_mint')}
+              <Slider
+                min={100}
+                max={1000000}
+                step={100}
+                value={[parseInt(form.initial_primary_mint) || 0]}
+                onValueChange={(value) => handleSliderChange('initial_primary_mint', value)}
+                disabled={!form.initial_primary_mint}
+              />
             </div>
-            <div className="mb-4">
+            {/* initial_secondary_burn input and slider - Grid Item 3 */}
+            <div className="mb-4 md:mb-0"> {/* Adjusted margin for grid layout */}
               <div className="flex items-center mb-1">
                 <Label className="block text-lg font-medium text-foreground me-2">
                   Initial Secondary Burn <span className="text-red-500">*:</span>
@@ -396,14 +442,23 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 type="text"
                 name='initial_secondary_burn'
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.initial_secondary_burn ? 'border-red-500' : 'border-gray-400'}`}
-                placeholder="e.g. 1000 tokens to creator at launch"
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.initial_secondary_burn ? 'border-red-500' : 'border-gray-400'}`}
+                placeholder="e.g. 50000 tokens"
                 value={form.initial_secondary_burn}
                 onChange={handleChange}
               />
               {renderError('initial_secondary_burn')}
+              <Slider
+                min={100}
+                max={1000000}
+                step={100}
+                value={[parseInt(form.initial_secondary_burn) || 0]}
+                onValueChange={(value) => handleSliderChange('initial_secondary_burn', value)}
+                disabled={!form.initial_secondary_burn}
+              />
             </div>
-            <div className="mb-10">
+            {/* primary_max_phase_mint input and slider - Grid Item 4 */}
+            <div className="mb-10 md:mb-0"> {/* Adjusted margin for grid layout, was mb-10 */}
                <div className="flex items-center mb-1">
                 <Label className="block text-lg font-medium text-foreground me-2">
                   Primary Max Phase Mint <span className="text-red-500">*:</span>
@@ -415,33 +470,40 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 type="text"
                 name='primary_max_phase_mint'
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.primary_max_phase_mint ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.primary_max_phase_mint ? 'border-red-500' : 'border-gray-400'}`}
                 placeholder="e.g. 1000 per phase"
                 value={form.primary_max_phase_mint}
                 onChange={handleChange}
               />
               {renderError('primary_max_phase_mint')}
-            </div>
-            {/* Tokenomics Graphs Section */}
-            <div className="py-6 mt-8 border-t-2 border-t-[#E2E8F0]">
-              <h2 className="text-2xl font-bold mb-6 text-foreground pt-6">Tokenomics Projection</h2>
-              <TokenomicsGraphs
-                  primaryMaxSupply={form.primary_max_supply}
-                  initialPrimaryMint={form.initial_primary_mint}
-                  initialSecondaryBurn={form.initial_secondary_burn}
+              <Slider
+                min={100}
+                max={100000}
+                step={100}
+                value={[parseInt(form.primary_max_phase_mint) || 0]}
+                onValueChange={(value) => handleSliderChange('primary_max_phase_mint', value)}
+                disabled={!form.primary_max_phase_mint}
               />
-            </div>
-            <div className="text-center mt-12">
-              <Button
-                type="submit"
-                className="inline-flex gap-2 items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all duration-100 ease-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 bg-[#5555FF] lg:h-14 md:h-12 sm:h-10 xs:h-10 lg:px-7 md:px-5 sm:px-4 xs:px-2 text-white lg:text-lg md:text-base text-sm border-2 border-[#5555FF] rounded-xl hover:bg-transparent hover:text-[#5555FF] dark:bg-[#353230] dark:border-[#353230] dark:text-[#fff] hover:dark:border-[#5555FF] hover:dark:text-[#fff] hover:dark:bg-[#5555FF] min-w-[300px] dark:hover:bg-[#5555ff] dark:hover:text-white"
-              >
-                Create Token
-              </Button>
             </div>
           </div>
         </div>
-      </form>
+
+          <TokenomicsGraphs
+              primaryMaxSupply={form.primary_max_supply}
+              initialPrimaryMint={form.initial_primary_mint}
+              initialSecondaryBurn={form.initial_secondary_burn}
+          />
+
+        {/* Submit Button Section */}
+        <div className="text-center mt-12">
+          <Button
+            type="submit"
+            className="inline-flex gap-2 items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all duration-100 ease-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 bg-[#5555FF] lg:h-14 md:h-12 sm:h-10 xs:h-10 lg:px-7 md:px-5 sm:px-4 xs:px-2 text-white lg:text-lg md:text-base text-sm border-2 border-[#5555FF] rounded-xl hover:bg-transparent hover:text-[#5555FF] dark:bg-[#353230] dark:border-[#353230] dark:text-[#fff] hover:dark:border-[#5555FF] hover:dark:text-[#fff] hover:dark:bg-[#5555FF] min-w-[300px] dark:hover:bg-[#5555ff] dark:hover:text-white"
+          >
+            Create Token
+          </Button>
+        </div>
+      </form> {/* End of form element */}
 
       <LoadingModal show={loadingModalV} message1={"Creating Tokens"} message2={" This may take a few moments."} setShow={setLoadingModalV} />
       <SuccessModal show={successModalV} setShow={setSucessModalV} />
