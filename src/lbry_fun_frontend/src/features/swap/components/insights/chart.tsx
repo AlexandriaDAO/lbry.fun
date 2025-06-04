@@ -8,33 +8,27 @@ interface ChartProps {
     dataYaxis: any;
     lineColor: string;
     gardientColor: string;
-    name: string;
+    xAxisLabel?: string;
+    yAxisLabel?: string;
 }
 
 const LineChart: React.FC<ChartProps> = ({
     dataXaxis,
     dataYaxis,
-    name,
     lineColor,
-    gardientColor
+    gardientColor,
+    xAxisLabel,
+    yAxisLabel,
 }) => {
-    const chartRef1 = useRef<HTMLDivElement | null>(null);
+    const chartRef = useRef<HTMLDivElement | null>(null);
     const { theme } = useTheme();
     const isDarkMode = theme === 'dark';
 
     useEffect(() => {
-        if (chartRef1.current && dataYaxis.length) {
-            const myChart1 = echarts.init(chartRef1.current, isDarkMode ? 'dark' : undefined);
+        if (chartRef.current && dataYaxis && dataYaxis.length > 0) {
+            const myChart = echarts.init(chartRef.current, isDarkMode ? 'dark' : undefined);
 
-            const option1: ECBasicOption = {
-                title: {
-                    text: '',
-                    left: 'left',
-                    textStyle: {
-                        color: isDarkMode ? '#fff' : '#333',
-                        fontSize: 14
-                    }
-                },
+            const option: ECBasicOption = {
                 tooltip: {
                     trigger: 'axis'
                 },
@@ -43,26 +37,28 @@ const LineChart: React.FC<ChartProps> = ({
                     data: dataXaxis,
                     axisLabel: {
                         color: isDarkMode ? '#ccc' : '#666'
+                    },
+                    name: xAxisLabel,
+                    nameLocation: 'middle',
+                    nameGap: 35,
+                    nameTextStyle: {
+                        color: isDarkMode ? '#ccc' : '#666',
+                        fontSize: 14
                     }
                 },
                 yAxis: {
                     type: 'value',
                     axisLabel: {
                         color: isDarkMode ? '#ccc' : '#666'
+                    },
+                    name: yAxisLabel,
+                    nameLocation: 'middle',
+                    nameGap: 60,
+                    nameTextStyle: {
+                        color: isDarkMode ? '#ccc' : '#666',
+                        fontSize: 14
                     }
                 },
-                dataZoom: [
-                    {
-                        type: 'inside',
-                        start: 0,
-                        end: 100
-                    },
-                    {
-                        type: 'slider',
-                        start: 0,
-                        end: 100
-                    }
-                ],
                 series: [
                     {
                         data: dataYaxis,
@@ -76,50 +72,41 @@ const LineChart: React.FC<ChartProps> = ({
                                 { offset: 0, color: gardientColor },
                                 { 
                                     offset: 1, 
-                                    color: isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)' 
+                                    color: isDarkMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'
                                 }
                             ])
                         }
                     }
-                ]
+                ],
+                grid: {
+                    left: '8%',
+                    right: '4%',
+                    bottom: '10%',
+                    top: '10%',
+                    containLabel: true
+                }
             };
 
-            myChart1.setOption(option1);
+            myChart.setOption(option);
 
             const handleResize = () => {
-                myChart1.resize();
+                myChart.resize();
             };
             window.addEventListener('resize', handleResize);
 
             return () => {
                 window.removeEventListener('resize', handleResize);
-                myChart1.dispose();
+                myChart.dispose();
             };
         }
-    }, [dataYaxis, isDarkMode]);
+    }, [dataXaxis, dataYaxis, xAxisLabel, yAxisLabel, lineColor, gardientColor, isDarkMode]);
 
     return (
-        <div className={`w-full ${isDarkMode ? 'bg-gray-800' : 'bg-[#FFF]'} rounded-3xl border ${isDarkMode ? 'border-gray-700' : 'border-[#F0F0F0]'}`}>
-            <div className="p-6 flex md:flex-row flex-col w-full border-b-2 items-center">
-                <h3 className={`text-xl font-medium w-full ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{name}</h3>
-            </div>
-            <div className="p-6 pb-0">
-                <p className={`lg:text-lg md:text-base sm:text-sm xs:text-xs font-normal md:pr-5 xs:pr-0 ${isDarkMode ? 'text-gray-300' : 'text-[#525252]'} md:w-9/12 xs:w-full`}>
-                    Displaying {name} performance over the past
-                </p>
-            </div>
+        <div className="w-full">
             <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '10px',
-                }}
-            >
-                <div
-                    ref={chartRef1}
-                    className={`h-[400px] w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg`}
-                />
-            </div>
+                ref={chartRef}
+                className={`h-[350px] w-full rounded-lg`}
+            />
         </div>
     );
 };

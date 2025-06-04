@@ -5,7 +5,8 @@
 
 
 
-
+- y-axis label on graphs 1, 2 and 4
+- Consistent slider and input option for all 4 parameters with default values.
 
 
 
