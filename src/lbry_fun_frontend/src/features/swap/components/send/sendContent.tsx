@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 
 import transferICP from "@/features/icp-ledger/thunks/transferICP";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 
-import { _SERVICE as _SERVICEICPLEDGER } from '../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did'
 import transferPrimary from "../../thunks/primaryIcrc/transferPrimary";
 import transferSecondary from "../../thunks/secondaryIcrc/transferSecondary";
 import { icpLedgerFlagHandler } from "@/features/icp-ledger/icpLedgerSlice";
 import { flagHandler } from "../../swapSlice";
-import { icp_fee, options } from "@/utils/utils";
+import { icp_fee, options as staticOptions } from "@/utils/utils";
 import { LoaderCircle } from "lucide-react";
 import LoadingModal from "../loadingModal";
 import SuccessModal from "../successModal";
@@ -35,20 +34,20 @@ const SendContent = () => {
     const [successModalV, setSucessModalV] = useState(false);
     const [errorModalV, setErrorModalV] = useState(false);
     const [selectedOption, setSelectedOption] = useState("Select an option");
-    const [selectedImage, setSelectedImage] = useState("");
+    const [selectedImage, setSelectedImage] = useState<string | undefined>("");
     const [availableBalance, setAvailableBalnce] = useState("");
     const [destinationPrincipal, setDestinationPrincipal] = useState("");
     const [principalError, setPrincipalError] = useState("");
     const [amount, setAmount] = useState("0");
-    const [fee, setFee] = useState();
+    const [fee, setFee] = useState<number | undefined>();
 
-    const validatePrincipal = (principal: string): boolean => {
+    const validatePrincipal = (principalString: string): boolean => {
         try {
-            if (!principal) {
+            if (!principalString) {
                 setPrincipalError("Principal ID is required");
                 return false;
             }
-            Principal.fromText(principal);
+            Principal.fromText(principalString);
             setPrincipalError("");
             return true;
         } catch (error) {
@@ -56,6 +55,40 @@ const SendContent = () => {
             return false;
         }
     };
+
+    const primaryLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
+    const secondaryLogoFromState = swap.activeSwapPool?.[1]?.secondary_token_logo_base64;
+
+    interface DynamicSendOption {
+        value: string;
+        label: string;
+        img: string | undefined;
+        fee: number | undefined;
+    }
+
+    const dynamicSendOptions: DynamicSendOption[] = React.useMemo(() => {
+        const baseOptions: DynamicSendOption[] = [
+            { value: "ICP", label: "ICP", img: "images/8-logo.png", fee: staticOptions.find(o => o.label === "ICP")?.fee },
+        ];
+        if (swap.activeSwapPool && swap.activeSwapPool[1]) {
+            const primarySymbol = swap.activeSwapPool[1].primary_token_symbol || "PRIMARY";
+            const secondarySymbol = swap.activeSwapPool[1].secondary_token_symbol || "SECONDARY";
+            
+            baseOptions.push({
+                value: primarySymbol,
+                label: primarySymbol,
+                img: primaryLogoFromState,
+                fee: staticOptions.find(o => o.label === "ALEX")?.fee
+            });
+            baseOptions.push({
+                value: secondarySymbol,
+                label: secondarySymbol,
+                img: secondaryLogoFromState,
+                fee: staticOptions.find(o => o.label === "Secondary")?.fee
+            });
+        }
+        return baseOptions;
+    }, [swap.activeSwapPool, primaryLogoFromState, secondaryLogoFromState, staticOptions]);
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (Number(e.target.value) >= 0) {
@@ -69,36 +102,29 @@ const SendContent = () => {
         validatePrincipal(value);
     };
 
-    const handleSelect = (option: any) => {
+    const handleSelect = (option: DynamicSendOption) => {
         setFee(option.fee);
         setSelectedOption(option.label);
         setIsOpen(false);
-        let img = "images/8-logo.png";
-        if (option.label === "PRIMARY") {
-            img = "images/alex-logo.svg";
-        } else if (option.label === "SECONDARY") {
-            img = "images/lbry-logo.svg";
-        }
-        setSelectedImage(img);
+        setSelectedImage(option.img);
     };
+
     const handleMax = () => {
-        // since we dont need approval here 
         if (selectedOption === "ICP") {
              const userBal = Math.max(
                   0,
                   Number(icpLedger.accountBalance) - 1 * icp_fee
                 ).toFixed(4);
-     
             setAmount(userBal);
         }
-        else if (selectedOption === "PRIMARY") {
+        else if (selectedOption === (swap.activeSwapPool?.[1]?.primary_token_symbol || "PRIMARY")) {
             const userBal = Math.max(
                 0,
                 Number(primary.primaryBal) - (Number(primary.primaryFee) * 1)
             ).toFixed(4);
             setAmount(userBal);
         }
-        else if (selectedOption === "SECONDARY") {
+        else if (selectedOption === (swap.activeSwapPool?.[1]?.secondary_token_symbol || "SECONDARY")) {
             const userBal = Math.max(
                 0,
                 Number(swap.secondaryBalance) - (Number(swap.secondaryFee) * 1)
@@ -115,10 +141,10 @@ const SendContent = () => {
         if (selectedOption === "ICP") {
             dispatch(transferICP({ amount, destination: destinationPrincipal, accountType: "principal" }));
         }
-        else if (selectedOption === "PRIMARY") {
+        else if (selectedOption === (swap.activeSwapPool?.[1]?.primary_token_symbol || "PRIMARY")) {
             dispatch(transferPrimary({ amount, destination: destinationPrincipal }));
         }
-        else if (selectedOption === "SECONDARY") {
+        else if (selectedOption === (swap.activeSwapPool?.[1]?.secondary_token_symbol || "SECONDARY")) {
             dispatch(transferSecondary({ amount, destination: destinationPrincipal }));
         }
         setLoadingModalV(true);
@@ -128,13 +154,15 @@ const SendContent = () => {
         if (selectedOption === "ICP") {
             setAvailableBalnce(icpLedger.accountBalance + " " + selectedOption);
         }
-        else if (selectedOption === "PRIMARY") {
-            setAvailableBalnce(primary.primaryBal + " " + selectedOption);
+        else if (selectedOption === (swap.activeSwapPool?.[1]?.primary_token_symbol || "PRIMARY")) {
+            setAvailableBalnce(primary.primaryBal + " " + (swap.activeSwapPool?.[1]?.primary_token_symbol || "PRIMARY"));
         }
-        else if (selectedOption === "SECONDARY") {
-            setAvailableBalnce(swap.secondaryBalance + " " + selectedOption);
+        else if (selectedOption === (swap.activeSwapPool?.[1]?.secondary_token_symbol || "SECONDARY")) {
+            setAvailableBalnce(swap.secondaryBalance + " " + (swap.activeSwapPool?.[1]?.secondary_token_symbol || "SECONDARY"));
+        } else if (selectedOption === "Select an option") {
+            setAvailableBalnce("");
         }
-    }, [selectedOption, icpLedger.accountBalance, primary.primaryBal, swap.secondaryBalance])
+    }, [selectedOption, icpLedger.accountBalance, primary.primaryBal, swap.secondaryBalance, swap.activeSwapPool]);
 
     useEffect(() => {
         if(!user) return;
@@ -143,15 +171,12 @@ const SendContent = () => {
             setSucessModalV(true);
             dispatch(getIcpBal(user.principal));
             dispatch(icpLedgerFlagHandler());
-
         }
         else if (primary.transferSuccess === true) {
             setLoadingModalV(false);
             setSucessModalV(true);
             dispatch(getAccountPrimaryBalance(user.principal))
-
             dispatch((primaryFlagHandler()));
-
         }
         else if (swap.transferSuccess === true) {
             setLoadingModalV(false);
@@ -163,10 +188,10 @@ const SendContent = () => {
             setLoadingModalV(false);
             setErrorModalV(true);
             dispatch(flagHandler());
-
-
+            dispatch(primaryFlagHandler());
+            dispatch(icpLedgerFlagHandler());
         }
-    }, [user, icpLedger, swap, primary])
+    }, [user, icpLedger, swap, primary, dispatch]);
 
     return (<>
         <div>
@@ -185,7 +210,10 @@ const SendContent = () => {
                             className="flex justify-between items-center border border-gray-300 dark:border-gray-700 rounded-full bg-white dark:bg-gray-800 py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-3 2xl:px-5 xl:px-5 lg:px-4 md:px-3 sm:px-3 text-2xl font-semibold cursor-pointer"
                         >
                             <div className='flex items-center'>
-                                {selectedImage === "" ? <></> : <img className='h-5 w-5 me-3' src={selectedImage} />}
+                                {selectedImage ? 
+                                     <img className='h-5 w-5 me-3' src={selectedImage} alt={selectedOption} /> : 
+                                     (selectedOption !== "Select an option" && <div className='h-5 w-5 me-3 bg-gray-200 rounded-full'></div>)
+                                }
                                 <span className='lg:text-xl md:text-lg xs:text-base font-medium text-black dark:text-gray-200'>{selectedOption}</span>
                             </div>
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -194,20 +222,20 @@ const SendContent = () => {
                         </div>
                         {isOpen && (
                             <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg">
-                                {options.map((option, index) => {
-                                    let logoSrc = "images/8-logo.png";
-                                    if (option.label === "PRIMARY") {
-                                        logoSrc = "images/alex-logo.svg";
-                                    } else if (option.label === "SECONDARY") {
-                                        logoSrc = "images/lbry-logo.svg";
-                                    }
+                                {dynamicSendOptions.map((option, index) => {
                                     return (
                                         <div
                                             key={index}
                                             onClick={() => handleSelect(option)}
                                             className="flex items-center py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer dark:text-gray-200"
                                         >
-                                            <img src={logoSrc} alt={option.label} className="h-5 w-5 mr-3" />
+                                            {option.img ? (
+                                                <img src={option.img} alt={option.label} className="h-5 w-5 mr-3" />
+                                            ) : (
+                                                <div className="w-5 h-5 mr-3 bg-gray-200 rounded-full flex items-center justify-center">
+                                                    {/* Optional: Placeholder for no logo */}
+                                                </div>
+                                            )}
                                             <span>{option.label}</span>
                                         </div>
                                     );
@@ -247,8 +275,16 @@ const SendContent = () => {
                                 <div className='flex items-center'>
                                     <strong className='text-base text-multygray dark:text-gray-300 font-medium me-2'>Available Balance:<span className='text-base text-darkgray dark:text-gray-200 ms-2'>{availableBalance}</span></strong>
                                     {selectedOption === "ICP" && <img className='w-5 h-5' src="images/8-logo.png" alt="icp" />}
-                                    {selectedOption === "PRIMARY" && <img className='w-5 h-5' src="images/alex-logo.svg" alt="alex" />}
-                                    {selectedOption === "SECONDARY" && <img className='w-5 h-5' src="images/lbry-logo.svg" alt="lbry" />}
+                                    {selectedOption === (swap.activeSwapPool?.[1]?.primary_token_symbol || "PRIMARY") && 
+                                        (primaryLogoFromState ? 
+                                            <img className='w-5 h-5' src={primaryLogoFromState} alt="primary token" /> : 
+                                            <div className='w-5 h-5 bg-gray-200 rounded-full'></div>)
+                                    }
+                                    {selectedOption === (swap.activeSwapPool?.[1]?.secondary_token_symbol || "SECONDARY") && 
+                                        (secondaryLogoFromState ? 
+                                            <img className='w-5 h-5' src={secondaryLogoFromState} alt="secondary token" /> : 
+                                            <div className='w-5 h-5 bg-gray-200 rounded-full'></div>)
+                                    }
                                 </div>
                                 <Link role="button" to="" className='text-[#A7B1D7] dark:text-blue-400 underline text-base font-medium' onClick={() => { handleMax() }}>Max</Link>
                             </div>
@@ -257,15 +293,15 @@ const SendContent = () => {
                     {user ? <button
                         type="button"
                         className={`w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2
-                            ${parseFloat(amount) === 0 || swap.loading ? 'text-[#808080] cursor-not-allowed' : 'bg-balancebox text-white cursor-pointer'}`} style={{
-                            backgroundColor: parseFloat(amount) === 0 || swap.loading ? '#525252' : '', // when disabled
+                            ${parseFloat(amount) === 0 || icpLedger.loading || primary.loading || swap.loading ? 'text-[#808080] cursor-not-allowed' : 'bg-balancebox text-white cursor-pointer'}`} style={{
+                            backgroundColor: parseFloat(amount) === 0 || icpLedger.loading || primary.loading || swap.loading ? '#525252' : '',
                         }}
-                        disabled={parseFloat(amount) === 0 || swap.loading === true}
+                        disabled={parseFloat(amount) === 0 || icpLedger.loading || primary.loading || swap.loading}
                         onClick={(e) => {
                             handleSubmit(e);
                         }}
                     >
-                        {swap.loading ? (<>
+                        {(icpLedger.loading || primary.loading || swap.loading) ? (<>
                             <LoaderCircle size={18} className="animate animate-spin mx-auto" /> </>) : (
                             <>Send</>
                         )}
@@ -292,13 +328,26 @@ const SendContent = () => {
                             </li>
                         </ul>
                     </div> : <></>}
-
-
                 </div>
             </div>
             <LoadingModal show={loadingModalV} message1={"Transfer in Progress"} message2={"Your transaction is being processed. This may take a few moments."} setShow={setLoadingModalV} />
             <SuccessModal show={successModalV} setShow={setSucessModalV} />
-            <ErrorModal show={errorModalV} setShow={setErrorModalV} />
+            <ErrorModal 
+                show={errorModalV} 
+                setShow={setErrorModalV} 
+                title={
+                    swap.error?.title ||
+                    (primary.error && typeof primary.error === 'object' && (primary.error as any).title ? (primary.error as any).title : null) ||
+                    (icpLedger.error && typeof icpLedger.error === 'object' && (icpLedger.error as any).title ? (icpLedger.error as any).title : null) ||
+                    "Error"
+                }
+                message={
+                    swap.error?.message ||
+                    (primary.error && typeof primary.error === 'object' && (primary.error as any).message ? (primary.error as any).message : typeof primary.error === 'string' ? primary.error : null) ||
+                    (icpLedger.error && typeof icpLedger.error === 'object' && (icpLedger.error as any).message ? (icpLedger.error as any).message : typeof icpLedger.error === 'string' ? icpLedger.error : null) ||
+                    "An unknown error occurred."
+                }
+            />
 
         </div>
     </>)

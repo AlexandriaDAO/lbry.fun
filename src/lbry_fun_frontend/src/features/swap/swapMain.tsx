@@ -22,6 +22,7 @@ import getPrimaryFee from './thunks/primaryIcrc/getPrimaryFee';
 import Insights from './components/insights/insights';
 
 import { setActiveSwapPool } from './swapSlice';
+import fetchTokenLogosForPool from '../token/thunk/fetchTokenLogosForPoolThunk';
 
 const SwapMain = () => {
     const dispatch = useAppDispatch();
@@ -66,7 +67,18 @@ const SwapMain = () => {
     useEffect(() => {
         const pool = tokenPools.find((tokenPool) => tokenPool[0] === id);
         dispatch(setActiveSwapPool(pool));
-    }, [id, tokenPools]);
+        if (pool) {
+            const poolData = pool[1];
+            if ((poolData.primary_token_id && !poolData.primary_token_logo_base64) || 
+                (poolData.secondary_token_id && !poolData.secondary_token_logo_base64)) {
+                dispatch(fetchTokenLogosForPool({
+                    poolId: pool[0],
+                    primaryTokenId: poolData.primary_token_id,
+                    secondaryTokenId: poolData.secondary_token_id,
+                }));
+            }
+        }
+    }, [id, tokenPools, dispatch]);
 
     return (
         <div className='tabs py-10 2xl:py-20 xl:py-16 lg:py-14 md:py-12 sm:py-10'>

@@ -1,5 +1,5 @@
 import { useAppSelector } from "@/store/hooks/useAppSelector";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -16,10 +16,11 @@ const SecondaryBalanceCard = () => {
         if (!auth.user) return;
         dispatch(getSecondaryBalance(auth.user.principal))
         toast.info("Refreshing balance!")
-
     }
-    return (<>
 
+    const secondaryLogoFromState = activeSwapPool?.[1]?.secondary_token_logo_base64;
+
+    return (<>
         <div className="w-full"
         // className='grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1'
         >
@@ -30,7 +31,13 @@ const SecondaryBalanceCard = () => {
                         <span className='text-sm font-regular text-lightgray '>{activeSwapPool?.[1].secondary_token_name}</span>
                     </div>
                     <div>
-                        <img src="images/lbry-logo.svg" alt="lbry-logo" className="w-12 h-12"/>
+                        {secondaryLogoFromState ? (
+                            <img src={secondaryLogoFromState} alt={activeSwapPool?.[1].secondary_token_symbol || "Secondary token logo"} className="w-12 h-12"/>
+                        ) : (
+                            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                                <span className="text-xs text-gray-500">No Logo</span>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="flex justify-between items-center mb-3">

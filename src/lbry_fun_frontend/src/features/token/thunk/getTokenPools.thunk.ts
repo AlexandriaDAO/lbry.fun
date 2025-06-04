@@ -2,12 +2,13 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getLbryFunActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage } from "@/features/swap/utlis/erorrs";
 import { TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
+import fetchTokenLogosForPool from "./fetchTokenLogosForPoolThunk";
 
 const getTokenPools = createAsyncThunk<
   [string, TokenRecordStringified][],
   void,
-  { rejectValue: ErrorMessage }
->("lbry_fun/getTokenPools", async (_, { rejectWithValue }) => {
+  { rejectValue: ErrorMessage; dispatch: any }
+>("lbry_fun/getTokenPools", async (_, { rejectWithValue, dispatch }) => {
   try {
     const actor = await getLbryFunActor();
     const result = await actor.get_all_token_record(); // returns [bigint, TokenRecord][]
@@ -34,6 +35,23 @@ const getTokenPools = createAsyncThunk<
           isLive: record.is_live,
         },
       ]);
+
+    // After fetching pools, dispatch actions to fetch logos for each pool
+    safeResult.forEach(pool => {
+      const poolData = pool[1];
+      // Check if logos are already fetched (e.g. by a previous call or another mechanism)
+      // For simplicity, we can always dispatch, or add a check like:
+      // if (!poolData.primary_token_logo_base64 && poolData.primary_token_id) { ... }
+      // if (!poolData.secondary_token_logo_base64 && poolData.secondary_token_id) { ... }
+      // However, the thunk itself is conditional, so just dispatching is fine.
+      if (poolData.primary_token_id || poolData.secondary_token_id) {
+        dispatch(fetchTokenLogosForPool({
+          poolId: pool[0],
+          primaryTokenId: poolData.primary_token_id,
+          secondaryTokenId: poolData.secondary_token_id,
+        }));
+      }
+    });
 
     return safeResult;
   } catch (error) {
@@ -67,5 +85,5 @@ export type TokenRecordStringified = {
   liquidity_provided_at: string | null;
   isLive: boolean;
   primary_token_logo_base64?: string;
-
+  secondary_token_logo_base64?: string;
 };

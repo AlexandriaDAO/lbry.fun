@@ -1,42 +1,66 @@
-import React, {useState } from "react";
+import React, {useState, useEffect } from "react";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import CopyHelper from "../copyHelper";
-import { options } from "@/utils/utils";
+import { options as staticOptions } from "@/utils/utils";
 import QRCode from "react-qr-code";
 
 const ReceiveContent = () => {
     const auth = useAppSelector((state) => state.auth);
+    const swap = useAppSelector((state) => state.swap);
     const [isOpen, setIsOpen] = useState(false);
     const [networkOpen, setNetworkOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState("Select an option");
     const [selectedNetwork, setSelectedNetwork] = useState("ICP(Internet Computer)");
-    const [selectedImage, setSelectedImage] = useState("");
+    const [selectedImage, setSelectedImage] = useState<string | undefined>("");
     const [selectedNetworkImage, setSelectedNetworkImage] = useState("images/icp-logo.png");
-    const [fee, setFee] = useState();
+    const [fee, setFee] = useState<number | undefined>();
+
     const networkOptions = [
         { value: "ICP", label: "ICP(Internet Computer)", img: "images/icp-logo.png" },
-
     ];
 
+    const primaryLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
+    const secondaryLogoFromState = swap.activeSwapPool?.[1]?.secondary_token_logo_base64;
 
-    const handleSelect = (option: any) => {
+    interface DynamicOption {
+        value: string;
+        label: string;
+        img: string | undefined;
+        fee: number | undefined;
+    }
+
+    const dynamicOptions: DynamicOption[] = React.useMemo(() => {
+        const baseOptions: DynamicOption[] = [
+            { value: "ICP", label: "ICP", img: "images/8-logo.png", fee: staticOptions.find(o => o.label === "ICP")?.fee },
+        ];
+        if (swap.activeSwapPool && swap.activeSwapPool[1]) {
+            baseOptions.push({
+                value: "PRIMARY", 
+                label: swap.activeSwapPool[1].primary_token_symbol || "Primary", 
+                img: primaryLogoFromState, 
+                fee: staticOptions.find(o => o.label === "ALEX")?.fee
+            });
+            baseOptions.push({
+                value: "SECONDARY", 
+                label: swap.activeSwapPool[1].secondary_token_symbol || "Secondary", 
+                img: secondaryLogoFromState, 
+                fee: staticOptions.find(o => o.label === "Secondary")?.fee
+            });
+        }
+        return baseOptions;
+    }, [swap.activeSwapPool, primaryLogoFromState, secondaryLogoFromState, staticOptions]);
+
+    const handleSelect = (option: DynamicOption) => {
         setSelectedOption(option.label);
         setFee(option.fee);
         setIsOpen(false);
-        let img = "images/8-logo.png";
-        if (option.label === "ALEX") {
-            img = "images/alex-logo.svg";
-        } else if (option.label === "Secondary") {
-            img = "images/lbry-logo.svg";
-        }
-        setSelectedImage(img);
+        setSelectedImage(option.img);
     };
     const handleNetworkSelect = (option: any) => {
         setSelectedNetwork(option.label);
         setNetworkOpen(false);
         setSelectedNetworkImage(option.img);
     };
-
 
     return (<>
         <div>
@@ -64,20 +88,20 @@ const ReceiveContent = () => {
                         </div>
                         {isOpen && (
                             <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
-                                {options.map((option, index) => {
-                                    let logoSrc = "images/8-logo.png";
-                                    if (option.label === "ALEX") {
-                                        logoSrc = "images/alex-logo.svg";
-                                    } else if (option.label === "Secondary") {
-                                        logoSrc = "images/lbry-logo.svg";
-                                    }
+                                {dynamicOptions.map((option, index) => {
                                     return (
                                         <div
                                             key={index}
                                             onClick={() => handleSelect(option)}
                                             className="flex items-center py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer dark:text-white"
                                         >
-                                            <img src={logoSrc} alt={option.label} className="h-5 w-5 mr-3" />
+                                            {option.img ? (
+                                                <img src={option.img} alt={option.label} className="h-5 w-5 mr-3" />
+                                            ) : (
+                                                <div className="w-5 h-5 mr-3 bg-gray-200 rounded-full flex items-center justify-center">
+                                                    {/* Optional: Placeholder for no logo */}
+                                                </div>
+                                            )}
                                             <span>{option.label}</span>
                                         </div>
                                     );

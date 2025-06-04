@@ -2,12 +2,14 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getLbryFunActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage } from "@/features/swap/utlis/erorrs";
 import { TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
+import { TokenRecordStringified } from "./getTokenPools.thunk";
+import fetchTokenLogosForPool from "./fetchTokenLogosForPoolThunk";
 
 const getLiveTokens = createAsyncThunk<
   [string, TokenRecordStringified][],
   void,
-  { rejectValue: ErrorMessage }
->("lbry_fun/getLiveTokens", async (_, { rejectWithValue }) => {
+  { rejectValue: ErrorMessage; dispatch: any }
+>("lbry_fun/getLiveTokens", async (_, { rejectWithValue, dispatch }) => {
   try {
     const actor = await getLbryFunActor();
     const result = await actor.get_live(); // returns [bigint, TokenRecord][]
@@ -34,6 +36,18 @@ const getLiveTokens = createAsyncThunk<
       },
     ]);
 
+    // After fetching live tokens, dispatch actions to fetch logos for each token
+    safeResult.forEach(pool => {
+      const poolData = pool[1];
+      if (poolData.primary_token_id || poolData.secondary_token_id) {
+        dispatch(fetchTokenLogosForPool({
+          poolId: pool[0],
+          primaryTokenId: poolData.primary_token_id,
+          secondaryTokenId: poolData.secondary_token_id,
+        }));
+      }
+    });
+
     return safeResult;
   } catch (error) {
     console.error(error);
@@ -46,21 +60,21 @@ const getLiveTokens = createAsyncThunk<
 
 export default getLiveTokens;
 
-export type TokenRecordStringified = {
-  id: string;
-  secondary_token_symbol: string;
-  secondary_token_id: string;
-  primary_token_name: string;
-  tokenomics_canister_id: string;
-  secondary_token_name: string;
-  primary_token_symbol: string;
-  icp_swap_canister_id: string;
-  primary_max_phase_mint: string;
-  primary_token_max_supply: string;
-  initial_primary_mint: string;
-  primary_token_id: string;
-  caller: string;
-  initial_secondary_burn: string;
-  liquidity_provided_at: string | null;
-  isLive: boolean;
-};
+// export type TokenRecordStringified = {
+//   id: string;
+//   secondary_token_symbol: string;
+//   secondary_token_id: string;
+//   primary_token_name: string;
+//   tokenomics_canister_id: string;
+//   secondary_token_name: string;
+//   primary_token_symbol: string;
+//   icp_swap_canister_id: string;
+//   primary_max_phase_mint: string;
+//   primary_token_max_supply: string;
+//   initial_primary_mint: string;
+//   primary_token_id: string;
+//   caller: string;
+//   initial_secondary_burn: string;
+//   liquidity_provided_at: string | null;
+//   isLive: boolean;
+// };

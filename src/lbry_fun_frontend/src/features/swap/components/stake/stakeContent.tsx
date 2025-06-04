@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { useTheme } from "@/providers/ThemeProvider";
 
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
-import { _SERVICE as _SERVICESWAP } from "../../../../../../declarations/icp_swap/icp_swap.did"
-import { _SERVICE as _SERVICEALEX } from "../../../../../../ICRC/ICRC.did";
 
 import getAccountPrimaryBalance from "../../thunks/primaryIcrc/getAccountPrimaryBalance";
 import { flagHandler } from "../../swapSlice";
@@ -102,6 +100,7 @@ const StakeContent = () => {
         }
     }, [user, swap])
 
+    const primaryTokenLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
 
     return (
         <>
@@ -189,7 +188,11 @@ const StakeContent = () => {
                                 <div className='flex justify-between'>
                                     <div className='flex items-center'>
                                         <strong className='text-base text-multygray dark:text-gray-400 font-medium me-2'>Available Balance:<span className='text-base text-darkgray dark:text-white ms-2'>{primary.primaryBal}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span></strong>
-                                        <img className='w-5 h-5' src="images/alex-logo.svg" alt="alex" />
+                                        {primaryTokenLogoFromState ? (
+                                            <img className='w-5 h-5' src={primaryTokenLogoFromState} alt={swap.activeSwapPool?.[1]?.primary_token_name || "Primary token logo"} />
+                                        ) : (
+                                            <div className='w-5 h-5 bg-gray-200 rounded-full'></div>
+                                        )}
                                     </div>
                                     <Link to="" role="button" className='text-[#A7B1D7] dark:text-gray-400 underline text-base font-bold hover:text-[#8494C7] dark:hover:text-gray-300' onClick={() => handleMaxPrimary()} >Max</Link>
                                 </div>

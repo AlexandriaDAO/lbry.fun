@@ -4,7 +4,7 @@ import { useAppSelector } from "@/store/hooks/useAppSelector";
 import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swap/icp_swap.did'
 import { _SERVICE as _SERVICESECONDARY } from '../../../../../../ICRC/ICRC.did'
 
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { flagHandler } from "../../swapSlice";
 import burnSecondary from "../../thunks/burnSecondary";
 import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance";
@@ -89,6 +89,10 @@ const BurnContent = () => {
     useEffect(() => {
         setMaxburnAllowed(calculateMaxBurnAllowed(swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))
     }, [swap.canisterArchivedBal, swap.secondaryRatio, icpLedger.canisterBalance])
+
+    const primaryLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
+    const secondaryLogoFromState = swap.activeSwapPool?.[1]?.secondary_token_logo_base64;
+
     return (
         <>
             <div>
@@ -107,7 +111,13 @@ const BurnContent = () => {
                             <div className='flex justify-between'>
                                 <div className='flex items-center'>
                                     <strong className='text-base text-multygray dark:text-gray-300 font-medium me-1'>Balance:<span className='text-darkgray dark:text-gray-200 ms-2'>{swap.secondaryBalance} {swap?.activeSwapPool&&swap?.activeSwapPool[1]?.secondary_token_symbol}</span></strong>
-                                    <img className='w-4 h-4' src="images/lbry-logo.svg" alt="lbry" />
+                                    {secondaryLogoFromState ? (
+                                        <img className='w-4 h-4' src={secondaryLogoFromState} alt={swap.activeSwapPool?.[1]?.secondary_token_symbol || "Secondary token logo"} />
+                                    ) : (
+                                        <div className="w-4 h-4 bg-gray-200 rounded-full flex items-center justify-center">
+                                            {/* Optional: Add a placeholder or text if needed */}
+                                        </div>
+                                    )}
                                 </div>
                                 <Link to="" role="button" className='text-[#A7B1D7] dark:text-blue-400 underline text-base font-bold' onClick={() => handleMaxLbry()} >Max</Link>
                             </div>
@@ -132,7 +142,13 @@ const BurnContent = () => {
                             <div className='flex justify-between'>
                                 <div className='flex items-center'>
                                     <div className='me-3'>
-                                        <img className='w-6 h-6' src="images/alex-logo.svg" alt="alex" />
+                                        {primaryLogoFromState ? (
+                                            <img className='w-6 h-6' src={primaryLogoFromState} alt={swap.activeSwapPool?.[1]?.primary_token_symbol || "Primary token logo"} />
+                                        ) : (
+                                            <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                                                {/* Optional: Add a placeholder or text if needed */}
+                                            </div>
+                                        )}
                                     </div>
                                     <div>
                                         <h4 className=' lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium'>{swap.activeSwapPool&&swap.activeSwapPool[1].primary_token_symbol}</h4>

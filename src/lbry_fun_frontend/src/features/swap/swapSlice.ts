@@ -24,6 +24,8 @@ import getSecondaryFee from "./thunks/secondaryIcrc/getSecondaryFee";
 // import getAllLogs from "./thunks/insights/getAllLogs";
 import { ErrorMessage } from "./utlis/erorrs";
 import { TokenRecordStringified } from "../token/thunk/getTokenPools.thunk";
+import fetchTokenLogosForPool from "../token/thunk/fetchTokenLogosForPoolThunk";
+
 // Define the interface for our node state
 export interface StakeInfo {
   stakedPrimary: string;
@@ -439,7 +441,20 @@ const swapSlice = createSlice({
       //     title: action.payload || "Failed to get log data",
       //   };
       // })
-      ;
+      .addCase(fetchTokenLogosForPool.fulfilled, (state, action) => {
+        const { poolId, primaryTokenLogo, secondaryTokenLogo } = action.payload;
+        if (state.activeSwapPool && state.activeSwapPool[0] === poolId) {
+          const updatedRecord = { ...state.activeSwapPool[1] };
+          if (primaryTokenLogo !== undefined) {
+            updatedRecord.primary_token_logo_base64 = primaryTokenLogo;
+          }
+          if (secondaryTokenLogo !== undefined) {
+            updatedRecord.secondary_token_logo_base64 = secondaryTokenLogo;
+          }
+          state.activeSwapPool = [state.activeSwapPool[0], updatedRecord];
+        }
+        // No loading state change, it's a background update
+      });
   },
 });
 export const { flagHandler ,setActiveSwapPool} = swapSlice.actions;
