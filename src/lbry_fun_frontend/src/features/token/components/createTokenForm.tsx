@@ -32,10 +32,11 @@ export interface TokenFormValues {
   secondary_token_description: string;
   secondary_token_logo_base64: string;
   primary_max_supply: string;
-  initial_primary_mint: string;
+  tge_allocation: string;
   initial_secondary_burn: string;
   primary_max_phase_mint: string;
   halving_step: string;
+  initial_reward_per_burn_unit: string;
 }
 
 interface FormErrors {
@@ -63,11 +64,12 @@ const CreateTokenForm: React.FC = () => {
     secondary_token_description: '',
     secondary_token_logo_base64: '',
     primary_max_supply: '1000000',      // In whole tokens
-    initial_primary_mint: '2',          // Fixed value in WHOLE tokens (200,000,000 e8s)
+    tge_allocation: '2',          // Fixed value in WHOLE tokens (200,000,000 e8s)
     initial_secondary_burn: '1000',  // In whole tokens
     primary_max_phase_mint: '1000',     // In whole tokens
     primary_token_logo_base64: '',
     halving_step: '50', // Default to 50%
+    initial_reward_per_burn_unit: '20000',
   });
 
   useEffect(() => {
@@ -87,9 +89,10 @@ const CreateTokenForm: React.FC = () => {
       'primary_max_supply',
       'initial_secondary_burn',
       'primary_max_phase_mint',
-      'halving_step'
+      'halving_step',
+      'initial_reward_per_burn_unit'
     ];
-    if (name === 'initial_primary_mint') return;
+    if (name === 'tge_allocation') return;
 
     if (numericFieldNames.includes(name as keyof TokenFormValues)) {
       if (value === '' || /^[0-9]+$/.test(value)) {
@@ -109,7 +112,7 @@ const CreateTokenForm: React.FC = () => {
   };
 
   const handleSliderChange = (fieldName: keyof TokenFormValues, newValue: number[]) => {
-    if (fieldName === 'initial_primary_mint') return;
+    if (fieldName === 'tge_allocation') return;
     setForm(prev => ({
       ...prev,
       [fieldName]: newValue[0].toString()
@@ -150,14 +153,15 @@ const CreateTokenForm: React.FC = () => {
       newErrors.secondary_token_symbol = 'Ticker must be 3-5 uppercase letters';
     }
     const primaryMaxSupplyNum = Number(form.primary_max_supply);
-    const initialPrimaryMintNum = Number(form.initial_primary_mint);
-    if (!isNaN(primaryMaxSupplyNum) && primaryMaxSupplyNum < initialPrimaryMintNum) {
-      newErrors.primary_max_supply = `Hard Cap must be at least ${initialPrimaryMintNum.toLocaleString()}.`;
+    const tgeAllocationNum = Number(form.tge_allocation);
+    if (!isNaN(primaryMaxSupplyNum) && primaryMaxSupplyNum < tgeAllocationNum) {
+      newErrors.primary_max_supply = `Hard Cap must be at least ${tgeAllocationNum.toLocaleString()}.`;
     }
     const numericFields: Array<keyof TokenFormValues> = [
       'initial_secondary_burn',
       'primary_max_phase_mint',
-      'primary_max_supply'
+      'primary_max_supply',
+      'initial_reward_per_burn_unit'
     ];
     numericFields.forEach(field => {
       if (form[field] && isNaN(Number(form[field]))) {
@@ -182,12 +186,13 @@ const CreateTokenForm: React.FC = () => {
     }
     
     // Convert whole token values to e8s for the backend
-    const formDataForBackend: TokenFormValues = {
+    const formDataForBackend = {
       ...form,
       primary_max_supply: (BigInt(form.primary_max_supply) * BigInt(E8S)).toString(),
-      initial_primary_mint: (BigInt(form.initial_primary_mint) * BigInt(E8S)).toString(),
+      initial_primary_mint: (BigInt(form.tge_allocation) * BigInt(E8S)).toString(),
       initial_secondary_burn: (BigInt(form.initial_secondary_burn) * BigInt(E8S)).toString(),
       primary_max_phase_mint: (BigInt(form.primary_max_phase_mint) * BigInt(E8S)).toString(),
+      initial_reward_per_burn_unit: (BigInt(form.initial_reward_per_burn_unit) * BigInt(E8S)).toString(),
       halving_step: form.halving_step,
     };
 
@@ -470,6 +475,34 @@ const CreateTokenForm: React.FC = () => {
                 disabled={!form.primary_max_supply}
               />
             </div>
+            {/* initial_reward_per_burn_unit input and slider - Grid Item 2 */}
+            <div className="mb-4 md:mb-0">
+              <div className="flex items-center mb-1">
+                <Label className="block text-lg font-medium text-foreground me-2">
+                  Initial Reward per Burn Unit <span className="text-red-500">*:</span>
+                </Label>
+                <TooltipIcon
+                  text="The number of Primary Tokens that will be minted when the 'Burn Unit' is met for the first time. This sets the starting rate for the entire minting schedule."
+                />
+              </div>
+              <Input
+                name="initial_reward_per_burn_unit"
+                type="text"
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.initial_reward_per_burn_unit ? 'border-red-500' : 'border-gray-400'}`}
+                placeholder="e.g. 20000"
+                value={form.initial_reward_per_burn_unit}
+                onChange={handleChange}
+              />
+              {renderError('initial_reward_per_burn_unit')}
+              <Slider
+                min={1000}
+                max={1000000}
+                step={1000}
+                value={[parseInt(form.initial_reward_per_burn_unit) || 0]}
+                onValueChange={(value) => handleSliderChange('initial_reward_per_burn_unit', value)}
+                disabled={!form.initial_reward_per_burn_unit}
+              />
+            </div>
             {/* initial_secondary_burn input and slider - Grid Item 3 */}
             <div className="mb-4 md:mb-0"> {/* Adjusted margin for grid layout */}
               <div className="flex items-center mb-1">
@@ -560,9 +593,10 @@ const CreateTokenForm: React.FC = () => {
 
           <TokenomicsGraphs
               primaryMaxSupply={form.primary_max_supply}
-              initialPrimaryMint={form.initial_primary_mint}
+              tgeAllocation={form.tge_allocation}
               initialSecondaryBurn={form.initial_secondary_burn}
               halvingStep={form.halving_step}
+              initialRewardPerBurnUnit={form.initial_reward_per_burn_unit}
           />
 
         {/* Submit Button Section */}

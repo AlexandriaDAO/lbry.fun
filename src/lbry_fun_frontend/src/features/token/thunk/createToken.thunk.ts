@@ -4,13 +4,12 @@ import {
   getLbryFunActor,
 } from "@/features/auth/utils/authUtils";
 import { ErrorMessage } from "@/features/swap/utlis/erorrs";
-import { TokenFormValues } from "@/features/token/components/createTokenForm";
 import { Principal } from "@dfinity/principal/lib/cjs";
 
 // Define the thunk
 const createToken = createAsyncThunk<
   boolean, // This is the return type of the thunk's payload
-  { formData: TokenFormValues; userPrincipal: string },
+  { formData: any; userPrincipal: string },
   { rejectValue: ErrorMessage }
 >(
   "lbry_fun/createToken",
@@ -61,19 +60,21 @@ const createToken = createAsyncThunk<
         }
       }
 
-      const result = await actor.create_token(
-        formData.primary_token_symbol,
+      const result = await (actor.create_token as any)(
         formData.primary_token_name,
+        formData.primary_token_symbol,
         formData.primary_token_description,
         formData.primary_token_logo_base64,
-        formData.secondary_token_symbol,
         formData.secondary_token_name,
+        formData.secondary_token_symbol,
         formData.secondary_token_description,
         formData.secondary_token_logo_base64,
-        BigInt(Number(formData.primary_max_supply)* 10 ** 8),
-        BigInt(Number(formData.initial_primary_mint)*10 ** 4),
+        BigInt(formData.primary_max_supply),
+        BigInt(formData.primary_max_phase_mint),
+        BigInt(formData.initial_primary_mint),
         BigInt(formData.initial_secondary_burn),
-        BigInt(formData.primary_max_phase_mint)
+        BigInt(formData.halving_step),
+        BigInt(formData.initial_reward_per_burn_unit)
       );
 
       if ("Ok" in result) {

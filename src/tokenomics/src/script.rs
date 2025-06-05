@@ -11,10 +11,11 @@ pub struct InitArgs {
     pub swap_canister_id: Option<Principal>,
     pub frontend_canister_id:Option<Principal>,
     pub max_primary_supply: u64,
-    pub initial_primary_mint: u64,
+    pub tge_allocation: u64,
     pub initial_secondary_burn: u64,
     pub max_primary_phase:u64,
     pub halving_step: u64,
+    pub initial_reward_per_burn_unit: u64,
 }
 
 fn initialize_globals(args: InitArgs) {
@@ -27,10 +28,11 @@ fn initialize_globals(args: InitArgs) {
                 swap_canister_id: args.swap_canister_id.unwrap_or(Principal::anonymous()),
                 frontend_canister_id:args.frontend_canister_id.unwrap_or(Principal::anonymous()),
                 max_primary_supply: args.max_primary_supply,
-                initial_primary_mint: args.initial_primary_mint,
+                tge_allocation: args.tge_allocation,
                 initial_secondary_burn: args.initial_secondary_burn,
                 max_primary_phase:args.max_primary_phase,
                 halving_step: args.halving_step,
+                initial_reward_per_burn_unit: args.initial_reward_per_burn_unit,
             })
             .unwrap();
     });
@@ -38,7 +40,7 @@ fn initialize_globals(args: InitArgs) {
     // Generate and store tokenomics schedule
     let schedule = generate_tokenomics_schedule(
         args.initial_secondary_burn,
-        args.initial_primary_mint,
+        args.initial_reward_per_burn_unit,
         args.max_primary_supply,
         args.halving_step,
     );
@@ -73,9 +75,9 @@ fn init(args: Option<InitArgs>) {
                 ic_cdk::trap("Initialization failed: 'max_primary_supply' must be greater than 0.");
             }
 
-            if init_args.initial_primary_mint == 0 {
+            if init_args.tge_allocation == 0 {
                 ic_cdk::trap(
-                    "Initialization failed: 'initial_primary_mint' must be greater than 0.",
+                    "Initialization failed: 'tge_allocation' must be greater than 0.",
                 );
             }
 
@@ -87,6 +89,11 @@ fn init(args: Option<InitArgs>) {
             if init_args.max_primary_phase == 0 {
                 ic_cdk::trap(
                     "Initialization failed: 'max_primary_phase' must be greater than 0.",
+                );
+            }
+            if init_args.initial_reward_per_burn_unit == 0 {
+                ic_cdk::trap(
+                    "Initialization failed: 'initial_reward_per_burn_unit' must be greater than 0.",
                 );
             }
             if init_args.halving_step < 25 || init_args.halving_step > 90 {
@@ -105,7 +112,7 @@ fn init(args: Option<InitArgs>) {
 }
 fn generate_tokenomics_schedule(
     initial_secondary_burn: u64,
-    initial_primary_mint: u64,
+    initial_reward_per_burn_unit: u64,
     max_primary_supply: u64,
     halving_step: u64,
 ) -> TokenomicsSchedule {
@@ -115,14 +122,14 @@ fn generate_tokenomics_schedule(
     let mut current_burn = initial_secondary_burn as u128;
     let mut last_burn = 0u128;
     let mut total_minted = 0u128;
-    let mut primary_per_threshold = initial_primary_mint as u128;
+    let mut primary_per_threshold = initial_reward_per_burn_unit as u128;
 
     let mut one_reward_mode = false;
 
     while total_minted < max_primary_supply as u128 {
         let in_slot_burn = current_burn - last_burn;
 
-        let reward = (primary_per_threshold * in_slot_burn) / 10000;
+        let reward = (primary_per_threshold * in_slot_burn) / (initial_secondary_burn as u128);
 
         if one_reward_mode {
             // Remaining mint allowed

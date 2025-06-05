@@ -34,6 +34,7 @@ async fn create_token(
     initial_primary_mint: u64,
     initial_secondary_burn: u64,
     halving_step: u64,
+    initial_reward_per_burn_unit: u64,
 ) -> Result<String, String> {
     let user_principal = ic_cdk::api::caller(); // Get the calling user's principal
     // payment
@@ -99,6 +100,7 @@ async fn create_token(
         initial_secondary_burn,
         primary_max_phase_mint,
         halving_step,
+        initial_reward_per_burn_unit,
     )
     .await?;
     install_icp_swap_wasm_on_existing_canister(
@@ -169,6 +171,7 @@ async fn create_token(
             initial_secondary_burn,
             primary_max_phase_mint,
             halving_step,
+            initial_reward_per_burn_unit,
             caller: user_principal,
             created_time: ic_cdk::api::time(),
             liquidity_provided_at: 0,
@@ -282,6 +285,7 @@ async fn install_tokenomics_wasm_on_existing_canister(
     initial_secondary_burn: u64,
     max_primary_phase: u64,
     halving_step: u64,
+    initial_reward_per_burn_unit: u64,
 ) -> Result<(), String> {
     let args = TokenomicsInitArgs {
         primary_token_id,
@@ -289,10 +293,11 @@ async fn install_tokenomics_wasm_on_existing_canister(
         swap_canister_id,
         frontend_canister_id,
         max_primary_supply,
-        initial_primary_mint,
+        tge_allocation: initial_primary_mint,
         initial_secondary_burn,
         max_primary_phase,
         halving_step,
+        initial_reward_per_burn_unit,
     };
     let encoded_args = Encode!(&Some(args))
         .map_err(|e: candid::Error| format!("Failed to encode args: {:?}", e))?;
