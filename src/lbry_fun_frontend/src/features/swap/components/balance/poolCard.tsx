@@ -231,11 +231,11 @@ const PoolCard: React.FC = () => {
                                     <span className="text-white">{activeSwapPoolFromRedux[1].isLive ? "Yes" : "No"}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-300">Initial Primary Mint:</span>
+                                    <span className="font-semibold text-gray-300">Initial Supply:</span>
                                     <span className="text-white">{activeSwapPoolFromRedux[1].initial_primary_mint}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-300">Initial Secondary Burn:</span>
+                                    <span className="font-semibold text-gray-300">Burn Unit:</span>
                                     <span className="text-white">{activeSwapPoolFromRedux[1].initial_secondary_burn}</span>
                                 </div>
                                 <div className="flex justify-between">

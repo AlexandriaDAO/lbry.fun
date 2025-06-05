@@ -59,7 +59,7 @@ export const idlFactory = ({ IDL }) => {
     'tick' : IDL.Int,
     'liquidity' : IDL.Nat,
     'token1Price' : IDL.Float64,
-    'feeTier' : IDL.Nat,
+    'feeEpoch' : IDL.Nat,
     'token1TotalVolume' : IDL.Float64,
     'volumeUSD' : IDL.Float64,
     'feesUSD' : IDL.Float64,

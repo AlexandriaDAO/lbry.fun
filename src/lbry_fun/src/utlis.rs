@@ -152,6 +152,7 @@ pub struct TokenomicsInitArgs {
     pub initial_primary_mint: u64,
     pub initial_secondary_burn: u64,
     pub max_primary_phase: u64,
+    pub halving_step: u64,
 }
 
 #[derive(CandidType)]

@@ -14,6 +14,7 @@ pub struct InitArgs {
     pub initial_primary_mint: u64,
     pub initial_secondary_burn: u64,
     pub max_primary_phase:u64,
+    pub halving_step: u64,
 }
 
 fn initialize_globals(args: InitArgs) {
@@ -28,7 +29,8 @@ fn initialize_globals(args: InitArgs) {
                 max_primary_supply: args.max_primary_supply,
                 initial_primary_mint: args.initial_primary_mint,
                 initial_secondary_burn: args.initial_secondary_burn,
-                max_primary_phase:args.max_primary_phase
+                max_primary_phase:args.max_primary_phase,
+                halving_step: args.halving_step,
             })
             .unwrap();
     });
@@ -38,6 +40,7 @@ fn initialize_globals(args: InitArgs) {
         args.initial_secondary_burn,
         args.initial_primary_mint,
         args.max_primary_supply,
+        args.halving_step,
     );
 
     TOKENOMICS.with(|s| {
@@ -86,6 +89,11 @@ fn init(args: Option<InitArgs>) {
                     "Initialization failed: 'max_primary_phase' must be greater than 0.",
                 );
             }
+            if init_args.halving_step < 25 || init_args.halving_step > 90 {
+                ic_cdk::trap(
+                    "Initialization failed: 'halving_step' must be between 25 and 90.",
+                );
+            }
             
 
             initialize_globals(init_args);
@@ -99,6 +107,7 @@ fn generate_tokenomics_schedule(
     initial_secondary_burn: u64,
     initial_primary_mint: u64,
     max_primary_supply: u64,
+    halving_step: u64,
 ) -> TokenomicsSchedule {
     let mut secondary_thresholds = Vec::new();
     let mut primary_rewards = Vec::new();
@@ -143,7 +152,7 @@ fn generate_tokenomics_schedule(
         current_burn = current_burn * 2;
 
         if primary_per_threshold > 1 {
-            primary_per_threshold = std::cmp::max(1, primary_per_threshold / 2);
+            primary_per_threshold = std::cmp::max(1, (primary_per_threshold * halving_step) / 100);
         }
 
         if primary_per_threshold == 1 {

@@ -19,6 +19,9 @@ import { RootState } from "@/store";
 import TokenomicsGraphs from './TokenomicsGraphs';
 import TooltipIcon from './TooltipIcon';
 
+// Define E8S constant for conversion
+const E8S = 100_000_000;
+
 export interface TokenFormValues {
   primary_token_symbol: string;
   primary_token_name: string;
@@ -32,6 +35,7 @@ export interface TokenFormValues {
   initial_primary_mint: string;
   initial_secondary_burn: string;
   primary_max_phase_mint: string;
+  halving_step: string;
 }
 
 interface FormErrors {
@@ -48,6 +52,7 @@ const CreateTokenForm: React.FC = () => {
   
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [halvingStepWarning, setHalvingStepWarning] = useState<string>('');
 
   const [form, setForm] = useState<TokenFormValues>({
     primary_token_symbol: '',
@@ -57,21 +62,35 @@ const CreateTokenForm: React.FC = () => {
     secondary_token_name: '',
     secondary_token_description: '',
     secondary_token_logo_base64: '',
-    primary_max_supply: '1000000',
-    initial_primary_mint: '10000',
-    initial_secondary_burn: '50000',
-    primary_max_phase_mint: '1000',
-    primary_token_logo_base64: ''
+    primary_max_supply: '1000000',      // In whole tokens
+    initial_primary_mint: '2',          // Fixed value in WHOLE tokens (200,000,000 e8s)
+    initial_secondary_burn: '1000',  // In whole tokens
+    primary_max_phase_mint: '1000',     // In whole tokens
+    primary_token_logo_base64: '',
+    halving_step: '50', // Default to 50%
   });
+
+  useEffect(() => {
+    const step = parseInt(form.halving_step);
+    if (step < 40) {
+      setHalvingStepWarning("Warning: A low value creates an extreme front-load. The vast majority of tokens will be mintable only in the first epoch, after which minting difficulty will increase dramatically.");
+    } else if (step > 75) {
+      setHalvingStepWarning("Warning: A high value creates a prolonged period of high inflation. The minting rate will decrease very slowly, potentially devaluing early contributions over a longer term.");
+    } else {
+      setHalvingStepWarning('');
+    }
+  }, [form.halving_step]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     const numericFieldNames: Array<keyof TokenFormValues> = [
       'primary_max_supply',
-      'initial_primary_mint',
       'initial_secondary_burn',
-      'primary_max_phase_mint'
+      'primary_max_phase_mint',
+      'halving_step'
     ];
+    if (name === 'initial_primary_mint') return;
+
     if (numericFieldNames.includes(name as keyof TokenFormValues)) {
       if (value === '' || /^[0-9]+$/.test(value)) {
         setForm(prev => ({ ...prev, [name]: value }));
@@ -90,6 +109,7 @@ const CreateTokenForm: React.FC = () => {
   };
 
   const handleSliderChange = (fieldName: keyof TokenFormValues, newValue: number[]) => {
+    if (fieldName === 'initial_primary_mint') return;
     setForm(prev => ({
       ...prev,
       [fieldName]: newValue[0].toString()
@@ -114,9 +134,9 @@ const CreateTokenForm: React.FC = () => {
       'secondary_token_name',
       'secondary_token_description',
       'secondary_token_logo_base64',
-      'initial_primary_mint',
       'initial_secondary_burn',
-      'primary_max_phase_mint'
+      'primary_max_phase_mint',
+      'halving_step'
     ];
     requiredFields.forEach(field => {
       if (!form[field]) {
@@ -129,8 +149,12 @@ const CreateTokenForm: React.FC = () => {
     if (form.secondary_token_symbol && !/^[A-Z]{3,5}$/.test(form.secondary_token_symbol)) {
       newErrors.secondary_token_symbol = 'Ticker must be 3-5 uppercase letters';
     }
+    const primaryMaxSupplyNum = Number(form.primary_max_supply);
+    const initialPrimaryMintNum = Number(form.initial_primary_mint);
+    if (!isNaN(primaryMaxSupplyNum) && primaryMaxSupplyNum < initialPrimaryMintNum) {
+      newErrors.primary_max_supply = `Hard Cap must be at least ${initialPrimaryMintNum.toLocaleString()}.`;
+    }
     const numericFields: Array<keyof TokenFormValues> = [
-      'initial_primary_mint',
       'initial_secondary_burn',
       'primary_max_phase_mint',
       'primary_max_supply'
@@ -156,8 +180,19 @@ const CreateTokenForm: React.FC = () => {
       setErrorModalV({ flag: true, title: "Authentication Error", message: "Please log in to create a token." });
       return;
     }
-    dispatch(createToken({ formData: form, userPrincipal: principal }));
-    console.log('Submitting:', form);
+    
+    // Convert whole token values to e8s for the backend
+    const formDataForBackend: TokenFormValues = {
+      ...form,
+      primary_max_supply: (BigInt(form.primary_max_supply) * BigInt(E8S)).toString(),
+      initial_primary_mint: (BigInt(form.initial_primary_mint) * BigInt(E8S)).toString(),
+      initial_secondary_burn: (BigInt(form.initial_secondary_burn) * BigInt(E8S)).toString(),
+      primary_max_phase_mint: (BigInt(form.primary_max_phase_mint) * BigInt(E8S)).toString(),
+      halving_step: form.halving_step,
+    };
+
+    dispatch(createToken({ formData: formDataForBackend, userPrincipal: principal }));
+    console.log('Submitting (converted to e8s):', formDataForBackend);
   };
 
   const handleImageUpload = (
@@ -212,7 +247,41 @@ const CreateTokenForm: React.FC = () => {
       {/* Header */}
       <div className="text-center px-2 pb-8">
         <h1 className="text-5xl font-bold text-black text-foreground mb-6">Create Token</h1>
-        <p className="text-black mt-1 text-xl text-foreground">Create custom tokens within the Alexandria Protocol — modular, interoperable, and built for the networked knowledge layer.</p>
+        {/* Tokenomics Explanation Start */}
+        <details className="text-left mx-auto max-w-2xl my-4 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-800 shadow-sm open:ring-1 open:ring-black/5 dark:open:ring-white/10">
+          <summary className="text-md font-semibold p-3 cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl flex justify-between items-center">
+            How it works
+            <span className="text-xs transition-transform transform">▼</span>
+          </summary>
+          
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">
+            <div className="space-y-3">
+              <div>
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Secondary Tokens:</h4>
+                <ul className="list-disc list-inside pl-4 space-y-1">
+                  <li>Mint at a fixed rate of $0.01 in ICP.</li>
+                  <li>Burn to create Primary Tokens & recover 50% of their initial ICP cost.</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Primary Tokens:</h4>
+                <ul className="list-disc list-inside pl-4 space-y-1">
+                  <li>No fixed price; created by burning Secondary Tokens.</li>
+                  <li>Minting difficulty increases with each epoch (less Primary Token per Secondary Token burned over time).</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">ICP Revenue Flow (from Secondary Token minting):</h4>
+                <ul className="list-disc list-inside pl-4 space-y-1">
+                  <li>1% fee to ALEX stakers.</li>
+                  <li>49.5% to Primary Token buybacks & locked liquidity.</li>
+                  <li>49.5% to Primary Token staking rewards.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </details>
+        {/* Tokenomics Explanation End */}
       </div>
 
       <UserICPBalance />
@@ -377,7 +446,7 @@ const CreateTokenForm: React.FC = () => {
             <div className="mb-4 md:mb-0"> {/* Adjusted margin for grid layout */}
               <div className="flex items-center mb-1">
                 <Label className="block text-lg font-medium text-foreground me-2">
-                  Primary Max Supply <span className="text-red-500">* :</span>
+                  Hard Cap <span className="text-red-500">* :</span>
                 </Label>
                 <TooltipIcon 
                   text="The absolute maximum number of Primary Tokens that can ever exist. This includes initial minting and all tokens from the burning schedule."
@@ -387,56 +456,28 @@ const CreateTokenForm: React.FC = () => {
                 name="primary_max_supply"
                 type="text"
                 className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.primary_max_supply ? 'border-red-500' : 'border-gray-400'}`}
-                placeholder="e.g. 1000000"
+                placeholder="e.g. 10000000"
                 value={form.primary_max_supply}
                 onChange={handleChange}
               />
               {renderError('primary_max_supply')}
               <Slider
                 min={1000}
-                max={100000000}
+                max={10000000}
                 step={1000}
                 value={[parseInt(form.primary_max_supply) || 0]}
                 onValueChange={(value) => handleSliderChange('primary_max_supply', value)}
                 disabled={!form.primary_max_supply}
               />
             </div>
-            {/* initial_primary_mint input and slider - Grid Item 2 */}
-            <div className="mb-4 md:mb-0"> {/* Adjusted margin for grid layout */}
-              <div className="flex items-center mb-1">
-                <Label className="block text-lg font-medium text-foreground me-2">
-                  Initial Primary Mint <span className="text-red-500">*:</span>
-                </Label>
-                <TooltipIcon 
-                  text="Amount of Primary Token minted at launch (for treasury, liquidity etc.) AND the initial rate for minting Primary Tokens when Secondary Tokens are burned in the first tier of the schedule."
-                />
-              </div>
-              <Input
-                name='initial_primary_mint'
-                type="text"
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.initial_primary_mint ? 'border-red-500' : 'border-gray-400'}`}
-                placeholder="e.g. 10000 tokens"
-                value={form.initial_primary_mint}
-                onChange={handleChange}
-              />
-              {renderError('initial_primary_mint')}
-              <Slider
-                min={100}
-                max={1000000}
-                step={100}
-                value={[parseInt(form.initial_primary_mint) || 0]}
-                onValueChange={(value) => handleSliderChange('initial_primary_mint', value)}
-                disabled={!form.initial_primary_mint}
-              />
-            </div>
             {/* initial_secondary_burn input and slider - Grid Item 3 */}
             <div className="mb-4 md:mb-0"> {/* Adjusted margin for grid layout */}
               <div className="flex items-center mb-1">
                 <Label className="block text-lg font-medium text-foreground me-2">
-                  Initial Secondary Burn <span className="text-red-500">*:</span>
+                  Burn Unit <span className="text-red-500">*:</span>
                 </Label>
                 <TooltipIcon 
-                  text="The amount of Secondary Tokens that need to be burned to complete the FIRST tier of the Primary Token minting schedule. Subsequent tiers will require more burns."
+                  text="The amount of Secondary Tokens that need to be burned to complete the FIRST epoch of the Primary Token minting schedule. Subsequent epochs will require more burns."
                 />
               </div>
               <Input
@@ -450,7 +491,7 @@ const CreateTokenForm: React.FC = () => {
               {renderError('initial_secondary_burn')}
               <Slider
                 min={100}
-                max={1000000}
+                max={10000000}
                 step={100}
                 value={[parseInt(form.initial_secondary_burn) || 0]}
                 onValueChange={(value) => handleSliderChange('initial_secondary_burn', value)}
@@ -461,7 +502,7 @@ const CreateTokenForm: React.FC = () => {
             <div className="mb-10 md:mb-0"> {/* Adjusted margin for grid layout, was mb-10 */}
                <div className="flex items-center mb-1">
                 <Label className="block text-lg font-medium text-foreground me-2">
-                  Primary Max Phase Mint <span className="text-red-500">*:</span>
+                  Mint Cap <span className="text-red-500">*:</span>
                 </Label>
                 <TooltipIcon 
                   text="A cap on how many Primary Tokens can be minted in any single burn transaction, regardless of how many Secondary Tokens are burned. This smooths out supply."
@@ -485,6 +526,35 @@ const CreateTokenForm: React.FC = () => {
                 disabled={!form.primary_max_phase_mint}
               />
             </div>
+            {/* halving_step input and slider - Grid Item 5 */}
+            <div className="mb-10 md:mb-0">
+              <div className="flex items-center mb-1">
+                <Label className="block text-lg font-medium text-foreground me-2">
+                  Halving Step (%) <span className="text-red-500">*:</span>
+                </Label>
+                <TooltipIcon
+                  text="The percentage by which the minting rate decreases each epoch. 50% is a standard halving. Lower values mean a slower decay."
+                />
+              </div>
+              <Input
+                type="text"
+                name='halving_step'
+                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.halving_step ? 'border-red-500' : 'border-gray-400'}`}
+                placeholder="e.g. 50"
+                value={form.halving_step}
+                onChange={handleChange}
+              />
+              {renderError('halving_step')}
+              {halvingStepWarning && <p className="text-yellow-600 dark:text-yellow-400 text-sm mt-1">{halvingStepWarning}</p>}
+              <Slider
+                min={25}
+                max={90}
+                step={1}
+                value={[parseInt(form.halving_step) || 0]}
+                onValueChange={(value) => handleSliderChange('halving_step', value)}
+                disabled={!form.halving_step}
+              />
+            </div>
           </div>
         </div>
 
@@ -492,6 +562,7 @@ const CreateTokenForm: React.FC = () => {
               primaryMaxSupply={form.primary_max_supply}
               initialPrimaryMint={form.initial_primary_mint}
               initialSecondaryBurn={form.initial_secondary_burn}
+              halvingStep={form.halving_step}
           />
 
         {/* Submit Button Section */}

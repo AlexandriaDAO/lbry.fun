@@ -37,7 +37,7 @@ export interface PublicPoolOverView {
   'tick' : bigint,
   'liquidity' : bigint,
   'token1Price' : number,
-  'feeTier' : bigint,
+  'feeEpoch' : bigint,
   'token1TotalVolume' : number,
   'volumeUSD' : number,
   'feesUSD' : number,

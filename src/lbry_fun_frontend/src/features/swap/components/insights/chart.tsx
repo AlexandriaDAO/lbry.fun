@@ -10,6 +10,9 @@ interface ChartProps {
     gardientColor: string;
     xAxisLabel?: string;
     yAxisLabel?: string;
+    dataYaxis2?: any;
+    lineColor2?: string;
+    yAxisLabel2?: string;
 }
 
 const LineChart: React.FC<ChartProps> = ({
@@ -19,6 +22,9 @@ const LineChart: React.FC<ChartProps> = ({
     gardientColor,
     xAxisLabel,
     yAxisLabel,
+    dataYaxis2,
+    lineColor2,
+    yAxisLabel2,
 }) => {
     const chartRef = useRef<HTMLDivElement | null>(null);
     const { theme } = useTheme();
@@ -46,21 +52,29 @@ const LineChart: React.FC<ChartProps> = ({
                         fontSize: 14
                     }
                 },
-                yAxis: {
-                    type: 'value',
-                    axisLabel: {
-                        color: isDarkMode ? '#ccc' : '#666'
-                    },
-                    name: yAxisLabel,
-                    nameLocation: 'middle',
-                    nameGap: 60,
-                    nameTextStyle: {
-                        color: isDarkMode ? '#ccc' : '#666',
-                        fontSize: 14
+                yAxis: [
+                    {
+                        type: 'value',
+                        axisLabel: {
+                            color: isDarkMode ? '#ccc' : '#666'
+                        },
+                        name: yAxisLabel,
+                        nameLocation: 'middle',
+                        nameGap: 60,
+                        nameTextStyle: {
+                            color: isDarkMode ? '#ccc' : '#666',
+                            fontSize: 14
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                color: isDarkMode ? '#333' : '#eee'
+                            }
+                        }
                     }
-                },
+                ],
                 series: [
                     {
+                        name: yAxisLabel,
                         data: dataYaxis,
                         type: 'line',
                         smooth: true,
@@ -80,12 +94,44 @@ const LineChart: React.FC<ChartProps> = ({
                 ],
                 grid: {
                     left: '8%',
-                    right: '4%',
+                    right: dataYaxis2 ? '8%' : '4%',
                     bottom: '10%',
                     top: '10%',
                     containLabel: true
                 }
             };
+
+            if (dataYaxis2 && dataYaxis2.length > 0) {
+                (option.yAxis as echarts.EChartsCoreOption['yAxis'][]).push({
+                    type: 'value',
+                    name: yAxisLabel2 || '',
+                    position: 'right',
+                    axisLabel: {
+                        color: isDarkMode ? '#ccc' : '#666',
+                        formatter: '{value} %',
+                    },
+                    nameLocation: 'middle',
+                    nameGap: 45,
+                    nameTextStyle: {
+                        color: isDarkMode ? '#ccc' : '#666',
+                        fontSize: 14
+                    },
+                    splitLine: {
+                        show: false
+                    }
+                });
+
+                (option.series as echarts.EChartsCoreOption['series'][]).push({
+                    name: yAxisLabel2,
+                    data: dataYaxis2,
+                    type: 'line',
+                    smooth: true,
+                    yAxisIndex: 1,
+                    itemStyle: {
+                        color: lineColor2 || '#5470c6'
+                    },
+                });
+            }
 
             myChart.setOption(option);
 
@@ -99,7 +145,7 @@ const LineChart: React.FC<ChartProps> = ({
                 myChart.dispose();
             };
         }
-    }, [dataXaxis, dataYaxis, xAxisLabel, yAxisLabel, lineColor, gardientColor, isDarkMode]);
+    }, [dataXaxis, dataYaxis, xAxisLabel, yAxisLabel, lineColor, gardientColor, isDarkMode, dataYaxis2, lineColor2, yAxisLabel2]);
 
     return (
         <div className="w-full">

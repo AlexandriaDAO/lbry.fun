@@ -39,6 +39,7 @@ pub struct TokenRecord {
     pub initial_primary_mint: u64,
     pub initial_secondary_burn: u64,
     pub primary_max_phase_mint: u64,
+    pub halving_step: u64,
     pub caller: Principal,
     pub created_time: u64,
     pub liquidity_provided_at: u64,
