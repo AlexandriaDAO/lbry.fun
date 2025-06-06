@@ -13,6 +13,7 @@ interface ChartProps {
     dataYaxis2?: any;
     lineColor2?: string;
     yAxisLabel2?: string;
+    yAxis2format?: 'percent';
 }
 
 const LineChart: React.FC<ChartProps> = ({
@@ -25,6 +26,7 @@ const LineChart: React.FC<ChartProps> = ({
     dataYaxis2,
     lineColor2,
     yAxisLabel2,
+    yAxis2format,
 }) => {
     const chartRef = useRef<HTMLDivElement | null>(null);
     const { theme } = useTheme();
@@ -108,7 +110,7 @@ const LineChart: React.FC<ChartProps> = ({
                     position: 'right',
                     axisLabel: {
                         color: isDarkMode ? '#ccc' : '#666',
-                        formatter: '{value} %',
+                        formatter: yAxis2format === 'percent' ? '{value} %' : '{value}',
                     },
                     nameLocation: 'middle',
                     nameGap: 45,
@@ -145,7 +147,7 @@ const LineChart: React.FC<ChartProps> = ({
                 myChart.dispose();
             };
         }
-    }, [dataXaxis, dataYaxis, xAxisLabel, yAxisLabel, lineColor, gardientColor, isDarkMode, dataYaxis2, lineColor2, yAxisLabel2]);
+    }, [dataXaxis, dataYaxis, xAxisLabel, yAxisLabel, lineColor, gardientColor, isDarkMode, dataYaxis2, lineColor2, yAxisLabel2, yAxis2format]);
 
     return (
         <div className="w-full">

@@ -63,13 +63,13 @@ const CreateTokenForm: React.FC = () => {
     secondary_token_name: '',
     secondary_token_description: '',
     secondary_token_logo_base64: '',
-    primary_max_supply: '1000000',      // In whole tokens
-    tge_allocation: '2',          // Fixed value in WHOLE tokens (200,000,000 e8s)
-    initial_secondary_burn: '1000',  // In whole tokens
-    primary_max_phase_mint: '1000',     // In whole tokens
+    primary_max_supply: '1000000',
+    tge_allocation: '100000',
+    initial_secondary_burn: '1000000',
+    primary_max_phase_mint: '50000',
     primary_token_logo_base64: '',
-    halving_step: '50', // Default to 50%
-    initial_reward_per_burn_unit: '20000',
+    halving_step: '70',
+    initial_reward_per_burn_unit: '200000',
   });
 
   useEffect(() => {

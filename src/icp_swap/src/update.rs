@@ -26,6 +26,8 @@ use icrc_ledger_types::icrc2::transfer_from::{TransferFromArgs, TransferFromErro
 use num_bigint::BigUint;
 use serde::Deserialize;
 
+const LBRY_FUN_CANISTER_ID: &str = "j362g-ziaaa-aaaap-qkt7q-cai";
+
 #[warn(non_snake_case)]
 #[derive(CandidType, Deserialize, Debug)]
 pub struct Metadata {
@@ -409,7 +411,7 @@ pub async fn burn_secondary(
                     dest: caller.to_string(),
                     token: "ICP".to_string(),
                     amount: amount_icp_e8s,
-                    details: e,
+                    details: e.to_string(),
                     reason: DEFAULT_TRANSFER_FAILED_ERROR.to_string(),
                 },
             ));
@@ -473,7 +475,7 @@ pub async fn burn_secondary(
     // // else {
     // //     // primary fully minted
     // //     register_info_log(
-    // //         caller,
+    //         caller,
     //         "burn_secondary",
     //         &format!("Burn completed successfully. No more primary tokens can be minted.")
     //     );
@@ -566,22 +568,34 @@ async fn send_icp(
     destination: Principal,
     amount: u64,
     from_subaccount: Option<[u8; 32]>,
-) -> Result<BlockIndexIC, String> {
-    let amount = Tokens::from_e8s(amount);
-    let from_subaccount = from_subaccount.map(Subaccount);
-
-    let transfer_args: ic_ledger_types::TransferArgs = ic_ledger_types::TransferArgs {
-        memo: Memo(0),
-        amount,
-        fee: Tokens::from_e8s(ICP_TRANSFER_FEE),
-        from_subaccount,
-        to: AccountIdentifier::new(&destination, &from_subaccount.unwrap_or(DEFAULT_SUBACCOUNT)),
+) -> Result<BlockIndex, String> {
+    let transfer_args = TransferArg {
+        from_subaccount: from_subaccount.map(|s| s.to_vec()),
+        to: Account {
+            owner: destination,
+            subaccount: None,
+        },
+        amount: amount.into(),
+        fee: Some(Nat::from(ICP_TRANSFER_FEE)),
+        memo: None,
         created_at_time: None,
     };
-    ic_ledger_types::transfer(get_principal(ICP_CANISTER_ID), transfer_args)
-        .await
-        .map_err(|e| format!("failed to call ledger: {:?}", e))?
-        .map_err(|e: ic_ledger_types::TransferError| format!("ledger transfer error {:?}", e))
+
+    let result: Result<(Result<BlockIndex, TransferError>,), _> = ic_cdk::call(
+        get_principal(ICP_CANISTER_ID),
+        "icrc1_transfer",
+        (transfer_args,),
+    )
+    .await;
+
+    match result {
+        Ok((Ok(block_index),)) => Ok(block_index),
+        Ok((Err(err),)) => Err(format!("Ledger transfer error: {:?}", err)),
+        Err((code, msg)) => Err(format!(
+            "Failed to call ledger: (code: {:?}, message: \"{}\")",
+            code, msg
+        )),
+    }
 }
 
 #[allow(non_snake_case)]
@@ -858,7 +872,7 @@ async fn un_stake_all_primary(from_subaccount: Option<[u8; 32]>) -> Result<Strin
     );
     Ok("Successfully unstaked!".to_string())
 }
-//Guard ensure call is only by canister.
+
 pub async fn distribute_reward() -> Result<String, ExecutionError> {
     register_info_log(
         caller(),
@@ -870,6 +884,7 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
     let mut total_icp_available: u64 = 0;
 
     match fetch_canister_icp_balance().await {
+        
         Ok(bal) => {
             total_icp_available = bal;
         }
@@ -951,12 +966,62 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
         )
     })?;
 
-    if total_icp_allocated < 1_000_000 {
+    // Calculate the 1% fee for the Alexandria project.
+    let alexandria_fee_share = total_icp_allocated.checked_div(100).ok_or_else(|| ExecutionError::DivisionFailed {
+        operation: "distribute_reward".to_string(),
+        details: "Failed to calculate alexandria_fee_share".to_string()
+    })?;
+
+    // Calculate the 49.5% share for the LP Treasury.
+    // Multiplying by 495 and dividing by 1000 is a safe way to handle 49.5%.
+    let lp_treasury_share = total_icp_allocated.checked_mul(495).ok_or_else(|| ExecutionError::MultiplicationOverflow {
+        operation: "distribute_reward".to_string(),
+        details: "Failed to calculate lp_treasury_share".to_string()
+    })?
+    .checked_div(1000).ok_or_else(|| ExecutionError::DivisionFailed {
+        operation: "distribute_reward".to_string(),
+        details: "Failed to calculate lp_treasury_share".to_string()
+    })?;
+
+    // The remainder is for the stakers. This avoids potential rounding errors.
+    let staker_share = total_icp_allocated.checked_sub(alexandria_fee_share).ok_or_else(|| ExecutionError::Underflow {
+        operation: "distribute_reward".to_string(),
+        details: "Failed to calculate staker_share".to_string()
+    })?
+    .checked_sub(lp_treasury_share).ok_or_else(|| ExecutionError::Underflow {
+        operation: "distribute_reward".to_string(),
+        details: "Failed to calculate staker_share".to_string()
+    })?;
+
+    let lbry_fun_principal = Principal::from_text(LBRY_FUN_CANISTER_ID).expect("Invalid lbry_fun canister principal");
+
+    if alexandria_fee_share > 0 {
+        match send_icp(lbry_fun_principal, alexandria_fee_share as u64, None).await {
+            Ok(_) => {
+                register_info_log(caller(), "distribute_reward", &format!("Successfully sent {} e8s fee to lbry_fun.", alexandria_fee_share));
+            },
+            Err(e) => {
+                // Log the critical error but allow other distributions to proceed
+                register_error_log(caller(), "distribute_reward", ExecutionError::TransferFailed {
+                    source: "self".to_string(),
+                    dest: "lbry_fun".to_string(),
+                    token: "ICP".to_string(),
+                    amount: alexandria_fee_share as u64,
+                    details: e,
+                    reason: "Failed to send Alexandria fee".to_string(),
+                });
+            }
+        }
+    }
+    
+    add_to_lp_treasury(lp_treasury_share as u64)?;
+
+    if staker_share < 1_000_000 {
         return Err(ExecutionError::new_with_log(
             caller(),
             "distribute_reward",
             ExecutionError::InsufficientBalanceRewardDistribution {
-                available: total_icp_allocated,
+                available: staker_share,
                 details: DEFAULT_INSUFFICIENT_BALANCE_REWARD_DISTRIBUTION_ERROR.to_string(),
             },
         ));
@@ -973,7 +1038,7 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
             },
         ));
     }
-    let mut icp_reward_per_primary = total_icp_allocated
+    let mut icp_reward_per_primary = staker_share
         .checked_mul(SCALING_FACTOR)
         .ok_or_else(||
             ExecutionError::new_with_log(
@@ -983,7 +1048,7 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
                     operation: DEFAULT_MULTIPLICATION_OVERFLOW_ERROR.to_string(),
                     details: format!(
                         "total_icp_allocated: {} with SCALING_FACTOR: {}",
-                        total_icp_allocated,
+                        staker_share,
                         SCALING_FACTOR
                     ),
                 }
@@ -998,7 +1063,7 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
                     operation: DEFAULT_DIVISION_ERROR.to_string(),
                     details: format!(
                         "total_icp_allocated * SCALING_FACTOR: {} divided by total_staked_primary: {}",
-                        total_icp_allocated * SCALING_FACTOR,
+                        staker_share * SCALING_FACTOR,
                         total_staked_primary
                     ),
                 }
@@ -1328,7 +1393,7 @@ pub async fn get_icp_rate_in_cents() -> Result<u64, ExecutionError> {
                     XRCResponse::Err(err) => Err(ExecutionError::new_with_log(
                         caller(),
                         "get_icp_rate_in_cents",
-                        ExecutionError::StateError("Error in XRC response".to_string()),
+                        ExecutionError::StateError(format!("Error in XRC response: {:?}", err)),
                     )),
                 }
             }
@@ -1341,7 +1406,7 @@ pub async fn get_icp_rate_in_cents() -> Result<u64, ExecutionError> {
         Err((_rejection_code, msg)) => Err(ExecutionError::new_with_log(
             caller(),
             "get_icp_rate_in_cents",
-            ExecutionError::StateError("Error call rejected".to_string()),
+            ExecutionError::StateError(format!("Error call rejected: {}", msg)),
         )),
     }
 }
@@ -1470,7 +1535,7 @@ async fn withdraw_token(
         created_at_time: None,
     };
 
-    let (result,) = ic_cdk::call::<(TransferFromArgs,), (Result<BlockIndex, TransferFromError>,)>(
+    let (result,): (Result<BlockIndex, TransferFromError>,) = ic_cdk::call::<(TransferFromArgs,), (Result<BlockIndex, TransferFromError>,)>(
         primary_token_id,
         "icrc2_transfer_from",
         (transfer_from_args,),
@@ -1572,4 +1637,24 @@ async fn burn_token(
     })?;
 
     result // Return the inner Result<BlockIndex, TransferFromError>
+}
+
+#[derive(CandidType, Deserialize, Debug)]
+pub enum ExchangeRateError {
+    AnonymousPrincipalNotAllowed,
+    CryptoQuoteAssetNotFound,
+    FailedToAcceptCycles,
+    ForexBaseAssetNotFound,
+    CryptoBaseAssetNotFound,
+    StablecoinRateTooFewRates,
+    ForexAssetsNotFound,
+    InconsistentRatesReceived,
+    RateLimited,
+    StablecoinRateZeroRate,
+    Other { code: u32, description: String },
+    ForexInvalidTimestamp,
+    NotEnoughCycles,
+    ForexQuoteAssetNotFound,
+    StablecoinRateNotFound,
+    Pending,
 }

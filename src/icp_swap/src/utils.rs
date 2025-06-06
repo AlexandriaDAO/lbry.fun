@@ -11,7 +11,7 @@ use serde::Deserialize;
 
 pub const STAKING_REWARD_PERCENTAGE: u64 = 100; // 1%
 pub const XRC_CANISTER_ID: &str = "uf6dk-hyaaa-aaaaq-qaaaq-cai";
-pub const ICP_CANISTER_ID: &str = "nppha-riaaa-aaaal-ajf2q-cai";
+pub const ICP_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 
 pub const ICP_TRANSFER_FEE: u64 = 10_000;
 pub const MAX_DAYS: u32 = 30;

@@ -12,6 +12,14 @@ interface TokenomicsGraphsProps {
 
 const SECONDARY_BURN_USD_COST = 0.005; // Cost per secondary token burned in USD
 
+// Note on simulation logic vs. on-chain reality:
+// This function simulates the tokenomics schedule based on user-provided parameters,
+// including a `tgeAllocation`. This simulation correctly reflects the math of the
+// on-chain tokenomics canister.
+// It's important to know that for actual deployment, a single, negligible primary token
+// is minted first to seed the liquidity pool. This seed token is separate from the TGE
+// and is not included in these graphing calculations, as its impact on the overall
+// supply and schedule is virtually zero.
 const generateTokenomicsScheduleData = (
   primaryMaxSupplyStr: string,
   tgeAllocationStr: string,
@@ -195,13 +203,35 @@ const generateTokenomicsScheduleData = (
 
   const costPerPrimaryTokenY = effectiveRateY_calc.map(rate => rate > 0 ? (SECONDARY_BURN_USD_COST / rate) : null);
 
+  const costToMintXAxis = [];
+  const costToMintYAxis = [];
+
+  if (cumulativePy && cumulativePy.length > 0) {
+      // TGE part has zero cost
+      costToMintXAxis.push(0);
+      costToMintYAxis.push(0);
+      costToMintXAxis.push(cumulativePy[0]);
+      costToMintYAxis.push(0);
+
+      for (let i = 0; i < cumulativePy.length - 1; i++) {
+          const cost = costPerPrimaryTokenY[i];
+
+          // Step up to new cost
+          costToMintXAxis.push(cumulativePy[i]);
+          costToMintYAxis.push(cost);
+          // Horizontal line at new cost for the duration of the epoch
+          costToMintXAxis.push(cumulativePy[i+1]);
+          costToMintYAxis.push(cost);
+      }
+  }
+
   return {
     cumulativeSupplyData: { xAxis: cumulativeSx, yAxis: cumulativePy.map(v => Math.min(v,maxPrimarySupply)) },
     mintedPerEpochData: { xAxis: epochLabels, yAxis: primaryMintedInEpochY },
     effectiveMintRateData: { xAxis: effectiveRateX, yAxis: effectiveRateY_calc },
     cumulativeUsdCostData: { xAxis: finalCumulativePyForCost, yAxis: finalCumulativeCostY },
     cumulativePercentageSupplyData: { xAxis: finalCumulativePyForCost, yAxis: cumulativePercentageSupplyY },
-    costPerTokenData: { xAxis: effectiveRateX, yAxis: costPerPrimaryTokenY },
+    costToMintData: { xAxis: costToMintXAxis, yAxis: costToMintYAxis },
   };
 };
 
@@ -218,14 +248,28 @@ const TokenomicsGraphs: React.FC<TokenomicsGraphsProps> = ({
     effectiveMintRateData,
     cumulativeUsdCostData,
     cumulativePercentageSupplyData,
-    costPerTokenData,
-  } = useMemo(() => generateTokenomicsScheduleData(
-    primaryMaxSupply,
-    tgeAllocation,
-    initialSecondaryBurn.toString(),
-    halvingStep,
-    initialRewardPerBurnUnit.toString()
-  ), [primaryMaxSupply, tgeAllocation, initialSecondaryBurn, halvingStep, initialRewardPerBurnUnit]);
+    costToMintData,
+    summaryData,
+  } = useMemo(() => {
+      const data = generateTokenomicsScheduleData(
+        primaryMaxSupply,
+        tgeAllocation,
+        initialSecondaryBurn.toString(),
+        halvingStep,
+        initialRewardPerBurnUnit.toString()
+      );
+      
+      const summary = {
+          epochs: data.mintedPerEpochData.yAxis.length,
+          totalMintingValuation: data.cumulativeUsdCostData.yAxis[data.cumulativeUsdCostData.yAxis.length - 1] || 0,
+          initialMintCost: data.costToMintData?.yAxis.find(cost => cost && cost > 0) || 0,
+          finalMintCost: [...(data.costToMintData?.yAxis || [])].reverse().find(cost => cost && cost > 0) || 0,
+          tgePercentage: parseFloat(primaryMaxSupply) > 0 ? parseFloat(((parseFloat(tgeAllocation) / parseFloat(primaryMaxSupply)) * 100).toFixed(2)) : 0,
+      };
+
+      return { ...data, summaryData: summary };
+
+  }, [primaryMaxSupply, tgeAllocation, initialSecondaryBurn, halvingStep, initialRewardPerBurnUnit]);
 
   const [copySuccess, setCopySuccess] = useState(false);
 
@@ -291,6 +335,31 @@ const TokenomicsGraphs: React.FC<TokenomicsGraphsProps> = ({
 
   return (
     <>
+      <div className="mb-8 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+        <h3 className="text-xl font-semibold mb-4 text-center text-gray-900 dark:text-white">Key Metrics Summary</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
+          <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Minting Epochs</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">{summaryData?.epochs}</p>
+          </div>
+          <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+            <p className="text-sm text-gray-500 dark:text-gray-400">TGE Allocation</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">{summaryData?.tgePercentage}%</p>
+          </div>
+          <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Initial Mint Cost</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">${summaryData?.initialMintCost?.toFixed(4)}</p>
+          </div>
+          <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Final Mint Cost</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">${summaryData?.finalMintCost?.toFixed(4)}</p>
+          </div>
+          <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md col-span-2 md:col-span-1 lg:col-span-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Total Minting Valuation</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">${summaryData?.totalMintingValuation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          </div>
+        </div>
+      </div>
       <div className="space-y-8 mt-10 md:grid md:grid-cols-2 md:gap-x-8 md:space-y-0">
         <div className="md:mb-8">
           <div className="flex items-center mb-2">
@@ -304,6 +373,9 @@ const TokenomicsGraphs: React.FC<TokenomicsGraphsProps> = ({
             yAxisLabel="Cumulative Primary Tokens Minted"
             lineColor="#8884d8"
             gardientColor="rgba(136, 132, 216, 0.3)"
+            dataYaxis2={effectiveMintRateData?.yAxis}
+            yAxisLabel2="Effective Mint Rate"
+            lineColor2="#ffc658"
           />
         </div>
         <div className="md:mb-8">
@@ -322,36 +394,34 @@ const TokenomicsGraphs: React.FC<TokenomicsGraphsProps> = ({
         </div>
         <div>
           <div className="flex items-center mb-2">
-              <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Effective Mint Rate vs. Burn</h3>
-              <TooltipIcon text="This graph illustrates the 'bang for your buck' when burning Secondary Tokens. It shows how many Primary Tokens you get for each Secondary Token burned. The rate typically decreases in steps as more total Secondary Tokens are burned, making early burning more efficient. A sharper drop means incentives for early burning are stronger." />
+              <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cost to Mint One Primary Token vs. Total Supply Minted</h3>
+              <TooltipIcon text="This graph shows the 'price' to create one new Primary Token by burning Secondary Tokens. Notice how the cost jumps up at each stage (or 'epoch'). This increasing cost is what makes it more rewarding for early participants to mint tokens." />
           </div>
           <LineChart
-            dataXaxis={effectiveMintRateData.xAxis}
-            dataYaxis={effectiveMintRateData.yAxis}
-            xAxisLabel="Cumulative Secondary Tokens Burned"
-            yAxisLabel="Primary Tokens Minted per Secondary Burned"
-            lineColor="#ffc658"
-            gardientColor="rgba(255, 198, 88, 0.3)"
-            dataYaxis2={costPerTokenData?.yAxis}
-            yAxisLabel2="USD Cost per Primary Token ($)"
-            lineColor2="#4CAF50"
+            dataXaxis={costToMintData?.xAxis}
+            dataYaxis={costToMintData?.yAxis}
+            xAxisLabel="Cumulative Primary Tokens Minted"
+            yAxisLabel="USD Cost per Primary Token ($)"
+            lineColor="#4CAF50"
+            gardientColor="rgba(76, 175, 80, 0.3)"
           />
         </div>
         <div>
           <div className="flex items-center mb-2">
-              <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cumulative USD Cost vs. Primary Minted</h3>
+              <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Minting Valuation vs. Primary Minted</h3>
               <TooltipIcon text="Assuming each Secondary Token burned costs $0.005 (half a cent), this graph projects the total USD expenditure needed to mint a certain amount of Primary Tokens through the burning schedule. The cost of initially allocated Primary Tokens is considered $0 in this projection." />
           </div>
           <LineChart
             dataXaxis={cumulativeUsdCostData.xAxis}
             dataYaxis={cumulativeUsdCostData.yAxis}
             xAxisLabel="Cumulative Primary Tokens Minted"
-            yAxisLabel="Cumulative USD Cost ($)"
+            yAxisLabel="Minting Valuation ($)"
             lineColor="#FA8072"
             gardientColor="rgba(250, 128, 114, 0.3)"
             dataYaxis2={cumulativePercentageSupplyData.yAxis}
             yAxisLabel2="Supply Minted (%)"
             lineColor2="#00BCD4"
+            yAxis2format="percent"
           />
         </div>
       </div>

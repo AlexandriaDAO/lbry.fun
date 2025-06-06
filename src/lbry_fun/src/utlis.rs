@@ -3,7 +3,7 @@ use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 pub const KONG_BACKEND_CANISTER: &str = "2ipq2-uqaaa-aaaar-qailq-cai";
 pub const ICP_CANISTER_ID: &str = "nppha-riaaa-aaaal-ajf2q-cai";
-pub const INTITAL_PRIMARY_MINT: u64 = 200_000_000;
+pub const INTITAL_PRIMARY_MINT: u64 = 100_010_000; // 1 token (100,000,000) + transfer fee (10,000)
 pub const ICP_TRANSFER_FEE: u64 = 10_000;
 
 pub const E8S:u64=100_000_000;
@@ -222,4 +222,23 @@ pub struct UpgradeArgs {
 pub enum LedgerArg {
     Init(InitArgs),
     Upgrade(Option<UpgradeArgs>),
+}
+
+pub async fn get_self_icp_balance(principal: Principal) -> Result<u64, String> {
+    let ledger_canister_id = Principal::from_text(ICP_CANISTER_ID).unwrap();
+    let args = icrc_ledger_types::icrc1::account::Account {
+        owner: principal,
+        subaccount: None,
+    };
+
+    let result: Result<(Nat,), _> =
+        ic_cdk::call(ledger_canister_id, "icrc1_balance_of", (args,)).await
+        .map_err(|e| format!("Failed to call icrc1_balance_of: {:?}", e));
+
+    match result {
+        Ok((balance,)) => balance
+            .try_into()
+            .map_err(|_| "Balance exceeds u64 max".to_string()),
+        Err(e) => Err(format!("Failed to get balance: {:?}", e)),
+    }
 }

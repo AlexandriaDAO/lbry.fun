@@ -45,6 +45,84 @@ Fairness = Expensive to mint in the first epoch.
 
 
 
+**Objective:** Implement a sophisticated, community-driven liquidity provision system within each `icp_swap` canister. This system will enable the protocol to use its accrued ICP treasury to deepen its on-chain liquidity on the KongSwap DEX. This will be achieved through a symbiotic partnership with any community member who provides the matching primary tokens. The system will feature a "swap-and-LP" model, where the user is compensated with ICP, and a 1% fee will be directed to the parent Alexandria protocol to create a positive feedback loop.
+
+**Core Design Philosophy:**
+
+*   **Code Encapsulation:** New, distinct functionality will be placed in new, dedicated Rust files (`dex_integration.rs`, `alexandria_integration.rs`, `constants.rs`) to keep the existing, audited logic in `update.rs` clean and focused.
+*   **On-Chain Accounting:** The ICP treasury will not be tracked in a `StableCell`. It will be calculated dynamically as the canister's own ICP balance on the ledger, minus any outstanding ICP rewards owed to stakers. This is a simpler, more robust accounting method.
+*   **Community Partnership, Not Reliance:** Any user, not just a "whale," can provide primary tokens. The function will allow them to specify how much ICP they wish to "swap" for, giving them control and a clear incentive.
+*   **Transactional Safety:** The multi-step process of adding liquidity and paying the user will be executed in a safe, atomic order to protect the protocol's funds. Liquidity will be added to the DEX *before* the user receives their ICP payout.
+*   **Symbiotic Value Accrual:** A hardcoded 1% fee on the protocol's portion of the deployed ICP will be used to buy and burn LBRY tokens, directly supporting the parent ALEX ecosystem.
+*   **Economic Security:** The function will have a hardcoded cap on the amount of treasury ICP deployed per transaction to mitigate economic exploits like sandwich attacks.
+
+---
+
+### **List of Files to be Attached to the Prompt:**
+
+To ensure the AI has full context, please attach the following files from the `icp_swap` directory:
+
+1.  `icp_swap.did`
+2.  `Cargo.toml`
+3.  The entire `src/` directory and all its contents.
+
+---
+
+### **Instructions for Implementation:**
+
+You are to refactor the `icp_swap` canister source code by creating three new files and modifying two existing ones.
+
+#### **Part 1: Create New Files for Code Separation**
+
+1.  **Create `src/constants.rs`:**
+    *   This file will hold all static mainnet principals.
+    *   Populate it with the following `pub const` string slices:
+        *   `KONG_BACKEND_CANISTER_ID: &str = "2ipq2-uqaaa-aaaar-qailq-cai";`
+        *   `ALEXANDRIA_ICP_SWAP_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";`
+        *   `LBRY_TOKEN_CANISTER_ID: &str = "y33wz-myaaa-aaaap-qkmna-cai";`
+        *   `ICP_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";`
+        *   `LIQUIDITY_DEPLOYMENT_CAP_E8S: u64 = 10 * 100_000_000; // 10 ICP`
+        *   `LBRY_BURN_ADDRESS: &str = "54fqz-5iaaa-aaaap-qkmqa-cai"; // The main icp_swap canister`
+        *   `LBRY_FEE_PERCENT: u64 = 1;`
+
+2.  **Create `src/dex_integration.rs`:**
+    *   This file will contain all logic for interacting with the KongSwap DEX.
+    *   Define the necessary `CandidType` structs for KongSwap calls (`SwapAmountsReply`, `AddLiquidityAmountsReply`, `AddLiquidityArgs`, etc.), using the user-provided examples as a guide.
+    *   Implement two public async functions:
+        *   `get_kong_swap_quote(pay_symbol: String, pay_amount: Nat, receive_symbol: String) -> Result<SwapAmountsReply, String>`: This function will call the `swap_amounts` method on the KongSwap canister.
+        *   `add_liquidity_to_kong(primary_token_symbol: String, primary_token_amount: Nat, icp_amount: Nat) -> Result<AddLiquidityReply, String>`: This function must perform the full, multi-step liquidity addition process as detailed in the user's example: (1) call `add_liquidity_amounts` to get proportional amounts, (2) call `icrc2_approve` on both the primary token ledger and the ICP ledger, and (3) call `add_liquidity` to finalize.
+
+3.  **Create `src/alexandria_integration.rs`:**
+    *   This file will contain the logic for the 1% fee mechanism.
+    *   Implement one public async function: `buy_and_burn_lbry(icp_fee_amount_e8s: u64) -> Result<String, String>`.
+    *   The function must perform the following steps:
+        a. Approve the `ALEXANDRIA_ICP_SWAP_CANISTER_ID` to spend the `icp_fee_amount_e8s` from this canister's account on the ICP ledger.
+        b. Call the `swap` function on the `ALEXANDRIA_ICP_SWAP_CANISTER_ID` to exchange the ICP for LBRY tokens.
+        c. Upon receiving the LBRY, call `icrc1_transfer` on the `LBRY_TOKEN_CANISTER_ID`, sending the newly acquired LBRY to the `LBRY_BURN_ADDRESS`.
+
+#### **Part 2: Modify Existing Files**
+
+1.  **Modify `src/storage.rs`:**
+    *   This file should remain largely unchanged. **Do not** add a `StableCell` for the ICP treasury. The treasury is an account balance, not a piece of canister state.
+
+2.  **Modify `src/update.rs`:**
+    *   **Imports:** Add `use crate::{constants::*, dex_integration::*, alexandria_integration::*};`.
+    *   **Modify `distribute_reward`:**
+        *   After calculating `total_icp_allocated`, simply proceed with the existing logic to distribute 100% of it to the stakers' reward balances.
+        *   **Remove** any logic that splits the pool or sends it to a treasury. The treasury is now the canister's entire "profit" balance, which will be used directly.
+    *   **Create the Main User-Facing Function:**
+        *   Add a new, public `update` function: `provide_liquidity_with_swap(primary_token_amount_provided: u64, max_icp_to_receive_e8s: u64) -> Result<String, ExecutionError>`.
+        *   **Implement the following logic IN ORDER:**
+            i.   **Get Treasury Balance:** Fetch the canister's ICP balance (`fetch_canister_icp_balance`) and subtract the total unclaimed staker rewards (`get_total_unclaimed_icp_reward`) to get the `available_treasury_icp`.
+            ii.  **Apply Cap:** Determine the `icp_to_deploy` by taking the minimum of `available_treasury_icp` and the `LIQUIDITY_DEPLOYMENT_CAP_E8S` constant.
+            iii. **Check User Approval:** Verify that the caller has approved the canister to spend at least `primary_token_amount_provided` of the primary token.
+            iv.  **Get Quote:** Call `get_kong_swap_quote` to get the current market price for swapping the user's provided primary tokens into ICP.
+            v.   **Calculate Swap:** Determine the `icp_for_user_swap` based on the quote. This must not exceed `max_icp_to_receive_e8s`. Calculate the `primary_tokens_for_swap` that this corresponds to.
+            vi.  **Calculate LP Amounts:** The remaining primary tokens (`primary_tokens_for_lp`) and the remaining deployable ICP from the treasury (`icp_for_lp`) are now defined.
+            vii. **Calculate and Execute LBRY Fee:** Calculate the `lbry_fee` (1% of `icp_for_lp`). Call `buy_and_burn_lbry` with this amount.
+            viii.**Add Liquidity to DEX:** Call `add_liquidity_to_kong` using the `primary_tokens_for_lp` and the post-fee `icp_for_lp`.
+            ix.  **Pay User:** **Only upon successful liquidity addition**, transfer the `icp_for_user_swap` amount to the user.
+            x.   Return a detailed success message.
 
 
 
@@ -62,76 +140,76 @@ Fairness = Expensive to mint in the first epoch.
 
 
 
-## Token Creation Parameters: A Deep Dive
 
-The `create_token` function initializes a new token ecosystem with two core tokens: a Primary Token and a Secondary Token. The economics of their interaction, especially how the Primary Token comes into existence, are governed by four critical parameters provided during creation. Understanding these is key to designing a sustainable and effective token model.
 
-These parameters are primarily used to configure the `tokenomics` canister, which manages the scheduled minting of the Primary Token in response to the burning of the Secondary Token.
 
-Let's break down each parameter from a tokenomics expert's and crypto degen's perspective:
 
-### 1. `primary_max_supply` (Total Cap of Primary Token)
 
-*   **What it is:** This is the absolute maximum number of Primary Tokens that can ever exist. This figure includes both the `initial_primary_mint` (see below) and all Primary Tokens that will be minted over time through the burning of Secondary Tokens via the `tokenomics` canister's schedule.
-*   **Tokenomics Perspective:**
-    *   **Scarcity and Value:** A fundamental lever for controlling the scarcity of the Primary Token. A lower max supply can, ceteris paribus, lead to higher per-token value if demand is constant or grows.
-    *   **Long-term Vision:** Defines the ultimate size of the Primary Token economy. This number should reflect the project's long-term goals and the total value it aims to represent or facilitate.
-    *   **Inflation Control:** Once this cap is reached (through initial minting and scheduled minting), no more Primary Tokens can be created by the `tokenomics` canister, effectively capping inflation from this source.
-*   **Degen Perspective:**
-    *   **"Wen Moon?":** A lower max supply is often seen as bullish ("less supply, price go up!"). Degens will compare this to other projects' total supplies.
-    *   **Fully Diluted Value (FDV):** This number is critical for calculating the FDV (`max_primary_supply` * current price).
-    *   **Is it *really* capped?** Degens will scrutinize if there are other mechanisms (e.g., governance, other minting contracts) that could bypass this cap. In this system, the `tokenomics` canister respects this cap for its scheduled mints.
 
-### 2. `initial_primary_mint` (Upfront Primary Token Supply & Initial Mint Rate)
 
-*   **What it is:**
-    1.  **Initial Allocation:** This is the quantity of Primary Tokens minted immediately when the Primary Token ledger is created. These tokens are typically allocated to the project treasury, team, early investors, or for initial liquidity provision *before* the burn-to-mint mechanism in the `tokenomics` canister becomes the primary source of new supply.
-    2.  **Initial Minting Rate Setter:** This value also sets the *initial rate* for `primary_per_threshold` within the `tokenomics` canister's schedule generator. The `generate_tokenomics_schedule` function uses `initial_primary_mint` as the starting value for `primary_per_threshold`. This determines how many Primary Tokens are minted per unit of Secondary Token burned in the *first epoch* of the schedule (scaled by a factor of 10,000, i.e., `(primary_per_threshold * in_slot_burn) / 10000`).
-*   **Tokenomics Perspective:**
-    *   **Bootstrapping:** Provides the initial tokens needed to kickstart the ecosystem, fund development, or establish initial market liquidity.
-    *   **Initial Minting Efficiency:** A higher `initial_primary_mint` (when used as the starting `primary_per_threshold`) means the burn-to-mint mechanism is more "generous" in the early stages, minting more Primary Tokens for each Secondary Token burned. This can incentivize early participation in burning.
-    *   **Balance:** A careful balance is needed. Too high an `initial_primary_mint` (as an allocation) might lead to concerns about centralization or selling pressure. As a rate setter, it influences how quickly the `max_primary_supply` (excluding the initial allocation) is approached in the early phases.
-*   **Degen Perspective:**
-    *   **"Team Tokens / VC Dump?":** Degens will be keen to know where these initial tokens go. Transparency in allocation is crucial.
-    *   **"Early Burner Bonus":** If this sets a high initial mint rate for burning, early degens who burn Secondary Tokens will get more Primary Tokens ("alpha leak!"). They'll be trying to get in before the mint rate decreases in later epochs.
 
-### 3. `initial_secondary_burn` (First Burn Epoch Size)
 
-*   **What it is:** This parameter defines the size of the *first epoch* in the Secondary Token burn schedule. Specifically, it sets the `current_burn` value for the first entry in the `secondary_thresholds` vector within the `TokenomicsSchedule`. To mint Primary Tokens according to the initial rate (set by `initial_primary_mint`), this amount of Secondary Tokens must be collectively burned.
-*   **Tokenomics Perspective:**
-    *   **Pacing of Minting:** Sets the scale for the burn mechanism. A lower `initial_secondary_burn` means the first epoch of Primary Token minting (and subsequent epochs, which double in size) is reached with less Secondary Token burn, potentially accelerating early Primary Token supply expansion. A higher value makes it more challenging to unlock the initial tranches of Primary Tokens.
-    *   **Commitment Signal:** The size of this first epoch (and the subsequent exponentially increasing epochs) can signal the level of commitment (in terms of Secondary Token burning) required from the community to expand the Primary Token supply.
-    *   **Schedule Dynamics:** The `generate_tokenomics_schedule` function creates subsequent burn thresholds by doubling the previous one (e.g., if `initial_secondary_burn` is 1000, the thresholds might be 1000, 2000, 4000, 8000...). Simultaneously, the `primary_per_threshold` (mint rate) halves at each epoch.
-*   **Degen Perspective:**
-    *   **"How much to burn to get X?":** This helps estimate how much collective effort (burning) is needed to unlock the first batch of scheduled Primary Token mints.
-    *   **"Is it too hard/easy?":** If this value is too high, degens might feel it's too difficult to participate in the burn-to-mint. If too low, the early minting phases might pass too quickly. They'll be looking for the "sweet spot" for their participation strategy.
 
-### 4. `primary_max_phase_mint` (Max Primary Mint Per Burn Event/Transaction)
 
-*   **What it is:** This parameter acts as a rate limiter or a cap on the amount of Primary Token that can be minted in a *single transaction* or call to the `mint_primary` function in the `tokenomics` canister, regardless of how many Secondary Tokens are burned in that specific event. For example, if the schedule dictates that 1000 Primary Tokens *could* be minted based on a large Secondary Token burn, but `primary_max_phase_mint` is set to 100, then only 100 Primary Tokens will be minted in that transaction.
-*   **Tokenomics Perspective:**
-    *   **Supply Smoothing:** Prevents large, sudden influxes of Primary Tokens into circulation due to a massive single burn event. This promotes a more gradual and predictable supply increase.
-    *   **Preventing Manipulation:** Reduces the ability of a single entity with a large amount of Secondary Tokens to trigger a disproportionately large minting of Primary Tokens at once, potentially impacting price stability.
-    *   **Fairness:** Ensures that the opportunity to mint Primary Tokens is distributed over more potential burn events rather than being captured by a few large ones.
-*   **Degen Perspective:**
-    *   **"Anti-Whale Dump/Pump":** This can be seen as a measure to prevent whales from burning massive amounts of Secondary Token to mint and then immediately dump a large number of Primary Tokens, or to control the pace of "supply unlock."
-    *   **"How often can I mint?":** If a degen plans a large burn, they'll need to understand that they might not get all the corresponding Primary Tokens in one go if this limit is hit. They might need multiple transactions or will see their effective mint capped by this.
-    *   **Gas / Transaction Strategy:** Could influence how users batch their Secondary Token burns if they are trying to maximize their Primary Token mints per transaction fee paid.
 
-### Interplay and Strategic Considerations:
 
-These four parameters are interconnected and must be considered holistically:
 
-*   **`initial_primary_mint` (allocation) + Scheduled Mints (derived from `initial_primary_mint` as rate, `initial_secondary_burn` as first epoch, and halving/doubling logic) ≤ `max_primary_supply`.**
-*   The **`initial_secondary_burn`** sets the entry point for the burn epochs. The **`initial_primary_mint`** (as a rate) sets how rewarding those early epochs are.
-*   The rate of minting decreases (halving `primary_per_threshold`) as the amount of Secondary Token required for the next epoch increases (doubling `current_burn`). This creates a dynamic where early burners are rewarded more significantly per unit of Secondary Token burned.
-*   **`primary_max_phase_mint`** acts as a global speed bump on any single minting event, ensuring the path to `max_primary_supply` is more controlled, regardless of the underlying schedule's generosity at any given point.
+### **AI Assistant Prompt**
 
-**Simulating Outcomes:**
-By inputting different values for these parameters, projects can model various scenarios for Primary Token supply emission. This allows for tuning the tokenomics to achieve desired outcomes regarding:
-*   Pace of decentralization of Primary Token supply.
-*   Incentives for early vs. late burners of Secondary Tokens.
-*   Overall rate of Primary Token inflation until the `max_primary_supply` is reached.
-*   Resilience against supply shocks from large individual burn events.
+**Objective:** Refactor the `icp_swap` canister's reward distribution logic to implement a three-way split of profits. Currently, 100% of profits go to stakers. The new design will allocate profits as follows:
+*   **49.5%** to Staking Rewards.
+*   **49.5%** to a new LP Treasury pool.
+*   **1%** to a new Alexandria Fee pool.
 
-Choosing these numbers carefully is paramount to launching a token with well-defined, predictable, and strategically aligned economic properties.
+**Functional Requirements:**
+*   Two new persistent storage variables (`StableCell`) must be created to track the balances of the LP Treasury and the Alexandria Fee pool.
+*   The `distribute_reward` function must be modified to calculate this three-way split.
+*   The amounts for the two new pools will be added to their respective storage variables for accrual. No spending logic for these new pools is required in this task.
+*   The stakers' portion will use the existing reward distribution logic.
+
+---
+
+### **List of Files to be Attached to the Prompt:**
+
+*   The entire `src/` directory from the `icp_swap` canister.
+
+---
+
+### **Step-by-Step Implementation Instructions:**
+
+#### **File 1: `src/icp_swap/src/storage.rs`**
+
+1.  **Define New Storage Pools:**
+    *   Add two new `pub static` `StableCell` variables to hold the balances of the new pools. Initialize them to `0`.
+        *   `LP_TREASURY: RefCell<StableCell<u64, DefaultMemoryImpl>>`
+        *   `ALEXANDRIA_FEE_POOL: RefCell<StableCell<u64, DefaultMemoryImpl>>`
+
+2.  **Create Helper Functions:**
+    *   Create two new public functions to safely add funds to these new cells. Both must check for arithmetic overflows and return a `Result<(), ExecutionError>`.
+        *   `add_to_lp_treasury(amount: u64)`
+        *   `add_to_alexandria_fee_pool(amount: u64)`
+
+#### **File 2: `src/icp_swap/src/update.rs`**
+
+1.  **Import Helper Functions:**
+    *   At the top of the file, add `use crate::storage::{add_to_lp_treasury, add_to_alexandria_fee_pool};`.
+
+2.  **Modify the `distribute_reward` function:**
+    *   Locate the `total_icp_allocated` variable, which represents the total profits for the cycle.
+    *   **Immediately after its definition, insert the logic for the three-way split.** Use integer arithmetic to avoid floating-point errors.
+        ```rust
+        // Calculate the 1% fee for the Alexandria project.
+        let alexandria_fee_share = total_icp_allocated / 100;
+
+        // Calculate the 49.5% share for the LP Treasury.
+        // Multiplying by 495 and dividing by 1000 is a safe way to handle 49.5%.
+        let lp_treasury_share = (total_icp_allocated * 495) / 1000;
+
+        // The remainder is for the stakers. This avoids potential rounding errors.
+        let staker_share = total_icp_allocated - alexandria_fee_share - lp_treasury_share;
+        ```
+    *   **Route the Funds to Their Pools:**
+        *   Call `add_to_alexandria_fee_pool(alexandria_fee_share as u64)?;`
+        *   Call `add_to_lp_treasury(lp_treasury_share as u64)?;`
+    *   **Update Staker Logic:**
+        *   Replace all subsequent uses of `total_icp_allocated` in the function with the new `staker_share` variable. This ensures only the stakers' 49.5% portion is used to calculate and assign their individual rewards.

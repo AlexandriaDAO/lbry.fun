@@ -26,6 +26,7 @@ pub const DISTRIBUTION_INTERVALS_MEM_ID: MemoryId = MemoryId::new(7);
 pub const LOGS_MEM_ID: MemoryId = MemoryId::new(8);
 pub const LOGS_COUNTER_ID: MemoryId = MemoryId::new(9);
 pub const CONFIGS_MEM_ID: MemoryId = MemoryId::new(10);
+pub const LP_TREASURY_MEM_ID: MemoryId = MemoryId::new(11);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
@@ -79,6 +80,10 @@ thread_local! {
         ).unwrap()
     );
 
+    pub static LP_TREASURY: RefCell<StableCell<u64, Memory>> = RefCell::new(
+        StableCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(LP_TREASURY_MEM_ID)), 0).unwrap()
+    );
+
 }
 
 pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u64, Memory> {
@@ -103,6 +108,17 @@ pub fn get_total_archived_balance_mem() -> StableBTreeMap<(), u64, Memory> {
 pub fn get_distribution_interval_mem() -> StableBTreeMap<(), u32, Memory> {
     DISTRIBUTION_INTERVALS.with(|interval_map| {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(DISTRIBUTION_INTERVALS_MEM_ID)))
+    })
+}
+
+pub fn add_to_lp_treasury(amount: u64) -> Result<(), ExecutionError> {
+    LP_TREASURY.with(|cell| {
+        let current_balance = *cell.borrow().get();
+        let new_balance = current_balance.checked_add(amount).ok_or_else(|| ExecutionError::AdditionOverflow {
+            operation: "add_to_lp_treasury".to_string(),
+            details: "Overflow when adding to LP treasury".to_string()
+        })?;
+        cell.borrow_mut().set(new_balance).map_err(|_| ExecutionError::StateError("Failed to set LP treasury balance".to_string()))
     })
 }
 

@@ -110,6 +110,25 @@ fn init(args: Option<InitArgs>) {
         }
     }
 }
+
+/// Generates the tokenomics schedule based on the provided parameters.
+///
+/// # Philosophy: "Ideal" Schedule vs. Real-World Execution
+///
+/// This function calculates an "ideal" or "perfect" tokenomics schedule that maps out the
+/// entire minting process based on the `max_primary_supply`. It deliberately does not
+/// account for the TGE (Token Generation Event) allocation, nor the single token used
+/// to initially seed the liquidity pool.
+///
+/// In practice, the TGE is minted separately, and the live minting process (driven by
+/// burning the secondary token) begins from that point. The overall `max_primary_supply`
+/// acts as a hard cap. If the TGE plus the scheduled minting reaches this cap, the process
+/// stops.
+///
+/// This design means the on-chain schedule represents a "perfect" reference model of minting
+/// rewards over time. The hard cap is the ultimate enforcer, which may render the final,
+/// less rewarding epochs of this pre-calculated schedule unreachable if the supply is exhausted
+/// sooner.
 fn generate_tokenomics_schedule(
     initial_secondary_burn: u64,
     initial_reward_per_burn_unit: u64,
@@ -131,10 +150,18 @@ fn generate_tokenomics_schedule(
 
         let reward = (primary_per_threshold * in_slot_burn) / (initial_secondary_burn as u128);
 
+        // This block handles the "One Reward Mode", a special final phase of minting.
+        // It is triggered when the decaying reward per unit has reached its absolute minimum
+        // value (1 e8s of the primary token). At this point, the standard halving logic
+        // ceases.
         if one_reward_mode {
             // Remaining mint allowed
             let remaining_mint = max_primary_supply as u128 - total_minted;
 
+            // This calculation determines the amount of secondary token that must be burned
+            // to mint the entire remaining primary supply. The divisor `10000` here establishes
+            // a new, fixed minting ratio for this final phase. Its apparent purpose is to calculate
+            // a final burn amount to release the remaining supply at a new, fixed rate.
             let final_burn = remaining_mint / 10000;
 
             // Final cumulative burn value

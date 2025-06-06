@@ -1,23 +1,31 @@
 use candid::{Encode, Nat, Principal};
-use ic_cdk::{api::management_canister::main::{
-    create_canister, install_code, CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument,
-}, update};
+use ic_cdk::{
+    api::management_canister::main::{
+        create_canister, install_code, CanisterInstallMode, CreateCanisterArgument,
+        InstallCodeArgument,
+    },
+    update,
+};
+use ic_cdk_timers::set_timer_interval;
 use icrc_ledger_types::{
     icrc1::account::Account,
     icrc2::transfer_from::{TransferFromArgs, TransferFromError},
 };
 use num_bigint::BigUint;
-use icrc_ledger_types::icrc1::transfer::BlockIndex ;
+use icrc_ledger_types::icrc1::transfer::BlockIndex;
+use std::time::Duration;
 
 use crate::{
-    get_principal, AddPoolArgs, AddPoolReply, AddPoolResult, AddTokenArgs, AddTokenReply,
-    AddTokenResponse, AddTokenResult, ApproveArgs, ApproveResult, ArchiveOptions, FeatureFlags,
-    IcpSwapInitArgs, InitArgs, LedgerArg, MetadataValue, TokenDetail, TokenInfo, TokenRecord,
-    TokenomicsInitArgs, CHAIN_ID, E8S, ICP_CANISTER_ID, ICP_TRANSFER_FEE, INTITAL_PRIMARY_MINT,
-    KONG_BACKEND_CANISTER, TOKENS,
+    get_principal, get_self_icp_balance, AddPoolArgs, AddPoolReply, AddPoolResult, AddTokenArgs,
+    AddTokenReply, AddTokenResponse, AddTokenResult, ApproveArgs, ApproveResult, ArchiveOptions,
+    FeatureFlags, IcpSwapInitArgs, InitArgs, LedgerArg, MetadataValue, TokenDetail, TokenInfo,
+    TokenRecord, TokenomicsInitArgs, CHAIN_ID, E8S, ICP_CANISTER_ID, ICP_TRANSFER_FEE,
+    INTITAL_PRIMARY_MINT, KONG_BACKEND_CANISTER, TOKENS,
 };
 
 const CANISTER_CREATION_CYCLES: u128 = 20_000_000_000u128;
+const ICP_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
+const LBRY_SWAP_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";
 
 #[ic_cdk::update]
 async fn create_token(
@@ -51,6 +59,13 @@ async fn create_token(
 
     // max supply from user
     //
+    // Note on Initial Liquidity Pool Token:
+    // This call intentionally uses the hardcoded `INTITAL_PRIMARY_MINT` constant.
+    // This constant represents exactly 1 token plus the standard transfer fee.
+    // This single token is used to seed the initial liquidity pool on the DEX.
+    // Because this amount is negligible and its purpose is purely functional (to create the pool),
+    // it is considered separate from the main tokenomic calculations, which begin with the TGE
+    // and scheduled minting.
     let primary_token_id = match create_icrc1_canister(
         primary_token_symbol.clone(),
         primary_token_name.clone(),
@@ -429,6 +444,7 @@ pub async fn approve_tokens_to_spender(
         ApproveResult::Err(e) => Err(format!("Approval failed: {:?}", e)),
     }
 }
+
 #[update]
 async fn deposit_icp_in_canister(
     amount: u64,
@@ -466,10 +482,6 @@ async fn deposit_icp_in_canister(
 
     result // Return the inner Result<BlockIndex, TransferFromError>
 }
-
-
-
-
 
 async fn deposit_ksicp_in_canister(
     amount: u64,
@@ -518,8 +530,6 @@ async fn deposit_ksicp_in_canister(
     result // Return the inner Result<BlockIndex, TransferFromError>
 }
 
-
-
 pub async fn publish_eligible_tokens_on_kongswap() ->Result<String,String>{
     let time = ic_cdk::api::time(); // current time in nanoseconds
     let twenty_four_hours_in_nanos: u64 =1*60*1_000_000_000;// 24*60*60*1_000_000_000;
@@ -565,4 +575,78 @@ pub async fn publish_eligible_tokens_on_kongswap() ->Result<String,String>{
         }
     }
     Ok("Published eligible tokens on KongSwap successfully.".to_string())
+}
+
+async fn _process_fee_treasury() -> Result<String, String> {
+    let canister_principal = ic_cdk::api::id();
+    let balance = match get_self_icp_balance(canister_principal).await {
+        Ok(b) => b,
+        Err(e) => {
+            let err_msg = format!("Failed to get treasury balance: {}", e);
+            ic_cdk::println!("{}", err_msg);
+            return Err(err_msg);
+        }
+    };
+
+    // Minimum 0.1 ICP to process
+    if balance < 10_000_000 {
+        let log_msg = "Not enough fees to process. Skipping run.".to_string();
+        ic_cdk::println!("{}", log_msg);
+        return Ok(log_msg);
+    }
+
+    let lbry_swap_principal = Principal::from_text(LBRY_SWAP_CANISTER_ID).unwrap();
+
+    // 1. Approve the LBRY swap canister to spend our ICP
+    match approve_tokens_to_spender(
+        Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
+        lbry_swap_principal,
+        balance.into(),
+    )
+    .await
+    {
+        Ok(_) => ic_cdk::println!("Successfully approved LBRY swap canister to spend ICP."),
+        Err(e) => return Err(format!("Failed to approve ICP for LBRY swap: {}", e)),
+    }
+
+    // 2. Call swap on the LBRY swap canister
+    let swap_args = (balance, None);
+    let result: Result<(Result<String, String>,), _> =
+        ic_cdk::call(lbry_swap_principal, "swap", swap_args).await;
+
+    match result {
+        Ok((Ok(success_msg),)) => {
+            let success_log = format!(
+                "Successfully swapped {} e8s of ICP for LBRY and burned it: {}",
+                balance, success_msg
+            );
+            ic_cdk::println!("{}", success_log);
+            Ok(success_log)
+        }
+        Ok((Err(err_msg),)) => {
+            let error_log = format!(
+                "Swap failed after approval. ICP remains in treasury. Error: {}",
+                err_msg
+            );
+            ic_cdk::println!("{}", error_log);
+            Err(error_log)
+        }
+        Err((code, msg)) => {
+            let error_log = format!(
+                "Failed to call swap on LBRY canister: (code: {:?}, message: '{}'). ICP remains in treasury.",
+                code, msg
+            );
+            ic_cdk::println!("{}", error_log);
+            Err(error_log)
+        }
+    }
+}
+
+#[ic_cdk::init]
+fn init() {
+    // Schedule the treasury processing to run every 24 hours.
+    let interval = Duration::from_secs(24 * 60 * 60);
+    set_timer_interval(interval, || {
+        ic_cdk::spawn(_process_fee_treasury());
+    });
 }
