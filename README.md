@@ -43,6 +43,8 @@ Compile and deploy your canisters locally. This process may take some time.
 If successful, you should have a ksICP instance of Kongswap with the canister ID:
 nppha-riaaa-aaaal-ajf2q-cai.
 
+Make sure to replace nppha-riaaa-aaaal-ajf2q-cai with nppha-riaaa-aaaal-ajf2q-cai for local deployment.
+
 
 switch id
 

@@ -9,6 +9,7 @@ use crate::{
 };
 use crate::{get_stake, storage::*};
 use crate::{get_user_archive_balance, utils::*};
+use crate::{constants::*, dex_integration::*};
 use candid::{CandidType, Nat, Principal};
 use ic_cdk::{self, caller, update};
 use ic_ledger_types::{
@@ -411,7 +412,7 @@ pub async fn burn_secondary(
                     dest: caller.to_string(),
                     token: "ICP".to_string(),
                     amount: amount_icp_e8s,
-                    details: e.to_string(),
+                    details: e,
                     reason: DEFAULT_TRANSFER_FAILED_ERROR.to_string(),
                 },
             ));
@@ -570,7 +571,7 @@ async fn send_icp(
     from_subaccount: Option<[u8; 32]>,
 ) -> Result<BlockIndex, String> {
     let transfer_args = TransferArg {
-        from_subaccount: from_subaccount.map(|s| s.to_vec()),
+        from_subaccount,
         to: Account {
             owner: destination,
             subaccount: None,
@@ -871,6 +872,126 @@ async fn un_stake_all_primary(from_subaccount: Option<[u8; 32]>) -> Result<Strin
         &format!("Successfully unstaked!"),
     );
     Ok("Successfully unstaked!".to_string())
+}
+
+#[update(guard = "not_anon")]
+pub async fn provide_liquidity_with_swap(
+    primary_token_amount_provided: u64,
+    max_icp_to_receive_e8s: u64,
+) -> Result<String, ExecutionError> {
+    let caller = ic_cdk::caller();
+    let canister_id = ic_cdk::api::id();
+    let primary_token_id = get_primary_canister_id();
+    let primary_token_symbol = get_primary_token_symbol()
+        .await
+        .map_err(|e| ExecutionError::StateError(format!("Failed to get primary token symbol: {}", e)))?;
+
+    // i. Get Treasury Balance
+    let treasury_balance = LP_TREASURY.with(|cell| *cell.borrow().get());
+
+    // ii. Apply Cap
+    let icp_to_deploy = treasury_balance.min(LIQUIDITY_DEPLOYMENT_CAP_E8S);
+
+    if icp_to_deploy == 0 {
+        return Err(ExecutionError::StateError("LP Treasury is empty.".to_string()));
+    }
+
+    // iii. Check User Approval
+    let allowance = icrc2_allowance(primary_token_id, caller, canister_id)
+        .await
+        .map_err(|e| ExecutionError::StateError(format!("Failed to get allowance: {}", e)))?;
+    
+    if allowance.allowance < Nat::from(primary_token_amount_provided) {
+        return Err(ExecutionError::InsufficientAllowance {
+            required: Nat::from(primary_token_amount_provided),
+            available: allowance.allowance,
+        });
+    }
+
+    // iv. Get Quote
+    let quote = get_kong_swap_quote(
+        primary_token_symbol.clone(),
+        Nat::from(primary_token_amount_provided),
+        "ICP".to_string(),
+    )
+    .await
+    .map_err(|e| ExecutionError::StateError(format!("Failed to get quote: {}", e)))?;
+
+    // v. Calculate Swap
+    let icp_for_user_swap_nat = quote.receive_amount;
+    let icp_for_user_swap: u64 = icp_for_user_swap_nat
+        .clone()
+        .0
+        .try_into()
+        .map_err(|_| ExecutionError::StateError("Could not convert user ICP amount to u64".to_string()))?;
+
+    if icp_for_user_swap > max_icp_to_receive_e8s {
+        return Err(ExecutionError::StateError(
+            "Market price is worse than max_icp_to_receive_e8s".to_string(),
+        ));
+    }
+    
+    let primary_tokens_for_swap_nat = icp_for_user_swap_nat.clone() * Nat::from(1_000_000_000_000u64) / Nat::from((quote.price * 1_000_000_000_000.0) as u64);
+    let primary_tokens_for_swap: u64 = primary_tokens_for_swap_nat
+        .clone()
+        .0
+        .try_into()
+        .map_err(|_| ExecutionError::StateError("Could not convert primary token swap amount to u64".to_string()))?;
+
+    // vi. Calculate LP Amounts
+    let primary_tokens_for_lp = primary_token_amount_provided
+        .checked_sub(primary_tokens_for_swap)
+        .ok_or_else(|| ExecutionError::StateError("primary_token_amount_provided underflow".to_string()))?;
+    
+    let icp_for_lp = icp_to_deploy;
+
+    // vii. Calculate and Send LBRY Fee
+    let lbry_fee = icp_for_lp * LIQUIDITY_FEE_PERCENT / 100;
+    
+    let lbry_fun_principal = Principal::from_text(LBRY_FUN_CANISTER_ID).unwrap();
+    send_icp(lbry_fun_principal, lbry_fee, None)
+        .await
+        .map_err(|e| ExecutionError::TransferFailed {
+            source: "self".to_string(),
+            dest: "lbry_fun".to_string(),
+            token: "ICP".to_string(),
+            amount: lbry_fee,
+            details: e,
+            reason: "Failed to send LBRY fee".to_string(),
+        })?;
+
+    // viii. Add Liquidity to DEX
+    let icp_for_lp_after_fee = icp_for_lp
+        .checked_sub(lbry_fee)
+        .ok_or_else(|| ExecutionError::StateError("icp_for_lp underflow".to_string()))?;
+
+    add_liquidity_to_kong(
+        primary_token_symbol,
+        Nat::from(primary_tokens_for_lp),
+        Nat::from(icp_for_lp_after_fee),
+    )
+    .await
+    .map_err(|e| ExecutionError::StateError(format!("Failed to add liquidity: {}", e)))?;
+
+    // ix. Update Treasury & Pay User
+    withdraw_from_lp_treasury(icp_for_lp)?;
+    
+    send_icp(caller, icp_for_user_swap, None)
+        .await
+        .map_err(|e| ExecutionError::TransferFailed {
+            source: "self".to_string(),
+            dest: caller.to_string(),
+            token: "ICP".to_string(),
+            amount: icp_for_user_swap,
+            details: e,
+            reason: "Failed to pay user".to_string(),
+        })?;
+
+    // x. Return a detailed success message.
+    Ok(format!(
+        "Successfully provided {} primary tokens and {} e8s ICP for liquidity. You received {} e8s ICP.",
+        primary_tokens_for_lp, icp_for_lp_after_fee, icp_for_user_swap
+    ))
 }
 
 pub async fn distribute_reward() -> Result<String, ExecutionError> {

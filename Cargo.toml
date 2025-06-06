@@ -1,9 +1,6 @@
 [workspace]
 members = [
-    "src/registry",
-    "src/logs",
     "src/xrc",
-    "src/logs",
     "src/lbry_fun",
     "src/icp_swap",
     "src/tokenomics",

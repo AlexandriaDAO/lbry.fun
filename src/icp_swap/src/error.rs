@@ -76,6 +76,10 @@ pub enum ExecutionError {
         available: u64,
         details: String,
     },
+    InsufficientAllowance {
+        required: candid::Nat,
+        available: candid::Nat,
+    },
     InsufficientBalanceRewardDistribution {
         available: u128,
         details: String,
@@ -170,6 +174,14 @@ impl fmt::Display for ExecutionError {
                 write!(
                     f,
                     "Insufficient canister balance. Required: {}, available: {}",
+                    required,
+                    available
+                )
+            }
+            ExecutionError::InsufficientAllowance { required, available } => {
+                write!(
+                    f,
+                    "Insufficient allowance. Required: {}, available: {}",
                     required,
                     available
                 )

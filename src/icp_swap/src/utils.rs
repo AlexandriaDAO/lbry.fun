@@ -11,7 +11,7 @@ use serde::Deserialize;
 
 pub const STAKING_REWARD_PERCENTAGE: u64 = 100; // 1%
 pub const XRC_CANISTER_ID: &str = "uf6dk-hyaaa-aaaaq-qaaaq-cai";
-pub const ICP_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
+pub const ICP_CANISTER_ID: &str = "nppha-riaaa-aaaal-ajf2q-cai";
 
 pub const ICP_TRANSFER_FEE: u64 = 10_000;
 pub const MAX_DAYS: u32 = 30;
@@ -421,4 +421,137 @@ pub enum ExchangeRateError {
     ForexQuoteAssetNotFound,
     StablecoinRateNotFound,
     Pending,
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Account {
+    pub owner: Principal,
+    pub subaccount: Option<[u8; 32]>,
+}
+
+#[derive(CandidType, Deserialize, Debug)]
+pub struct ApproveArgs {
+    pub from_subaccount: Option<[u8; 32]>,
+    pub spender: Account,
+    pub amount: Nat,
+    pub expected_allowance: Option<Nat>,
+    pub expires_at: Option<u64>,
+    pub fee: Option<Nat>,
+    pub memo: Option<Vec<u8>>,
+    pub created_at_time: Option<u64>,
+}
+
+#[derive(CandidType, Deserialize, Debug)]
+pub enum ApproveError {
+    BadFee { expected_fee: Nat },
+    BadMemo,
+    Duplicate,
+    TemporarilyUnavailable,
+    InsufficientFunds { balance: Nat },
+    AllowanceChanged { current_allowance: Nat },
+    Expired { ledger_time: u64 },
+    TooOld,
+    CreatedInFuture { ledger_time: u64 },
+    GenericError{ error_code: Nat, message: String},
+    Throttled,
+    Unauthorized{ tokens: Nat },
+}
+
+pub(crate) fn get_primary_canister_id() -> Principal {
+    get_config().primary_token_id
+}
+
+pub(crate) async fn icrc2_approve(
+    token_canister_id: Principal,
+    spender: Principal,
+    amount: Nat,
+) -> Result<Nat, String> {
+    let args = ApproveArgs {
+        from_subaccount: None,
+        spender: Account {
+            owner: spender,
+            subaccount: None,
+        },
+        amount,
+        expected_allowance: None,
+        expires_at: None,
+        fee: None,
+        memo: None,
+        created_at_time: None,
+    };
+
+    let result: Result<(Result<Nat, ApproveError>,), (RejectionCode, String)> =
+        ic_cdk::call(token_canister_id, "icrc2_approve", (args,)).await;
+
+    match result {
+        Ok((Ok(value),)) => Ok(value),
+        Ok((Err(err),)) => Err(format!("ICRC-2 approve failed: {:?}", err)),
+        Err((code, msg)) => Err(format!(
+            "ICRC-2 approve call failed: rejection code {:?}, message: {}",
+            code, msg
+        )),
+    }
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct AllowanceArgs {
+    pub account: Account,
+    pub spender: Account,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct Allowance {
+    pub allowance: Nat,
+    pub expires_at: Option<u64>,
+}
+
+#[derive(CandidType, Deserialize, Debug)]
+pub enum AllowanceError {
+    BadSpender,
+    BadSubaccount,
+    TemporarilyUnavailable,
+    GenericError {
+        error_code: Nat,
+        message: String,
+    },
+    Throttled,
+}
+
+pub(crate) async fn icrc2_allowance(
+    token_canister_id: Principal,
+    owner: Principal,
+    spender: Principal,
+) -> Result<Allowance, String> {
+    let args = AllowanceArgs {
+        account: Account {
+            owner,
+            subaccount: None,
+        },
+        spender: Account {
+            owner: spender,
+            subaccount: None,
+        },
+    };
+
+    let result: Result<(Result<Allowance, AllowanceError>,), (RejectionCode, String)> =
+        ic_cdk::call(token_canister_id, "icrc2_allowance", (args,)).await;
+
+    match result {
+        Ok((Ok(allowance),)) => Ok(allowance),
+        Ok((Err(err),)) => Err(format!("ICRC-2 allowance failed: {:?}", err)),
+        Err((code, msg)) => Err(format!(
+            "ICRC-2 allowance call failed: rejection code {:?}, message: {}",
+            code, msg
+        )),
+    }
+}
+
+pub(crate) async fn get_primary_token_symbol() -> Result<String, String> {
+    let primary_token_id = get_config().primary_token_id;
+    let result: Result<(String,), (RejectionCode, String)> =
+        ic_cdk::call(primary_token_id, "icrc1_symbol", ()).await;
+
+    result
+        .map(|(symbol,)| symbol)
+        .map_err(|(code, msg)| format!("Failed to get symbol: {} {:?}", msg, code))
 }

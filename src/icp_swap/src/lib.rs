@@ -1,22 +1,28 @@
 use candid::Principal;
 use ic_cdk;
 #[warn(non_snake_case)]
-mod storage;
+pub mod storage;
 pub use storage::{*};
 
-mod update;
+pub mod update;
 pub use update::{*};
 
-mod queries;
+pub mod queries;
 pub use queries::{*};
 
-mod guard;
+pub mod guard;
 pub use guard::{*};
 
-mod script;
+pub mod script;
 pub use script::{*};
 pub mod utils;
 
-mod error;
+pub mod error;
 pub use error::{*};
+
+pub mod constants;
+pub mod dex_integration;
+
+use ic_stable_structures::memory_manager::{ MemoryId, MemoryManager, VirtualMemory };
+
 ic_cdk::export_candid!();

@@ -118,7 +118,20 @@ pub fn add_to_lp_treasury(amount: u64) -> Result<(), ExecutionError> {
             operation: "add_to_lp_treasury".to_string(),
             details: "Overflow when adding to LP treasury".to_string()
         })?;
-        cell.borrow_mut().set(new_balance).map_err(|_| ExecutionError::StateError("Failed to set LP treasury balance".to_string()))
+        cell.borrow_mut().set(new_balance).map_err(|_| ExecutionError::StateError("Failed to set LP treasury balance".to_string()))?;
+        Ok(())
+    })
+}
+
+pub fn withdraw_from_lp_treasury(amount: u64) -> Result<(), ExecutionError> {
+    LP_TREASURY.with(|cell| {
+        let current_balance = *cell.borrow().get();
+        let new_balance = current_balance.checked_sub(amount).ok_or_else(|| ExecutionError::Underflow {
+            operation: "withdraw_from_lp_treasury".to_string(),
+            details: "Underflow when subtracting from LP treasury".to_string()
+        })?;
+        cell.borrow_mut().set(new_balance).map_err(|_| ExecutionError::StateError("Failed to set LP treasury balance".to_string()))?;
+        Ok(())
     })
 }
 

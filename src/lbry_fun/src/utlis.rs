@@ -1,5 +1,6 @@
 use candid::{CandidType, Nat, Principal};
 use icrc_ledger_types::icrc1::account::Account;
+use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 pub const KONG_BACKEND_CANISTER: &str = "2ipq2-uqaaa-aaaar-qailq-cai";
 pub const ICP_CANISTER_ID: &str = "nppha-riaaa-aaaal-ajf2q-cai";
@@ -153,6 +154,7 @@ pub struct TokenomicsInitArgs {
     pub initial_secondary_burn: u64,
     pub max_primary_phase: u64,
     pub halving_step: u64,
+    pub initial_reward_per_burn_unit: u64,
 }
 
 #[derive(CandidType)]
@@ -237,8 +239,9 @@ pub async fn get_self_icp_balance(principal: Principal) -> Result<u64, String> {
 
     match result {
         Ok((balance,)) => balance
-            .try_into()
-            .map_err(|_| "Balance exceeds u64 max".to_string()),
+            .0
+            .to_u64()
+            .ok_or("Balance exceeds u64 max".to_string()),
         Err(e) => Err(format!("Failed to get balance: {:?}", e)),
     }
 }

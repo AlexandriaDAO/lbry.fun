@@ -61,7 +61,7 @@ export MINTER_ACCOUNT_ID=$(dfx ledger account-id)
 
 #Kongswap already deployed its ksICP will be using it, so need to deploy our own icp
 
-dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argument "  
+dfx deploy --specified-id nppha-riaaa-aaaal-ajf2q-cai icp_ledger_canister --argument "  
   (variant {  
     Init = record {  
       minting_account = \"$MINTER_ACCOUNT_ID\";  

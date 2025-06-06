@@ -71,7 +71,7 @@ type PublicTokenOverview =
  };
 type PublicPoolOverView = 
  record {
-   feeEpoch: nat;
+   feeTier: nat;
    feesUSD: float64;
    id: nat;
    liquidity: nat;

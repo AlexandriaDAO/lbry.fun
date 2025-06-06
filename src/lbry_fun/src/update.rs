@@ -24,7 +24,7 @@ use crate::{
 };
 
 const CANISTER_CREATION_CYCLES: u128 = 20_000_000_000u128;
-const ICP_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
+const ICP_LEDGER_CANISTER_ID: &str = "nppha-riaaa-aaaal-ajf2q-cai";
 const LBRY_SWAP_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";
 
 #[ic_cdk::update]
@@ -145,28 +145,6 @@ async fn create_token(
     )
     .await?;
     ic_cdk::println!("Tokens approved!");
-    // Logic for scheduling within a 24-hour window:
-    //
-    // We have two options:
-    // 1. Run the scheduler once every 24 hours.
-    // 2. Run the scheduler every hour.
-    //
-    // Problem with option 1:
-    // Let's say the scheduler runs at 12:00 AM.
-    // A token is registered at 1:00 AM (1 hour later).
-    // The next scheduler run is 24 hours after the first (i.e., the next 12:00 AM).
-    // At that point, only 23 hours have passed since the token was registered.
-    // So the scheduler skips it, thinking it's not ready yet.
-    //
-    // As a result, the token gets picked up in the next run —
-    // which is **47 hours** after registration instead of 24.
-    // That's a problem if we want token pools to be created **after exactly 24 hours**.
-    //
-
-    // create_pool_on_kong_swap(get_principal(&primary_token_id))
-    //     .await
-    //     .map_err(|e| format!("Failed to create pool on Kong swap: {}", e))?;
-    // ic_cdk::println!("Pool created!");
 
     TOKENS.with(|tokens| {
         let mut tokens = tokens.borrow_mut();
@@ -186,7 +164,6 @@ async fn create_token(
             initial_secondary_burn,
             primary_max_phase_mint,
             halving_step,
-            initial_reward_per_burn_unit,
             caller: user_principal,
             created_time: ic_cdk::api::time(),
             liquidity_provided_at: 0,
@@ -308,7 +285,7 @@ async fn install_tokenomics_wasm_on_existing_canister(
         swap_canister_id,
         frontend_canister_id,
         max_primary_supply,
-        tge_allocation: initial_primary_mint,
+        initial_primary_mint,
         initial_secondary_burn,
         max_primary_phase,
         halving_step,
@@ -532,7 +509,7 @@ async fn deposit_ksicp_in_canister(
 
 pub async fn publish_eligible_tokens_on_kongswap() ->Result<String,String>{
     let time = ic_cdk::api::time(); // current time in nanoseconds
-    let twenty_four_hours_in_nanos: u64 =1*60*1_000_000_000;// 24*60*60*1_000_000_000;
+    let twenty_four_hours_in_nanos: u64 = 24 * 60 * 60 * 1_000_000_000;
     
     let result = TOKENS.with(|tokens| {
         let mut tokens_map = tokens.borrow_mut();
@@ -610,7 +587,7 @@ async fn _process_fee_treasury() -> Result<String, String> {
     }
 
     // 2. Call swap on the LBRY swap canister
-    let swap_args = (balance, None);
+    let swap_args = (balance, None::<Vec<u8>>);
     let result: Result<(Result<String, String>,), _> =
         ic_cdk::call(lbry_swap_principal, "swap", swap_args).await;
 
@@ -644,9 +621,18 @@ async fn _process_fee_treasury() -> Result<String, String> {
 
 #[ic_cdk::init]
 fn init() {
-    // Schedule the treasury processing to run every 24 hours.
-    let interval = Duration::from_secs(24 * 60 * 60);
-    set_timer_interval(interval, || {
-        ic_cdk::spawn(_process_fee_treasury());
+    // Schedule the treasury processing to run every hour.
+    let hourly = Duration::from_secs(60 * 60);
+    set_timer_interval(hourly, || {
+        ic_cdk::spawn(async {
+            let _ = _process_fee_treasury().await;
+        });
+    });
+
+    // Schedule publishing eligible tokens to run every hour.
+    set_timer_interval(hourly, || {
+        ic_cdk::spawn(async {
+            let _ = publish_eligible_tokens_on_kongswap().await;
+        });
     });
 }
