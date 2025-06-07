@@ -49,6 +49,7 @@ thread_local! {
                 max_primary_supply:0,
                  initial_primary_mint: 0,
                  initial_secondary_burn: 0,max_primary_phase:0,
+                 halving_step: 0
             }
         ).unwrap()
     );
@@ -111,7 +112,8 @@ pub struct Configs {
     pub max_primary_supply: u64,
     pub initial_primary_mint: u64,
     pub initial_secondary_burn: u64,
-    pub max_primary_phase:u64
+    pub max_primary_phase:u64,
+    pub halving_step: u64
 }
 
 impl Storable for TokenLogs {

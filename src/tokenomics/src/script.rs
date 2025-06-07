@@ -11,7 +11,7 @@ pub struct InitArgs {
     pub swap_canister_id: Option<Principal>,
     pub frontend_canister_id:Option<Principal>,
     pub max_primary_supply: u64,
-    pub tge_allocation: u64,
+    pub initial_primary_mint: u64,
     pub initial_secondary_burn: u64,
     pub max_primary_phase:u64,
     pub halving_step: u64,
@@ -28,11 +28,10 @@ fn initialize_globals(args: InitArgs) {
                 swap_canister_id: args.swap_canister_id.unwrap_or(Principal::anonymous()),
                 frontend_canister_id:args.frontend_canister_id.unwrap_or(Principal::anonymous()),
                 max_primary_supply: args.max_primary_supply,
-                tge_allocation: args.tge_allocation,
+                initial_primary_mint: args.initial_primary_mint,
                 initial_secondary_burn: args.initial_secondary_burn,
                 max_primary_phase:args.max_primary_phase,
                 halving_step: args.halving_step,
-                initial_reward_per_burn_unit: args.initial_reward_per_burn_unit,
             })
             .unwrap();
     });
@@ -75,7 +74,7 @@ fn init(args: Option<InitArgs>) {
                 ic_cdk::trap("Initialization failed: 'max_primary_supply' must be greater than 0.");
             }
 
-            if init_args.tge_allocation == 0 {
+            if init_args.initial_primary_mint == 0 {
                 ic_cdk::trap(
                     "Initialization failed: 'tge_allocation' must be greater than 0.",
                 );
@@ -186,7 +185,7 @@ fn generate_tokenomics_schedule(
         current_burn = current_burn * 2;
 
         if primary_per_threshold > 1 {
-            primary_per_threshold = std::cmp::max(1, (primary_per_threshold * halving_step) / 100);
+            primary_per_threshold = std::cmp::max(1, (primary_per_threshold * halving_step as u128) / 100);
         }
 
         if primary_per_threshold == 1 {

@@ -119,6 +119,7 @@ pub fn get_all_apy_values() -> Vec<(u32, u128)> {
 pub fn get_scaling_factor() -> u128 {
     return SCALING_FACTOR;
 }
+
 #[derive(CandidType, Deserialize)]
 pub struct PaginatedLogs {
     logs: Vec<Log>,

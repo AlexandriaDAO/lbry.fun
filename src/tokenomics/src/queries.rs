@@ -96,20 +96,20 @@ pub fn get_current_threshold_index() -> u32 {
 }
 #[query]
 pub fn get_current_primary_rate() -> u64 {
-    let primary_mint_per_threshold=get_tokenomics_schdeule().primary_mint_per_threshold;
+    let primary_mint_per_threshold=get_tokenomics_schedule().primary_mint_per_threshold;
     let current_threshold = get_current_threshold_index();
     primary_mint_per_threshold[current_threshold as usize]
 }
 #[query]
 pub fn get_current_secondary_threshold() -> u64 {
-    let secondary_burn_thresholds=get_tokenomics_schdeule().secondary_burn_thresholds;
+    let secondary_burn_thresholds=get_tokenomics_schedule().secondary_burn_thresholds;
     let current_threshold = get_current_threshold_index();
     secondary_burn_thresholds[current_threshold as usize]
 }
 
 #[query]
 pub fn get_max_stats() -> (u64, u64) {
-    let secondary_burn_thresholds=get_tokenomics_schdeule().secondary_burn_thresholds;
+    let secondary_burn_thresholds=get_tokenomics_schedule().secondary_burn_thresholds;
     let max_threshold = secondary_burn_thresholds[secondary_burn_thresholds.len() - 1];
     let total_burned = get_total_secondary_burn();
     (max_threshold, total_burned)
@@ -176,7 +176,7 @@ fn get_token_logs(page: Option<u64>, page_size: Option<u64>) -> PaginatedTokenLo
     })
 }
 #[ic_cdk::query]
-fn get_tokenomics_schedule() -> TokenomicsSchedule {
+pub fn get_tokenomics_schedule() -> TokenomicsSchedule {
     TOKENOMICS.with(|cell| {
         let binding = cell.borrow();
         let schedule = binding.get();
@@ -187,12 +187,6 @@ fn get_tokenomics_schedule() -> TokenomicsSchedule {
 #[query]
 pub fn get_config() -> Configs {
     CONFIGS.with(|c| {
-        c.borrow().get().clone()
-    })
-}
-#[query]
-pub fn get_tokenomics_schdeule() -> TokenomicsSchedule {
-    TOKENOMICS.with(|c| {
         c.borrow().get().clone()
     })
 }

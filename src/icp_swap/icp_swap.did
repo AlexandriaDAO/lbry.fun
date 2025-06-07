@@ -11,6 +11,7 @@ type ExecutionError = variant {
   DivisionFailed : record { operation : text; details : text };
   MultiplicationOverflow : record { operation : text; details : text };
   AdditionOverflow : record { operation : text; details : text };
+  InsufficientAllowance : record { available : nat; required : nat };
   RewardDistributionError : record { reason : text };
   RateLookupFailed : record { details : text };
   InsufficientBalance : record {
@@ -114,6 +115,7 @@ service : (opt InitArgs) -> {
   get_total_archived_balance : () -> (nat64) query;
   get_total_unclaimed_icp_reward : () -> (nat64) query;
   get_user_archive_balance : (principal) -> (opt ArchiveBalance) query;
+  liquidity_swap : (nat64, nat64) -> (Result);
   redeem : (opt blob) -> (Result);
   stake_primary : (nat64, opt blob) -> (Result);
   swap : (nat64, opt blob) -> (Result);

@@ -26,6 +26,8 @@ use icrc_ledger_types::icrc1::transfer::{BlockIndex, TransferArg, TransferError}
 use icrc_ledger_types::icrc2::transfer_from::{TransferFromArgs, TransferFromError};
 use num_bigint::BigUint;
 use serde::Deserialize;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 const LBRY_FUN_CANISTER_ID: &str = "j362g-ziaaa-aaaap-qkt7q-cai";
 
@@ -60,11 +62,6 @@ pub struct Asset {
     symbol: String,
 }
 
-#[derive(CandidType, Deserialize, Debug)]
-pub enum XRCResponse {
-    Ok(ExchangeRateResponse),
-    Err(ExchangeRateError),
-}
 #[derive(CandidType, Deserialize)]
 pub struct GetExchangeRateRequest {
     base_asset: Asset,
@@ -874,124 +871,106 @@ async fn un_stake_all_primary(from_subaccount: Option<[u8; 32]>) -> Result<Strin
     Ok("Successfully unstaked!".to_string())
 }
 
-#[update(guard = "not_anon")]
-pub async fn provide_liquidity_with_swap(
-    primary_token_amount_provided: u64,
-    max_icp_to_receive_e8s: u64,
-) -> Result<String, ExecutionError> {
-    let caller = ic_cdk::caller();
-    let canister_id = ic_cdk::api::id();
-    let primary_token_id = get_primary_canister_id();
-    let primary_token_symbol = get_primary_token_symbol()
-        .await
-        .map_err(|e| ExecutionError::StateError(format!("Failed to get primary token symbol: {}", e)))?;
-
-    // i. Get Treasury Balance
+// This is now an internal function, called by a timer.
+async fn provide_liquidity_from_treasury() {
     let treasury_balance = LP_TREASURY.with(|cell| *cell.borrow().get());
 
-    // ii. Apply Cap
-    let icp_to_deploy = treasury_balance.min(LIQUIDITY_DEPLOYMENT_CAP_E8S);
-
-    if icp_to_deploy == 0 {
-        return Err(ExecutionError::StateError("LP Treasury is empty.".to_string()));
-    }
-
-    // iii. Check User Approval
-    let allowance = icrc2_allowance(primary_token_id, caller, canister_id)
-        .await
-        .map_err(|e| ExecutionError::StateError(format!("Failed to get allowance: {}", e)))?;
-    
-    if allowance.allowance < Nat::from(primary_token_amount_provided) {
-        return Err(ExecutionError::InsufficientAllowance {
-            required: Nat::from(primary_token_amount_provided),
-            available: allowance.allowance,
-        });
-    }
-
-    // iv. Get Quote
-    let quote = get_kong_swap_quote(
-        primary_token_symbol.clone(),
-        Nat::from(primary_token_amount_provided),
-        "ICP".to_string(),
-    )
-    .await
-    .map_err(|e| ExecutionError::StateError(format!("Failed to get quote: {}", e)))?;
-
-    // v. Calculate Swap
-    let icp_for_user_swap_nat = quote.receive_amount;
-    let icp_for_user_swap: u64 = icp_for_user_swap_nat
-        .clone()
-        .0
-        .try_into()
-        .map_err(|_| ExecutionError::StateError("Could not convert user ICP amount to u64".to_string()))?;
-
-    if icp_for_user_swap > max_icp_to_receive_e8s {
-        return Err(ExecutionError::StateError(
-            "Market price is worse than max_icp_to_receive_e8s".to_string(),
-        ));
+    if treasury_balance < MIN_ICP_FOR_PROVISION_E8S {
+        return; // Not enough balance, wait for the next scheduled call.
     }
     
-    let primary_tokens_for_swap_nat = icp_for_user_swap_nat.clone() * Nat::from(1_000_000_000_000u64) / Nat::from((quote.price * 1_000_000_000_000.0) as u64);
-    let primary_tokens_for_swap: u64 = primary_tokens_for_swap_nat
-        .clone()
-        .0
-        .try_into()
-        .map_err(|_| ExecutionError::StateError("Could not convert primary token swap amount to u64".to_string()))?;
+    let result: Result<String, ExecutionError> = async {
+        let seed = get_random_seed().await;
+        let mut rng = StdRng::from_seed(seed);
+        
+        let primary_token_symbol = get_primary_token_symbol()
+            .await
+            .map_err(|e| ExecutionError::StateError(format!("Failed to get primary token symbol: {}", e)))?;
 
-    // vi. Calculate LP Amounts
-    let primary_tokens_for_lp = primary_token_amount_provided
-        .checked_sub(primary_tokens_for_swap)
-        .ok_or_else(|| ExecutionError::StateError("primary_token_amount_provided underflow".to_string()))?;
-    
-    let icp_for_lp = icp_to_deploy;
+        // 1. Randomized Execution Logic
+        let deploy_percent = rng.gen_range(40..=60);
+        let icp_to_deploy = (treasury_balance * deploy_percent) / 100;
+        let icp_for_buyback = icp_to_deploy / 2;
+        let icp_for_pairing = icp_to_deploy - icp_for_buyback;
 
-    // vii. Calculate and Send LBRY Fee
-    let lbry_fee = icp_for_lp * LIQUIDITY_FEE_PERCENT / 100;
-    
-    let lbry_fun_principal = Principal::from_text(LBRY_FUN_CANISTER_ID).unwrap();
-    send_icp(lbry_fun_principal, lbry_fee, None)
+        // 2. Execute buyback on DEX
+        let primary_tokens_bought_nat = execute_swap_on_dex(
+            "ICP".to_string(),
+            Nat::from(icp_for_buyback),
+            primary_token_symbol.clone(),
+        )
         .await
-        .map_err(|e| ExecutionError::TransferFailed {
-            source: "self".to_string(),
-            dest: "lbry_fun".to_string(),
-            token: "ICP".to_string(),
-            amount: lbry_fee,
-            details: e,
-            reason: "Failed to send LBRY fee".to_string(),
-        })?;
+        .map_err(|e| ExecutionError::StateError(format!("Failed to execute swap on DEX: {}", e)))?;
 
-    // viii. Add Liquidity to DEX
-    let icp_for_lp_after_fee = icp_for_lp
-        .checked_sub(lbry_fee)
-        .ok_or_else(|| ExecutionError::StateError("icp_for_lp underflow".to_string()))?;
+        if primary_tokens_bought_nat == 0 {
+            return Err(ExecutionError::StateError("Buyback resulted in zero primary tokens. Aborting.".to_string()));
+        }
 
-    add_liquidity_to_kong(
-        primary_token_symbol,
-        Nat::from(primary_tokens_for_lp),
-        Nat::from(icp_for_lp_after_fee),
-    )
-    .await
-    .map_err(|e| ExecutionError::StateError(format!("Failed to add liquidity: {}", e)))?;
-
-    // ix. Update Treasury & Pay User
-    withdraw_from_lp_treasury(icp_for_lp)?;
-    
-    send_icp(caller, icp_for_user_swap, None)
+        // 3. Add liquidity to DEX with the assets we have.
+        // The DEX will handle the ratio, leaving any "dust" unspent.
+        let lp_result = add_liquidity_to_kong(
+            primary_token_symbol,
+            primary_tokens_bought_nat.clone(),
+            Nat::from(icp_for_pairing),
+        )
         .await
-        .map_err(|e| ExecutionError::TransferFailed {
-            source: "self".to_string(),
-            dest: caller.to_string(),
-            token: "ICP".to_string(),
-            amount: icp_for_user_swap,
-            details: e,
-            reason: "Failed to pay user".to_string(),
-        })?;
+        .map_err(|e| ExecutionError::StateError(format!("Failed to add liquidity: {}", e)))?;
 
-    // x. Return a detailed success message.
-    Ok(format!(
-        "Successfully provided {} primary tokens and {} e8s ICP for liquidity. You received {} e8s ICP.",
-        primary_tokens_for_lp, icp_for_lp_after_fee, icp_for_user_swap
-    ))
+        // 4. Update treasury balance with the actual amounts used.
+        let icp_provided_for_lp: u64 = lp_result.amount_1.0.try_into()
+            .map_err(|_| ExecutionError::StateError("Could not convert LP amount to u64".to_string()))?;
+
+        let final_icp_spent = icp_for_buyback + icp_provided_for_lp;
+        withdraw_from_lp_treasury(final_icp_spent)?;
+        
+        let primary_tokens_bought: u64 = primary_tokens_bought_nat.0.try_into()
+            .map_err(|_| ExecutionError::StateError("Could not convert bought tokens amount to u64".to_string()))?;
+
+        Ok(format!(
+            "Successfully deployed {} e8s ICP ({}% of treasury). Bought {} primary tokens, added {} to LP.",
+            final_icp_spent, deploy_percent, primary_tokens_bought, lp_result.add_lp_token_amount
+        ))
+    }.await;
+    
+    // Log the outcome, regardless of success or failure.
+    let principal = get_principal(LBRY_FUN_CANISTER_ID);
+    match result {
+        Ok(msg) => register_info_log(principal, "provide_liquidity_from_treasury", &msg),
+        Err(e) => register_error_log(principal, "provide_liquidity_from_treasury", e),
+    }
+}
+
+async fn get_random_seed() -> [u8; 32] {
+    #[derive(CandidType)]
+    struct In {
+        num_bytes: u32,
+    }
+    let (res,): (Vec<u8>,) = ic_cdk::call(Principal::management_canister(), "raw_rand", ())
+        .await
+        .expect("Failed to get random bytes from management canister");
+    res.try_into().expect("Management canister returned a vector of unexpected length")
+}
+
+#[ic_cdk::init]
+fn init() {
+    ic_cdk_timers::set_timer(std::time::Duration::from_secs(10), schedule_liquidity_provision);
+}
+
+#[ic_cdk::post_upgrade]
+fn post_upgrade() {
+    ic_cdk_timers::set_timer(std::time::Duration::from_secs(10), schedule_liquidity_provision);
+}
+
+fn schedule_liquidity_provision() {
+    ic_cdk::spawn(async {
+        let seed = get_random_seed().await;
+        let mut rng = StdRng::from_seed(seed);
+        let next_interval_ns = rng.gen_range(MIN_PROVISION_INTERVAL_NS..=MAX_PROVISION_INTERVAL_NS);
+        
+        provide_liquidity_from_treasury().await;
+        
+        ic_cdk_timers::set_timer(std::time::Duration::from_nanos(next_interval_ns), schedule_liquidity_provision);
+    });
 }
 
 pub async fn distribute_reward() -> Result<String, ExecutionError> {

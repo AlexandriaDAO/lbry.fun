@@ -1,30 +1,7 @@
 # Tokenomics
 
-- Maybe make a 'Step' parameter instead of initial supply.
 
-- Should definitely explain how the tokenomics works in the UI.
-
-- We could add a line graph of amount of money vs. percent of supply minted.
-
-
-- Initial supply should be based on something.
-  - A percent of total supply (fixed to estimate initial mcap)
-
-
-
-
-
-
-Max Supply: 
-- Doesn't matter a whole lot
-
-Initial mint: 
-- Valuation = InitSupply (* 1ICP) * total_supply
-  - So this decision should be proportional to what people want the initial valuation to be (in ICP, assuming it's pooled with 1 ICP)
-
-First Epoch Supply Growth:
-- Burn unit that you need to get a mint unit.
-
+- Should definitely explain how the tokenomics works in the UI
 
 
 # Scores
@@ -53,8 +30,7 @@ We just added:
       - Explain what's happening behind the scenes.
 
 
-
-
+  liquidity_swap : (nat64, nat64) -> (Result);
 
 
 

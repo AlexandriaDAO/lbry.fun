@@ -92,24 +92,16 @@ pub struct ICTransferReply {
 }
 
 #[derive(CandidType, Debug, Clone, Serialize, Deserialize)]
-pub struct AddLiquidityReply {
-    pub tx_id: u64,
-    pub symbol: String,
+pub struct SwapReply {
     pub request_id: u64,
     pub status: String,
-    pub chain_0: String,
-    pub symbol_0: String,
-    pub amount_0: Nat,
-    pub chain_1: String,
-    pub symbol_1: String,
-    pub amount_1: Nat,
-    pub add_lp_token_amount: Nat,
-    pub transfer_ids: Vec<TransferIdReply>,
-    pub claim_ids: Vec<u64>,
-    pub ts: u64,
+    pub pay_amount: Nat,
+    pub pay_symbol: String,
+    pub receive_amount: Nat,
+    pub receive_symbol: String,
+    pub price: f64,
+    pub slippage: f64,
 }
-
-// Public async functions
 
 pub async fn get_kong_swap_quote(pay_symbol: String, pay_amount: Nat, receive_symbol: String) -> Result<SwapAmountsReply, String> {
     let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
@@ -118,35 +110,76 @@ pub async fn get_kong_swap_quote(pay_symbol: String, pay_amount: Nat, receive_sy
     result.map(|(r,)| r).map_err(|e| format!("Failed to call swap_amounts: {:?}", e))
 }
 
-pub async fn add_liquidity_to_kong(primary_token_symbol: String, primary_token_amount: Nat, icp_amount: Nat) -> Result<AddLiquidityReply, String> {
+pub async fn execute_swap_on_dex(pay_symbol: String, pay_amount: Nat, receive_symbol: String) -> Result<Nat, String> {
+    // 1. Get quote to establish a price baseline for slippage protection.
+    let quote = get_kong_swap_quote(pay_symbol.clone(), pay_amount.clone(), receive_symbol.clone()).await?;
+
+    // 2. Approve the Kong DEX to spend the token on our behalf.
     let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
+    let icp_canister_id = Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap();
+    icrc2_approve(icp_canister_id, kong_principal, pay_amount.clone()).await?;
 
-    // 1. call add_liquidity_amounts to get proportional amounts
-    let args = (primary_token_symbol.clone(), primary_token_amount.clone(), "ICP".to_string());
-    let amounts_result: Result<(AddLiquidityAmountsReply,), _> = ic_cdk::call(kong_principal, "add_liquidity_amounts", args).await;
-    let amounts = amounts_result.map_err(|e| format!("Failed to call add_liquidity_amounts: {:?}", e))?.0;
+    // 3. Define SwapArgs with slippage protection.
+    // We set max_slippage to 0.5% and also calculate the minimum expected amount.
+    // This provides robust protection against price volatility.
+    let max_slippage_percent = 0.5;
+    // Calculate 99.5% of the quoted amount: (quote.receive_amount * 995) / 1000
+    let min_receive_amount = quote.receive_amount * Nat::from(995u32) / Nat::from(1000u32);
 
-    if amounts.amount_1 > icp_amount {
-        return Err("Not enough ICP in treasury for this liquidity add".to_string());
+    let swap_args = SwapArgs {
+        pay_token: pay_symbol,
+        pay_amount: pay_amount.clone(),
+        pay_tx_id: None, // Not used in the icrc2_approve flow
+        receive_token: receive_symbol,
+        receive_amount: Some(min_receive_amount),
+        receive_address: None, // Defaults to caller (this canister)
+        max_slippage: Some(max_slippage_percent),
+        referred_by: None,
+    };
+    
+    // 4. Call the swap function on the Kong DEX.
+    let result: Result<(SwapReply,), _> = ic_cdk::call(kong_principal, "swap", (swap_args,)).await;
+
+    match result {
+        Ok((swap_reply,)) => {
+            if swap_reply.status == "Success" {
+                Ok(swap_reply.receive_amount)
+            } else {
+                Err(format!("Swap on DEX failed with status: '{}'", swap_reply.status))
+            }
+        }
+        Err(e) => Err(format!("Failed to call swap on DEX: {:?}", e)),
     }
+}
+
+pub async fn get_add_liquidity_amounts(primary_token_symbol: String, icp_amount: Nat) -> Result<AddLiquidityAmountsReply, String> {
+    let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
+    let args = (primary_token_symbol, icp_amount, "ICP".to_string());
+    let result: Result<(AddLiquidityAmountsReply,), _> = ic_cdk::call(kong_principal, "add_liquidity_amounts", args).await;
+    result.map(|(r,)| r).map_err(|e| format!("Failed to call add_liquidity_amounts: {:?}", e))
+}
+
+pub async fn add_liquidity_to_kong(primary_token_symbol: String, primary_token_amount: Nat, icp_amount: Nat) -> Result<AddLiquidityAmountsReply, String> {
+    let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
 
     let primary_canister_id = get_primary_canister_id();
     let icp_canister_id = Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap();
 
-    // 2. call icrc2_approve on both the primary token ledger and the ICP ledger
-    icrc2_approve(primary_canister_id, kong_principal, amounts.amount_0.clone()).await?;
-    icrc2_approve(icp_canister_id, kong_principal, amounts.amount_1.clone()).await?;
+    // 1. Approve the DEX to spend the tokens we are providing.
+    // We approve the full amount we have, the DEX will only take what it needs based on the current ratio.
+    icrc2_approve(primary_canister_id, kong_principal, primary_token_amount.clone()).await?;
+    icrc2_approve(icp_canister_id, kong_principal, icp_amount.clone()).await?;
 
-    // 3. call add_liquidity to finalize
+    // 2. call add_liquidity to finalize
     let add_liquidity_args = AddLiquidityArgs {
         token_0: primary_token_symbol,
-        amount_0: amounts.amount_0.clone(),
+        amount_0: primary_token_amount,
         tx_id_0: None,
         token_1: "ICP".to_string(),
-        amount_1: amounts.amount_1.clone(),
+        amount_1: icp_amount,
         tx_id_1: None,
     };
 
-    let result: Result<(AddLiquidityReply,), _> = ic_cdk::call(kong_principal, "add_liquidity", (add_liquidity_args,)).await;
+    let result: Result<(AddLiquidityAmountsReply,), _> = ic_cdk::call(kong_principal, "add_liquidity", (add_liquidity_args,)).await;
     result.map(|(r,)| r).map_err(|e| format!("Failed to call add_liquidity: {:?}", e))
 } 

@@ -9,6 +9,7 @@ use ic_stable_structures::{ DefaultMemoryImpl, Storable};
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
+use ic_cdk_timers::TimerId;
 
 use crate::utils::DEFAULT_SECONDARY_RATIO;
 use crate::ExecutionError;
@@ -27,6 +28,7 @@ pub const LOGS_MEM_ID: MemoryId = MemoryId::new(8);
 pub const LOGS_COUNTER_ID: MemoryId = MemoryId::new(9);
 pub const CONFIGS_MEM_ID: MemoryId = MemoryId::new(10);
 pub const LP_TREASURY_MEM_ID: MemoryId = MemoryId::new(11);
+pub const TREASURY_STATE_MEM_ID: MemoryId = MemoryId::new(12);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
@@ -84,6 +86,14 @@ thread_local! {
         StableCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(LP_TREASURY_MEM_ID)), 0).unwrap()
     );
 
+    pub static TREASURY_STATE: RefCell<StableCell<TreasuryState, Memory>> = RefCell::new(
+        StableCell::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(TREASURY_STATE_MEM_ID)),
+            TreasuryState {
+                next_earliest_provision_timestamp: 0,
+            }
+        ).unwrap()
+    );
 }
 
 pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u64, Memory> {
@@ -263,4 +273,29 @@ impl Storable for Configs {
     }
 
     const BOUND: Bound = Bound::Unbounded;
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug, Default)]
+pub struct TreasuryState {
+    pub next_earliest_provision_timestamp: u64,
+}
+
+impl Storable for TreasuryState {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
+}
+
+pub fn update_next_provision_timestamp(new_timestamp: u64) {
+    TREASURY_STATE.with(|state| {
+        let mut treasury_state = state.borrow().get().clone();
+        treasury_state.next_earliest_provision_timestamp = new_timestamp;
+        let _ = state.borrow_mut().set(treasury_state);
+    });
 }

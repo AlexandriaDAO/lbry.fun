@@ -1,5 +1,5 @@
 use crate::get_config;
-use crate::get_tokenomics_schdeule;
+use crate::get_tokenomics_schedule;
 use crate::guard::*;
 use crate::error::ExecutionError;
 use crate::register_info_log;
@@ -35,8 +35,8 @@ pub async fn mint_primary(
     let mut total_burned_secondary: u64 = get_total_secondary_burn();
     let max_primary_supply=get_config().max_primary_supply;
     let max_primary_phase=get_config().max_primary_phase;
-    let primary_mint_per_threshold=get_tokenomics_schdeule().primary_mint_per_threshold;
-    let secondary_burn_thresholds=get_tokenomics_schdeule().secondary_burn_thresholds;
+    let primary_mint_per_threshold=get_tokenomics_schedule().primary_mint_per_threshold;
+    let secondary_burn_thresholds=get_tokenomics_schedule().secondary_burn_thresholds;
 
 
     register_info_log(
