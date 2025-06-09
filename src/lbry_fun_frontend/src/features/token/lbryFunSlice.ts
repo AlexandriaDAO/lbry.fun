@@ -1,11 +1,12 @@
 import { ActionReducerMapBuilder, createSlice } from "@reduxjs/toolkit";
-import { toast } from "sonner";
 import createToken from "./thunk/createToken.thunk";
-import { TokenRecord } from "../../../../declarations/lbry_fun/lbry_fun.did";
-import getTokenPools, { TokenRecordStringified } from "./thunk/getTokenPools.thunk";
+import getTokenPools, {
+  TokenRecordStringified,
+} from "./thunk/getTokenPools.thunk";
 import getUpcomming from "./thunk/getUpcommingTokens.thunk";
 import getLiveTokens from "./thunk/getLiveTokens.thunk";
 import fetchTokenLogosForPool from "./thunk/fetchTokenLogosForPoolThunk";
+import { ErrorMessage } from "@/features/swap/utlis/erorrs";
 
 // Define the interface for our node state
 export interface LbryFunState {
@@ -14,7 +15,7 @@ export interface LbryFunState {
   tokenPools: [string, TokenRecordStringified][];
   liveTokens: [string, TokenRecordStringified][];
   upcommingTokens: [string, TokenRecordStringified][];
-  error: string | null;
+  error: ErrorMessage | null;
 }
 
 // Define the initial state using the ManagerState interface
@@ -24,7 +25,7 @@ const initialState: LbryFunState = {
   error: null,
   tokenPools: [],
   liveTokens: [],
-  upcommingTokens:[]
+  upcommingTokens: [],
 };
 
 const lbryFunSlice = createSlice({
@@ -49,7 +50,10 @@ const lbryFunSlice = createSlice({
       })
       .addCase(createToken.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.title ||"An unknown error occurred";
+        state.error = action.payload ?? {
+          title: "Token Creation Failed",
+          message: "An unknown error occurred.",
+        };
       })
       .addCase(getTokenPools.pending, (state) => {
         state.loading = true;
@@ -62,9 +66,10 @@ const lbryFunSlice = createSlice({
       })
       .addCase(getTokenPools.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload
-          ? (action.payload as unknown as string)
-          : "An unknown error occurred";
+        state.error = action.payload ?? {
+          title: "Get Token Pools Failed",
+          message: "An unknown error occurred.",
+        };
       })
       .addCase(getUpcomming.pending, (state) => {
         state.loading = true;
@@ -77,9 +82,10 @@ const lbryFunSlice = createSlice({
       })
       .addCase(getUpcomming.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload
-          ? (action.payload as unknown as string)
-          : "An unknown error occurred";
+        state.error = action.payload ?? {
+          title: "Get Upcoming Tokens Failed",
+          message: "An unknown error occurred.",
+        };
       })
       .addCase(getLiveTokens.pending, (state) => {
         state.loading = true;
@@ -92,13 +98,17 @@ const lbryFunSlice = createSlice({
       })
       .addCase(getLiveTokens.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload
-          ? (action.payload as unknown as string)
-          : "An unknown error occurred";
+        state.error = action.payload ?? {
+          title: "Get Live Tokens Failed",
+          message: "An unknown error occurred.",
+        };
       })
       .addCase(fetchTokenLogosForPool.fulfilled, (state, action) => {
-        const { poolId, primaryTokenLogo, secondaryTokenLogo } = action.payload;
-        const updateLogos = (pool: [string, TokenRecordStringified]): [string, TokenRecordStringified] => {
+        const { poolId, primaryTokenLogo, secondaryTokenLogo } =
+          action.payload;
+        const updateLogos = (
+          pool: [string, TokenRecordStringified]
+        ): [string, TokenRecordStringified] => {
           if (pool[0] === poolId) {
             const updatedRecord = { ...pool[1] };
             if (primaryTokenLogo !== undefined) {
@@ -123,4 +133,4 @@ const lbryFunSlice = createSlice({
   },
 });
 export const { lbryFunFlagHandler } = lbryFunSlice.actions;
-export default lbryFunSlice.reducer; 
+export default lbryFunSlice.reducer;

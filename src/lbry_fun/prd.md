@@ -2,6 +2,7 @@
 
 
 - Should definitely explain how the tokenomics works in the UI
+- Need to require svg only because the images don't show.
 
 
 # Scores

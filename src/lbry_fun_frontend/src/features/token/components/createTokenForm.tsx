@@ -9,7 +9,7 @@ import createToken from '../thunk/createToken.thunk';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import LoadingModal from '../../swap/components/loadingModal';
-import { lbryFunFlagHandler } from '../thunk/lbryFunSlice';
+import { lbryFunFlagHandler } from '../lbryFunSlice';
 import { Form } from 'antd/es';
 import UserICPBalance from './userICPBalance';
 import SuccessModal from '@/features/swap/components/successModal';
@@ -234,7 +234,7 @@ const CreateTokenForm: React.FC = () => {
     } 
     if (lbryFun.error !== null) {
       setLoadingModalV(false);
-     setErrorModalV({flag:true,title:lbryFun.error,message:""});
+     setErrorModalV({flag:true,title:lbryFun.error.title,message:lbryFun.error.message});
     }
   }, [lbryFun.success, lbryFun.error, dispatch, navigate]);
 

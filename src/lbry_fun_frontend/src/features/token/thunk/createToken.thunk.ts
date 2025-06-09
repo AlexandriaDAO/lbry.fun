@@ -60,7 +60,7 @@ const createToken = createAsyncThunk<
         }
       }
 
-      const result = await (actor.create_token as any)(
+      const result = await actor.create_token(
         formData.primary_token_name,
         formData.primary_token_symbol,
         formData.primary_token_description,

@@ -536,7 +536,7 @@
 │       ├── src/
 │       │   ├── Class.mo (1055 lines)
 │       │   └── lib.mo (1739 lines)
-├── Cargo.lock (1826 lines)
+├── Cargo.lock (2278 lines)
 ├── Cargo.toml (10 lines)
 ├── __mocks__/
 │   └── fileMock.js (2 lines)
@@ -595,18 +595,18 @@
 │   │   └── index.js (43 lines)
 │   ├── icp_swap/
 │   │   ├── Cargo.toml (28 lines)
-│   │   ├── icp_swap.did (124 lines)
+│   │   ├── icp_swap.did (123 lines)
 │   │   ├── icp_swap_prelim_audit.txt (128 lines)
 │   │   └── src/
-│   │       ├── constants.rs (5 lines)
-│   │       ├── dex_integration.rs (152 lines)
+│   │       ├── constants.rs (11 lines)
+│   │       ├── dex_integration.rs (197 lines)
 │   │       ├── error.rs (238 lines)
 │   │       ├── guard.rs (41 lines)
 │   │       ├── lib.rs (28 lines)
-│   │       ├── queries.rs (242 lines)
-│   │       ├── script.rs (220 lines)
-│   │       ├── storage.rs (267 lines)
-│   │       ├── update.rs (1782 lines)
+│   │       ├── queries.rs (164 lines)
+│   │       ├── script.rs (221 lines)
+│   │       ├── storage.rs (302 lines)
+│   │       ├── update.rs (1757 lines)
 │   │       └── utils.rs (558 lines)
 │   ├── icp_swap_factory/
 │   │   ├── icp_swap_factory copy.did (195 lines)
@@ -617,46 +617,35 @@
 │   │   └── index.js (43 lines)
 │   ├── lbry_fun/
 │   │   ├── Cargo.toml (30 lines)
-│   │   ├── lbry_fun.did (55 lines)
-│   │   ├── prd.md (337 lines)
+│   │   ├── lbry_fun.did (58 lines)
+│   │   ├── prd.md (319 lines)
 │   │   └── src/
 │   │       ├── ic-icrc1-ledger.did (453 lines)
 │   │       ├── ic-icrc1-ledger.wasm (6728 lines)
 │   │       ├── ic-icrc1-ledger.wasm.gz (2103 lines)
 │   │       ├── icp_swap.wasm (8667 lines)
-│   │       ├── lib.rs (18 lines)
-│   │       ├── queries.rs (50 lines)
+│   │       ├── lib.rs (13 lines)
+│   │       ├── queries.rs (49 lines)
 │   │       ├── script.rs (33 lines)
 │   │       ├── storage.rs (58 lines)
 │   │       ├── tokenomics.wasm (5247 lines)
-│   │       ├── update.rs (638 lines)
+│   │       ├── update.rs (639 lines)
 │   │       └── utlis.rs (247 lines)
 │   ├── lbry_fun_frontend/
 │   │   ├── src/
 │   │   │   ├── App.tsx (41 lines)
 │   │   │   ├── actors/
-│   │   │   │   ├── IcpLedgerActor.tsx (36 lines)
 │   │   │   │   ├── IcpSwapActor.tsx (36 lines)
 │   │   │   │   ├── LbryFunActor.tsx (36 lines)
 │   │   │   │   └── TokenomicsActor.tsx (36 lines)
 │   │   │   ├── components/
-│   │   │   │   ├── Alert.tsx (72 lines)
 │   │   │   │   ├── ErrorBoundary.tsx (37 lines)
 │   │   │   │   ├── ErrorFallback.tsx (25 lines)
-│   │   │   │   ├── LibrarianCard/
-│   │   │   │   │   ├── LibrarianView.tsx (26 lines)
-│   │   │   │   │   ├── NonLibrarianView.tsx (30 lines)
-│   │   │   │   │   └── index.tsx (27 lines)
 │   │   │   │   ├── Loading.tsx (23 lines)
 │   │   │   │   ├── Logo.tsx (48 lines)
-│   │   │   │   ├── MarkdownRenderer.tsx (172 lines)
-│   │   │   │   ├── Processing.tsx (15 lines)
-│   │   │   │   ├── Read/
-│   │   │   │   │   └── index.tsx (24 lines)
 │   │   │   │   ├── RiskWarningModal.tsx (46 lines)
 │   │   │   │   ├── Tabs.tsx (49 lines)
-│   │   │   │   ├── TopProgressBar.tsx (16 lines)
-│   │   │   │   └── ui/
+│   │   │   │   └── TopProgressBar.tsx (16 lines)
 │   │   │   ├── contexts/
 │   │   │   │   ├── KeysContext.tsx (29 lines)
 │   │   │   │   ├── SessionContext.tsx (14 lines)
@@ -666,13 +655,12 @@
 │   │   │   │       ├── LbryContext.tsx (7 lines)
 │   │   │   │       ├── LbryFunContext.tsx (7 lines)
 │   │   │   │       ├── TokenomicsContext.tsx (7 lines)
-│   │   │   │       ├── VetkdContext.tsx (7 lines)
-│   │   │   │       └── index.tsx (17 lines)
+│   │   │   │       └── index.tsx (5 lines)
 │   │   │   ├── features/
 │   │   │   │   ├── auth/
 │   │   │   │   │   ├── authSlice.ts (63 lines)
 │   │   │   │   │   ├── components/
-│   │   │   │   │   │   └── AuthMenu.tsx (82 lines)
+│   │   │   │   │   │   └── AuthMenu.tsx (92 lines)
 │   │   │   │   │   ├── index.tsx (20 lines)
 │   │   │   │   │   ├── thunks/
 │   │   │   │   │   └── utils/
@@ -692,19 +680,13 @@
 │   │   │   │   │   │   ├── ETHProcessor/
 │   │   │   │   │   │   └── SOLProcessor/
 │   │   │   │   │   └── thunks/
-│   │   │   │   ├── portal-pagination/
-│   │   │   │   │   └── index.tsx (67 lines)
-│   │   │   │   ├── signup/
-│   │   │   │   │   ├── components/
-│   │   │   │   │   └── thunks/
 │   │   │   │   ├── swap/
 │   │   │   │   │   ├── components/
-│   │   │   │   │   │   ├── BurnLBRY.tsx (1 lines)
 │   │   │   │   │   │   ├── balance/
 │   │   │   │   │   │   │   ├── accountCards.tsx (168 lines)
 │   │   │   │   │   │   │   ├── balanceContent.tsx (38 lines)
 │   │   │   │   │   │   │   ├── getAlexBal.tsx (31 lines)
-│   │   │   │   │   │   │   ├── poolCard.tsx (260 lines)
+│   │   │   │   │   │   │   ├── poolCard.tsx (304 lines)
 │   │   │   │   │   │   │   ├── primaryBalanceCard.tsx (69 lines)
 │   │   │   │   │   │   │   └── secondaryBalanceCard.tsx (55 lines)
 │   │   │   │   │   │   ├── burn/
@@ -789,9 +771,9 @@
 │   │   │   │       └── thunk/
 │   │   │   │           ├── createToken.thunk.ts (100 lines)
 │   │   │   │           ├── fetchTokenLogosForPoolThunk.ts (43 lines)
-│   │   │   │           ├── getLiveTokens.thunk.ts (80 lines)
-│   │   │   │           ├── getTokenPools.thunk.ts (90 lines)
-│   │   │   │           ├── getUpcommingTokens.thunk.ts (51 lines)
+│   │   │   │           ├── getLiveTokens.thunk.ts (81 lines)
+│   │   │   │           ├── getTokenPools.thunk.ts (92 lines)
+│   │   │   │           ├── getUpcommingTokens.thunk.ts (55 lines)
 │   │   │   │           └── lbryFunSlice.ts (105 lines)
 │   │   │   ├── fonts/
 │   │   │   │   ├── Syne-Bold.woff (144 lines)
@@ -808,53 +790,27 @@
 │   │   │   │   ├── AuthGuard.tsx (101 lines)
 │   │   │   │   └── Protected.tsx (24 lines)
 │   │   │   ├── hooks/
-│   │   │   │   ├── actors/
-│   │   │   │   │   ├── index.tsx (14 lines)
-│   │   │   │   │   ├── useActorErrorHandler.tsx (46 lines)
-│   │   │   │   │   ├── useAlex.tsx (7 lines)
-│   │   │   │   │   ├── useAlexWallet.tsx (7 lines)
-│   │   │   │   │   ├── useAssetCanister.tsx (7 lines)
-│   │   │   │   │   ├── useAssetManager.tsx (7 lines)
-│   │   │   │   │   ├── useIcpLedger.tsx (7 lines)
-│   │   │   │   │   ├── useIcpSwap.tsx (7 lines)
-│   │   │   │   │   ├── useIcrc7.tsx (7 lines)
-│   │   │   │   │   ├── useLbry.tsx (7 lines)
-│   │   │   │   │   ├── useLbryFun.tsx (7 lines)
-│   │   │   │   │   ├── useTokenomics.tsx (7 lines)
-│   │   │   │   │   └── useVetkd.tsx (7 lines)
-│   │   │   │   ├── useAppNavigation.ts (100 lines)
-│   │   │   │   ├── useAssetManager.ts (50 lines)
-│   │   │   │   ├── useDebounce.tsx (17 lines)
 │   │   │   │   ├── useIdentity.tsx (33 lines)
 │   │   │   │   ├── useLogout.tsx (15 lines)
-│   │   │   │   ├── useRiskWarning.ts (27 lines)
-│   │   │   │   └── useSession.tsx (6 lines)
-│   │   │   ├── index.js (94 lines)
+│   │   │   │   └── useRiskWarning.ts (27 lines)
+│   │   │   ├── index.tsx (96 lines)
 │   │   │   ├── layouts/
 │   │   │   │   ├── AppLayout.tsx (17 lines)
 │   │   │   │   ├── BaseLayout.tsx (23 lines)
 │   │   │   │   ├── DashboardLayout.tsx (24 lines)
 │   │   │   │   ├── MainLayout.tsx (17 lines)
-│   │   │   │   ├── parts/
-│   │   │   │   │   ├── AppHeader.tsx (18 lines)
-│   │   │   │   │   ├── AuthNavigation.tsx (41 lines)
-│   │   │   │   │   ├── DashboardSidebar.tsx (93 lines)
-│   │   │   │   │   └── Header.tsx (70 lines)
-│   │   │   │   └── skeletons/
-│   │   │   │       ├── HeaderSkeleton.tsx (26 lines)
-│   │   │   │       ├── LayoutSkeleton.tsx (32 lines)
-│   │   │   │       ├── MainPageSkeleton.tsx (31 lines)
-│   │   │   │       ├── PinaxSkeleton.tsx (97 lines)
-│   │   │   │       └── SidebarSkeleton.tsx (30 lines)
+│   │   │   │   └── parts/
+│   │   │   │       ├── AppHeader.tsx (18 lines)
+│   │   │   │       ├── AuthNavigation.tsx (41 lines)
+│   │   │   │       ├── DashboardSidebar.tsx (93 lines)
+│   │   │   │       └── Header.tsx (70 lines)
 │   │   │   ├── lib/
 │   │   │   │   ├── components/
-│   │   │   │   │   ├── accordion.tsx (57 lines)
 │   │   │   │   │   ├── alert-dialog.tsx (140 lines)
 │   │   │   │   │   ├── alert.tsx (60 lines)
 │   │   │   │   │   ├── aspect-ratio.tsx (6 lines)
 │   │   │   │   │   ├── badge.tsx (40 lines)
 │   │   │   │   │   ├── button.tsx (69 lines)
-│   │   │   │   │   ├── calendar.tsx (65 lines)
 │   │   │   │   │   ├── card.tsx (80 lines)
 │   │   │   │   │   ├── checkbox.tsx (29 lines)
 │   │   │   │   │   ├── collapsible.tsx (12 lines)
@@ -886,18 +842,14 @@
 │   │   │   │   │   └── IIProvider.tsx (23 lines)
 │   │   │   │   ├── ReduxProvider.tsx (14 lines)
 │   │   │   │   ├── SessionProvider.tsx (90 lines)
-│   │   │   │   ├── ThemeProvider.tsx (63 lines)
-│   │   │   │   └── UserProvider/
+│   │   │   │   └── ThemeProvider.tsx (63 lines)
 │   │   │   ├── routes/
-│   │   │   │   ├── index.tsx (59 lines)
+│   │   │   │   ├── index.tsx (55 lines)
 │   │   │   │   └── routeConfig.ts (109 lines)
-│   │   │   ├── services/
-│   │   │   │   └── librarianService.ts (74 lines)
 │   │   │   ├── store/
 │   │   │   │   ├── hooks/
 │   │   │   │   │   ├── useAppDispatch.ts (4 lines)
-│   │   │   │   │   ├── useAppSelector.ts (5 lines)
-│   │   │   │   │   └── useAppStore.ts (7 lines)
+│   │   │   │   │   └── useAppSelector.ts (5 lines)
 │   │   │   │   ├── index.ts (11 lines)
 │   │   │   │   ├── rootReducer.ts (24 lines)
 │   │   │   │   └── slices/
@@ -905,21 +857,12 @@
 │   │   │   ├── styles/
 │   │   │   │   ├── style.css (81 lines)
 │   │   │   │   └── tailwind.css (104 lines)
-│   │   │   ├── types/
-│   │   │   │   └── azle.d.ts (17 lines)
 │   │   │   ├── utils/
-│   │   │   │   ├── ComposeProviders.tsx (12 lines)
 │   │   │   │   ├── LedgerService.tsx (73 lines)
-│   │   │   │   ├── arweaveClient.ts (25 lines)
-│   │   │   │   ├── bgint_convert.ts (96 lines)
-│   │   │   │   ├── epub.tsx (33 lines)
 │   │   │   │   ├── general.ts (144 lines)
-│   │   │   │   ├── id_convert.ts (126 lines)
-│   │   │   │   ├── lazyLoad.ts (21 lines)
 │   │   │   │   ├── logoUtils.ts (50 lines)
 │   │   │   │   ├── principal.ts (11 lines)
-│   │   │   │   ├── utils.tsx (9 lines)
-│   │   │   │   └── vetkd.ts (15 lines)
+│   │   │   │   └── utils.tsx (9 lines)
 │   ├── logs/
 │   │   ├── Cargo.toml (23 lines)
 │   │   ├── logs.did (18 lines)
@@ -954,4 +897,4 @@
 │   │   └── xrc.did (44 lines)
 ├── tailwind.config.js (223 lines)
 ├── tsconfig.json (35 lines)
-├── webpack.config.js (282 lines)
+├── webpack.config.js (279 lines)
