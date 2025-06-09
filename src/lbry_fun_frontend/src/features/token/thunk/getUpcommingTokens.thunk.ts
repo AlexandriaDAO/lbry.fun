@@ -18,7 +18,10 @@ const getUpcomming = createAsyncThunk<
       ([poolId, record]) => [
         poolId.toString(),
         {
-          ...record,
+          primary_token_name: record.primary_token_name,
+          primary_token_symbol: record.primary_token_symbol,
+          secondary_token_name: record.secondary_token_name,
+          secondary_token_symbol: record.secondary_token_symbol,
           id: record.id.toString(),
           icp_swap_canister_id: record.icp_swap_canister_id.toString(),
           caller: record.caller.toString(),
@@ -29,6 +32,7 @@ const getUpcomming = createAsyncThunk<
           primary_token_max_supply: record.primary_token_max_supply.toString(),
           initial_primary_mint: record.initial_primary_mint.toString(),
           initial_secondary_burn: record.initial_secondary_burn.toString(),
+          created_time: record.created_time.toString(),
           liquidity_provided_at: record.liquidity_provided_at
             ? record.liquidity_provided_at.toString()
             : null,

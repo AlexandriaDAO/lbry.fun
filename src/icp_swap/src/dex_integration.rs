@@ -103,6 +103,18 @@ pub struct SwapReply {
     pub slippage: f64,
 }
 
+#[derive(CandidType, Debug, Clone, Serialize, Deserialize)]
+pub struct SwapArgs {
+    pub pay_token: String,
+    pub pay_amount: Nat,
+    pub pay_tx_id: Option<TxId>,
+    pub receive_token: String,
+    pub receive_amount: Option<Nat>,
+    pub receive_address: Option<String>,
+    pub max_slippage: Option<f64>,
+    pub referred_by: Option<String>,
+}
+
 pub async fn get_kong_swap_quote(pay_symbol: String, pay_amount: Nat, receive_symbol: String) -> Result<SwapAmountsReply, String> {
     let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
     let args = (pay_symbol, pay_amount, receive_symbol);

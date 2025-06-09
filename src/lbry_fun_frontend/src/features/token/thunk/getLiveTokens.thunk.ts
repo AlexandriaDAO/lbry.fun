@@ -31,6 +31,7 @@ const getLiveTokens = createAsyncThunk<
         primary_token_max_supply: record.primary_token_max_supply.toString(),
         initial_primary_mint: record.initial_primary_mint.toString(),
         initial_secondary_burn: record.initial_secondary_burn.toString(),
+        created_time: record.created_time.toString(),
         liquidity_provided_at: record.liquidity_provided_at ? record.liquidity_provided_at.toString() : null,
         isLive: record.is_live,
       },

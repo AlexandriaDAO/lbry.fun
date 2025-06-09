@@ -27,6 +27,7 @@ const PoolCard: React.FC = () => {
 
     const [primaryLogo, setPrimaryLogo] = useState<string | undefined>();
     const [secondaryLogo, setSecondaryLogo] = useState<string | undefined>();
+    const [countdown, setCountdown] = useState<string>("");
 
     // icp ledger
     useEffect(() => {
@@ -116,6 +117,42 @@ const PoolCard: React.FC = () => {
         } else {
             setPrimaryLogo(undefined);
             setSecondaryLogo(undefined);
+        }
+    }, [activeSwapPoolFromRedux]);
+
+    useEffect(() => {
+        if (activeSwapPoolFromRedux && activeSwapPoolFromRedux[1] && !activeSwapPoolFromRedux[1].isLive && activeSwapPoolFromRedux[1].created_time) {
+            // created_time from the backend is in nanoseconds (as a BigInt or can be converted to one).
+            const createdTimeNs = BigInt(activeSwapPoolFromRedux[1].created_time);
+            const launchTimeNs = createdTimeNs + BigInt(24 * 60 * 60 * 1000 * 1000 * 1000);
+
+            const intervalId = setInterval(() => {
+                // Current time in milliseconds from local clock, convert to nanoseconds BigInt.
+                const nowNs = BigInt(Date.now()) * BigInt(1_000_000);
+                const distanceNs = launchTimeNs - nowNs;
+
+                if (distanceNs <= 0) {
+                    setCountdown("Launching soon!");
+                    clearInterval(intervalId);
+                    return;
+                }
+
+                const oneSecondNs = BigInt(1_000_000_000);
+                const oneMinuteNs = oneSecondNs * BigInt(60);
+                const oneHourNs = oneMinuteNs * BigInt(60);
+
+                const hours = distanceNs / oneHourNs;
+                const minutes = (distanceNs % oneHourNs) / oneMinuteNs;
+                const seconds = (distanceNs % oneMinuteNs) / oneSecondNs;
+                
+                const paddedHours = hours.toString().padStart(2, '0');
+                const paddedMinutes = minutes.toString().padStart(2, '0');
+                const paddedSeconds = seconds.toString().padStart(2, '0');
+
+                setCountdown(`${paddedHours}h ${paddedMinutes}m ${paddedSeconds}s`);
+            }, 1000);
+
+            return () => clearInterval(intervalId);
         }
     }, [activeSwapPoolFromRedux]);
 
@@ -238,14 +275,21 @@ const PoolCard: React.FC = () => {
                                     <span className="font-semibold text-gray-300">Burn Unit:</span>
                                     <span className="text-white">{activeSwapPoolFromRedux[1].initial_secondary_burn}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-300">Liquidity Provided At:</span>
-                                    <span className="text-white">
-                                        {activeSwapPoolFromRedux[1].liquidity_provided_at
-                                            ? new Date(Number(activeSwapPoolFromRedux[1].liquidity_provided_at) / 1_000_000).toLocaleString()
-                                            : "Not Provided"}
-                                    </span>
-                                </div>
+                                {activeSwapPoolFromRedux[1].isLive ? (
+                                    <div className="flex justify-between">
+                                        <span className="font-semibold text-gray-300">Liquidity Provided At:</span>
+                                        <span className="text-white">
+                                            {activeSwapPoolFromRedux[1].liquidity_provided_at
+                                                ? new Date(Number(activeSwapPoolFromRedux[1].liquidity_provided_at) / 1_000_000).toLocaleString()
+                                                : "Not Provided"}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <div className="flex justify-between">
+                                        <span className="font-semibold text-gray-300">Countdown to Launch:</span>
+                                        <span className="text-white">{countdown || "Calculating..."}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

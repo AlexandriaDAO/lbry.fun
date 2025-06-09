@@ -4,7 +4,7 @@ use serde::Deserialize;
 use std::time::Duration;
 
 use crate::{
-    distribute_reward, get_icp_rate_in_cents, utils::register_info_log, ArchiveBalance, Configs, DailyValues, SecondaryRatio, Stake, APY, ARCHIVED_TRANSACTION_LOG, CONFIGS, DISTRIBUTION_INTERVALS, SECONDARY_RATIO, STAKES, TOTAL_ARCHIVED_BALANCE, TOTAL_UNCLAIMED_ICP_REWARD
+    distribute_reward, get_icp_rate_in_cents, schedule_liquidity_provision, utils::register_info_log, ArchiveBalance, Configs, DailyValues, SecondaryRatio, Stake, APY, ARCHIVED_TRANSACTION_LOG, CONFIGS, DISTRIBUTION_INTERVALS, SECONDARY_RATIO, STAKES, TOTAL_ARCHIVED_BALANCE, TOTAL_UNCLAIMED_ICP_REWARD
 };
 
 pub const REWARD_DISTRIBUTION_INTERVAL: Duration = Duration::from_secs(60 * 60); // 1 hour.
@@ -175,6 +175,7 @@ fn setup_timers() {
     ic_cdk_timers::set_timer(Duration::from_secs(0), || {
         ic_cdk::spawn(get_icp_rate_cents_wrapper());
     });
+    ic_cdk_timers::set_timer(std::time::Duration::from_secs(10), schedule_liquidity_provision);
 
     // Periodic reward distribution
     let _reward_timer_id: ic_cdk_timers::TimerId =

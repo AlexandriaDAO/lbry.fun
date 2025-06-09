@@ -902,7 +902,7 @@ async fn provide_liquidity_from_treasury() {
         .await
         .map_err(|e| ExecutionError::StateError(format!("Failed to execute swap on DEX: {}", e)))?;
 
-        if primary_tokens_bought_nat == 0 {
+        if primary_tokens_bought_nat == Nat::from(0u32) {
             return Err(ExecutionError::StateError("Buyback resulted in zero primary tokens. Aborting.".to_string()));
         }
 
@@ -951,17 +951,7 @@ async fn get_random_seed() -> [u8; 32] {
     res.try_into().expect("Management canister returned a vector of unexpected length")
 }
 
-#[ic_cdk::init]
-fn init() {
-    ic_cdk_timers::set_timer(std::time::Duration::from_secs(10), schedule_liquidity_provision);
-}
-
-#[ic_cdk::post_upgrade]
-fn post_upgrade() {
-    ic_cdk_timers::set_timer(std::time::Duration::from_secs(10), schedule_liquidity_provision);
-}
-
-fn schedule_liquidity_provision() {
+pub fn schedule_liquidity_provision() {
     ic_cdk::spawn(async {
         let seed = get_random_seed().await;
         let mut rng = StdRng::from_seed(seed);
@@ -1757,4 +1747,10 @@ pub enum ExchangeRateError {
     ForexQuoteAssetNotFound,
     StablecoinRateNotFound,
     Pending,
+}
+
+#[derive(CandidType, Deserialize)]
+pub enum XRCResponse {
+    Ok(ExchangeRateResponse),
+    Err(ExchangeRateError),
 }

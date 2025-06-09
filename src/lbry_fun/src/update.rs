@@ -509,8 +509,9 @@ async fn deposit_ksicp_in_canister(
 
 pub async fn publish_eligible_tokens_on_kongswap() ->Result<String,String>{
     let time = ic_cdk::api::time(); // current time in nanoseconds
-    let twenty_four_hours_in_nanos: u64 = 24 * 60 * 60 * 1_000_000_000;
-    
+    // let twenty_four_hours_in_nanos: u64 = 24 * 60 * 60 * 1_000_000_000;
+    let twenty_four_hours_in_nanos: u64 = 1000; // for testing
+
     let result = TOKENS.with(|tokens| {
         let mut tokens_map = tokens.borrow_mut();
         // Step 1: Get a list of token IDs

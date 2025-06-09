@@ -13,6 +13,7 @@ type TokenRecord = record {
   primary_token_symbol : text;
   icp_swap_canister_id : principal;
   primary_max_phase_mint : nat64;
+  halving_step : nat64;
   primary_token_max_supply : nat64;
   initial_primary_mint : nat64;
   primary_token_id : principal;
@@ -45,10 +46,12 @@ service : () -> {
       nat64,
       nat64,
       nat64,
+      nat64,
+      nat64,
     ) -> (Result);
   deposit_icp_in_canister : (nat64, opt blob) -> (Result_1);
   get_all_token_record : () -> (vec record { nat64; TokenRecord }) query;
   get_live : () -> (vec record { nat64; TokenRecord }) query;
-  get_upcomming : () -> (vec record { nat64; TokenRecord }) query;
   get_treasury_balance : () -> (Result_2) query;
+  get_upcomming : () -> (vec record { nat64; TokenRecord }) query;
 }

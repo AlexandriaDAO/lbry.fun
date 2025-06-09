@@ -33,6 +33,7 @@ const getTokenPools = createAsyncThunk<
           initial_secondary_burn: record.initial_secondary_burn.toString(),
           liquidity_provided_at: record.liquidity_provided_at ? record.liquidity_provided_at.toString() : null,
           isLive: record.is_live,
+          created_time: record.created_time.toString(),
         },
       ]);
 
@@ -84,6 +85,7 @@ export type TokenRecordStringified = {
   initial_secondary_burn: string;
   liquidity_provided_at: string | null;
   isLive: boolean;
+  created_time: string;
   primary_token_logo_base64?: string;
   secondary_token_logo_base64?: string;
 };

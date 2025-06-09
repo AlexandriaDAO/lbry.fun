@@ -1,5 +1,4 @@
-use ic_cdk::{query, update};
-use candid::Principal;
+use ic_cdk::query;
 use crate::{TokenRecord, TOKENS, get_self_icp_balance};
 
 #[query]

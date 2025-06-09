@@ -1,5 +1,6 @@
 import React from "react";
 import {
+	Copy,
 	LogIn,
 	LogOut,
 	UserCircle,
@@ -19,6 +20,7 @@ import { useIdentity } from "@/hooks/useIdentity";
 import { Button } from "@/lib/components/button";
 import { Skeleton } from "@/lib/components/skeleton";
 import { principalToString } from "@/utils/principal";
+import { toast } from "sonner";
 
 export default function AuthMenu() {
 	const logout = useLogout();
@@ -35,6 +37,13 @@ export default function AuthMenu() {
 			login();
 		}
 	};
+
+	const handleCopyPrincipal = () => {
+		if (principal) {
+			navigator.clipboard.writeText(principal);
+			toast.success("Principal copied to clipboard!");
+		}
+	}
 
 	const isMenuLoading = !authReduxInitialized || authReduxLoading || isLoggingIn;
 
@@ -66,9 +75,10 @@ export default function AuthMenu() {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="w-56" side="bottom" align="end">
 				{principal && (
-					<DropdownMenuLabel className="text-center truncate">
-						{displayPrincipal}
-					</DropdownMenuLabel>
+					<DropdownMenuItem className="cursor-pointer" onClick={handleCopyPrincipal}>
+						<span className="truncate">{displayPrincipal}</span>
+						<Copy className="ml-auto h-4 w-4" />
+					</DropdownMenuItem>
 				)}
 				<DropdownMenuSeparator />
 				<DropdownMenuItem className="cursor-pointer" onClick={logout}>

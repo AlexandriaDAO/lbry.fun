@@ -3,6 +3,7 @@
 .deps
 .dfx
 .azle
+.wasm
 node_modules
 dist
 target

@@ -6,11 +6,6 @@ mod update;
 pub use update::*;
 mod utlis;
 pub use utlis::*;
-mod script;
-pub use script::*;
-use candid::Principal;
-
-
 use icrc_ledger_types::icrc1::transfer::BlockIndex;
 use icrc_ledger_types::icrc2::transfer_from::TransferFromError;
 

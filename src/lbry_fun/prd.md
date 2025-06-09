@@ -18,24 +18,6 @@ Fairness = Expensive to mint in the first epoch.
 
 
 
-### According frontend changes: 
-
-We just added: 
-- 1% fee goes to ALEX staking pool.
-- 50/50 - token staking pool & lp pool.
-- Now we need in the frontend: 
-  - inside the swap page, show an LP Treasury tab, and option to 'sell' primary tokens.
-    - Show an input amount and return the kongswap quote projection. Let the user click submit and call the function.
-      - Cap it at 10 ICP returned at a time.
-      - Explain what's happening behind the scenes.
-
-
-  liquidity_swap : (nat64, nat64) -> (Result);
-
-
-
-
-
 
 
 

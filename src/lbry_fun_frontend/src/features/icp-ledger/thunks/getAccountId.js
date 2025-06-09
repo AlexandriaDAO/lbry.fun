@@ -1,0 +1,20 @@
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import { Principal } from "@dfinity/principal";
+import { AccountIdentifier } from "@dfinity/ledger-icp";
+// Define the async thunk
+const getAccountId = createAsyncThunk("icp_ledger/getAccountId", async (account, { rejectWithValue }) => {
+    try {
+        const principal = Principal.fromText(account);
+        const accountId = AccountIdentifier.fromPrincipal({ principal });
+        const accountIdHex = accountId.toHex().toString();
+        return accountIdHex;
+    }
+    catch (error) {
+        console.error("Failed to get account id:", error);
+        if (error instanceof Error) {
+            return rejectWithValue(error.message);
+        }
+    }
+    return rejectWithValue("An unknown error occurred while account id.");
+});
+export default getAccountId;
