@@ -330,6 +330,8 @@
 
     "@types/text-encoding": "^0.0.39",
 
+    "@types/webfontloader": "^1.6.38",
+
     "assert": "^2.1.0",
 
     "babel-jest": "^29.7.0",

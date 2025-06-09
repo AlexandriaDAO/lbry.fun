@@ -21,7 +21,7 @@ module.exports = {
   target: "web",
   mode: isDevelopment ? "development" : "production",
   entry: {
-    index: path.join(__dirname, "src", frontendDirectory, "src", "index.js"),
+    index: path.join(__dirname, "src", frontendDirectory, "src", "index.tsx"),
   },
   devtool: isDevelopment ? "source-map" : false,
   optimization: {
@@ -126,18 +126,15 @@ module.exports = {
         type: 'asset/resource',
       },
       {
-        test: /\.(ts|tsx)$/,
+        test: /\.(ts|tsx|js|jsx)$/,
         exclude: /node_modules/,
-        use: 'ts-loader',
-      },
-      {
-        test: /\.(js|jsx)$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env', '@babel/preset-react'],
-          },
+        loader: 'babel-loader',
+        options: {
+          presets: [
+            '@babel/preset-env',
+            '@babel/preset-react',
+            '@babel/preset-typescript',
+          ],
         },
       },
       {

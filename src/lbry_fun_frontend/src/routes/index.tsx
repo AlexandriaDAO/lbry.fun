@@ -1,14 +1,10 @@
 import React, { lazy, Suspense } from "react";
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from "react-router";
 
-// import TopProgressBar from "@/components/TopProgressBar";
-import LayoutSkeleton from "@/layouts/skeletons/LayoutSkeleton";
 
 import BaseLayout from "@/layouts/BaseLayout";
 import MainLayout from "@/layouts/MainLayout";
 import AuthGuard from "@/guards/AuthGuard";
-import MainPageSkeleton from "@/layouts/skeletons/MainPageSkeleton";
-import PinaxSkeleton from "@/layouts/skeletons/PinaxSkeleton";
 import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import Protected from "@/guards/Protected";
 import ErrorBoundary from "@/components/ErrorBoundary";
