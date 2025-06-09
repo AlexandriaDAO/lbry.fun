@@ -4,8 +4,8 @@
 ## Local Setup LBRY_FUN
 
 ```bash
-# Navigate to the scripts directory
-cd scripts
+# # Navigate to the scripts directory
+# cd scripts
 
 # Run the BUILD script
 ./build.sh
