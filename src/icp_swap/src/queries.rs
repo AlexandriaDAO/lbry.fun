@@ -120,6 +120,11 @@ pub fn get_scaling_factor() -> u128 {
     return SCALING_FACTOR;
 }
 
+#[query]
+pub fn get_lp_treasury_balance() -> u64 {
+    LP_TREASURY.with(|cell| *cell.borrow().get())
+}
+
 #[derive(CandidType, Deserialize)]
 pub struct PaginatedLogs {
     logs: Vec<Log>,

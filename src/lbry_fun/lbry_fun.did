@@ -1,3 +1,20 @@
+type GraphData = record {
+  cost_to_mint_data_x : vec nat64;
+  cost_to_mint_data_y : vec float64;
+  cumulative_usd_cost_data_x : vec nat64;
+  cumulative_usd_cost_data_y : vec float64;
+  cumulative_supply_data_x : vec nat64;
+  cumulative_supply_data_y : vec nat64;
+  minted_per_epoch_data_x : vec text;
+  minted_per_epoch_data_y : vec nat64;
+};
+type PreviewArgs = record {
+  halving_step : nat64;
+  initial_reward_per_burn_unit : nat64;
+  tge_allocation : nat64;
+  primary_max_supply : nat64;
+  initial_secondary_burn : nat64;
+};
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok : nat; Err : TransferFromError };
 type Result_2 = variant { Ok : nat64; Err : text };
@@ -20,6 +37,7 @@ type TokenRecord = record {
   caller : principal;
   created_time : nat64;
   initial_secondary_burn : nat64;
+  logs_canister_id : principal;
 };
 type TransferFromError = variant {
   GenericError : record { message : text; error_code : nat };
@@ -54,4 +72,5 @@ service : () -> {
   get_live : () -> (vec record { nat64; TokenRecord }) query;
   get_treasury_balance : () -> (Result_2) query;
   get_upcomming : () -> (vec record { nat64; TokenRecord }) query;
+  preview_tokenomics_graphs : (PreviewArgs) -> (GraphData) query;
 }

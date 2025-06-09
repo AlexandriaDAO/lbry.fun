@@ -1,4 +1,4 @@
-use candid::{Encode, Nat, Principal};
+use candid::{CandidType, Deserialize, Encode, Nat, Principal};
 use ic_cdk::{
     api::management_canister::main::{
         create_canister, install_code, CanisterInstallMode, CreateCanisterArgument,
@@ -18,8 +18,8 @@ use std::time::Duration;
 use crate::{
     get_principal, get_self_icp_balance, AddPoolArgs, AddPoolReply, AddPoolResult, AddTokenArgs,
     AddTokenReply, AddTokenResponse, AddTokenResult, ApproveArgs, ApproveResult, ArchiveOptions,
-    FeatureFlags, IcpSwapInitArgs, InitArgs, LedgerArg, MetadataValue, TokenDetail, TokenInfo,
-    TokenRecord, TokenomicsInitArgs, CHAIN_ID, E8S, ICP_CANISTER_ID, ICP_TRANSFER_FEE,
+    FeatureFlags, IcpSwapInitArgs, InitArgs, LedgerArg, LogsInitArgs, MetadataValue, TokenDetail,
+    TokenInfo, TokenRecord, TokenomicsInitArgs, CHAIN_ID, E8S, ICP_CANISTER_ID, ICP_TRANSFER_FEE,
     INTITAL_PRIMARY_MINT, KONG_BACKEND_CANISTER, TOKENS,
 };
 
@@ -53,6 +53,7 @@ async fn create_token(
     let swap_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
     let tokenomics_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
     let frontend_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
+    let logs_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
 
     // Create primary token
     // ALEX
@@ -126,6 +127,15 @@ async fn create_token(
     )
     .await?;
 
+    install_logs_wasm_on_existing_canister(
+        logs_canister_id,
+        get_principal(&primary_token_id),
+        get_principal(&secondary_token_id),
+        swap_canister_id,
+        tokenomics_canister_id,
+    )
+    .await?;
+
     match add_token_to_kong_swap(get_principal(&primary_token_id)).await {
         AddTokenResponse::Ok(_) => (),
         AddTokenResponse::Err(e) => return Err(format!("Failed to add token to swap: {}", e)),
@@ -160,6 +170,7 @@ async fn create_token(
             secondary_token_symbol: secondary_token_symbol.clone(),
             icp_swap_canister_id: swap_canister_id,
             tokenomics_canister_id,
+            logs_canister_id,
             initial_primary_mint,
             initial_secondary_burn,
             primary_max_phase_mint,
@@ -326,6 +337,38 @@ async fn install_icp_swap_wasm_on_existing_canister(
         Encode!(&Some(args)).map_err(|e| format!("Failed to encode args: {:?}", e))?;
 
     let wasm_module = include_bytes!("icp_swap.wasm").to_vec(); // Path must be valid in your project
+
+    let install_args = InstallCodeArgument {
+        mode: CanisterInstallMode::Install,
+        canister_id,
+        wasm_module,
+        arg: encoded_args,
+    };
+
+    install_code(install_args)
+        .await
+        .map_err(|e| format!("Wasm install failed: {:?}", e))?;
+
+    Ok(())
+}
+
+async fn install_logs_wasm_on_existing_canister(
+    canister_id: Principal,
+    primary_token_id: Principal,
+    secondary_token_id: Principal,
+    icp_swap_id: Principal,
+    tokenomics_id: Principal,
+) -> Result<(), String> {
+    let args = LogsInitArgs {
+        primary_token_id,
+        secondary_token_id,
+        icp_swap_id,
+        tokenomics_id,
+    };
+    let encoded_args =
+        Encode!(&args).map_err(|e: candid::Error| format!("Failed to encode args: {:?}", e))?;
+
+    let wasm_module = include_bytes!("logs.wasm").to_vec();
 
     let install_args = InstallCodeArgument {
         mode: CanisterInstallMode::Install,

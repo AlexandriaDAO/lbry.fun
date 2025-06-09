@@ -1,16 +1,21 @@
+type InitArgs = record {
+  secondary_token_id : principal;
+  icp_swap_id : principal;
+  tokenomics_id : principal;
+  primary_token_id : principal;
+};
 type Log = record {
   apy : nat;
-  lbry_supply : nat;
-  alex_supply : nat;
-  total_alex_staked : nat;
+  total_primary_staked : nat;
   time : nat64;
   staker_count : nat64;
-  alex_rate : nat64;
-  nft_supply : nat;
-  total_lbry_burn : nat64;
+  icp_in_lp_treasury : nat64;
+  total_secondary_burned : nat64;
+  secondary_token_supply : nat;
+  primary_token_supply : nat;
 };
 type Result = variant { Ok : text; Err : text };
-service : () -> {
+service : (InitArgs) -> {
   get_all_logs : () -> (vec record { nat64; Log }) query;
   register_log : () -> (Result);
   register_log_wrapper : () -> ();

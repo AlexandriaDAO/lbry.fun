@@ -16,7 +16,7 @@ import SuccessModal from '@/features/swap/components/successModal';
 import ErrorModal from '@/features/swap/components/errorModal';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from "@/store";
-import TokenomicsGraphs from './TokenomicsGraphs';
+import TokenomicsGraphsBackend from './TokenomicsGraphsBackend';
 import TooltipIcon from './TooltipIcon';
 
 // Define E8S constant for conversion
@@ -69,7 +69,7 @@ const CreateTokenForm: React.FC = () => {
     primary_max_phase_mint: '50000',
     primary_token_logo_base64: '',
     halving_step: '70',
-    initial_reward_per_burn_unit: '200000',
+    initial_reward_per_burn_unit: '2000',
   });
 
   useEffect(() => {
@@ -591,7 +591,9 @@ const CreateTokenForm: React.FC = () => {
           </div>
         </div>
 
-          <TokenomicsGraphs
+          <div className='my-8 border-t-4 border-dashed border-gray-400'></div>
+
+          <TokenomicsGraphsBackend
               primaryMaxSupply={form.primary_max_supply}
               tgeAllocation={form.tge_allocation}
               initialSecondaryBurn={form.initial_secondary_burn}

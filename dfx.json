@@ -16,6 +16,11 @@
       "package": "tokenomics",
       "type": "rust"
     },
+    "logs": {
+      "candid": "src/logs/logs.did",
+      "package": "logs",
+      "type": "rust"
+    },
  
     "lbry_fun_frontend": {
       "frontend": {

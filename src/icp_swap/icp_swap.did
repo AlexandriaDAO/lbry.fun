@@ -109,6 +109,7 @@ service : (opt InitArgs) -> {
   get_current_staking_reward_percentage : () -> (text) query;
   get_distribution_interval : () -> (nat32) query;
   get_logs : (opt nat64, opt nat64) -> (PaginatedLogs) query;
+  get_lp_treasury_balance : () -> (nat64) query;
   get_scaling_factor : () -> (nat) query;
   get_stake : (principal) -> (opt Stake) query;
   get_stakers_count : () -> (nat64) query;

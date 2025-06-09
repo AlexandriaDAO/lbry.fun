@@ -6,6 +6,13 @@ dfx start --clean --background
 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
 
 #!/bin/bash
+set -e
+
+# Download latest ic-icrc1-ledger.wasm
+wget https://download.dfinity.systems/ic/8f1ef8ce78361adbc09aea4c2f0bce701c9ddb4d/canisters/ic-icrc1-ledger.wasm.gz -O src/lbry_fun/src/ic-icrc1-ledger.wasm.gz
+gunzip -f src/lbry_fun/src/ic-icrc1-ledger.wasm.gz
+
+
 cp dfx_local.json dfx.json
 
 
@@ -29,17 +36,20 @@ dfx deploy xrc --specified-id uf6dk-hyaaa-aaaaq-qaaaq-cai
 
 # For icp_swap
 cargo build --release --target wasm32-unknown-unknown --package icp_swap
+cp target/wasm32-unknown-unknown/release/icp_swap.wasm src/lbry_fun/src/icp_swap.wasm
 candid-extractor target/wasm32-unknown-unknown/release/icp_swap.wasm > src/icp_swap/icp_swap.did
 # For tokenomics
 cargo build --release --target wasm32-unknown-unknown --package tokenomics
+cp target/wasm32-unknown-unknown/release/tokenomics.wasm src/lbry_fun/src/tokenomics.wasm
 candid-extractor target/wasm32-unknown-unknown/release/tokenomics.wasm > src/tokenomics/tokenomics.did
+# For Logs
+cargo build --release --target wasm32-unknown-unknown --package logs
+cp target/wasm32-unknown-unknown/release/logs.wasm src/lbry_fun/src/logs.wasm
+candid-extractor target/wasm32-unknown-unknown/release/logs.wasm > src/logs/logs.did
 
 
 
-# # For Logs
-# cargo build --release --target wasm32-unknown-unknown --package logs
-# candid-extractor target/wasm32-unknown-unknown/release/logs.wasm > src/logs/logs.did
-# dfx deploy logs --specified-id yn33w-uaaaa-aaaap-qpk5q-cai
+
 
 # For lbry_fun 
 cargo build --release --target wasm32-unknown-unknown --package lbry_fun

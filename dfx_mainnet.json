@@ -64,6 +64,12 @@
       "type": "rust",
       "id": "5abki-kiaaa-aaaap-qkmsa-cai"
     },
+    "logs": {
+      "candid": "src/logs/logs.did",
+      "package": "logs",
+      "type": "rust",
+      "specified_id": "yn33w-uaaaa-aaaap-qpk5q-cai"
+    },
     "ic_siwe_provider": {
       "type": "custom",
       "candid": "https://github.com/kristoferlund/ic-siwe/releases/download/v0.1.1/ic_siwe_provider.did",

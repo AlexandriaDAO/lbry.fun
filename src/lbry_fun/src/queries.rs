@@ -1,5 +1,6 @@
 use ic_cdk::query;
 use crate::{TokenRecord, TOKENS, get_self_icp_balance};
+use crate::simulation::{preview_tokenomics, GraphData, PreviewArgs};
 
 #[query]
 pub fn get_all_token_record() -> Vec<(u64, TokenRecord)> {
@@ -44,5 +45,10 @@ pub fn get_live() -> Vec<(u64, TokenRecord)> {
 async fn get_treasury_balance() -> Result<u64, String> {
     let canister_principal = ic_cdk::api::id();
     get_self_icp_balance(canister_principal).await
+}
+
+#[query]
+fn preview_tokenomics_graphs(args: PreviewArgs) -> GraphData {
+    preview_tokenomics(args)
 }
 

@@ -2,23 +2,21 @@ import React, { lazy, Suspense } from "react";
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from "react-router";
 
 
-import BaseLayout from "@/layouts/BaseLayout";
 import MainLayout from "@/layouts/MainLayout";
 import AuthGuard from "@/guards/AuthGuard";
 import UnauthorizedPage from "@/pages/UnauthorizedPage";
-import Protected from "@/guards/Protected";
-import ErrorBoundary from "@/components/ErrorBoundary";
 import { ROUTES } from "./routeConfig";
 import TopProgressBar from "@/components/TopProgressBar";
 import SwapPage from "@/pages/swap";
 import SuccessPage from "@/pages/SuccessPage";
+import RouteErrorBoundary from "@/components/RouteErrorBoundary";
 
 const NotFoundPage = lazy(()=>import("@/pages/NotFoundPage"));
 const TokenPage = lazy(() => import("@/pages/tokenPage"));
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
-		<Route element={<AuthGuard />}>
+		<Route element={<AuthGuard />} errorElement={<RouteErrorBoundary />}>
 			<Route path={"/"} element={<MainLayout />}>
 				<Route index element={<Suspense key="home" fallback={<TopProgressBar />}><TokenPage /></Suspense>} />
 				<Route path="/token">

@@ -1,9 +1,9 @@
 [workspace]
 members = [
-    "src/xrc",
-    "src/lbry_fun",
     "src/icp_swap",
+    "src/lbry_fun",
     "src/tokenomics",
-
+    "src/xrc",
+    "src/logs",
 ]
 resolver = "2"

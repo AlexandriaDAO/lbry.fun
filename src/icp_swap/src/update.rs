@@ -26,8 +26,6 @@ use icrc_ledger_types::icrc1::transfer::{BlockIndex, TransferArg, TransferError}
 use icrc_ledger_types::icrc2::transfer_from::{TransferFromArgs, TransferFromError};
 use num_bigint::BigUint;
 use serde::Deserialize;
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
 
 const LBRY_FUN_CANISTER_ID: &str = "j362g-ziaaa-aaaap-qkt7q-cai";
 
@@ -880,15 +878,13 @@ async fn provide_liquidity_from_treasury() {
     }
     
     let result: Result<String, ExecutionError> = async {
-        let seed = get_random_seed().await;
-        let mut rng = StdRng::from_seed(seed);
+        // Use a fixed 50% of the treasury for deployment.
+        let deploy_percent = 50;
         
         let primary_token_symbol = get_primary_token_symbol()
             .await
             .map_err(|e| ExecutionError::StateError(format!("Failed to get primary token symbol: {}", e)))?;
 
-        // 1. Randomized Execution Logic
-        let deploy_percent = rng.gen_range(40..=60);
         let icp_to_deploy = (treasury_balance * deploy_percent) / 100;
         let icp_for_buyback = icp_to_deploy / 2;
         let icp_for_pairing = icp_to_deploy - icp_for_buyback;
@@ -940,26 +936,14 @@ async fn provide_liquidity_from_treasury() {
     }
 }
 
-async fn get_random_seed() -> [u8; 32] {
-    #[derive(CandidType)]
-    struct In {
-        num_bytes: u32,
-    }
-    let (res,): (Vec<u8>,) = ic_cdk::call(Principal::management_canister(), "raw_rand", ())
-        .await
-        .expect("Failed to get random bytes from management canister");
-    res.try_into().expect("Management canister returned a vector of unexpected length")
-}
+const LIQUIDITY_PROVISION_INTERVAL_NS: u64 = 4 * 60 * 60 * 1_000_000_000; // 4 hours
 
 pub fn schedule_liquidity_provision() {
     ic_cdk::spawn(async {
-        let seed = get_random_seed().await;
-        let mut rng = StdRng::from_seed(seed);
-        let next_interval_ns = rng.gen_range(MIN_PROVISION_INTERVAL_NS..=MAX_PROVISION_INTERVAL_NS);
-        
         provide_liquidity_from_treasury().await;
         
-        ic_cdk_timers::set_timer(std::time::Duration::from_nanos(next_interval_ns), schedule_liquidity_provision);
+        // Schedule the next provision in 4 hours.
+        ic_cdk_timers::set_timer(std::time::Duration::from_nanos(LIQUIDITY_PROVISION_INTERVAL_NS), schedule_liquidity_provision);
     });
 }
 

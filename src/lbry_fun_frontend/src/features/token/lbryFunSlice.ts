@@ -7,6 +7,18 @@ import getUpcomming from "./thunk/getUpcommingTokens.thunk";
 import getLiveTokens from "./thunk/getLiveTokens.thunk";
 import fetchTokenLogosForPool from "./thunk/fetchTokenLogosForPoolThunk";
 import { ErrorMessage } from "@/features/swap/utlis/erorrs";
+import previewTokenomics from "./thunk/previewTokenomics.thunk";
+
+export interface GraphData {
+  cumulative_supply_data_x: string[];
+  cumulative_supply_data_y: string[];
+  minted_per_epoch_data_x: string[];
+  minted_per_epoch_data_y: string[];
+  cost_to_mint_data_x: string[];
+  cost_to_mint_data_y: number[];
+  cumulative_usd_cost_data_x: string[];
+  cumulative_usd_cost_data_y: number[];
+}
 
 // Define the interface for our node state
 export interface LbryFunState {
@@ -16,6 +28,9 @@ export interface LbryFunState {
   liveTokens: [string, TokenRecordStringified][];
   upcommingTokens: [string, TokenRecordStringified][];
   error: ErrorMessage | null;
+  previewGraphData: GraphData | null;
+  previewLoading: boolean;
+  previewError: string | null;
 }
 
 // Define the initial state using the ManagerState interface
@@ -26,6 +41,9 @@ const initialState: LbryFunState = {
   tokenPools: [],
   liveTokens: [],
   upcommingTokens: [],
+  previewGraphData: null,
+  previewLoading: false,
+  previewError: null,
 };
 
 const lbryFunSlice = createSlice({
@@ -129,6 +147,18 @@ const lbryFunSlice = createSlice({
         // Optionally handle logo fetching errors, e.g., log them
         console.warn("Failed to fetch token logos:", action.payload);
         // No user-facing error toast or loading state for now as it's a background task
+      })
+      .addCase(previewTokenomics.pending, (state) => {
+        state.previewLoading = true;
+        state.previewError = null;
+      })
+      .addCase(previewTokenomics.fulfilled, (state, action) => {
+        state.previewLoading = false;
+        state.previewGraphData = action.payload;
+      })
+      .addCase(previewTokenomics.rejected, (state, action) => {
+        state.previewLoading = false;
+        state.previewError = action.payload?.message ?? 'An unknown error occurred';
       });
   },
 });
