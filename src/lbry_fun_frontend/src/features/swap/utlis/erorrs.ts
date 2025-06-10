@@ -1,86 +1,10 @@
-export interface ExecutionErrorData {
-  MinimumRequired?: {
-    required: bigint;
-    provided: bigint;
-    token: string;
-    details: string;
-  };
-  InvalidAmount?: {
-    reason: string;
-    amount: bigint;
-    details: string;
-  };
-  InsufficientBalance?: {
-    required: bigint;
-    available: bigint;
-    token: string;
-    details: string;
-  };
-  InsufficientCanisterBalance?: {
-    required: bigint;
-    available: bigint;
-    details: string;
-  };
-  InsufficientBalanceRewardDistribution?: {
-    available: bigint;
-    details: string;
-  };
-  TransferFailed?: {
-    source: string;
-    dest: string;
-    token: string;
-    amount: bigint;
-    details: string;
-    reason: string;
-  };
-  MintFailed?: {
-    token: string;
-    amount: bigint;
-    reason: string;
-    details: string;
-  };
-  BurnFailed?: {
-    token: string;
-    amount: bigint;
-    reason: string;
-    details: string;
-  };
-  MultiplicationOverflow?: {
-    operation: string;
-    details: string;
-  };
-  AdditionOverflow?: {
-    operation: string;
-    details: string;
-  };
-  Underflow?: {
-    operation: string;
-    details: string;
-  };
-  DivisionFailed?: {
-    operation: string;
-    details: string;
-  };
-  RewardDistributionError?: {
-    reason: string;
-  };
-  CanisterCallFailed?: {
-    canister: string;
-    method: string;
-    details: string;
-  };
-  RateLookupFailed?: {
-    details: string;
-  };
-  StateError?: string;
-  Unauthorized?: string;
-}
+import type { ExecutionError } from "../../../../../declarations/icp_swap/icp_swap.did";
 
 export interface ErrorMessage {
   title: string;
   message: string;
 }
-export const getErrorMessage = (error: ExecutionErrorData): ErrorMessage => {
+export const getErrorMessage = (error: ExecutionError): ErrorMessage => {
   console.log("Error received:", error);
 
   const getMessage = (reason?: string, operation?: string, details?: string): string => {

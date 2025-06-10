@@ -1,36 +1,159 @@
-
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
-// import getAllLogs from '../../thunks/insights/getAllLogs';
-import LbryBurnChart from './chart';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
+import { TailSpin } from 'react-loader-spinner';
 import LineChart from './chart';
+import getAllLogs from '../../thunks/insights/getAllLogs.thunk';
+import TooltipIcon from '@/features/token/components/TooltipIcon';
+
+const formatTime = (timestamps: number[]) => {
+    return timestamps.map(ts => new Date(ts).toLocaleDateString());
+};
 
 const Insights: React.FC = () => {
     const dispatch = useAppDispatch();
-    const chartData = useAppSelector((state) => state.swap.logsData);
+    const { activeSwapPool } = useAppSelector((state) => state.swap);
+    const { logsData, logsLoading, logsError } = useAppSelector((state) => state.swap);
+
+    const logsCanisterId = useMemo(() => activeSwapPool?.[1].logs_canister_id, [activeSwapPool]);
 
     useEffect(() => {
-        // dispatch(getAllLogs());
-    }, [])
+        if (logsCanisterId) {
+            dispatch(getAllLogs(logsCanisterId));
+        }
+    }, [dispatch, logsCanisterId]);
+
+    const summaryData = useMemo(() => {
+        if (!logsData || logsData.time.length === 0) {
+            return null;
+        }
+        const lastIndex = logsData.time.length - 1;
+        return {
+            primaryTokenSupply: logsData.primaryTokenSupply[lastIndex],
+            secondaryTokenSupply: logsData.secondaryTokenSupply[lastIndex],
+            totalSecondaryBurned: logsData.totalSecondaryBurned[lastIndex],
+            totalPrimaryStaked: logsData.totalPrimaryStaked[lastIndex],
+            stakerCount: logsData.stakerCount[lastIndex],
+            apy: logsData.apy[lastIndex],
+            icpInLpTreasury: logsData.icpInLpTreasury[lastIndex],
+        };
+    }, [logsData]);
+    
+    if (logsLoading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <TailSpin color="#4f46e5" height={50} width={50} />
+            </div>
+        );
+    }
+
+    if (logsError) {
+        return <div className="text-center p-4 text-red-500">Error loading logs data: {logsError}</div>;
+    }
+
+    if (!logsData || logsData.time.length === 0) {
+        return <div className="text-center p-4 text-gray-500">No data available for the selected swap pool.</div>;
+    }
+
+    const graphTitleBaseClass = "text-xl font-medium w-full";
+    const isDarkMode = false; // Assuming a light mode default, or you can implement a theme switcher.
+    const formattedTime = formatTime(logsData.time);
+
     return (
-        <>
-            {/* <div className='container px-3'>
-                <div className='grid grid-cols-1 lg:grid-cols-2 md:grid-cols-1 gap-4'>
-                    <LineChart name='ALEX Supply' dataXaxis={chartData.chartData.map((data) => data.time)} dataYaxis={chartData.chartData.map((data) => data.primary)} lineColor={'#5470C6'} gardientColor={'#75A0FD4D'} />
-                    <LineChart name='LBRY Supply' dataXaxis={chartData.chartData.map((data) => data.time)} dataYaxis={chartData.chartData.map((data) => data.lbry)} lineColor={'#1A9442'} gardientColor={'#1A94424D'} />
-                    <LineChart name='LBRY Burned' dataXaxis={chartData.chartData.map((data) => data.time)} dataYaxis={chartData.chartData.map((data) => data.totalLbryBurn)} lineColor={'#B325EB'} gardientColor={'#B325EB4D'} />
-                    <LineChart name='ALEX / LBRY' dataXaxis={chartData.chartData.map((data) => data.time)} dataYaxis={chartData.chartData.map((data) => data.primaryRate)} lineColor={'#00ccff'} gardientColor={' #b3f0ff'} />
-                    <LineChart name='Staked ALEX' dataXaxis={chartData.chartData.map((data) => data.time)} dataYaxis={chartData.chartData.map((data) => data.totalPrimaryStaked)} lineColor={'#ffcc00'} gardientColor={'#fff5cc'} />
-                    <LineChart name='Total Stakers' dataXaxis={chartData.chartData.map((data) => data.time)} dataYaxis={chartData.chartData.map((data) => data.stakerCount)} lineColor={'#669900'} gardientColor={'#ddff99'} />
-                    <LineChart name='Minted NFTs' dataXaxis={chartData.chartData.map((data) => data.time)} dataYaxis={chartData.chartData.map((data) => data.nft)} lineColor={'#F0932F'} gardientColor={'#F0932F4D'} />
+        <div className="container mx-auto px-4 py-8">
+            <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Swap Pool Insights</h2>
+                <p className="text-md text-gray-500 dark:text-gray-400">Live data from the on-chain logs canister.</p>
+            </div>
 
-
-
+            {summaryData && (
+                 <div className="mb-8 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <h3 className="text-xl font-semibold mb-4 text-center text-gray-900 dark:text-white">Latest Metrics</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-center">
+                        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Primary Supply</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{summaryData.primaryTokenSupply.toLocaleString()}</p>
+                        </div>
+                        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Secondary Supply</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{summaryData.secondaryTokenSupply.toLocaleString()}</p>
+                        </div>
+                        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Total Secondary Burned</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{summaryData.totalSecondaryBurned.toLocaleString()}</p>
+                        </div>
+                        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Total Primary Staked</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{summaryData.totalPrimaryStaked.toLocaleString()}</p>
+                        </div>
+                        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Stakers</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{summaryData.stakerCount}</p>
+                        </div>
+                        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">ICP in LP</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{summaryData.icpInLpTreasury.toLocaleString()}</p>
+                        </div>
+                        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">APY</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{summaryData.apy.toFixed(2)}%</p>
+                        </div>
+                    </div>
                 </div>
-            </div> */}
-        </>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <div className="flex items-center mb-2">
+                        <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Primary Token Supply</h3>
+                        <TooltipIcon text="Tracks the total supply of the primary token over time." />
+                    </div>
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.primaryTokenSupply} xAxisLabel="Time" yAxisLabel="Supply" lineColor="#8884d8" gardientColor="rgba(136, 132, 216, 0.3)" />
+                </div>
+                <div>
+                    <div className="flex items-center mb-2">
+                        <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Secondary Token Supply</h3>
+                        <TooltipIcon text="Tracks the total supply of the secondary token over time." />
+                    </div>
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.secondaryTokenSupply} xAxisLabel="Time" yAxisLabel="Supply" lineColor="#82ca9d" gardientColor="rgba(130, 202, 157, 0.3)" />
+                </div>
+                <div>
+                    <div className="flex items-center mb-2">
+                        <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Total Secondary Burned</h3>
+                        <TooltipIcon text="The cumulative amount of secondary tokens burned." />
+                    </div>
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.totalSecondaryBurned} xAxisLabel="Time" yAxisLabel="Burned" lineColor="#ffc658" gardientColor="rgba(255, 198, 88, 0.3)" />
+                </div>
+                <div>
+                    <div className="flex items-center mb-2">
+                        <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Total Primary Staked</h3>
+                        <TooltipIcon text="The total amount of primary tokens currently staked in the pool." />
+                    </div>
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.totalPrimaryStaked} xAxisLabel="Time" yAxisLabel="Staked" lineColor="#ff8042" gardientColor="rgba(255, 128, 66, 0.3)" />
+                </div>
+                <div>
+                    <div className="flex items-center mb-2">
+                        <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Staker Count</h3>
+                        <TooltipIcon text="The number of unique stakers." />
+                    </div>
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.stakerCount} xAxisLabel="Time" yAxisLabel="Count" lineColor="#0088FE" gardientColor="rgba(0, 136, 254, 0.3)" />
+                </div>
+                <div>
+                    <div className="flex items-center mb-2">
+                        <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>APY</h3>
+                        <TooltipIcon text="The Annual Percentage Yield for staking." />
+                    </div>
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.apy} xAxisLabel="Time" yAxisLabel="APY (%)" lineColor="#00C49F" gardientColor="rgba(0, 196, 159, 0.3)" />
+                </div>
+                <div className="md:col-span-2">
+                    <div className="flex items-center mb-2">
+                        <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>ICP in LP Treasury</h3>
+                        <TooltipIcon text="The amount of ICP held in the liquidity pool treasury." />
+                    </div>
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.icpInLpTreasury} xAxisLabel="Time" yAxisLabel="ICP" lineColor="#FFBB28" gardientColor="rgba(255, 187, 40, 0.3)" />
+                </div>
+            </div>
+        </div>
     );
 };
 

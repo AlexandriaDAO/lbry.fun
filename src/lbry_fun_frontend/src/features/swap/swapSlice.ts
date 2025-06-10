@@ -21,10 +21,11 @@ import getStakersCount from "./thunks/getStakersCount";
 import getCanisterArchivedBal from "./thunks/getCanisterArchivedBal";
 import getAverageApy from "./thunks/getAverageApy";
 import getSecondaryFee from "./thunks/secondaryIcrc/getSecondaryFee";
-// import getAllLogs from "./thunks/insights/getAllLogs";
+import getAllLogs from "./thunks/insights/getAllLogs.thunk";
 import { ErrorMessage } from "./utlis/erorrs";
 import { TokenRecordStringified } from "../token/thunk/getTokenPools.thunk";
 import fetchTokenLogosForPool from "../token/thunk/fetchTokenLogosForPoolThunk";
+import { ProcessedLogsData } from "./types/logs";
 
 // Define the interface for our node state
 export interface StakeInfo {
@@ -60,18 +61,9 @@ export interface SwapState {
   error: ErrorMessage | null;
   spendingBalance: string;
   activeSwapPool: [string, TokenRecordStringified] | null;
-  logsData: {
-    chartData: {
-      time: string;
-      lbry: number;
-      primary: number;
-      nft: number;
-      totalPrimaryStaked: number;
-      stakerCount: number;
-      primaryRate: number;
-      totalLbryBurn: number;
-    }[];
-  };
+  logsData: ProcessedLogsData | null;
+  logsLoading: boolean;
+  logsError: string | null;
 }
 
 // Define the initial state using the ManagerState interface
@@ -97,9 +89,9 @@ const initialState: SwapState = {
   averageAPY: 0,
   error: null,
   spendingBalance: "0",
-  logsData: {
-    chartData: [],
-  },
+  logsData: null,
+  logsLoading: false,
+  logsError: null,
   activeSwapPool: null,
 };
 
@@ -427,20 +419,21 @@ const swapSlice = createSlice({
         };
       })
 
-      // .addCase(getAllLogs.fulfilled, (state, action) => {
-      //   state.logsData = action.payload;
-      //   state.loading = false;
-      // })
-      // .addCase(getAllLogs.pending, (state) => {
-      //   state.loading = true;
-      // })
-      // .addCase(getAllLogs.rejected, (state, action) => {
-      //   state.loading = false;
-      //   state.error = state.error = {
-      //     message: "",
-      //     title: action.payload || "Failed to get log data",
-      //   };
-      // })
+      .addCase(getAllLogs.pending, (state) => {
+        state.logsLoading = true;
+      })
+      .addCase(getAllLogs.fulfilled, (state, action) => {
+        state.logsData = action.payload;
+        state.logsLoading = false;
+      })
+      .addCase(getAllLogs.rejected, (state, action) => {
+        state.logsLoading = false;
+        state.logsError = action.payload as string;
+        state.error = {
+          message: "",
+          title: (action.payload as string) || "Failed to get log data",
+        };
+      })
       .addCase(fetchTokenLogosForPool.fulfilled, (state, action) => {
         const { poolId, primaryTokenLogo, secondaryTokenLogo } = action.payload;
         if (state.activeSwapPool && state.activeSwapPool[0] === poolId) {
