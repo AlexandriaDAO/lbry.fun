@@ -1,8 +1,8 @@
 use candid::{CandidType, Deserialize, Encode, Nat, Principal};
 use ic_cdk::{
     api::management_canister::main::{
-        create_canister, install_code, CanisterInstallMode, CreateCanisterArgument,
-        InstallCodeArgument,
+        canister_status, create_canister, install_code, CanisterInstallMode, CreateCanisterArgument,
+        InstallCodeArgument, CanisterIdRecord,
     },
     update,
 };
@@ -23,7 +23,7 @@ use crate::{
     INTITAL_PRIMARY_MINT, KONG_BACKEND_CANISTER, TOKENS,
 };
 
-const CANISTER_CREATION_CYCLES: u128 = 20_000_000_000u128;
+const CANISTER_CREATION_CYCLES: u128 = 2_000_000_000_000u128;
 const ICP_LEDGER_CANISTER_ID: &str = "nppha-riaaa-aaaal-ajf2q-cai";
 const LBRY_SWAP_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";
 
@@ -238,7 +238,7 @@ async fn create_icrc1_canister(
         ],
         feature_flags: Some(FeatureFlags { icrc2: true }),
         archive_options: ArchiveOptions {
-            num_blocks_to_archive: 1000,
+            num_blocks_to_archive: 0,
             max_transactions_per_response: None,
             trigger_threshold: 2000,
             max_message_size_bytes: None,
@@ -462,6 +462,14 @@ pub async fn approve_tokens_to_spender(
     match result {
         ApproveResult::Ok(block_index) => Ok(block_index),
         ApproveResult::Err(e) => Err(format!("Approval failed: {:?}", e)),
+    }
+}
+
+#[update]
+async fn get_canister_cycle_balance(canister_id: Principal) -> Result<Nat, String> {
+    match canister_status(CanisterIdRecord { canister_id }).await {
+        Ok((status,)) => Ok(status.cycles),
+        Err((_code, msg)) => Err(format!("Failed to get canister status: {}", msg)),
     }
 }
 

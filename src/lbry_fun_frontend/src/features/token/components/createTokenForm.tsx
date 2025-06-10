@@ -64,7 +64,7 @@ const CreateTokenForm: React.FC = () => {
     secondary_token_description: '',
     secondary_token_logo_base64: '',
     primary_max_supply: '1000000',
-    tge_allocation: '100000',
+    tge_allocation: '1',
     initial_secondary_burn: '1000000',
     primary_max_phase_mint: '50000',
     primary_token_logo_base64: '',
@@ -73,15 +73,58 @@ const CreateTokenForm: React.FC = () => {
   });
 
   useEffect(() => {
-    const step = parseInt(form.halving_step);
-    if (step < 40) {
-      setHalvingStepWarning("Warning: A low value creates an extreme front-load. The vast majority of tokens will be mintable only in the first epoch, after which minting difficulty will increase dramatically.");
-    } else if (step > 75) {
-      setHalvingStepWarning("Warning: A high value creates a prolonged period of high inflation. The minting rate will decrease very slowly, potentially devaluing early contributions over a longer term.");
+    const newErrors: FormErrors = {};
+
+    // --- Set informational warnings ---
+    const step = parseInt(form.halving_step, 10);
+    if (step >= 25 && step < 40) {
+      setHalvingStepWarning("Warning: A low value creates an extreme front-load. The number of tokens minted will drop sharply after the first epoch.");
+    } else if (step > 75 && step <= 90) {
+      setHalvingStepWarning("Warning: A high value causes the number of tokens minted per epoch to increase over time. This leads to higher inflation in later stages.");
     } else {
       setHalvingStepWarning('');
     }
-  }, [form.halving_step]);
+
+    // --- Validation for disabling form submission ---
+    const requiredFields: Array<keyof TokenFormValues> = [
+      'primary_token_symbol', 'primary_token_name', 'primary_token_description', 'primary_token_logo_base64',
+      'secondary_token_symbol', 'secondary_token_name', 'secondary_token_description', 'secondary_token_logo_base64',
+      'initial_secondary_burn', 'primary_max_phase_mint', 'halving_step'
+    ];
+    requiredFields.forEach(field => {
+      if (!form[field]) {
+        newErrors[field] = 'This field is required';
+      }
+    });
+
+    if (form.primary_token_symbol && !/^[A-Z]{3,5}$/.test(form.primary_token_symbol)) {
+      newErrors.primary_token_symbol = 'Ticker must be 3-5 uppercase letters';
+    }
+    if (form.secondary_token_symbol && !/^[A-Z]{3,5}$/.test(form.secondary_token_symbol)) {
+      newErrors.secondary_token_symbol = 'Ticker must be 3-5 uppercase letters';
+    }
+    
+    const numericFields: Array<keyof TokenFormValues> = [
+      'initial_secondary_burn', 'primary_max_phase_mint', 'primary_max_supply', 'initial_reward_per_burn_unit'
+    ];
+    numericFields.forEach(field => {
+      if (form[field] && isNaN(Number(form[field]))) {
+        newErrors[field] = 'Must be a valid number';
+      }
+    });
+
+    const initialBurn = parseFloat(form.initial_secondary_burn);
+    const secondaryTokenPrice = 0.005;
+    if (!newErrors.initial_secondary_burn && initialBurn > 0 && (initialBurn * secondaryTokenPrice) < 5000) {
+      newErrors.initial_secondary_burn = `Initial valuation must be at least $5,000. Current: $${(initialBurn * secondaryTokenPrice).toLocaleString()}`;
+    }
+
+    if (!newErrors.halving_step && (step < 25 || step > 90)) {
+      newErrors.halving_step = `Halving Step must be between 25% and 90%.`;
+    }
+
+    setErrors(newErrors);
+  }, [form]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -101,14 +144,6 @@ const CreateTokenForm: React.FC = () => {
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
     }
-
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
   };
 
   const handleSliderChange = (fieldName: keyof TokenFormValues, newValue: number[]) => {
@@ -117,68 +152,14 @@ const CreateTokenForm: React.FC = () => {
       ...prev,
       [fieldName]: newValue[0].toString()
     }));
-    if (errors[fieldName]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[fieldName];
-        return newErrors;
-      });
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    const requiredFields: Array<keyof TokenFormValues> = [
-      'primary_token_symbol',
-      'primary_token_name',
-      'primary_token_description',
-      'primary_token_logo_base64',
-      'secondary_token_symbol',
-      'secondary_token_name',
-      'secondary_token_description',
-      'secondary_token_logo_base64',
-      'initial_secondary_burn',
-      'primary_max_phase_mint',
-      'halving_step'
-    ];
-    requiredFields.forEach(field => {
-      if (!form[field]) {
-        newErrors[field] = 'This field is required';
-      }
-    });
-    if (form.primary_token_symbol && !/^[A-Z]{3,5}$/.test(form.primary_token_symbol)) {
-      newErrors.primary_token_symbol = 'Ticker must be 3-5 uppercase letters';
-    }
-    if (form.secondary_token_symbol && !/^[A-Z]{3,5}$/.test(form.secondary_token_symbol)) {
-      newErrors.secondary_token_symbol = 'Ticker must be 3-5 uppercase letters';
-    }
-    const primaryMaxSupplyNum = Number(form.primary_max_supply);
-    const tgeAllocationNum = Number(form.tge_allocation);
-    if (!isNaN(primaryMaxSupplyNum) && primaryMaxSupplyNum < tgeAllocationNum) {
-      newErrors.primary_max_supply = `Hard Cap must be at least ${tgeAllocationNum.toLocaleString()}.`;
-    }
-    const numericFields: Array<keyof TokenFormValues> = [
-      'initial_secondary_burn',
-      'primary_max_phase_mint',
-      'primary_max_supply',
-      'initial_reward_per_burn_unit'
-    ];
-    numericFields.forEach(field => {
-      if (form[field] && isNaN(Number(form[field]))) {
-        newErrors[field] = 'Must be a valid number';
-      }
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoadingModalV(true);
-    if (!validateForm()) {
-      setLoadingModalV(false);
+    if (Object.keys(errors).length > 0) {
       return;
     }
+    setLoadingModalV(true);
     if (!isAuthenticated || !principal) {
       setLoadingModalV(false);
       setErrorModalV({ flag: true, title: "Authentication Error", message: "Please log in to create a token." });
@@ -566,7 +547,7 @@ const CreateTokenForm: React.FC = () => {
                   Halving Step (%) <span className="text-red-500">*:</span>
                 </Label>
                 <TooltipIcon
-                  text="The percentage by which the minting rate decreases each epoch. 50% is a standard halving. Lower values mean a slower decay."
+                  text="The percentage by which the minting reward is multiplied each epoch. A value < 50% causes tokens minted per epoch to decrease (front-loaded). A value > 50% causes tokens minted per epoch to increase (back-loaded)."
                 />
               </div>
               <Input
@@ -605,7 +586,8 @@ const CreateTokenForm: React.FC = () => {
         <div className="text-center mt-12">
           <Button
             type="submit"
-            className="inline-flex gap-2 items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all duration-100 ease-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 bg-[#5555FF] lg:h-14 md:h-12 sm:h-10 xs:h-10 lg:px-7 md:px-5 sm:px-4 xs:px-2 text-white lg:text-lg md:text-base text-sm border-2 border-[#5555FF] rounded-xl hover:bg-transparent hover:text-[#5555FF] dark:bg-[#353230] dark:border-[#353230] dark:text-[#fff] hover:dark:border-[#5555FF] hover:dark:text-[#fff] hover:dark:bg-[#5555FF] min-w-[300px] dark:hover:bg-[#5555ff] dark:hover:text-white"
+            disabled={Object.keys(errors).length > 0}
+            className="inline-flex gap-2 items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all duration-100 ease-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 bg-[#5555FF] lg:h-14 md:h-12 sm:h-10 xs:h-10 lg:px-7 md:px-5 sm:px-4 xs:px-2 text-white lg:text-lg md:text-base text-sm border-2 border-[#5555FF] rounded-xl hover:bg-transparent hover:text-[#5555FF] dark:bg-[#353230] dark:border-[#353230] dark:text-[#fff] hover:dark:border-[#5555FF] hover:dark:text-[#fff] hover:dark:bg-[#5555FF] min-w-[300px] dark:hover:bg-[#5555ff] dark:hover:text-white disabled:bg-gray-400 disabled:cursor-not-allowed disabled:dark:bg-gray-600 disabled:dark:hover:border-gray-600 disabled:dark:hover:text-white"
           >
             Create Token
           </Button>

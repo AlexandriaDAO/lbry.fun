@@ -86,7 +86,7 @@ const BurnContent = () => {
 
     useEffect(() => {
         setMaxburnAllowed(calculateMaxBurnAllowed(swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))
-    }, [swap.canisterArchivedBal, swap.secondaryRatio, icpLedger.canisterBalance])
+    }, [swap.activeSwapPool, swap.canisterArchivedBal, swap.secondaryRatio, icpLedger.canisterBalance]);
 
     const primaryLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
     const secondaryLogoFromState = swap.activeSwapPool?.[1]?.secondary_token_logo_base64;

@@ -91,7 +91,7 @@ const AuthGuard = () => {
 		return <Loading />;
 	}
 
-	if (!isAuthenticated && location.pathname !== "/") { 
+	if (!isAuthenticated && location.pathname !== "/" && !location.pathname.startsWith("/swap")) { 
 		return <Navigate to="/" replace />;
 	}
 

@@ -1,35 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 - Cant navigate to 'swap' unless logged in?
 - Do a logs canister instead of a frontend canister
 - Launch Countdown is also going to be very important.
@@ -59,7 +27,7 @@ dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_balance_of '(record { owner 
 # TO Topup
 dfx identity use kong_user1
 
-dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_transfer '(record { to = record { owner = principal "zerqh-sicpt-z2eox-rk4lt-tikxf-kaqrf-l4jkd-3cdf3-v22au-dxnyd-pqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
+dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_transfer '(record { to = record { owner = principal "k7qe5-wtpll-7tl3k-qhjew-s2rt3-sxrom-tlhax-qw5bu-tb36s-44zib-6qe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
 
 dfx identity use default
 

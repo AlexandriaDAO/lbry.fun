@@ -39,6 +39,7 @@ export const SWAP_ROUTES = {
   REDEEM: '/swap/redeem',
   HISTORY: '/swap/history',
   INSIGHTS: '/swap/insights',
+  INFO: '/swap/info',
   TRANSACTION: '/swap/transaction',
 };
 
@@ -96,6 +97,7 @@ export const buildRoutes = {
   swapRedeem: () => SWAP_ROUTES.REDEEM,
   swapHistory: () => SWAP_ROUTES.HISTORY,
   swapInsights: () => SWAP_ROUTES.INSIGHTS,
+  swapInfo: () => SWAP_ROUTES.INFO,
   swapTransaction: () => SWAP_ROUTES.TRANSACTION,
   
   // Dashboard routes

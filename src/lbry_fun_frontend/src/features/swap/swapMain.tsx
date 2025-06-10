@@ -20,6 +20,7 @@ import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import getSecondaryFee from './thunks/secondaryIcrc/getSecondaryFee';
 import getPrimaryFee from './thunks/primaryIcrc/getPrimaryFee';
 import Insights from './components/insights/insights';
+import InfoCard from './components/info/InfoCard';
 
 import getTokenPools from '../token/thunk/getTokenPools.thunk';
 import { setActiveSwapPool } from './swapSlice';
@@ -43,7 +44,8 @@ const SwapMain = () => {
         { id: 7, path: 'stake', label: 'Stake', hover: null, content: <StakeContent /> },
         { id: 8, path: 'redeem', label: 'Redeem', hover: "Redeem ICP if your swap fails", content: <RedeemContent /> },
         { id: 9, path: 'history', label: 'Transaction history', hover: null, content: <TransactionHistory /> },
-        { id: 10, path: 'insights', label: 'Insights', hover: null, content: <Insights /> }
+        { id: 10, path: 'insights', label: 'Insights', hover: null, content: <Insights /> },
+        { id: 11, path: 'info', label: 'Info', hover: null, content: <InfoCard /> }
     ];
 
     const currentPath = location.pathname.split('/').pop() || 'balance';
@@ -77,6 +79,7 @@ const SwapMain = () => {
             if (swap.activeSwapPool !== null) {
                 dispatch(setActiveSwapPool(null));
             }
+            navigate('/');
             return;
         }
 
@@ -99,12 +102,12 @@ const SwapMain = () => {
                     }));
                 }
             }
-        } else {
+        } else if (lbryFunSuccess) {
             if (swap.activeSwapPool !== null) {
                 dispatch(setActiveSwapPool(null));
             }
         }
-    }, [idFromUrl, tokenPools, lbryFunLoading, lbryFunError, dispatch, swap.activeSwapPool]);
+    }, [idFromUrl, tokenPools, lbryFunLoading, lbryFunError, dispatch, swap.activeSwapPool, lbryFunSuccess, navigate]);
 
     return (
         <div className='tabs py-10 2xl:py-20 xl:py-16 lg:py-14 md:py-12 sm:py-10'>

@@ -164,20 +164,22 @@ fn generate_tokenomics_schedule(
     let mut secondary_thresholds = Vec::new();
     let mut primary_rewards = Vec::new();
 
-    let mut current_burn = initial_secondary_burn as u128;
-    let mut last_burn = 0u128;
+    let mut burn_for_epoch = initial_secondary_burn as u128;
+    let mut cumulative_burn = 0u128;
     let mut total_minted = 0u128;
     let mut primary_per_threshold = initial_reward_per_burn_unit as u128;
     let mut one_reward_mode = false;
+    const E8S_L: u128 = 100_000_000;
 
     while total_minted < max_primary_supply as u128 {
-        let in_slot_burn = current_burn - last_burn;
+        let in_slot_burn = burn_for_epoch;
         let reward = (primary_per_threshold * in_slot_burn) / (initial_secondary_burn as u128);
 
         if one_reward_mode {
             let remaining_mint = max_primary_supply as u128 - total_minted;
-            let final_burn = remaining_mint / 10000;
-            let final_threshold = last_burn + final_burn;
+            let remaining_mint_e8s = remaining_mint.saturating_mul(E8S_L);
+            let final_burn = remaining_mint_e8s / 10000;
+            let final_threshold = cumulative_burn + final_burn;
             secondary_thresholds.push(final_threshold as u64);
             primary_rewards.push(1);
             total_minted += remaining_mint;
@@ -188,12 +190,12 @@ fn generate_tokenomics_schedule(
             break;
         }
 
-        secondary_thresholds.push(current_burn as u64);
+        cumulative_burn += burn_for_epoch;
+        secondary_thresholds.push(cumulative_burn as u64);
         primary_rewards.push(primary_per_threshold as u64);
 
         total_minted += reward;
-        last_burn = current_burn;
-        current_burn = current_burn * 2;
+        burn_for_epoch *= 2;
 
         if primary_per_threshold > 1 {
             primary_per_threshold =

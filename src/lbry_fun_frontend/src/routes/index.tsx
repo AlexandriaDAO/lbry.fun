@@ -36,6 +36,7 @@ const router = createBrowserRouter(
 					<Route path="redeem" element={<Suspense key="swap-redeem" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="history" element={<Suspense key="swap-history" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="insights" element={<Suspense key="swap-insights" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
+					<Route path="info" element={<Suspense key="swap-info" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					{/* <Route path="transaction" element={<Suspense key="transaction" fallback={<TopProgressBar />}><DetailTransaction /></Suspense>} /> */}
 				</Route>
 

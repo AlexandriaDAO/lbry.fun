@@ -246,11 +246,6 @@ const PoolCard: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-300">Primary Token ID:</span>
-                                    <span className="text-white break-all">{activeSwapPoolFromRedux[1].primary_token_id}</span>
-                                </div>
-
-                                <div className="flex justify-between items-center">
                                     <span className="font-semibold text-gray-300">Secondary Token:</span>
                                     <div className="flex items-center">
                                         {secondaryLogo && <img src={secondaryLogo} alt="Secondary token logo" className="w-6 h-6 mr-2" />}
@@ -258,10 +253,6 @@ const PoolCard: React.FC = () => {
                                             {activeSwapPoolFromRedux[1].secondary_token_name} ({activeSwapPoolFromRedux[1].secondary_token_symbol})
                                         </span>
                                     </div>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-300">Secondary Token ID:</span>
-                                    <span className="text-white break-all">{activeSwapPoolFromRedux[1].secondary_token_id}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-semibold text-gray-300">Is Live:</span>
