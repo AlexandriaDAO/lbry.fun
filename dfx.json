@@ -29,14 +29,13 @@
       "source": ["dist/lbry_fun_frontend/"],
       "type": "assets",
       "specified_id": "yn33w-uaaaa-aaaap-qpk5q-cai"
-
     },
 
     "icp_ledger_canister": {
       "type": "custom",
-      "candid": "src/icp_ledger_canister/icp_ledger_canister.did",
-      "wasm": "src/icp_ledger_canister/ic-icrc1-ledger.wasm",
-      "specified_id": "nppha-riaaa-aaaal-ajf2q-cai"
+      "candid": "src/icp_ledger_canister/ledger.did",
+      "wasm": "src/icp_ledger_canister/ledger.wasm",
+      "specified_id": "ryjl3-tyaaa-aaaaa-aaaba-cai"
     },
 
 

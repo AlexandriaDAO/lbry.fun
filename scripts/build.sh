@@ -6,14 +6,6 @@ set -ex
 dfx stop
 dfx start --clean --background
 
-# Download latest ic-icrc1-ledger.wasm from a stable release
-mkdir -p src/icp_ledger_canister
-wget https://github.com/dfinity/ic/releases/download/ledger-suite-icrc-2024-11-28/ic-icrc1-ledger.wasm.gz -O src/icp_ledger_canister/ic-icrc1-ledger.wasm.gz
-gunzip -f src/icp_ledger_canister/ic-icrc1-ledger.wasm.gz
-/home/theseus/.cargo/bin/ic-wasm src/icp_ledger_canister/ic-icrc1-ledger.wasm -o src/icp_ledger_canister/ic-icrc1-ledger.wasm shrink
-
-cp dfx_local.json dfx.json
-
 # Step 2: II Canister
 dfx deps pull
 dfx deps init
@@ -57,40 +49,61 @@ dfx ledger fabricate-cycles --canister "$LBRY_FUN_PRINCIPAL" --cycles 1000000000
 
 cargo update
 
-# Prepare for ledger deployment
-mkdir -p src/icp_ledger_canister
-wget https://github.com/dfinity/ic/raw/ledger-suite-icrc-2024-11-28/rs/rosetta-api/icrc1/ledger/ledger.did -O src/icp_ledger_canister/icp_ledger_canister.did
-
+# Define account IDs for ledger deployment
 export MINTER_ACCOUNT_ID=$(dfx ledger account-id)
 export DEFAULT_ACCOUNT_ID=$(dfx ledger account-id)
 export ALICE_ACCOUNT_ID=$(dfx ledger account-id)
 export BOB_ACCOUNT_ID=$(dfx ledger account-id)
 export CHARLIE_ACCOUNT_ID=$(dfx ledger account-id)
 
-# Deploy the ledger canister
-dfx deploy --specified-id nppha-riaaa-aaaal-ajf2q-cai icp_ledger_canister --argument "  
+# Generate frontend actors BEFORE deploying the ledger canister
+echo "Generating type declarations..."
+for canister in lbry_fun tokenomics logs xrc icp_ledger_canister icp_swap; do
+  dfx generate "$canister"
+done
+
+
+#Kongswap already deployed its ksICP will be using it, so need to deploy our own icp
+
+# Download and prepare the ICP ledger canister
+export IC_VERSION=d87954601e4b22972899e9957e800406a0a6b929
+mkdir -p src/icp_ledger_canister
+curl -L -o src/icp_ledger_canister/ledger.wasm.gz "https://download.dfinity.systems/ic/$IC_VERSION/canisters/ledger-canister.wasm.gz"
+gunzip -f src/icp_ledger_canister/ledger.wasm.gz
+curl -L -o src/icp_ledger_canister/ledger.did "https://raw.githubusercontent.com/dfinity/ic/$IC_VERSION/rs/rosetta-api/icp_ledger/ledger.did"
+
+# Deploy the ICP 
+dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argument "
   (variant {  
     Init = record {  
       minting_account = \"$MINTER_ACCOUNT_ID\";  
       initial_values = vec {  
-        record { \"$DEFAULT_ACCOUNT_ID\"; record { e8s = 8_681_981_000_000_000 : nat64; }; };
-        record { \"$ALICE_ACCOUNT_ID\"; record { e8s = 1_000_000_000 : nat64; }; };
-        record { \"$BOB_ACCOUNT_ID\"; record { e8s = 1_000_000_000 : nat64; }; };
-        record { \"$CHARLIE_ACCOUNT_ID\"; record { e8s = 1_000_000_000 : nat64; }; }
-      };
+        record {  
+          \"$MINTER_ACCOUNT_ID\";  
+          record {  
+            e8s = 8_681_981_000_000_000 : nat64;  
+          };  
+         
+        };  
+      };  
       send_whitelist = vec {};  
-      transfer_fee = opt record { e8s = 10_000 : nat64; };  
+      transfer_fee = opt record {  
+        e8s = 10_000 : nat64;  
+      };  
       token_symbol = opt \"LICP\";  
-      token_name = opt \"Local ICP\";
+      token_name = opt \"Local ICP\";  
     }  
   })  
 "
 
+
+# # How we get the icrc1 ledger wasm:
+# curl -L -o src/lbry_fun/src/ic-icrc1-ledger.wasm.gz "https://download.dfinity.systems/ic/d87954601e4b22972899e9957e800406a0a6b929/canisters/ic-icrc1-ledger.wasm.gz" && gunzip -f src/lbry_fun/src/ic-icrc1-ledger.wasm.gz
+
+
+
 # For icp_swap_factory
 mkdir -p src/icp_swap_factory && dfx canister --network ic metadata ggzvv-5qaaa-aaaag-qck7a-cai candid:service > src/icp_swap_factory/icp_swap_factory.did
-
-echo "Generating type declarations..."
-dfx generate
 
 npm i
 dfx deploy lbry_fun_frontend --specified-id yn33w-uaaaa-aaaap-qpk5q-cai

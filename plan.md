@@ -59,7 +59,7 @@ dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_balance_of '(record { owner 
 # TO Topup
 dfx identity use kong_user1
 
-dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_transfer '(record { to = record { owner = principal "wtwao-hqmec-3up72-zhvyn-e6byd-fgo5k-z2bxl-mywac-56bfi-6bv4l-xqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
+dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_transfer '(record { to = record { owner = principal "zerqh-sicpt-z2eox-rk4lt-tikxf-kaqrf-l4jkd-3cdf3-v22au-dxnyd-pqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
 
 dfx identity use default
 
