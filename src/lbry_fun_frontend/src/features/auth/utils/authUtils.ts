@@ -24,10 +24,6 @@ import {
   createActor as createActorLogs,
 } from "../../../../../declarations/logs";
 import {
-  icp_swap_factory,
-  createActor as createActorIcpSwapFactory,
-} from "../../../../../icp_swap_factory";
-import {
   lbry_fun,
   createActor as createActorLbryFun,
 } from "../../../../../declarations/lbry_fun";
@@ -114,9 +110,3 @@ export const getICRCActor = (canisterId:string) =>
 export const getLogs = () => getActor(log_canister_id, createActorLogs, logs);
 export const getLbryFunActor = () =>
   getActor(lbry_fun_canister_id, createActorLbryFun, lbry_fun);
-export const getIcpSwapFactoryCanister = () =>
-  getActor(
-    icp_swap_factory_canister_id,
-    createActorIcpSwapFactory,
-    icp_swap_factory
-  );

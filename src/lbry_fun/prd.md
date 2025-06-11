@@ -1,3 +1,108 @@
+### **Revised Prompt: Fixing the Broken Integration Test Build**
+
+**Persona:** You are an expert-level Rust developer specializing in setting up robust and isolated testing infrastructure for Internet Computer projects. You have a deep understanding of Cargo's build system, including workspace overrides.
+
+**Primary Goal:** The primary goal is to fix the broken build of the `tests` crate and successfully execute the integration test. The core of the problem lies in finding a valid git reference for the `ic-cdk v0.12.1` dependency, which is required for the test environment's version of `pocket-ic`.
+
+**Current State & Critical Context:**
+
+*   The project is a Rust workspace where source canisters (e.g., `src/icp_swap`) use `ic-cdk` version `0.13.2`.
+*   The `tests` crate must use `pocket-ic` version `2.2.0` to be compatible with the `pocket-ic` server bundled in your `dfx v0.27.0`.
+*   This version of `pocket-ic` requires `ic-cdk` version `0.12.1`, creating a dependency conflict with the rest of the workspace.
+*   An attempt to solve this was made by creating a local dependency override in `tests/.cargo/config.toml` using `[patch.crates-io]`. This correctly isolates the test environment.
+*   All necessary code changes in `tests/Cargo.toml` and `tests/src/simulation_vs_reality.rs` have been applied.
+*   **Core Conflict:** The build is failing because we have been unable to find a valid git `rev` (commit hash) or `tag` for the `v0.12.1` release of `ic-cdk` in the `dfinity/cdk-rs` repository. All attempts so far have resulted in `git fetch` errors. The current configuration in `tests/.cargo/config.toml` is using an invalid reference.
+
+**The Only Acceptable Solution: Find the Correct Git Reference**
+
+The solution **must not** involve downgrading the dependencies of the source canisters. The fix must come from finding the correct, valid git reference for `ic-cdk v0.12.1` and updating the patch configuration.
+
+**Your Step-by-Step Task:**
+
+1.  **Find the Correct Git Reference for `ic-cdk v0.12.1`:**
+    *   This is the most critical step. You need to investigate the `dfinity/cdk-rs` git repository to find the exact commit or tag that corresponds to the `ic-cdk` crate's `v0.12.1` release.
+    *   **Suggestion:** Clone the `dfinity/cdk-rs` repository locally. Navigate into the `ic-cdk` directory and inspect its `Cargo.toml` file's history (`git log -p -- ic-cdk/Cargo.toml`) to find the commit where the version was set to `0.12.1`. Alternatively, you can browse the repository's tags (`git tag`) to find one that corresponds to that release.
+
+2.  **Update the Local Cargo Configuration:**
+    *   Once you have found a valid commit hash or tag, open `tests/.cargo/config.toml`.
+    *   Replace the incorrect `tag` or `rev` value with the correct one you discovered.
+
+    For example, if you find a commit hash `abcdef123...`:
+    ```toml
+    [patch.crates-io]
+    ic-cdk = { git = "https://github.com/dfinity/cdk-rs", rev = "abcdef123..." }
+    ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs", rev = "abcdef123..." }
+    #...
+    ```
+    Or, if you find a tag like `ic-cdk-v0.12.1`:
+    ```toml
+    [patch.crates-io]
+    ic-cdk = { git = "https://github.com/dfinity/cdk-rs", tag = "ic-cdk-v0.12.1" }
+    ic-cdk-macros = { git = "https://github.com/dfinity/cdk-rs", tag = "ic-cdk-v0.12.1" }
+    #...
+    ```
+
+3.  **Clean and Rebuild:**
+    *   It's good practice to clear out any cached build artifacts that might be causing issues. Run `cargo clean` from within the `tests` directory.
+
+**Final Execution Command:**
+
+To run the tests for this project, you must first navigate into the `tests` directory. This is critical so that Cargo uses the local `.cargo/config.toml` with the dependency patch.
+
+Execute the test with:
+`cd tests && cargo test -- --nocapture`
+
+**Definition of Done:**
+
+*   A valid `rev` or `tag` for `ic-cdk` v0.12.1 is found and successfully used.
+*   The `tests/.cargo/config.toml` file is updated with the correct reference.
+*   The project compiles successfully.
+*   Running the test command **successfully executes** the `test_simulation_vs_reality` test without panicking.
+*   The `println!` outputs from the test are visible.
+*   **Crucially: No files outside of the `tests/` directory have been modified.**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Tokenomics
 
 

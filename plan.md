@@ -1,9 +1,5 @@
-- Cant navigate to 'swap' unless logged in?
-- Do a logs canister instead of a frontend canister
-- Launch Countdown is also going to be very important.
 
-
-
+- Dynamic price feeds from kongswap.
 
 - y-axis label on graphs 1, 2 and 4
 - Consistent slider and input option for all 4 parameters with default values.
@@ -27,7 +23,7 @@ dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_balance_of '(record { owner 
 # TO Topup
 dfx identity use kong_user1
 
-dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_transfer '(record { to = record { owner = principal "k7qe5-wtpll-7tl3k-qhjew-s2rt3-sxrom-tlhax-qw5bu-tb36s-44zib-6qe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
+dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_transfer '(record { to = record { owner = principal "ay2wb-5bxeg-6ygoi-25hqi-jmfhk-yr6fg-24xxm-siaq2-pxsjn-yqr6z-nqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
 
 dfx identity use default
 
@@ -263,3 +259,8 @@ Big Changes:
 
 
 If there are unforseen implementation challenges with this idea, we could modify accordingly. But generally speaking this is the ideal. LP grows with staking rewards so there's a nice moat for times when supply expansion stops.
+
+
+
+
+

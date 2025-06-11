@@ -93,8 +93,13 @@ pub fn preview_tokenomics(args: PreviewArgs) -> GraphData {
 
         let (actual_primary_mint_e8s, actual_secondary_burned) =
             if potential_primary_mint_e8s > remaining_to_mint_e8s {
-                let secondary_needed_to_cap =
-                    remaining_to_mint_e8s / (reward_rate.saturating_mul(10000));
+                let secondary_needed_to_cap = if reward_rate > 0 {
+                    remaining_to_mint_e8s
+                        .saturating_div(reward_rate)
+                        .saturating_div(10000)
+                } else {
+                    0
+                };
                 (remaining_to_mint_e8s, secondary_needed_to_cap)
             } else {
                 (potential_primary_mint_e8s, epoch_secondary_burn_capacity)
@@ -169,16 +174,16 @@ fn generate_tokenomics_schedule(
     let mut total_minted = 0u128;
     let mut primary_per_threshold = initial_reward_per_burn_unit as u128;
     let mut one_reward_mode = false;
-    const E8S_L: u128 = 100_000_000;
+    const E8S: u128 = 100_000_000;
 
     while total_minted < max_primary_supply as u128 {
         let in_slot_burn = burn_for_epoch;
-        let reward = (primary_per_threshold * in_slot_burn) / (initial_secondary_burn as u128);
+        let reward_e8s = primary_per_threshold * in_slot_burn * 10000;
+        let reward = reward_e8s / E8S;
 
         if one_reward_mode {
             let remaining_mint = max_primary_supply as u128 - total_minted;
-            let remaining_mint_e8s = remaining_mint.saturating_mul(E8S_L);
-            let final_burn = remaining_mint_e8s / 10000;
+            let final_burn = remaining_mint * 10000;
             let final_threshold = cumulative_burn + final_burn;
             secondary_thresholds.push(final_threshold as u64);
             primary_rewards.push(1);

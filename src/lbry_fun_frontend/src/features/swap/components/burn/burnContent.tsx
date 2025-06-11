@@ -79,9 +79,9 @@ const BurnContent = () => {
     useEffect(() => {
         if (isAuthenticated && principal && swap.activeSwapPool) {
             dispatch(getSecondaryBalance(principal));
+            dispatch(getCanisterBal());
+            dispatch(getCanisterArchivedBal());
         }
-        dispatch(getCanisterBal());
-        dispatch(getCanisterArchivedBal());
     }, [isAuthenticated, principal, swap.activeSwapPool, dispatch]);
 
     useEffect(() => {

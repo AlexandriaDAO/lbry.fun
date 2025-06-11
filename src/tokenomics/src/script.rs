@@ -143,11 +143,13 @@ fn generate_tokenomics_schedule(
     let mut primary_per_threshold = initial_reward_per_burn_unit as u128;
 
     let mut one_reward_mode = false;
+    const E8S: u128 = 100_000_000;
 
     while total_minted < max_primary_supply as u128 {
         let in_slot_burn = current_burn - last_burn;
 
-        let reward = (primary_per_threshold * in_slot_burn) / (initial_secondary_burn as u128);
+        let reward_e8s = (primary_per_threshold * in_slot_burn * 10000);
+        let reward = reward_e8s / E8S;
 
         // This block handles the "One Reward Mode", a special final phase of minting.
         // It is triggered when the decaying reward per unit has reached its absolute minimum
@@ -158,10 +160,8 @@ fn generate_tokenomics_schedule(
             let remaining_mint = max_primary_supply as u128 - total_minted;
 
             // This calculation determines the amount of secondary token that must be burned
-            // to mint the entire remaining primary supply. The divisor `10000` here establishes
-            // a new, fixed minting ratio for this final phase. Its apparent purpose is to calculate
-            // a final burn amount to release the remaining supply at a new, fixed rate.
-            let final_burn = remaining_mint / 10000;
+            // to mint the entire remaining primary supply.
+            let final_burn = remaining_mint * 10000;
 
             // Final cumulative burn value
             let final_threshold = last_burn + final_burn;
@@ -185,7 +185,8 @@ fn generate_tokenomics_schedule(
         current_burn = current_burn * 2;
 
         if primary_per_threshold > 1 {
-            primary_per_threshold = std::cmp::max(1, (primary_per_threshold * halving_step as u128) / 100);
+            primary_per_threshold =
+                std::cmp::max(1, (primary_per_threshold * halving_step as u128) / 100);
         }
 
         if primary_per_threshold == 1 {
