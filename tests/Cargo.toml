@@ -1,13 +1,12 @@
 [package]
-name = "lbryfun_tests"
+name = "tests"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+
 [dependencies]
-candid = "0.10.1"
-ic-cdk = "0.13.1"
-ic-cdk-macros = "0.13.1"
-icrc-ledger-types = "0.1.5"
-pocket-ic = "3.0.0"
-serde = "1.0"
-dirs = "5.0.1"
+candid = "0.10.0"
+pocket-ic = "9.0.2"
+serde = "1.0.203"
+serde_bytes = "0.11.12" 
