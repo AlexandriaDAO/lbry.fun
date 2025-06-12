@@ -1,4 +1,4 @@
-use candid::{decode_one, CandidType, Encode, Principal};
+use candid::{decode_one, CandidType, Encode, Nat, Principal};
 use pocket_ic::PocketIc;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -164,6 +164,128 @@ fn test_get_all_token_record() {
             println!(
                 "Successfully called get_all_token_record and got an empty vec as expected."
             );
+        }
+        Err(user_error) => {
+            panic!("Error calling canister: {}", user_error)
+        }
+    }
+}
+
+#[test]
+fn test_get_canister_cycle_balance() {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let bin_path = manifest_dir.parent().unwrap().join("bin").join("pocket-ic");
+    env::set_var("POCKET_IC_BIN", bin_path);
+
+    let pic = PocketIc::new();
+    let canister_id = pic.create_canister();
+    pic.add_cycles(canister_id, 2_000_000_000_000);
+
+    let sender = Principal::anonymous();
+
+    let install_payload = Encode!(&()).expect("Failed to encode init args");
+
+    pic.install_canister(
+        canister_id,
+        LBRY_FUN_WASM.to_vec(),
+        install_payload,
+        Some(sender),
+    );
+
+    let args = Encode!(&canister_id).expect("Failed to encode arguments");
+    let result = pic.update_call(canister_id, sender, "get_canister_cycle_balance", args);
+
+    match result {
+        Ok(reply) => {
+            let balance_result: Result<Nat, String> =
+                decode_one(&reply).expect("Failed to decode response");
+
+            match balance_result {
+                Ok(balance) => {
+                    println!("Canister cycle balance: {}", balance);
+                    let balance_u128: u128 = balance.to_string().replace("_", "").parse().unwrap();
+                    assert!(balance_u128 > 1_000_000_000_000);
+                    assert!(balance_u128 <= 2_000_000_000_000);
+                    println!("Successfully got canister cycle balance.");
+                }
+                Err(e) => {
+                    panic!("Canister returned an error: {}", e);
+                }
+            }
+        }
+        Err(user_error) => {
+            panic!("Error calling canister: {}", user_error)
+        }
+    }
+}
+
+#[test]
+fn test_get_upcomming_tokens() {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let bin_path = manifest_dir.parent().unwrap().join("bin").join("pocket-ic");
+    env::set_var("POCKET_IC_BIN", bin_path);
+
+    let pic = PocketIc::new();
+    let canister_id = pic.create_canister();
+    pic.add_cycles(canister_id, 2_000_000_000_000);
+
+    let sender = Principal::anonymous();
+
+    let install_payload = Encode!(&()).expect("Failed to encode init args");
+
+    pic.install_canister(
+        canister_id,
+        LBRY_FUN_WASM.to_vec(),
+        install_payload,
+        Some(sender),
+    );
+
+    let args = Encode!().expect("Failed to encode arguments");
+    let result = pic.query_call(canister_id, sender, "get_upcomming", args);
+
+    match result {
+        Ok(reply) => {
+            let records: Vec<(u64, TokenRecord)> =
+                decode_one(&reply).expect("Failed to decode response");
+            assert!(records.is_empty());
+            println!("Successfully called get_upcomming and got empty vec as expected.");
+        }
+        Err(user_error) => {
+            panic!("Error calling canister: {}", user_error)
+        }
+    }
+}
+
+#[test]
+fn test_get_live_tokens() {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let bin_path = manifest_dir.parent().unwrap().join("bin").join("pocket-ic");
+    env::set_var("POCKET_IC_BIN", bin_path);
+
+    let pic = PocketIc::new();
+    let canister_id = pic.create_canister();
+    pic.add_cycles(canister_id, 2_000_000_000_000);
+
+    let sender = Principal::anonymous();
+
+    let install_payload = Encode!(&()).expect("Failed to encode init args");
+
+    pic.install_canister(
+        canister_id,
+        LBRY_FUN_WASM.to_vec(),
+        install_payload,
+        Some(sender),
+    );
+
+    let args = Encode!().expect("Failed to encode arguments");
+    let result = pic.query_call(canister_id, sender, "get_live", args);
+
+    match result {
+        Ok(reply) => {
+            let records: Vec<(u64, TokenRecord)> =
+                decode_one(&reply).expect("Failed to decode response");
+            assert!(records.is_empty());
+            println!("Successfully called get_live and got empty vec as expected.");
         }
         Err(user_error) => {
             panic!("Error calling canister: {}", user_error)
