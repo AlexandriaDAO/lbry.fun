@@ -8,7 +8,7 @@ const InfoCard: React.FC = () => {
     return (
         <div
             style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-            className="bg-[#5555FF] text-white py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3"
+            className="bg-interactive-primary text-primary-foreground py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3"
         >
             <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6">
                 Developer Info

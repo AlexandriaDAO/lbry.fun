@@ -13,8 +13,8 @@ const toggleVariants = cva(
       variant: {
         default: "bg-transparent hover:bg-muted hover:text-muted-foreground",
         outline: "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
-        tag: "border border-input bg-transparent data-[state=off]:hover:bg-[#2A2620] data-[state=on]:bg-balancebox data-[state=on]:text-[#F6F930] data-[state=on]:hover:bg-[hsl(10,35%,20%)]",
-        collection: "border border-input bg-transparent data-[state=off]:hover:bg-[#2A2620] data-[state=on]:bg-balancebox data-[state=on]:text-[#F6F930] data-[state=on]:hover:bg-[hsl(10,35%,20%)]",
+        tag: "border border-input bg-transparent data-[state=off]:hover:bg-muted data-[state=on]:bg-accent data-[state=on]:text-accent-foreground data-[state=on]:hover:bg-accent/80",
+        collection: "border border-input bg-transparent data-[state=off]:hover:bg-muted data-[state=on]:bg-accent data-[state=on]:text-accent-foreground data-[state=on]:hover:bg-accent/80",
       },
       size: {
         default: "h-10 px-3",

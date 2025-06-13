@@ -72,7 +72,7 @@ const GetTokenPools = () => {
                 {tokenPools?.map(([id, record]) => (
                   <tr
                     key={id}
-                    className="bg-white dark:bg-[#2D2A26] hover:bg-[#5555FF] hover:text-white dark:hover:bg-gray-600 shadow-sm"
+                    className="bg-background hover:bg-interactive-primary hover:text-primary-foreground shadow-sm"
                   >
                     <td className="p-4 text-center dark:text-white rounded-l-xl bg-inherit">
                       {id}

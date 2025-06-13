@@ -17,11 +17,11 @@ const UserICPBalance = () => {
 
     return (<>
         <div className="pb-5">
-            <div className="py-4 border-b-2 border-b-[#FF9900] mb-4 px-2 md:flex md:items-center md:justify-between">
+            <div className="py-4 border-b-2 border-b-border-accent mb-4 px-2 md:flex md:items-center md:justify-between">
                 <div>
                     <h2 className="text-2xl font-bold mb-2 text-foreground">Balance</h2>
                     <p className="text-lg text-black font-semibold text-foreground">
-                        <span className="text-[#5EBF82]">{icp.accountBalance}</span> ICP
+                        <span className="text-constructive">{icp.accountBalance}</span> ICP
                     </p>
                 </div>
 

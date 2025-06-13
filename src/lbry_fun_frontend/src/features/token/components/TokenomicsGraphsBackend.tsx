@@ -193,7 +193,7 @@ const TokenomicsGraphsBackend: React.FC<TokenomicsGraphsBackendProps> = ({
   if (previewLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <TailSpin color="#4f46e5" height={50} width={50} />
+        <TailSpin color="hsl(var(--interactive-primary))" height={50} width={50} />
       </div>
     );
   }
@@ -262,8 +262,8 @@ const TokenomicsGraphsBackend: React.FC<TokenomicsGraphsBackendProps> = ({
             dataYaxis={cumulativeSupplyData.yAxis}
             xAxisLabel="Cumulative Secondary Tokens Burned"
             yAxisLabel="Cumulative Primary Tokens Minted"
-            lineColor="#8884d8"
-            gardientColor="rgba(136, 132, 216, 0.3)"
+            lineColor="hsl(var(--color-chart-primary))"
+            gardientColor="hsl(var(--color-chart-primary) / 0.3)"
           />
         </div>
         <div className="md:mb-8">
@@ -276,8 +276,8 @@ const TokenomicsGraphsBackend: React.FC<TokenomicsGraphsBackendProps> = ({
             dataYaxis={mintedPerEpochData.yAxis.length > 0 ? mintedPerEpochData.yAxis : [0]}
             xAxisLabel="Burn Epoch"
             yAxisLabel="Primary Tokens Minted in Epoch"
-            lineColor="#82ca9d"
-            gardientColor="rgba(130, 202, 157, 0.3)"
+            lineColor="hsl(var(--color-chart-secondary))"
+            gardientColor="hsl(var(--color-chart-secondary) / 0.3)"
           />
         </div>
         <div>
@@ -290,8 +290,8 @@ const TokenomicsGraphsBackend: React.FC<TokenomicsGraphsBackendProps> = ({
             dataYaxis={costToMintData?.yAxis}
             xAxisLabel="Cumulative Primary Tokens Minted"
             yAxisLabel="USD Cost per Primary Token ($)"
-            lineColor="#4CAF50"
-            gardientColor="rgba(76, 175, 80, 0.3)"
+            lineColor="hsl(var(--color-chart-success))"
+            gardientColor="hsl(var(--color-chart-success) / 0.3)"
           />
         </div>
         <div>
@@ -304,11 +304,11 @@ const TokenomicsGraphsBackend: React.FC<TokenomicsGraphsBackendProps> = ({
             dataYaxis={cumulativeUsdCostData.yAxis}
             xAxisLabel="Cumulative Primary Tokens Minted"
             yAxisLabel="Minting Valuation ($)"
-            lineColor="#FA8072"
-            gardientColor="rgba(250, 128, 114, 0.3)"
+            lineColor="hsl(var(--color-chart-warning))"
+            gardientColor="hsl(var(--color-chart-warning) / 0.3)"
             dataYaxis2={cumulativePercentageSupplyData.yAxis}
             yAxisLabel2="Supply Minted (%)"
-            lineColor2="#00BCD4"
+            lineColor2="hsl(var(--color-chart-accent))"
             yAxis2format="percent"
           />
         </div>

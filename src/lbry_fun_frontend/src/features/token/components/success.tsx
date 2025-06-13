@@ -10,7 +10,7 @@ const SuccessToken = () => {
 
                 {/* Header */}
                 <div className="text-center px-2 pb-10">
-                    <h1 className="text-5xl font-bold text-black text-foreground pb-8">Your token has been created <span className="text-[#16A34A]">successfully</span>!</h1>
+                    <h1 className="text-5xl font-bold text-black text-foreground pb-8">Your token has been created <span className="text-constructive">successfully</span>!</h1>
                    
                 </div>
             </div>

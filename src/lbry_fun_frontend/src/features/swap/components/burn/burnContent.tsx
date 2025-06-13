@@ -159,20 +159,20 @@ const BurnContent = () => {
                         </div>
                         {isAuthenticated ? <button
                             type="button"
-                            className={`bg-[#5555FF] text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-4 ${parseInt(amountSecondary.toString()) === 0 ||
+                            className={`bg-interactive-primary text-primary-foreground w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-4 ${parseInt(amountSecondary.toString()) === 0 ||
                                     swap.loading ||
                                     amountSecondary > maxBurnAllowed ||
                                     tentativePrimary > 50
-                                    ? 'text-[#808080] cursor-not-allowed'
-                                    : 'bg-[#5555FF] text-white cursor-pointer'
+                                    ? 'text-muted-foreground cursor-not-allowed opacity-50'
+                                    : 'cursor-pointer'
                                 }`}
                             style={{
-                                backgroundColor: parseInt(amountSecondary.toString()) === 0 ||
+                                opacity: parseInt(amountSecondary.toString()) === 0 ||
                                     swap.loading ||
                                     amountSecondary > maxBurnAllowed ||
                                     tentativePrimary > 50
-                                    ? '#5555FF'
-                                    : '', // when disabled
+                                    ? 0.5
+                                    : 1, // when disabled
                             }}
                             disabled={
                                 amountSecondary === 0 ||

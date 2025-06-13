@@ -32,9 +32,26 @@ const LineChart: React.FC<ChartProps> = ({
     const { theme } = useTheme();
     const isDarkMode = theme === 'dark';
 
+    // Helper function to resolve CSS custom properties
+    const resolveColor = (colorString: string): string => {
+        if (typeof document === 'undefined') return colorString;
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.style.color = colorString;
+        document.body.appendChild(tempDiv);
+        const computedColor = getComputedStyle(tempDiv).color;
+        document.body.removeChild(tempDiv);
+        return computedColor || colorString;
+    };
+
     useEffect(() => {
         if (chartRef.current && dataYaxis && dataYaxis.length > 0) {
             const myChart = echarts.init(chartRef.current, isDarkMode ? 'dark' : undefined);
+            
+            // Resolve CSS custom properties to actual color values
+            const resolvedLineColor = resolveColor(lineColor);
+            const resolvedGradientColor = resolveColor(gardientColor);
+            const resolvedLineColor2 = lineColor2 ? resolveColor(lineColor2) : '#5470c6';
 
             const option: ECBasicOption = {
                 tooltip: {
@@ -44,13 +61,13 @@ const LineChart: React.FC<ChartProps> = ({
                     type: 'category',
                     data: dataXaxis,
                     axisLabel: {
-                        color: isDarkMode ? '#ccc' : '#666'
+                        color: 'hsl(var(--muted-foreground))'
                     },
                     name: xAxisLabel,
                     nameLocation: 'middle',
                     nameGap: 35,
                     nameTextStyle: {
-                        color: isDarkMode ? '#ccc' : '#666',
+                        color: 'hsl(var(--muted-foreground))',
                         fontSize: 14
                     }
                 },
@@ -58,7 +75,7 @@ const LineChart: React.FC<ChartProps> = ({
                     {
                         type: 'value',
                         axisLabel: {
-                            color: isDarkMode ? '#ccc' : '#666'
+                            color: 'hsl(var(--muted-foreground))'
                         },
                         name: yAxisLabel,
                         nameLocation: 'middle',
@@ -69,7 +86,7 @@ const LineChart: React.FC<ChartProps> = ({
                         },
                         splitLine: {
                             lineStyle: {
-                                color: isDarkMode ? '#333' : '#eee'
+                                color: 'hsl(var(--border))'
                             }
                         }
                     }
@@ -81,14 +98,14 @@ const LineChart: React.FC<ChartProps> = ({
                         type: 'line',
                         smooth: true,
                         itemStyle: {
-                            color: lineColor
+                            color: resolvedLineColor
                         },
                         areaStyle: {
                             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                { offset: 0, color: gardientColor },
+                                { offset: 0, color: resolvedGradientColor },
                                 { 
                                     offset: 1, 
-                                    color: isDarkMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'
+                                    color: resolveColor('hsl(var(--border) / 0.1)')
                                 }
                             ])
                         }
@@ -109,13 +126,13 @@ const LineChart: React.FC<ChartProps> = ({
                     name: yAxisLabel2 || '',
                     position: 'right',
                     axisLabel: {
-                        color: isDarkMode ? '#ccc' : '#666',
+                        color: 'hsl(var(--muted-foreground))',
                         formatter: yAxis2format === 'percent' ? '{value} %' : '{value}',
                     },
                     nameLocation: 'middle',
                     nameGap: 45,
                     nameTextStyle: {
-                        color: isDarkMode ? '#ccc' : '#666',
+                        color: 'hsl(var(--muted-foreground))',
                         fontSize: 14
                     },
                     splitLine: {
@@ -130,7 +147,7 @@ const LineChart: React.FC<ChartProps> = ({
                     smooth: true,
                     yAxisIndex: 1,
                     itemStyle: {
-                        color: lineColor2 || '#5470c6'
+                        color: resolvedLineColor2
                     },
                 });
             }

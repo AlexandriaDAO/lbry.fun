@@ -53,101 +53,107 @@ module.exports = {
   			smswapheading: '24px'
   		},
   		colors: {
-			// //  OG from Zeeshan with the blue tone.
-  			// gray: {
-  			// 	50: 'rgb(249, 250, 251)',
-  			// 	100: 'rgb(243, 244, 246)',
-  			// 	200: 'rgb(229, 231, 235)',
-  			// 	300: 'rgb(209, 213, 219)',
-  			// 	400: 'rgb(156, 163, 175)',
-  			// 	500: 'rgb(107, 114, 128)',
-  			// 	600: 'rgb(75, 85, 99)',
-  			// 	700: 'rgb(55, 65, 81)',
-  			// 	800: 'rgb(31, 31, 31)',
-  			// 	900: 'rgb(17, 24, 39)',
-  			// },
-			  gray: {
-				20: 'rgb(242, 242, 241)',
-				30: 'rgb(254, 253, 251)',
-				50: 'rgb(253, 252, 249)',
-				100: 'rgb(249, 247, 242)',
-				200: 'rgb(240, 237, 229)',
-				300: 'rgb(224, 220, 208)',
-				400: 'rgb(194, 189, 173)',
-				500: 'rgb(161, 155, 136)',
-				600: 'rgb(127, 121, 104)',
-				700: 'rgb(96, 92, 79)',
-				800: 'rgb(66, 64, 58)',
-				850: 'rgb(60, 58, 53)',
-				900: 'rgb(53, 52, 48)',
-			  },
-  			border: 'hsl(var(--border))',
-  			input: 'hsl(var(--input))',
-  			ring: 'hsl(var(--ring))',
-  			background: 'hsl(var(--background))',
-  			foreground: 'hsl(var(--foreground))',
-  			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
-  			},
-  			secondary: {
-  				DEFAULT: 'hsl(var(--secondary))',
-  				foreground: 'hsl(var(--secondary-foreground))'
-  			},
-  			info: {
-  				DEFAULT: 'hsl(var(--info))',
-  				foreground: 'hsl(var(--info-foreground))'
-  			},
-  			warning: {
-  				DEFAULT: 'hsl(var(--warning))',
-  				foreground: 'hsl(var(--warning-foreground))'
-  			},
-  			destructive: {
-  				DEFAULT: 'hsl(var(--destructive))',
-  				foreground: 'hsl(var(--destructive-foreground))'
-  			},
-  			constructive: {
-  				DEFAULT: 'hsl(var(--constructive))',
-  				foreground: 'hsl(var(--constructive-foreground))'
-  			},
-  			muted: {
-  				DEFAULT: 'hsl(var(--muted))',
-  				foreground: 'hsl(var(--muted-foreground))'
-  			},
-  			accent: {
-  				DEFAULT: 'hsl(var(--accent))',
-  				foreground: 'hsl(var(--accent-foreground))'
-  			},
-  			popover: {
-  				DEFAULT: 'hsl(var(--popover))',
-  				foreground: 'hsl(var(--popover-foreground))'
-  			},
-  			card: {
-  				DEFAULT: 'hsl(var(--card))',
-  				foreground: 'hsl(var(--card-foreground))'
-  			},
-  			multycolor: '#FF9900',
-			brightyellow: '#F6F930',
-  			multygray: '#808080',
-  			lightgray: '#CCCCCC',
-  			radiocolor: '#353535',
-  			swapinput: '#32524D',
-  			swaptext: '#5C5C5C',
-  			swapvalue: '#31524E',
-  			darkgray: '#525252',
-  			white: '#FFFFFF',
-  			black: '#000000',
-  			transparent: 'transparent',
-  			current: 'currentColor',
-  		},
+			// Cool-toned gray system (cyberpunk-ready)
+			gray: {
+				50: 'hsl(210 20% 98%)',     // Very light cool gray
+				100: 'hsl(210 20% 95%)',    // Light cool gray
+				200: 'hsl(210 15% 85%)',    // Cool gray
+				300: 'hsl(210 15% 75%)',    // Medium cool gray
+				400: 'hsl(210 10% 60%)',    // Dark cool gray
+				500: 'hsl(210 10% 45%)',    // Darker cool gray
+				600: 'hsl(210 15% 35%)',    // Very dark cool gray
+				700: 'hsl(210 20% 25%)',    // Almost black cool
+				800: 'hsl(210 25% 15%)',    // Dark slate
+				900: 'hsl(210 30% 8%)',     // Very dark slate
+			},
+			
+			// Core semantic color system using CSS variables
+			border: 'hsl(var(--color-border-primary))',
+			input: 'hsl(var(--color-border-muted))',
+			ring: 'hsl(var(--ring))',
+			background: 'hsl(var(--color-background-primary))',
+			foreground: 'hsl(var(--color-text-primary))',
+			
+			// Interactive colors
+			primary: {
+				DEFAULT: 'hsl(var(--color-interactive-primary))',
+				foreground: 'hsl(var(--color-text-accent))'
+			},
+			secondary: {
+				DEFAULT: 'hsl(var(--color-interactive-secondary))',
+				foreground: 'hsl(var(--color-text-primary))'
+			},
+			
+			// Status colors
+			info: {
+				DEFAULT: 'hsl(var(--color-status-info))',
+				foreground: 'hsl(var(--color-status-info-fg))'
+			},
+			warning: {
+				DEFAULT: 'hsl(var(--color-status-warning))',
+				foreground: 'hsl(var(--color-status-warning-fg))'
+			},
+			destructive: {
+				DEFAULT: 'hsl(var(--color-status-error))',
+				foreground: 'hsl(var(--color-status-error-fg))'
+			},
+			constructive: {
+				DEFAULT: 'hsl(var(--color-status-success))',
+				foreground: 'hsl(var(--color-status-success-fg))'
+			},
+			
+			// Layout colors
+			muted: {
+				DEFAULT: 'hsl(var(--color-background-muted))',
+				foreground: 'hsl(var(--color-text-secondary))'
+			},
+			accent: {
+				DEFAULT: 'hsl(var(--color-background-accent))',
+				foreground: 'hsl(var(--color-text-primary))'
+			},
+			popover: {
+				DEFAULT: 'hsl(var(--color-background-secondary))',
+				foreground: 'hsl(var(--color-text-primary))'
+			},
+			card: {
+				DEFAULT: 'hsl(var(--color-background-secondary))',
+				foreground: 'hsl(var(--color-text-primary))'
+			},
+			
+			// Chart colors using CSS variables
+			chart: {
+				primary: 'hsl(var(--color-chart-primary))',
+				secondary: 'hsl(var(--color-chart-secondary))',
+				accent: 'hsl(var(--color-chart-accent))',
+				success: 'hsl(var(--color-chart-success))',
+				warning: 'hsl(var(--color-chart-warning))',
+				error: 'hsl(var(--color-chart-error))'
+			},
+			
+			// Theme-specific semantic colors (replace hardcoded usage)
+			multycolor: 'hsl(var(--color-interactive-accent))',    // Replace #FF9900
+			brightyellow: 'hsl(var(--color-text-accent))',        // Replace #F6F930
+			multygray: 'hsl(var(--color-text-secondary))',        // Replace #808080
+			lightgray: 'hsl(var(--color-border-muted))',          // Replace #CCCCCC
+			radiocolor: 'hsl(var(--color-background-accent))',    // Replace #353535
+			swapinput: 'hsl(var(--color-interactive-primary))',   // Replace #32524D
+			swaptext: 'hsl(var(--color-text-secondary))',         // Replace #5C5C5C
+			swapvalue: 'hsl(var(--color-interactive-primary))',   // Replace #31524E
+			darkgray: 'hsl(var(--color-text-secondary))',         // Replace #525252
+			
+			// Standard colors
+			white: '#FFFFFF',
+			black: '#000000',
+			transparent: 'transparent',
+			current: 'currentColor',
+		},
   		backgroundColor: {
-			  balancebox: '#3A3630', // I think it's a winner.
-  			// balancebox: '#353535',  // OG Grey
-			// balancebox: 'rgb(74, 72, 63)',
-  			sendbtnbg: '#FF3737',
-  			mintbtnbg: '#92FF71',
-  			receive: '#92FF71'
-  		},
+			// Replace hardcoded backgrounds with semantic roles
+			balancebox: 'hsl(var(--color-interactive-primary))',  // Replace #3A3630
+			sendbtnbg: 'hsl(var(--color-status-error))',         // Replace #FF3737
+			mintbtnbg: 'hsl(var(--color-status-success))',       // Replace #92FF71
+			receive: 'hsl(var(--color-status-success))'          // Replace #92FF71
+		},
   		borderRadius: {
   			lg: '`var(--radius)`',
   			md: '`calc(var(--radius) - 2px)`',

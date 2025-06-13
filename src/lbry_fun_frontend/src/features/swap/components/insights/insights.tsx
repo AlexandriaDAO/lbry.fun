@@ -42,7 +42,7 @@ const Insights: React.FC = () => {
     if (logsLoading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <TailSpin color="#4f46e5" height={50} width={50} />
+                <TailSpin color="hsl(var(--interactive-primary))" height={50} width={50} />
             </div>
         );
     }
@@ -108,49 +108,49 @@ const Insights: React.FC = () => {
                         <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Primary Token Supply</h3>
                         <TooltipIcon text="Tracks the total supply of the primary token over time." />
                     </div>
-                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.primaryTokenSupply} xAxisLabel="Time" yAxisLabel="Supply" lineColor="#8884d8" gardientColor="rgba(136, 132, 216, 0.3)" />
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.primaryTokenSupply} xAxisLabel="Time" yAxisLabel="Supply" lineColor="hsl(var(--color-chart-primary))" gardientColor="hsl(var(--color-chart-primary) / 0.3)" />
                 </div>
                 <div>
                     <div className="flex items-center mb-2">
                         <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Secondary Token Supply</h3>
                         <TooltipIcon text="Tracks the total supply of the secondary token over time." />
                     </div>
-                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.secondaryTokenSupply} xAxisLabel="Time" yAxisLabel="Supply" lineColor="#82ca9d" gardientColor="rgba(130, 202, 157, 0.3)" />
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.secondaryTokenSupply} xAxisLabel="Time" yAxisLabel="Supply" lineColor="hsl(var(--color-chart-secondary))" gardientColor="hsl(var(--color-chart-secondary) / 0.3)" />
                 </div>
                 <div>
                     <div className="flex items-center mb-2">
                         <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Total Secondary Burned</h3>
                         <TooltipIcon text="The cumulative amount of secondary tokens burned." />
                     </div>
-                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.totalSecondaryBurned} xAxisLabel="Time" yAxisLabel="Burned" lineColor="#ffc658" gardientColor="rgba(255, 198, 88, 0.3)" />
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.totalSecondaryBurned} xAxisLabel="Time" yAxisLabel="Burned" lineColor="hsl(var(--color-chart-warning))" gardientColor="hsl(var(--color-chart-warning) / 0.3)" />
                 </div>
                 <div>
                     <div className="flex items-center mb-2">
                         <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Total Primary Staked</h3>
                         <TooltipIcon text="The total amount of primary tokens currently staked in the pool." />
                     </div>
-                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.totalPrimaryStaked} xAxisLabel="Time" yAxisLabel="Staked" lineColor="#ff8042" gardientColor="rgba(255, 128, 66, 0.3)" />
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.totalPrimaryStaked} xAxisLabel="Time" yAxisLabel="Staked" lineColor="hsl(var(--color-chart-error))" gardientColor="hsl(var(--color-chart-error) / 0.3)" />
                 </div>
                 <div>
                     <div className="flex items-center mb-2">
                         <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Staker Count</h3>
                         <TooltipIcon text="The number of unique stakers." />
                     </div>
-                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.stakerCount} xAxisLabel="Time" yAxisLabel="Count" lineColor="#0088FE" gardientColor="rgba(0, 136, 254, 0.3)" />
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.stakerCount} xAxisLabel="Time" yAxisLabel="Count" lineColor="hsl(var(--color-chart-accent))" gardientColor="hsl(var(--color-chart-accent) / 0.3)" />
                 </div>
                 <div>
                     <div className="flex items-center mb-2">
                         <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>APY</h3>
                         <TooltipIcon text="The Annual Percentage Yield for staking." />
                     </div>
-                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.apy} xAxisLabel="Time" yAxisLabel="APY (%)" lineColor="#00C49F" gardientColor="rgba(0, 196, 159, 0.3)" />
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.apy} xAxisLabel="Time" yAxisLabel="APY (%)" lineColor="hsl(var(--color-chart-success))" gardientColor="hsl(var(--color-chart-success) / 0.3)" />
                 </div>
                 <div className="md:col-span-2">
                     <div className="flex items-center mb-2">
                         <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>ICP in LP Treasury</h3>
                         <TooltipIcon text="The amount of ICP held in the liquidity pool treasury." />
                     </div>
-                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.icpInLpTreasury} xAxisLabel="Time" yAxisLabel="ICP" lineColor="#FFBB28" gardientColor="rgba(255, 187, 40, 0.3)" />
+                    <LineChart dataXaxis={formattedTime} dataYaxis={logsData.icpInLpTreasury} xAxisLabel="Time" yAxisLabel="ICP" lineColor="hsl(var(--color-chart-secondary))" gardientColor="hsl(var(--color-chart-secondary) / 0.3)" />
                 </div>
             </div>
         </div>
