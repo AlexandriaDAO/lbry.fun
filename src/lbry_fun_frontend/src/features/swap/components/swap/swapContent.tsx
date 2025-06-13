@@ -30,7 +30,7 @@ const SwapContent: React.FC = () => {
   const [successModalV, setSucessModalV] = useState(false);
   const [errorModalV, setErrorModalV] = useState({ flag: false, title: "", message: "" });
 
-  const [shadow, setShadow] = useState('shadow-[0px_0px_13px_4px_#abbddb8a] border-[#C5CFF9] ');
+  const [inputState, setInputState] = useState<'default' | 'error' | 'focus'>('default');
 
   const handleSubmit = () => {
     if (!isAuthenticated || !principal || !swap.activeSwapPool?.[1].icp_swap_canister_id) return;
@@ -54,7 +54,7 @@ const SwapContent: React.FC = () => {
     if (Number(e.target.value) >= 0) {
       setAmount(e.target.value);
       setTentativeSecondary(secondaryRatio * Number(e.target.value));
-      setShadow("border-[#bdbec4]");
+      setInputState('focus');
     }
   };
   useEffect(() => {
@@ -83,36 +83,32 @@ const SwapContent: React.FC = () => {
     }
   }, [swap])
   useEffect(() => {
-    if (amount == "0") {
-      setShadow('shadow-[0px_0px_13px_4px_#FF37371A] border-[#FF37374D]');
-    }
-    else if (amount == "") {
-      setShadow('shadow-[0px_0px_13px_4px_#abbddb8a] border-[#C5CFF9]')
-
-    }
-    else if (Number(amount) < minimum_icp) {
-      setShadow('shadow-[0px_0px_13px_4px_#FF37371A] border-[#FF37374D]');
-
+    if (amount == "0" || Number(amount) < minimum_icp) {
+      setInputState('error');
+    } else if (amount == "") {
+      setInputState('default');
+    } else {
+      setInputState('focus');
     }
   }, [amount])
   return (
     <div>
       <div className="mb-5 2xl:mb-10 xl:mb-7 lg:mb-7 md:mb-6 sm:mb-5">
-        <h3 className="text-tabsheading 2xl:text-xxltabsheading xl:text-xltabsheading lg:text-lgtabsheading md:text-mdtabsheading sm:text-smtabsheading font-bold dark:text-gray-200">
+        <h3 className="text-tabsheading 2xl:text-xxltabsheading xl:text-xltabsheading lg:text-lgtabsheading md:text-mdtabsheading sm:text-smtabsheading font-bold text-foreground">
           Swap
         </h3>
       </div>
       <div className="grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-1 sm:grid-cols-1">
         <div className="me-0 2xl:me-2 xl:me-2 lg:me-2 md:me-0 sm:me-0 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-3 sm:mb-3">
           <div className="block 2xl:flex xl:flex lg:flex md:flex sm:block justify-between mb-5 w-full">
-            <div className={'bg-white dark:bg-gray-800 border dark:border-gray-700 py-5 px-7 rounded-borderbox me-0 2xl:me-2 xl:me-2 lg:me-2 md:me-2 sm:me-0 w-full 2xl:w-6/12 xl:w-6/12 lg:w-6/12 md:w-6/12 sm:w-full mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3 ' + shadow}>
+            <div className={`bg-card border ${inputState === 'error' ? 'border-destructive ring-2 ring-destructive/20' : inputState === 'focus' ? 'border-primary ring-2 ring-primary/20' : 'border-border'} py-5 px-7 rounded-borderbox me-0 2xl:me-2 xl:me-2 lg:me-2 md:me-2 sm:me-0 w-full 2xl:w-6/12 xl:w-6/12 lg:w-6/12 md:w-6/12 sm:w-full mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3`}>
               <div className="flex justify-between mb-5">
-                <h2 className="text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-black dark:text-gray-200 me-2">
+                <h2 className="text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-foreground me-2">
                   ICP
                 </h2>
                 <div>
                   <input
-                    className="text-black dark:text-gray-200 text-right text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading bg-transparent placeholder-black dark:placeholder-gray-400 focus:outline-none focus:border-transparent w-full caret-[#D8DDF7] dark:caret-blue-400"
+                    className="text-foreground text-right text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading bg-transparent placeholder-muted-foreground focus:outline-none focus:border-transparent w-full caret-primary"
                     type="text"
                     value={amount + ""}
                     min="0"
@@ -137,17 +133,17 @@ const SwapContent: React.FC = () => {
                 </Link>
               </div>
             </div>
-            <div className="bg-white dark:bg-gray-800 border border-[#bdbec4] dark:border-gray-700 py-5 px-7 rounded-borderbox me-0 2xl:ms-2 xl:ms-2 lg:ms-2 md:ms-2 sm:me-0 w-full 2xl:w-6/12 xl:w-6/12 lg:w-6/12 md:w-6/12 sm:w-full">
+            <div className="bg-card border border-border py-5 px-7 rounded-borderbox me-0 2xl:ms-2 xl:ms-2 lg:ms-2 md:ms-2 sm:me-0 w-full 2xl:w-6/12 xl:w-6/12 lg:w-6/12 md:w-6/12 sm:w-full">
               <div className="flex justify-between mb-5 flex-wrap break-all">
-                <h2 className="text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-black dark:text-gray-200">
+                <h2 className="text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-foreground">
                   {swap.activeSwapPool?.[1].secondary_token_symbol}
                 </h2>
-                <h3 className="text-swapvalue text-right text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium dark:text-gray-200">
+                <h3 className="text-swapvalue text-right text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-foreground">
                   {tentativeSecondary.toFixed(4)}
                 </h3>
               </div>
               <div className="flex justify-between">
-                <strong className="text-base text-[#353535] dark:text-gray-300 font-medium me-1">
+                <strong className="text-base text-muted-foreground font-medium me-1">
                   Balance: {swap.secondaryBalance} {swap.activeSwapPool?.[1].secondary_token_symbol}
                 </strong>
               </div>

@@ -33,7 +33,7 @@ const Unstake: React.FC<UnstakeProps> = ({ setLoadingModalV, setActionType}) => 
 
     return (
         <button
-            className="lg:text-xl md:text-lg sm:text-base xs:text-xs font-semibold text-multycolor dark:text-orange-300 border-2 border-[#FF9900] dark:border-orange-400 py-2 px-5 me-3 rounded-full hover:bg-orange-50 dark:hover:bg-gray-800"
+            className="lg:text-xl md:text-lg sm:text-base xs:text-xs font-semibold text-warning-foreground border-2 border-warning py-2 px-5 me-3 rounded-full hover:bg-warning/10"
             onClick={(e) => handleUnstake(e)}
         >
             Unstake

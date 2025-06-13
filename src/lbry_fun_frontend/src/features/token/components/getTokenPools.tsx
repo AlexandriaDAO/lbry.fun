@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import getTokenPools from "../thunk/getTokenPools.thunk";
-import { Button } from "antd/es";
+import { Button } from "@/lib/components/button";
 import { useNavigate } from "react-router-dom";
 import { lbryFunFlagHandler } from '@/features/token/lbryFunSlice'; // If you need to reset flags
 
@@ -34,30 +34,30 @@ const GetTokenPools = () => {
         ) : (
           <div className="overflow-hidden ">
             <table className="min-w-full table-auto text-sm border-separate border-spacing-y-2">
-              <thead className="bg-[#F8FAFC] dark:bg-[#2D2A26]">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="p-4 text-base text-[#64748B] dark:text-white font-medium rounded-l-xl">
+                  <th className="p-4 text-base text-muted-foreground font-medium rounded-l-xl">
                     ID
                   </th>
-                  <th className="p-4 text-base text-[#64748B] dark:text-white font-medium">
+                  <th className="p-4 text-base text-muted-foreground font-medium">
                     Primary Ticker
                   </th>
-                  <th className="p-4 text-base text-[#64748B] dark:text-white font-medium">
+                  <th className="p-4 text-base text-muted-foreground font-medium">
                     Primary Name
                   </th>
-                  <th className="p-4 text-base text-[#64748B] dark:text-white font-medium">
+                  <th className="p-4 text-base text-muted-foreground font-medium">
                     Primary Canister ID
                   </th>
-                  <th className="p-4 text-base text-[#64748B] dark:text-white font-medium">
+                  <th className="p-4 text-base text-muted-foreground font-medium">
                     Secondary Ticker
                   </th>
-                  <th className="p-4 text-base text-[#64748B] dark:text-white font-medium">
+                  <th className="p-4 text-base text-muted-foreground font-medium">
                     Secondary Name
                   </th>
-                  <th className="p-4 text-base text-[#64748B] dark:text-white font-medium">
+                  <th className="p-4 text-base text-muted-foreground font-medium">
                     Secondary Canister ID
                   </th>
-                  <th className="p-4 text-base text-[#64748B] dark:text-white font-medium">
+                  <th className="p-4 text-base text-muted-foreground font-medium">
                     Swap Canister ID
                   </th>
                   <th className="p-4 text-base text-[#64748B] dark:text-grey font-medium ">
@@ -77,36 +77,36 @@ const GetTokenPools = () => {
                     <td className="p-4 text-center dark:text-white rounded-l-xl bg-inherit">
                       {id}
                     </td>
-                    <td className="p-4 text-center hover:text-white bg-inherit">
+                    <td className="p-4 text-center text-foreground bg-inherit">
                       {record.primary_token_symbol}
                     </td>
-                    <td className="p-4 text-center dark:text-white bg-inherit">
+                    <td className="p-4 text-center text-foreground bg-inherit">
                       {record.primary_token_name}
                     </td>
-                    <td className="p-4 text-center dark:text-white bg-inherit">
+                    <td className="p-4 text-center text-foreground bg-inherit">
                       {record.primary_token_id}
                     </td>
-                    <td className="p-4 text-center dark:text-white bg-inherit">
+                    <td className="p-4 text-center text-foreground bg-inherit">
                       {record.secondary_token_symbol}
                     </td>
-                    <td className="p-4 text-center dark:text-white bg-inherit">
+                    <td className="p-4 text-center text-foreground bg-inherit">
                       {record.secondary_token_name}
                     </td>
-                    <td className="p-4 text-center dark:text-white bg-inherit">
+                    <td className="p-4 text-center text-foreground bg-inherit">
                       {record.secondary_token_id}
                     </td>
-                    <td className="p-4 text-center dark:text-white bg-inherit">
+                    <td className="p-4 text-center text-foreground bg-inherit">
                       {record.icp_swap_canister_id}
                     </td>
-                    <td className="p-4 text-center dark:text-white  bg-inherit">
-                      <span className={`px-2 py-1 rounded text-xs ${record.isLive ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-[#000]'}`}>
+                    <td className="p-4 text-center text-foreground bg-inherit">
+                      <span className={`px-2 py-1 rounded text-xs ${record.isLive ? 'bg-constructive/20 text-constructive' : 'bg-primary/20 text-primary'}`}>
                         {record.isLive ? 'Live' : 'Upcoming'}
                       </span>
                     </td>
                     <td className="p-4 text-center dark:text-white bg-inherit flex items-center ">
-                      <Button className="mr-2 inline-flex gap-2 items-center justify-center whitespace-nowrap font-medium font-roboto-condensed ring-offset-background transition-all duration-100 ease-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 bg-[#5555FF] lg:px-7 md:px-5 sm:px-4 xs:px-2 text-white lg:text-lg md:text-base text-sm border-2 border-[#5555FF] rounded-xl hover:bg-white hover:text-[#353535] dark:bg-[#FFFFFF] dark:border-[#FFFFFF] dark:text-[#0F1F2A] hover:dark:border-[#FFFFFF] hover:dark:text-[#FFFFFF] hover:dark:bg-transparent"
+                      <Button variant="default" size="sm" className="mr-2 lg:px-7 md:px-5 sm:px-4 xs:px-2 lg:text-lg md:text-base text-sm"
                         onClick={()=>{navigate("/swap?id="+id)}}>Swap</Button>
-                      <Button className="inline-flex gap-2 items-center justify-center whitespace-nowrap font-medium font-roboto-condensed ring-offset-background transition-all duration-100 ease-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 bg-[#F1F5F9] lg:px-7 md:px-5 sm:px-4 xs:px-2 text-[#0F172A] lg:text-lg md:text-base text-sm border-2 border-[#F1F5F9] rounded-xl sm:me-5 xs:mb-2 hover:bg-white hover:text-[#353535] dark:bg-gray-600 dark:border-gray-600 dark:text-white hover:dark:border-gray-600 hover:dark:bg-transparent hover:dark:text-white"
+                      <Button variant="secondary" size="sm" className="lg:px-7 md:px-5 sm:px-4 xs:px-2 lg:text-lg md:text-base text-sm sm:me-5 xs:mb-2"
                         >Kong Swap</Button>
 
                     </td>

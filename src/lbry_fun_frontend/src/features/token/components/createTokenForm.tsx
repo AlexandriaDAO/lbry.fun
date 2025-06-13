@@ -47,6 +47,7 @@ const CreateTokenForm: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const lbryFun = useAppSelector((state: RootState) => state.lbryFun);
+  const { previewGraphData } = useAppSelector((state: RootState) => state.lbryFun);
   const [loadingModalV, setLoadingModalV] = useState(false);
   const [successModalV, setSucessModalV] = useState(false);    
   const [errorModalV, setErrorModalV] = useState({ flag: false, title: "", message: "" });
@@ -79,7 +80,7 @@ const CreateTokenForm: React.FC = () => {
     const step = parseInt(form.halving_step, 10);
     if (step >= 25 && step < 40) {
       setHalvingStepWarning("Warning: A low value creates an extreme front-load. The number of tokens minted will drop sharply after the first epoch.");
-    } else if (step > 75 && step <= 90) {
+    } else if (step > 75 && step <= 99) {
       setHalvingStepWarning("Warning: A high value causes the number of tokens minted per epoch to increase over time. This leads to higher inflation in later stages.");
     } else {
       setHalvingStepWarning('');
@@ -113,14 +114,30 @@ const CreateTokenForm: React.FC = () => {
       }
     });
 
-    const initialBurn = parseFloat(form.initial_secondary_burn);
-    const secondaryTokenPrice = 0.005;
-    if (!newErrors.initial_secondary_burn && initialBurn > 0 && (initialBurn * secondaryTokenPrice) < 5000) {
-      newErrors.initial_secondary_burn = `Initial valuation must be at least $5,000. Current: $${(initialBurn * secondaryTokenPrice).toLocaleString()}`;
+    // Validate hard cap minimum
+    const hardCap = parseInt(form.primary_max_supply);
+    if (!newErrors.primary_max_supply && hardCap > 0 && hardCap < 100000) {
+      newErrors.primary_max_supply = 'Hard cap must be at least 100,000 tokens (vulnerable to manipulation below this threshold)';
     }
 
-    if (!newErrors.halving_step && (step < 25 || step > 90)) {
-      newErrors.halving_step = `Halving Step must be between 25% and 90%.`;
+    const initialBurn = parseFloat(form.initial_secondary_burn);
+    const secondaryTokenPrice = 0.005;
+    if (!newErrors.initial_secondary_burn && initialBurn > 0 && (initialBurn * secondaryTokenPrice) < 1000) {
+      newErrors.initial_secondary_burn = `Initial valuation must be at least $1,000 to prevent bot attacks. Current: $${(initialBurn * secondaryTokenPrice).toLocaleString()}`;
+    }
+
+    // Validate maximum 30% first epoch capture
+    const remainingSupply = hardCap - parseInt(form.tge_allocation || '1');
+    const initialReward = parseInt(form.initial_reward_per_burn_unit);
+    if (!newErrors.initial_reward_per_burn_unit && remainingSupply > 0 && initialReward > 0) {
+      const firstEpochPercent = (initialReward / remainingSupply) * 100;
+      if (firstEpochPercent > 30) {
+        newErrors.initial_reward_per_burn_unit = `First epoch would capture ${firstEpochPercent.toFixed(1)}% of supply - reduce initial reward to max 30% for fair distribution`;
+      }
+    }
+
+    if (!newErrors.halving_step && (step < 25 || step > 99)) {
+      newErrors.halving_step = `Halving Step must be between 25% and 99%.`;
     }
 
     setErrors(newErrors);
@@ -423,6 +440,69 @@ const CreateTokenForm: React.FC = () => {
           </div>
         </div>
 
+        {/* Parameter Presets */}
+        <div className="py-6 border-t-2 border-t-[#E2E8F0] md:border-t-0">
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Parameter Presets</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                setForm(prev => ({
+                  ...prev,
+                  initial_secondary_burn: '200000',
+                  initial_reward_per_burn_unit: '100',
+                  halving_step: '35',
+                  primary_max_phase_mint: prev.primary_max_phase_mint || '50000'
+                }));
+              }}
+              className="p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+            >
+              <h3 className="font-semibold text-foreground mb-2">Extended Distribution</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">15+ epochs</p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Initial valuation: $1,000</p>
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => {
+                setForm(prev => ({
+                  ...prev,
+                  initial_secondary_burn: '500000',
+                  initial_reward_per_burn_unit: '500',
+                  halving_step: '45',
+                  primary_max_phase_mint: prev.primary_max_phase_mint || '50000'
+                }));
+              }}
+              className="p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+            >
+              <h3 className="font-semibold text-foreground mb-2">Balanced</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">8-12 epochs</p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Initial valuation: $2,500</p>
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => {
+                setForm(prev => ({
+                  ...prev,
+                  initial_secondary_burn: '1000000',
+                  initial_reward_per_burn_unit: '2000',
+                  halving_step: '70',
+                  primary_max_phase_mint: prev.primary_max_phase_mint || '50000'
+                }));
+              }}
+              className="p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+            >
+              <h3 className="font-semibold text-foreground mb-2">Quick Launch</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">3-5 epochs</p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Initial valuation: $5,000</p>
+            </button>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Select a preset above or customize parameters below
+          </p>
+        </div>
+
         {/* Supply Settings Inputs first */}
         <div className="py-6 border-t-2 border-t-[#E2E8F0] md:border-t-0">
           <h2 className="text-2xl font-bold mb-4 text-foreground">Supply Settings</h2>
@@ -448,7 +528,7 @@ const CreateTokenForm: React.FC = () => {
               />
               {renderError('primary_max_supply')}
               <Slider
-                min={1000}
+                min={100000}
                 max={10000000}
                 step={1000}
                 value={[parseInt(form.primary_max_supply) || 0]}
@@ -476,13 +556,18 @@ const CreateTokenForm: React.FC = () => {
               />
               {renderError('initial_reward_per_burn_unit')}
               <Slider
-                min={1000}
-                max={1000000}
-                step={1000}
+                min={10}
+                max={Math.min(100000, Math.floor((parseInt(form.primary_max_supply || '0') - parseInt(form.tge_allocation || '1')) * 0.1)) || 100000}
+                step={10}
                 value={[parseInt(form.initial_reward_per_burn_unit) || 0]}
                 onValueChange={(value) => handleSliderChange('initial_reward_per_burn_unit', value)}
                 disabled={!form.initial_reward_per_burn_unit}
               />
+              {form.primary_max_supply && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Max: {Math.floor((parseInt(form.primary_max_supply) - parseInt(form.tge_allocation || '1')) * 0.1).toLocaleString()} (10% of remaining supply)
+                </p>
+              )}
             </div>
             {/* initial_secondary_burn input and slider - Grid Item 3 */}
             <div className="mb-4 md:mb-0"> {/* Adjusted margin for grid layout */}
@@ -504,13 +589,25 @@ const CreateTokenForm: React.FC = () => {
               />
               {renderError('initial_secondary_burn')}
               <Slider
-                min={100}
+                min={200000}
                 max={10000000}
-                step={100}
+                step={10000}
                 value={[parseInt(form.initial_secondary_burn) || 0]}
                 onValueChange={(value) => handleSliderChange('initial_secondary_burn', value)}
                 disabled={!form.initial_secondary_burn}
               />
+              {form.initial_secondary_burn && (
+                <>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Initial Valuation: ${(parseInt(form.initial_secondary_burn) * 0.005).toLocaleString()} USD
+                  </p>
+                  {parseInt(form.initial_secondary_burn) * 0.005 < 1000 && (
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                      ⚠️ Initial valuation below $1,000 threshold - vulnerable to bot attacks
+                    </p>
+                  )}
+                </>
+              )}
             </div>
             {/* primary_max_phase_mint input and slider - Grid Item 4 */}
             <div className="mb-10 md:mb-0"> {/* Adjusted margin for grid layout, was mb-10 */}
@@ -562,7 +659,7 @@ const CreateTokenForm: React.FC = () => {
               {halvingStepWarning && <p className="text-yellow-600 dark:text-yellow-400 text-sm mt-1">{halvingStepWarning}</p>}
               <Slider
                 min={25}
-                max={90}
+                max={99}
                 step={1}
                 value={[parseInt(form.halving_step) || 0]}
                 onValueChange={(value) => handleSliderChange('halving_step', value)}
@@ -570,6 +667,38 @@ const CreateTokenForm: React.FC = () => {
               />
             </div>
           </div>
+        </div>
+
+        {/* Parameter Validation Warnings */}
+        <div className="space-y-2">
+          {(form.initial_reward_per_burn_unit && form.primary_max_supply && 
+            parseInt(form.initial_reward_per_burn_unit) > (parseInt(form.primary_max_supply) - parseInt(form.tge_allocation || '1')) * 0.1) && (
+            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                ⚠️ High reward exceeds 10% of remaining supply - this enables unfair launches where bots can monopolize early epochs. Reduce initial reward to ensure at least 3 meaningful distribution epochs.
+              </p>
+            </div>
+          )}
+          
+          {previewGraphData && previewGraphData.minted_per_epoch_data_y && (
+            <>
+              {previewGraphData.minted_per_epoch_data_y.length < 3 && (
+                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-800 dark:text-red-200">
+                    🚨 UNFAIR LAUNCH: Only {previewGraphData.minted_per_epoch_data_y.length} epochs - insufficient time for community participation. Minimum 3 epochs required to prevent bot monopolization.
+                  </p>
+                </div>
+              )}
+              
+              {previewGraphData.minted_per_epoch_data_y.length > 30 && (
+                <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    ⚠️ Extended distribution ({previewGraphData.minted_per_epoch_data_y.length} epochs) may reduce liquidity - consider adjusting parameters
+                  </p>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
           <div className='my-8 border-t-4 border-dashed border-gray-400'></div>
@@ -587,7 +716,9 @@ const CreateTokenForm: React.FC = () => {
           <Button
             type="submit"
             disabled={Object.keys(errors).length > 0}
-            className="inline-flex gap-2 items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all duration-100 ease-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 bg-[#5555FF] lg:h-14 md:h-12 sm:h-10 xs:h-10 lg:px-7 md:px-5 sm:px-4 xs:px-2 text-white lg:text-lg md:text-base text-sm border-2 border-[#5555FF] rounded-xl hover:bg-transparent hover:text-[#5555FF] dark:bg-[#353230] dark:border-[#353230] dark:text-[#fff] hover:dark:border-[#5555FF] hover:dark:text-[#fff] hover:dark:bg-[#5555FF] min-w-[300px] dark:hover:bg-[#5555ff] dark:hover:text-white disabled:bg-gray-400 disabled:cursor-not-allowed disabled:dark:bg-gray-600 disabled:dark:hover:border-gray-600 disabled:dark:hover:text-white"
+            variant="default"
+            size="lg"
+            className="min-w-[300px] lg:h-14 md:h-12 sm:h-10 xs:h-10 lg:px-7 md:px-5 sm:px-4 xs:px-2 lg:text-lg md:text-base text-sm"
           >
             Create Token
           </Button>

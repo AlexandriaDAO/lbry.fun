@@ -160,14 +160,14 @@ const PoolCard: React.FC = () => {
     const PoolCardSkeleton: React.FC = () => (
         <div
             style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-            className="bg-[#5555FF] text-white py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3 animate-pulse"
+            className="bg-primary text-primary-foreground py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3 animate-pulse"
         >
-            <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6 bg-gray-400 h-8 w-3/4 rounded"></h4>
+            <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6 bg-muted h-8 w-3/4 rounded"></h4>
             <div className="flex flex-col space-y-4">
                 {[...Array(7)].map((_, index) => (
                     <div key={index} className="flex justify-between items-center">
-                        <span className="font-semibold bg-gray-400 h-5 w-1/3 rounded"></span>
-                        <span className="bg-gray-300 h-5 w-1/2 rounded"></span>
+                        <span className="font-semibold bg-muted h-5 w-1/3 rounded"></span>
+                        <span className="bg-muted/70 h-5 w-1/2 rounded"></span>
                     </div>
                 ))}
             </div>
@@ -188,7 +188,7 @@ const PoolCard: React.FC = () => {
                 <div className="">
                     <div
                         style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-                        className="bg-[#5555FF] text-white py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3"
+                        className="bg-primary text-primary-foreground py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3"
                     >
                         <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6">
                             Active Swap Pool
@@ -203,7 +203,7 @@ const PoolCard: React.FC = () => {
                 <div className="">
                     <div
                         style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-                        className="bg-[#5555FF] text-white py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3"
+                        className="bg-primary text-primary-foreground py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3"
                     >
                         <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6">
                             Active Swap Pool
@@ -221,7 +221,7 @@ const PoolCard: React.FC = () => {
             <div className="">
                 <div
                     style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-                    className="bg-[#5555FF] text-white py-10 xxl:px-14 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3 ">
+                    className="bg-primary text-primary-foreground py-10 xxl:px-14 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3 ">
                     <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6">
                         Active Swap Pool
                     </h4>
@@ -233,43 +233,43 @@ const PoolCard: React.FC = () => {
                         >
                             <div className="flex flex-col space-y-4">
                                 <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-300">Pool ID:</span>
-                                    <span className="text-white">{activeSwapPoolFromRedux[0]}</span>
+                                    <span className="font-semibold text-primary-foreground/70">Pool ID:</span>
+                                    <span className="text-primary-foreground">{activeSwapPoolFromRedux[0]}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="font-semibold text-gray-300">Primary Token:</span>
+                                    <span className="font-semibold text-primary-foreground/70">Primary Token:</span>
                                     <div className="flex items-center">
                                         {primaryLogo && <img src={primaryLogo} alt="Primary token logo" className="w-6 h-6 mr-2" />}
-                                        <span className="text-white">
+                                        <span className="text-primary-foreground">
                                             {activeSwapPoolFromRedux[1].primary_token_name} ({activeSwapPoolFromRedux[1].primary_token_symbol})
                                         </span>
                                     </div>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-300">Secondary Token:</span>
+                                    <span className="font-semibold text-primary-foreground/70">Secondary Token:</span>
                                     <div className="flex items-center">
                                         {secondaryLogo && <img src={secondaryLogo} alt="Secondary token logo" className="w-6 h-6 mr-2" />}
-                                        <span className="text-white">
+                                        <span className="text-primary-foreground">
                                             {activeSwapPoolFromRedux[1].secondary_token_name} ({activeSwapPoolFromRedux[1].secondary_token_symbol})
                                         </span>
                                     </div>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-300">Is Live:</span>
-                                    <span className="text-white">{activeSwapPoolFromRedux[1].isLive ? "Yes" : "No"}</span>
+                                    <span className="font-semibold text-primary-foreground/70">Is Live:</span>
+                                    <span className="text-primary-foreground">{activeSwapPoolFromRedux[1].isLive ? "Yes" : "No"}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-300">Initial Supply:</span>
-                                    <span className="text-white">{activeSwapPoolFromRedux[1].initial_primary_mint}</span>
+                                    <span className="font-semibold text-primary-foreground/70">Initial Supply:</span>
+                                    <span className="text-primary-foreground">{activeSwapPoolFromRedux[1].initial_primary_mint}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-300">Burn Unit:</span>
-                                    <span className="text-white">{activeSwapPoolFromRedux[1].initial_secondary_burn}</span>
+                                    <span className="font-semibold text-primary-foreground/70">Burn Unit:</span>
+                                    <span className="text-primary-foreground">{activeSwapPoolFromRedux[1].initial_secondary_burn}</span>
                                 </div>
                                 {activeSwapPoolFromRedux[1].isLive ? (
                                     <div className="flex justify-between">
-                                        <span className="font-semibold text-gray-300">Liquidity Provided At:</span>
-                                        <span className="text-white">
+                                        <span className="font-semibold text-primary-foreground/70">Liquidity Provided At:</span>
+                                        <span className="text-primary-foreground">
                                             {activeSwapPoolFromRedux[1].liquidity_provided_at
                                                 ? new Date(Number(activeSwapPoolFromRedux[1].liquidity_provided_at) / 1_000_000).toLocaleString()
                                                 : "Not Provided"}
@@ -277,8 +277,8 @@ const PoolCard: React.FC = () => {
                                     </div>
                                 ) : (
                                     <div className="flex justify-between">
-                                        <span className="font-semibold text-gray-300">Countdown to Launch:</span>
-                                        <span className="text-white">{countdown || "Calculating..."}</span>
+                                        <span className="font-semibold text-primary-foreground/70">Countdown to Launch:</span>
+                                        <span className="text-primary-foreground">{countdown || "Calculating..."}</span>
                                     </div>
                                 )}
                             </div>

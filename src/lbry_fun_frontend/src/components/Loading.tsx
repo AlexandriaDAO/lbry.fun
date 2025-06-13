@@ -13,7 +13,7 @@ const Loading = () => (
             <DialogDescription className="text-center">Please wait while we load page.</DialogDescription>
 
             <div className="flex flex-col items-center gap-4">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#828282]"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-muted-foreground"></div>
                 <p className="text-lg font-medium">Loading...</p>
             </div>
         </DialogContent>

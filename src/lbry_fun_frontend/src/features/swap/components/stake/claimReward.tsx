@@ -33,7 +33,7 @@ const ClaimReward: React.FC<StakedInfoProps> = ({ setLoadingModalV, setActionTyp
     return (
         <button
             onClick={(e) => handleClaim(e)}
-            className="lg:text-xl md:text-lg sm:text-base xs:text-xs font-semibold text-white bg-radiocolor dark:bg-gray-700 py-2 px-5 me-3 rounded-full border-2 border-[#000] dark:border-gray-600 hover:bg-opacity-90 dark:hover:bg-opacity-90"
+            className="lg:text-xl md:text-lg sm:text-base xs:text-xs font-semibold text-primary-foreground bg-primary py-2 px-5 me-3 rounded-full border-2 border-primary hover:bg-primary/90"
         >
             Claim
         </button>

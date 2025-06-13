@@ -1,0 +1,44 @@
+Phase 1.5 Critical Failures - Degen Analysis
+===========================================
+
+=== E1: Bot scoops 90% for $500 ===
+First Epoch: 90.0% of supply for $500.000
+🤖 Bot: 'Easy money! I can grab 90.0% for just $500.000!'
+🐋 Whale: 'Only 1 epochs? I can dominate this.'
+👥 Retail: 'By the time I see this, it's over. Another bot coin!'
+
+=== E2: Bot gets 50% for $500 ===
+First Epoch: 50.0% of supply for $500.000
+🤖 Bot: 'Easy money! I can grab 50.0% for just $500.000!'
+🐋 Whale: 'Only 1 epochs? I can dominate this.'
+👥 Retail: 'By the time I see this, it's over. Another bot coin!'
+
+=== E4: 50% in epoch 1 for $1k ===
+First Epoch: 50.0% of supply for $1000.000
+🤖 Bot: 'Easy money! I can grab 50.0% for just $1000.000!'
+🐋 Whale: 'Only 1 epochs? I can dominate this.'
+👥 Retail: 'By the time I see this, it's over. Another bot coin!'
+
+=== G1: 99.98% in first epoch ===
+First Epoch: 100.0% of supply for $2500.000
+🤖 Bot: 'Easy money! I can grab 100.0% for just $2500.000!'
+🐋 Whale: 'Only 1 epochs? I can dominate this.'
+👥 Retail: 'By the time I see this, it's over. Another bot coin!'
+
+=== G2: 99% first epoch for $50 ===
+First Epoch: 99.0% of supply for $50.000
+🤖 Bot: 'Easy money! I can grab 99.0% for just $50.000!'
+🐋 Whale: 'Only 2 epochs? I can dominate this.'
+👥 Retail: 'By the time I see this, it's over. Another bot coin!'
+
+=== G3: 50% for $50 - extreme bot bait ===
+First Epoch: 50.0% of supply for $50.000
+🤖 Bot: 'Easy money! I can grab 50.0% for just $50.000!'
+🐋 Whale: 'Only 2 epochs? I can dominate this.'
+👥 Retail: 'By the time I see this, it's over. Another bot coin!'
+
+=== H5: 30% first epoch at $500 ===
+First Epoch: 30.0% of supply for $500.000
+🤖 Bot: 'Easy money! I can grab 30.0% for just $500.000!'
+🐋 Whale: 'Only 1 epochs? I can dominate this.'
+👥 Retail: 'By the time I see this, it's over. Another bot coin!'
