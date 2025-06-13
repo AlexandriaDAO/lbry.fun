@@ -144,7 +144,7 @@ const AccountCards: React.FC = () => {
                                     </h4>
                                 </div>
                                 <div className="mb-3 xxl:mb-3">
-                                    <h4 className="text-2xl 2xl:text-2xl font-medium mb-3 text-[#FF9900]">
+                                    <h4 className="text-2xl 2xl:text-2xl font-medium mb-3 text-primary">
                                         ≈ $ {icpLedgerAccountBalanceUSD}
                                     </h4>
                                 </div>

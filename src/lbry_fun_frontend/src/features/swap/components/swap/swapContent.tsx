@@ -119,13 +119,13 @@ const SwapContent: React.FC = () => {
                 </div>
               </div>
               <div className="flex justify-between">
-                <strong className="text-base text-[#353535] dark:text-gray-300 font-medium me-1">
+                <strong className="text-base text-foreground font-medium me-1">
                   Balance:{icpLedger.accountBalance}
                 </strong>
 
                 <Link
                   role="button"
-                  className="text-base font-blod text-[#A7B1D7] dark:text-blue-400 underline"
+                  className="text-base font-blod text-primary underline"
                   to={""}
                   onClick={() => handleMaxIcp()}
                 >
@@ -150,7 +150,7 @@ const SwapContent: React.FC = () => {
             </div>
           </div>
           <div className="terms-condition-wrapper flex tems-baseline mb-4">
-            <p className="text-lg font-semibold pr-5 text-[#525252] dark:text-gray-300 w-9/12">{parseFloat(amount) < minimum_icp ? <>Please enter at least the minimum amount to proceed</> : <></>}</p>
+            <p className="text-lg font-semibold pr-5 text-muted-foreground w-9/12">{parseFloat(amount) < minimum_icp ? <>Please enter at least the minimum amount to proceed</> : <></>}</p>
           </div>
           <div>
             {isAuthenticated ? (
@@ -179,7 +179,7 @@ const SwapContent: React.FC = () => {
             )}
             <div className="terms-condition-wrapper flex tems-baseline">
               <span className="text-[#FF37374D] mr-2 text-xl font-semibold">*</span>
-              <p className="text-lg font-semibold pr-5 text-[#525252] dark:text-gray-300 w-9/12">If the transaction doesn't complete as expected, please check the redeem page to locate your tokens.</p>
+              <p className="text-lg font-semibold pr-5 text-muted-foreground w-9/12">If the transaction doesn't complete as expected, please check the redeem page to locate your tokens.</p>
             </div>
           </div>
         </div>

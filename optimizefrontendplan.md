@@ -1,4 +1,18 @@
-# Frontend Optimization Plan
+# Frontend Optimization Plan (SUPERSEDED)
+
+## ‚ö†Ô∏è IMPORTANT: This Plan Has Been Revised
+
+**This original plan has been superseded by `optimizefrontendplan_revised.md`**
+
+**Why Revised**: Deep analysis revealed this plan included many improvements that don't actually block cyberpunk theme implementation. The revised plan focuses exclusively on technical blockers.
+
+**Key Discovery**: Cyberpunk theme requires "leverage shadcn/ui extensively, minimal custom CSS" - but current technical debt would force extensive manual component updates instead.
+
+**See**: `optimizefrontendplan_revised.md` for the focused 4-day plan that enables cyberpunk theme success.
+
+---
+
+# Original Frontend Optimization Plan
 
 ## Project Overview
 
@@ -6,12 +20,12 @@ Optimize the LbryFun frontend to properly leverage shadcn/ui and Tailwind CSS be
 
 ## Critical Issues Identified
 
-### =® Breaking Issues for Theming
+### =ÔøΩ Breaking Issues for Theming
 1. **Hardcoded Colors**: 28+ files using `bg-[#...]`, `text-[#...]` patterns
 2. **Theme System Bypass**: Manual dark mode instead of CSS variables
 3. **Inconsistent Component Usage**: Custom implementations instead of shadcn/ui
 
-### =  Current State Analysis
+### =ÔøΩ Current State Analysis
 -  **shadcn/ui Foundation**: 29 components properly configured
 -  **CSS Variables**: Theme system correctly set up
 -  **Tailwind Config**: Basic configuration in place

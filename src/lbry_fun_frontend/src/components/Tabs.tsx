@@ -19,7 +19,7 @@ export default function Tabs() {
         leading-normal 
         tracking-normal 
         flex items-center
-        text-[#FFF]
+        text-primary-foreground
         py-2
         sm:text-[15px] 
     `;

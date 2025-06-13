@@ -222,7 +222,7 @@ const StakeContent = () => {
                             </div>}
                             <div className="terms-condition-wrapper flex tems-baseline">
                                 <span className="text-[#FF37374D] mr-2 text-xl font-semibold">*</span>
-                                <p className="sm:text-lg xs:text-sm font-semibold pr-5 text-[#525252] dark:text-gray-400 w-9/12">If the transaction doesn't complete as expected, please check the redeem page to locate your tokens.</p>
+                                <p className="sm:text-lg xs:text-sm font-semibold pr-5 text-muted-foreground w-9/12">If the transaction doesn't complete as expected, please check the redeem page to locate your tokens.</p>
                             </div>
                         </div>
                     </div>

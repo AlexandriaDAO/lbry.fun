@@ -195,7 +195,7 @@ const BurnContent = () => {
                         </div>}
                         <div className="terms-condition-wrapper flex tems-baseline">
                             <span className="text-[#FF37374D] mr-2 text-xl font-semibold">*</span>
-                            <p className="lg:text-lg md:text-base sm:text-sm font-semibold md:pr-5 xs:pr-0 text-[#525252] dark:text-gray-300 md:w-9/12 xs:w-full">If the transaction doesn't complete as expected, please check the redeem page to locate your tokens.</p>
+                            <p className="lg:text-lg md:text-base sm:text-sm font-semibold md:pr-5 xs:pr-0 text-muted-foreground md:w-9/12 xs:w-full">If the transaction doesn't complete as expected, please check the redeem page to locate your tokens.</p>
                         </div>
                     </div>
                     <BurnInfo maxBurnAllowed={maxBurnAllowed} />

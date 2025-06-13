@@ -60,10 +60,10 @@ const GetTokenPools = () => {
                   <th className="p-4 text-base text-muted-foreground font-medium">
                     Swap Canister ID
                   </th>
-                  <th className="p-4 text-base text-[#64748B] dark:text-grey font-medium ">
+                  <th className="p-4 text-base text-muted-foreground font-medium">
                     Status
                   </th>
-                  <th className="p-4 text-base text-[#64748B] dark:text-white font-medium ">
+                  <th className="p-4 text-base text-muted-foreground font-medium">
                     Actions
                   </th>
                 </tr>

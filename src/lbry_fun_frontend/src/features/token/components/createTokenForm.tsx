@@ -251,13 +251,13 @@ const CreateTokenForm: React.FC = () => {
       <div className="text-center px-2 pb-8">
         <h1 className="text-5xl font-bold text-black text-foreground mb-6">Create Token</h1>
         {/* Tokenomics Explanation Start */}
-        <details className="text-left mx-auto max-w-2xl my-4 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-800 shadow-sm open:ring-1 open:ring-black/5 dark:open:ring-white/10">
-          <summary className="text-md font-semibold p-3 cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl flex justify-between items-center">
+        <details className="text-left mx-auto max-w-2xl my-4 border border-border rounded-xl bg-muted shadow-sm open:ring-1 open:ring-black/5 dark:open:ring-white/10">
+          <summary className="text-md font-semibold p-3 cursor-pointer text-foreground hover:bg-muted/80 rounded-xl flex justify-between items-center">
             How it works
             <span className="text-xs transition-transform transform">▼</span>
           </summary>
           
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">
+          <div className="p-4 border-t border-border text-sm text-muted-foreground">
             <div className="space-y-3">
               <div>
                 <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Secondary Tokens:</h4>
@@ -294,7 +294,7 @@ const CreateTokenForm: React.FC = () => {
         {/* Wrapper for Primary and Secondary Token Sections (Side-by-Side on Desktop) */}
         <div className="md:flex md:space-x-8">
           {/* Primary Token Section */}
-          <div className="md:w-1/2 border-b-2 border-b-[#E2E8F0] pb-6 md:border-b-0 md:border-r-2 md:border-r-[#E2E8F0] md:pr-8">
+          <div className="md:w-1/2 border-b-2 border-b-border pb-6 md:border-b-0 md:border-r-2 md:border-r-border md:pr-8">
             <h2 className="text-2xl font-bold mb-4 text-foreground">Primary Token</h2>
             <div className="mb-4">
               <Label className="block text-lg font-medium text-foreground mb-4">
@@ -303,7 +303,7 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 name="primary_token_name"
                 type="text"
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.primary_token_name ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 h-[60px] text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.primary_token_name ? 'border-red-500' : 'border-border'}`}
                 placeholder="Enter Name for your token"
                 value={form.primary_token_name}
                 onChange={handleChange}
@@ -317,7 +317,7 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 name="primary_token_symbol"
                 type="text"
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.primary_token_symbol ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 h-[60px] text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.primary_token_symbol ? 'border-red-500' : 'border-border'}`}
                 placeholder="Enter the ticker (3–5 uppercase letters)"
                 value={form.primary_token_symbol}
                 onChange={handleChange}
@@ -330,7 +330,7 @@ const CreateTokenForm: React.FC = () => {
               </Label>
               <Textarea
                 rows={4}
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 ${errors.primary_token_description ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.primary_token_description ? 'border-red-500' : 'border-border'}`}
                 placeholder="Enter your description here"
                 name='primary_token_description'
                 value={form.primary_token_description}
@@ -339,16 +339,16 @@ const CreateTokenForm: React.FC = () => {
               {renderError('primary_token_description')}
             </div>
             <div className="mb-4">
-              <h4 className="text-[#64748B] dark-text-[#000] text-sm text-foreground mb-4">Describe what your token represents or how it's intended to be used</h4>
+              <h4 className="text-sm text-muted-foreground mb-4">Describe what your token represents or how it's intended to be used</h4>
               <div className="flex align-items-center">
                 <div className="w-[100px] h-[100px] me-4">
                   <img className="w-full object-contain" src={form.primary_token_logo_base64 || "images/thumbnail.png"} alt="thumbnail" />
                 </div>
                 <div className="">
-                  <h5 className="mb-4 text-foreground text-sm text-[#000] dark:text-[white]">Primary Token Image (.svg) *</h5>
+                  <h5 className="mb-4 text-sm text-foreground">Primary Token Image (.svg) *</h5>
                   <div className="flex flex-col">
-                    <label className="inline-block text-sm text-[#3C3C3C] font-semibold rounded cursor-pointer">
-                      <span className="bg-[#E2E8F0] text-[#000] dark:text-white dark:bg-[#444] px-4 py-2 rounded-xl hover:bg-[#CBD5E1] dark:hover:bg-[#555] transition">
+                    <label className="inline-block text-sm text-muted-foreground font-semibold rounded cursor-pointer">
+                      <span className="bg-muted text-muted-foreground px-4 py-2 rounded-xl hover:bg-muted/80 transition">
                         Choose File
                       </span>
                       <Input
@@ -367,7 +367,7 @@ const CreateTokenForm: React.FC = () => {
           </div>
 
           {/* Secondary Token Section */}
-          <div className="md:w-1/2 border-b-2 border-b-[#E2E8F0] py-6 md:border-b-0 md:pt-0 md:pl-8">
+          <div className="md:w-1/2 border-b-2 border-b-border py-6 md:border-b-0 md:pt-0 md:pl-8">
             <h2 className="text-2xl font-bold mb-4 text-foreground">Secondary Token</h2>
             <div className="mb-4">
               <Label className="block text-lg font-bold text-foreground mb-4">
@@ -376,7 +376,7 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 name="secondary_token_name"
                 type="text"
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.secondary_token_name ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 h-[60px] text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.secondary_token_name ? 'border-red-500' : 'border-border'}`}
                 placeholder="Enter Name for your token"
                 value={form.secondary_token_name}
                 onChange={handleChange}
@@ -390,7 +390,7 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 name="secondary_token_symbol"
                 type="text"
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] ${errors.secondary_token_symbol ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 h-[60px] text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.secondary_token_symbol ? 'border-red-500' : 'border-border'}`}
                 placeholder="Enter the ticker (3–5 uppercase letters)"
                 value={form.secondary_token_symbol}
                 onChange={handleChange}
@@ -403,7 +403,7 @@ const CreateTokenForm: React.FC = () => {
               </Label>
               <Textarea
                 rows={4}
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 ${errors.secondary_token_description ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.secondary_token_description ? 'border-red-500' : 'border-border'}`}
                 placeholder="Enter your description here"
                 name='secondary_token_description'
                 value={form.secondary_token_description}
@@ -412,16 +412,16 @@ const CreateTokenForm: React.FC = () => {
               {renderError('secondary_token_description')}
             </div>
             <div className="mb-4">
-              <h4 className="text-[#64748B] text-sm text-foreground mb-4">Describe what your token represents or how it's intended to be used</h4>
+              <h4 className="text-sm text-muted-foreground mb-4">Describe what your token represents or how it's intended to be used</h4>
               <div className="flex align-items-center">
                 <div className="w-[100px] h-[100px] me-4">
                   <img className="w-full object-contain" src={form.secondary_token_logo_base64 || "images/thumbnail.png"} alt="thumbnail" />
                 </div>
                 <div className="">
-                  <h5 className="mb-4 text-foreground text-sm text-[#000]">Secondary Token Image (.svg) *</h5>
+                  <h5 className="mb-4 text-sm text-foreground">Secondary Token Image (.svg) *</h5>
                   <div className="flex flex-col">
-                    <label className="inline-block text-sm text-[#3C3C3C] font-semibold rounded cursor-pointer">
-                      <span className="bg-[#E2E8F0] text-[#000] dark:text-white dark:bg-[#444] px-4 py-2 rounded-xl hover:bg-[#CBD5E1] dark:hover:bg-[#555] transition">
+                    <label className="inline-block text-sm text-muted-foreground font-semibold rounded cursor-pointer">
+                      <span className="bg-muted text-muted-foreground px-4 py-2 rounded-xl hover:bg-muted/80 transition">
                         Choose File
                       </span>
                       <Input
@@ -441,7 +441,7 @@ const CreateTokenForm: React.FC = () => {
         </div>
 
         {/* Parameter Presets */}
-        <div className="py-6 border-t-2 border-t-[#E2E8F0] md:border-t-0">
+        <div className="py-6 border-t-2 border-t-border md:border-t-0">
           <h2 className="text-2xl font-bold mb-4 text-foreground">Parameter Presets</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <button
@@ -455,11 +455,11 @@ const CreateTokenForm: React.FC = () => {
                   primary_max_phase_mint: prev.primary_max_phase_mint || '50000'
                 }));
               }}
-              className="p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+              className="p-4 border-2 border-border rounded-lg hover:border-primary transition-colors"
             >
               <h3 className="font-semibold text-foreground mb-2">Extended Distribution</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">15+ epochs</p>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Initial valuation: $1,000</p>
+              <p className="text-sm text-muted-foreground">15+ epochs</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Initial valuation: $1,000</p>
             </button>
             
             <button
@@ -473,11 +473,11 @@ const CreateTokenForm: React.FC = () => {
                   primary_max_phase_mint: prev.primary_max_phase_mint || '50000'
                 }));
               }}
-              className="p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+              className="p-4 border-2 border-border rounded-lg hover:border-primary transition-colors"
             >
               <h3 className="font-semibold text-foreground mb-2">Balanced</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">8-12 epochs</p>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Initial valuation: $2,500</p>
+              <p className="text-sm text-muted-foreground">8-12 epochs</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Initial valuation: $2,500</p>
             </button>
             
             <button
@@ -491,20 +491,20 @@ const CreateTokenForm: React.FC = () => {
                   primary_max_phase_mint: prev.primary_max_phase_mint || '50000'
                 }));
               }}
-              className="p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+              className="p-4 border-2 border-border rounded-lg hover:border-primary transition-colors"
             >
               <h3 className="font-semibold text-foreground mb-2">Quick Launch</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">3-5 epochs</p>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Initial valuation: $5,000</p>
+              <p className="text-sm text-muted-foreground">3-5 epochs</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Initial valuation: $5,000</p>
             </button>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Select a preset above or customize parameters below
           </p>
         </div>
 
         {/* Supply Settings Inputs first */}
-        <div className="py-6 border-t-2 border-t-[#E2E8F0] md:border-t-0">
+        <div className="py-6 border-t-2 border-t-border md:border-t-0">
           <h2 className="text-2xl font-bold mb-4 text-foreground">Supply Settings</h2>
           {/* This div becomes the grid container for supply parameters */}
           <div className="md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-6">
@@ -521,7 +521,7 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 name="primary_max_supply"
                 type="text"
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.primary_max_supply ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 h-[60px] mb-2 text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.primary_max_supply ? 'border-red-500' : 'border-border'}`}
                 placeholder="e.g. 10000000"
                 value={form.primary_max_supply}
                 onChange={handleChange}
@@ -549,7 +549,7 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 name="initial_reward_per_burn_unit"
                 type="text"
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.initial_reward_per_burn_unit ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 h-[60px] mb-2 text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.initial_reward_per_burn_unit ? 'border-red-500' : 'border-border'}`}
                 placeholder="e.g. 20000"
                 value={form.initial_reward_per_burn_unit}
                 onChange={handleChange}
@@ -582,7 +582,7 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 type="text"
                 name='initial_secondary_burn'
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.initial_secondary_burn ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 h-[60px] mb-2 text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.initial_secondary_burn ? 'border-red-500' : 'border-border'}`}
                 placeholder="e.g. 50000 tokens"
                 value={form.initial_secondary_burn}
                 onChange={handleChange}
@@ -622,7 +622,7 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 type="text"
                 name='primary_max_phase_mint'
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.primary_max_phase_mint ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 h-[60px] mb-2 text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.primary_max_phase_mint ? 'border-red-500' : 'border-border'}`}
                 placeholder="e.g. 1000 per phase"
                 value={form.primary_max_phase_mint}
                 onChange={handleChange}
@@ -650,7 +650,7 @@ const CreateTokenForm: React.FC = () => {
               <Input
                 type="text"
                 name='halving_step'
-                className={`w-full border rounded-2xl px-3 py-2 text-[#64748B] placeholder:text-[#64748B] bg-white text-black dark:bg-gray-800 dark:text-foreground file:border-0 file:bg-transparent file:font-normal focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-gray-700 placeholder:text-muted-foreground text-sm file:text-lg placeholder:text-sm w-full rounded-2xl px-3 py-2 h-[60px] mb-2 ${errors.halving_step ? 'border-red-500' : 'border-gray-400'}`}
+                className={`w-full border rounded-2xl px-3 py-2 h-[60px] mb-2 text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.halving_step ? 'border-red-500' : 'border-border'}`}
                 placeholder="e.g. 50"
                 value={form.halving_step}
                 onChange={handleChange}
@@ -701,7 +701,7 @@ const CreateTokenForm: React.FC = () => {
           )}
         </div>
 
-          <div className='my-8 border-t-4 border-dashed border-gray-400'></div>
+          <div className='my-8 border-t-4 border-dashed border-border'></div>
 
           <TokenomicsGraphsBackend
               primaryMaxSupply={form.primary_max_supply}

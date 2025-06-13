@@ -10,7 +10,7 @@ const ErrorFallback = ({ error }: { error: Error }) => {
             <DialogContent
                 closeIcon={null}
                 onOpenAutoFocus={(e) => e.preventDefault()}
-                className="font-roboto-condensed outline-none mx-auto max-w-md bg-white p-8 text-[#828282]"
+                className="font-roboto-condensed outline-none mx-auto max-w-md bg-background p-8 text-muted-foreground"
             >
                 <DialogTitle className="sr-only">Error</DialogTitle>
                 <DialogDescription className="text-center">Something went wrong.</DialogDescription>
