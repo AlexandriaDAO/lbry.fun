@@ -1,0 +1,1011 @@
+A1|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A2|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A3|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A4|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A5|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A6|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A7|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A8|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A9|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A10|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A11|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A12|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A13|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+A14|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+B1|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+B2|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+B3|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+B4|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+B5|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+B6|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+B7|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+B8|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+B9|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+B10|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+B11|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+C1|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      3_875_820_019_684_212_736 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000009999599995999961 : float64;
+      0.000000000009999599995999961 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      3_875_820_019_684_212_736 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 99.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 19_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      3_875_820_019_684_212_736 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 3_865_820_019_684_212_736 : nat64 };
+  },
+)
+C2|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      3_875_820_019_684_212_736 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.0000000005 : float64;
+      0.0000000005 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      3_875_820_019_684_212_736 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 4999.95 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 999_990 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      3_875_820_019_684_212_736 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 3_865_820_019_684_212_736 : nat64 };
+  },
+)
+C3|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      200_376_420_520_689_664 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.0000000005 : float64;
+      0.0000000005 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      200_376_420_520_689_664 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 499999.95 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 99_999_990 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      200_376_420_520_689_664 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 190_376_420_520_689_664 : nat64 };
+  },
+)
+C4|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      200_376_420_520_689_664 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.0000000000049999954999995496 : float64;
+      0.0000000000049999954999995496 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      200_376_420_520_689_664 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 4999.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 999_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      200_376_420_520_689_664 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 190_376_420_520_689_664 : nat64 };
+  },
+)
+C5|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.0000005 : float64;
+      0.0000005 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 49999950.0 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 9_999_990_000 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+C6|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.0000000000004999504999505 : float64;
+      0.0000000000004999504999505 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec {
+      0.0 : float64;
+      49.995000000000005 : float64;
+    };
+    cumulative_supply_data_x = vec { 0 : nat64; 9_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+D1|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000_000 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.0000000005 : float64;
+      0.0000000005 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000_000 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 49.95 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 9_990 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000_000 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 9_990_000_000_000_000_000 : nat64 };
+  },
+)
+D2|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      200_376_420_520_689_664 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000000499995049999505 : float64;
+      0.000000000000499995049999505 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      200_376_420_520_689_664 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 99_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      200_376_420_520_689_664 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 190_376_420_520_689_664 : nat64 };
+  },
+)
+D3|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      1_854_712_049_423_024_128 : nat64;
+      1_854_712_049_423_024_128 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.0 : float64;
+      0.0 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      1_854_712_049_423_024_128 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 0.0 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 0 : nat64 };
+    cumulative_supply_data_y = vec {
+      1_854_712_049_423_024_128 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 10_000_000_000_000_000 : nat64 };
+  },
+)
+D4|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000024999974999975 : float64;
+      0.000000000024999974999975 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 2499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 499_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)
+D5|(
+  record {
+    cost_to_mint_data_x = vec {
+      0 : nat64;
+      10_000_000_000_000_000 : nat64;
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cost_to_mint_data_y = vec {
+      0.0 : float64;
+      0.0 : float64;
+      0.000000000004999954999955 : float64;
+      0.000000000004999954999955 : float64;
+    };
+    cumulative_usd_cost_data_x = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    cumulative_usd_cost_data_y = vec { 0.0 : float64; 499.995 : float64 };
+    cumulative_supply_data_x = vec { 0 : nat64; 99_999 : nat64 };
+    cumulative_supply_data_y = vec {
+      10_000_000_000_000_000 : nat64;
+      1_864_712_049_423_024_128 : nat64;
+    };
+    minted_per_epoch_data_x = vec { "Epoch 1" };
+    minted_per_epoch_data_y = vec { 1_854_712_049_423_024_128 : nat64 };
+  },
+)

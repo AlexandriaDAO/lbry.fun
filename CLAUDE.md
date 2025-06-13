@@ -35,6 +35,7 @@ The project has:
 
 And 2 system canisters: XRC for price feeds and icp_ledger_canister for local icp tokens. Please don't mess with these as we already deploy them correctly.
 
-Our full deployment methodology can be seen in /scripts/build.sh
+Our full deployment methodology can be seen in @/scripts/build.sh
+If the build script is failing because zombie process are still running, use @/scripts/kill_zombies.sh to clean them up.
 
 All tests are done with a 'mock' canister using the pocket-ic library in the project root's /test folder.
