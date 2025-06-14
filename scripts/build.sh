@@ -3,8 +3,8 @@
 
 set -ex 
 
-dfx stop
-dfx start --clean --background
+# dfx stop
+# dfx start --clean --background
 
 # Step 2: II Canister
 dfx deps pull
@@ -56,6 +56,10 @@ export ALICE_ACCOUNT_ID=$(dfx ledger account-id)
 export BOB_ACCOUNT_ID=$(dfx ledger account-id)
 export CHARLIE_ACCOUNT_ID=$(dfx ledger account-id)
 
+# Define principal IDs for ICRC-1 ledger deployment
+export MINTER_PRINCIPAL=$(dfx identity get-principal)
+export DEFAULT_PRINCIPAL=$(dfx identity get-principal)
+
 # Generate frontend actors BEFORE deploying the ledger canister
 echo "Generating type declarations..."
 for canister in lbry_fun tokenomics logs xrc icp_ledger_canister icp_swap; do
@@ -63,35 +67,46 @@ for canister in lbry_fun tokenomics logs xrc icp_ledger_canister icp_swap; do
 done
 
 
-#Kongswap already deployed its ksICP will be using it, so need to deploy our own icp
+# Deploy ICRC-1 ledger with ICRC-2 support as our ICP ledger
+# This replaces the old ICP ledger and supports the ICRC-2 features our app needs
 
-# Download and prepare the ICP ledger canister
+# Download and prepare the ICRC-1 ledger canister (with ICRC-2 support)
 export IC_VERSION=d87954601e4b22972899e9957e800406a0a6b929
 mkdir -p src/icp_ledger_canister
-curl -L -o src/icp_ledger_canister/ledger.wasm.gz "https://download.dfinity.systems/ic/$IC_VERSION/canisters/ledger-canister.wasm.gz"
+curl -L -o src/icp_ledger_canister/ledger.wasm.gz "https://download.dfinity.systems/ic/$IC_VERSION/canisters/ic-icrc1-ledger.wasm.gz"
 gunzip -f src/icp_ledger_canister/ledger.wasm.gz
-curl -L -o src/icp_ledger_canister/ledger.did "https://raw.githubusercontent.com/dfinity/ic/$IC_VERSION/rs/rosetta-api/icp_ledger/ledger.did"
+curl -L -o src/icp_ledger_canister/ledger.did "https://raw.githubusercontent.com/dfinity/ic/$IC_VERSION/rs/rosetta-api/icrc1/ledger/ledger.did"
 
-# Deploy the ICP 
+# Deploy the ICRC-1 ICP ledger with ICRC-2 features enabled
 dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argument "
   (variant {  
     Init = record {  
-      minting_account = \"$MINTER_ACCOUNT_ID\";  
-      initial_values = vec {  
-        record {  
-          \"$MINTER_ACCOUNT_ID\";  
-          record {  
-            e8s = 8_681_981_000_000_000 : nat64;  
-          };  
-         
-        };  
-      };  
-      send_whitelist = vec {};  
-      transfer_fee = opt record {  
-        e8s = 10_000 : nat64;  
-      };  
-      token_symbol = opt \"LICP\";  
-      token_name = opt \"Local ICP\";  
+      minting_account = record { owner = principal \"$MINTER_PRINCIPAL\"; subaccount = null };
+      transfer_fee = 10_000 : nat;
+      decimals = opt 8;
+      max_memo_length = opt 80;
+      token_symbol = \"LICP\";
+      token_name = \"Local ICP\";
+      metadata = vec {};
+      initial_balances = vec { 
+        record { 
+          record { owner = principal \"$MINTER_PRINCIPAL\"; subaccount = null }; 
+          8_681_981_000_000_000 : nat 
+        }; 
+      };
+      feature_flags = opt record { icrc2 = true };
+      maximum_number_of_accounts = null;
+      accounts_overflow_trim_quantity = null;
+      archive_options = record {
+        num_blocks_to_archive = 1000;
+        max_transactions_per_response = null;
+        trigger_threshold = 2000;
+        max_message_size_bytes = null;
+        cycles_for_archive_creation = null;
+        node_max_memory_size_bytes = null;
+        controller_id = principal \"$MINTER_PRINCIPAL\";
+        more_controller_ids = null;
+      };
     }  
   })  
 "

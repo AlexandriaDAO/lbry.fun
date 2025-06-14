@@ -300,6 +300,7 @@ impl TokenTestEnvironment {
             primary_token_id: Some(self.primary_token),
             secondary_token_id: Some(self.secondary_token),
             tokenomics_canister_id: Some(self.tokenomics),
+            icp_ledger_id: Some(self.icp_ledger),
         })).expect("Failed to encode icp_swap args");
         
         self.pic.install_canister(

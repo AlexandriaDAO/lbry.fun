@@ -12,7 +12,6 @@ import InternetIdentityProvider from "./providers/AuthProvider/IIProvider";
 // import ActorProvider from "./providers/ActorProvider";
 // import UserProvider from "./providers/UserProvider";
 import { AppRoutes } from "./routes";
-import { ThemeProvider } from "./providers/ThemeProvider";
 
 export default function App() {
     const [isReady, setIsReady] = useState(false);

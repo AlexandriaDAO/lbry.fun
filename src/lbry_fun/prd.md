@@ -181,7 +181,7 @@ You are to enhance the `icp_swap` canister source code by creating two new files
     *   Populate it with the following `pub const` values:
         *   `KONG_BACKEND_CANISTER_ID: &str = "2ipq2-uqaaa-aaaar-qailq-cai";`
         *   `LBRY_FUN_CANISTER_ID: &str = "j362g-ziaaa-aaaap-qkt7q-cai";`
-        *   `ICP_LEDGER_CANISTER_ID: &str = "nppha-riaaa-aaaal-ajf2q-cai";`
+        *   `ICP_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";`
         *   `LIQUIDITY_DEPLOYMENT_CAP_E8S: u64 = 10 * 100_000_000; // 10 ICP`
         *   `LIQUIDITY_FEE_PERCENT: u64 = 1;`
 

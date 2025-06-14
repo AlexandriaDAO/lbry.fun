@@ -23,13 +23,13 @@ Before we start building this out though, I want to do some planning with you. U
 dfx ledger transfer --icp 99 --memo 0 $(dfx ledger account-id --of-principal 3p5as-qtth3-qww4q-qhc55-unoun-3zyiy-d2rk7-537id-3bhfi-2rb5o-cqe)
 
 // Test deploymenbt of ksICP.
-dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_balance_of '(record { owner = principal "pqfkz-a2dfx-yzm4o-vzw26-tdsby-vky6p-ueknm-qvxbk-yr45c-pinei-zqe" })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner = principal "pqfkz-a2dfx-yzm4o-vzw26-tdsby-vky6p-ueknm-qvxbk-yr45c-pinei-zqe" })'
 
 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call nppha-riaaa-aaaal-ajf2q-cai icrc1_transfer '(record { to = record { owner = principal "pqfkz-a2dfx-yzm4o-vzw26-tdsby-vky6p-ueknm-qvxbk-yr45c-pinei-zqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "jbehk-d7e5s-kzkv5-jjzej-rwuck-6xs3b-e3rxx-uspyq-f7wb6-3mqgb-yqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
 
 dfx identity use default
 

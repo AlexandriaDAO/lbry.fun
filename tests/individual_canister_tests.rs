@@ -29,6 +29,7 @@ pub struct IcpSwapInitArgs {
     pub primary_token_id: Option<Principal>,
     pub secondary_token_id: Option<Principal>,
     pub tokenomics_canister_id: Option<Principal>,
+    pub icp_ledger_id: Option<Principal>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -166,6 +167,7 @@ pub fn test_icp_swap_canister_deployment() {
         primary_token_id: Some(primary_token_id),
         secondary_token_id: Some(secondary_token_id),
         tokenomics_canister_id: Some(tokenomics_id),
+        icp_ledger_id: None, // Use default ICP ledger for testing
     }).expect("Failed to encode ICP swap init args");
     
     pic.install_canister(

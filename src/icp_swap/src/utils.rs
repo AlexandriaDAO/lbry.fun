@@ -11,7 +11,7 @@ use serde::Deserialize;
 
 pub const STAKING_REWARD_PERCENTAGE: u64 = 100; // 1%
 pub const XRC_CANISTER_ID: &str = "uf6dk-hyaaa-aaaaq-qaaaq-cai";
-pub const ICP_CANISTER_ID: &str = "nppha-riaaa-aaaal-ajf2q-cai";
+pub const ICP_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 
 pub const ICP_TRANSFER_FEE: u64 = 10_000;
 pub const MAX_DAYS: u32 = 30;
@@ -306,14 +306,15 @@ pub(crate) async fn fetch_canister_icp_balance() -> Result<u64, ExecutionError> 
     };
 
     // Call the ledger canister's `account_balance` method and extract the balance in e8s (u64)
+    let icp_ledger_id = get_config().icp_ledger_id;
     let result = ic_ledger_types
-        ::account_balance(get_principal(ICP_CANISTER_ID), balance_args).await
+        ::account_balance(icp_ledger_id, balance_args).await
         .map_err(|e|
             ExecutionError::new_with_log(
                 caller(),
                 "fetch_canister_icp_balance",
                 ExecutionError::CanisterCallFailed {
-                    canister: ICP_CANISTER_ID.to_string(),
+                    canister: icp_ledger_id.to_string(),
                     method: "account_balance".to_string(),
                     details: format!("Rejection call failed: {:?}", e),
                 }

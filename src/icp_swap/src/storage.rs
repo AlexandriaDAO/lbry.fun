@@ -77,7 +77,8 @@ thread_local! {
                 // Default values
                 primary_token_id:Principal::anonymous(),
                 secondary_token_id: Principal::anonymous(),
-                tokenomics_cansiter_id:Principal::anonymous()
+                tokenomics_cansiter_id:Principal::anonymous(),
+                icp_ledger_id: Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap(),
             }
         ).unwrap()
     );
@@ -198,6 +199,7 @@ pub struct Configs {
     pub primary_token_id: Principal,
     pub secondary_token_id: Principal,
     pub tokenomics_cansiter_id: Principal,
+    pub icp_ledger_id: Principal,
 }
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub enum LogType {

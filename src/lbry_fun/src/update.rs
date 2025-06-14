@@ -24,7 +24,7 @@ use crate::{
 };
 
 const CANISTER_CREATION_CYCLES: u128 = 2_000_000_000_000u128;
-const ICP_LEDGER_CANISTER_ID: &str = "nppha-riaaa-aaaal-ajf2q-cai";
+const ICP_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 const LBRY_SWAP_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";
 
 #[ic_cdk::update]
@@ -331,6 +331,7 @@ async fn install_icp_swap_wasm_on_existing_canister(
         primary_token_id,
         secondary_token_id,
         tokenomics_canister_id,
+        icp_ledger_id: None, // None means use default (our standard ICP ledger)
     };
 
     let encoded_args =

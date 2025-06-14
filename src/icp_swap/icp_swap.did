@@ -1,6 +1,7 @@
 type ArchiveBalance = record { icp : nat64 };
 type Configs = record {
   secondary_token_id : principal;
+  icp_ledger_id : principal;
   primary_token_id : principal;
   tokenomics_cansiter_id : principal;
 };
@@ -68,6 +69,7 @@ type InitArgs = record {
   stakes : opt vec record { principal; Stake };
   secondary_token_id : opt principal;
   tokenomics_canister_id : opt principal;
+  icp_ledger_id : opt principal;
   total_archived_balance : opt nat64;
   secondary_ratio : opt SecondaryRatio;
   primary_token_id : opt principal;

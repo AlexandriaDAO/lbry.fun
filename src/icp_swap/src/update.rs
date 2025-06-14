@@ -547,7 +547,7 @@ async fn deposit_icp_in_canister(
     };
 
     let (result,): (Result<BlockIndex, TransferFromError>,) = ic_cdk::call(
-        get_principal(ICP_CANISTER_ID),
+        get_config().icp_ledger_id,
         "icrc2_transfer_from",
         (transfer_args,),
     )
@@ -578,7 +578,7 @@ async fn send_icp(
     };
 
     let result: Result<(Result<BlockIndex, TransferError>,), _> = ic_cdk::call(
-        get_principal(ICP_CANISTER_ID),
+        get_config().icp_ledger_id,
         "icrc1_transfer",
         (transfer_args,),
     )

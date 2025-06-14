@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::constants::{KONG_BACKEND_CANISTER_ID, ICP_LEDGER_CANISTER_ID};
 use crate::utils::{get_primary_canister_id, icrc2_approve};
 use crate::storage::STATE;
+use crate::get_config;
 
 // CandidType structs for KongSwap calls
 
@@ -128,7 +129,7 @@ pub async fn execute_swap_on_dex(pay_symbol: String, pay_amount: Nat, receive_sy
 
     // 2. Approve the Kong DEX to spend the token on our behalf.
     let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
-    let icp_canister_id = Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap();
+    let icp_canister_id = get_config().icp_ledger_id;
     icrc2_approve(icp_canister_id, kong_principal, pay_amount.clone()).await?;
 
     // 3. Define SwapArgs with slippage protection.
@@ -175,7 +176,7 @@ pub async fn add_liquidity_to_kong(primary_token_symbol: String, primary_token_a
     let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
 
     let primary_canister_id = get_primary_canister_id();
-    let icp_canister_id = Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap();
+    let icp_canister_id = get_config().icp_ledger_id;
 
     // 1. Approve the DEX to spend the tokens we are providing.
     // We approve the full amount we have, the DEX will only take what it needs based on the current ratio.

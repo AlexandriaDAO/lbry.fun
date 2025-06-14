@@ -3,7 +3,7 @@ use icrc_ledger_types::icrc1::account::Account;
 use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 pub const KONG_BACKEND_CANISTER: &str = "2ipq2-uqaaa-aaaar-qailq-cai";
-pub const ICP_CANISTER_ID: &str = "nppha-riaaa-aaaal-ajf2q-cai";
+pub const ICP_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 pub const INTITAL_PRIMARY_MINT: u64 = 100_010_000; // 1 token (100,000,000) + transfer fee (10,000)
 pub const ICP_TRANSFER_FEE: u64 = 10_000;
 
@@ -162,6 +162,7 @@ pub struct IcpSwapInitArgs {
     pub primary_token_id: Option<Principal>,
     pub secondary_token_id: Option<Principal>,
     pub tokenomics_canister_id: Option<Principal>,
+    pub icp_ledger_id: Option<Principal>,
 }
 
 

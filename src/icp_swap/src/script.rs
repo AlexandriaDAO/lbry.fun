@@ -22,6 +22,7 @@ pub struct InitArgs {
     pub primary_token_id: Option<Principal>,
     pub secondary_token_id: Option<Principal>,
     pub tokenomics_canister_id: Option<Principal>,
+    pub icp_ledger_id: Option<Principal>,
 }
 
 // Function to initialize global states from InitArgs.
@@ -77,12 +78,17 @@ fn initialize_globals(args: InitArgs) {
             }
         });
     }
+    // Set ICP ledger ID (defaults to our standard ledger if not provided)
+    let icp_ledger_id = args.icp_ledger_id
+        .unwrap_or_else(|| Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap());
+
     CONFIGS.with(|c| {
         let mut config = c.borrow_mut();
         config.set(Configs {
             primary_token_id: args.primary_token_id.unwrap_or(Principal::anonymous()),
             secondary_token_id: args.secondary_token_id.unwrap_or(Principal::anonymous()),
-            tokenomics_cansiter_id: args.tokenomics_canister_id.unwrap_or(Principal::anonymous())
+            tokenomics_cansiter_id: args.tokenomics_canister_id.unwrap_or(Principal::anonymous()),
+            icp_ledger_id,
         }).unwrap();
     })
 }
