@@ -1,5 +1,5 @@
 use candid::{decode_one, Encode, Principal};
-use crate::common::{setup_test_environment, Configs, InitArgs, ICP_SWAP_WASM};
+use crate::simulation::common::{setup_test_environment, Configs, InitArgs, ICP_SWAP_WASM};
 
 #[test]
 fn test_get_config() {

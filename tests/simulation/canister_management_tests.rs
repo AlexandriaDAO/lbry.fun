@@ -1,5 +1,5 @@
 use candid::{decode_one, Encode, Nat, Principal};
-use crate::common::{setup_test_environment, setup_lbry_fun_canister};
+use crate::simulation::common::{setup_test_environment, setup_lbry_fun_canister};
 
 #[test]
 fn test_get_canister_cycle_balance() {

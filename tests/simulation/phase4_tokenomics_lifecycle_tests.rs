@@ -1,5 +1,5 @@
 use candid::{decode_one, Encode, CandidType};
-use crate::common::{setup_test_environment, setup_lbry_fun_canister};
+use crate::simulation::common::{setup_test_environment, setup_lbry_fun_canister};
 use serde::Deserialize;
 
 #[derive(CandidType, Deserialize, Clone)]

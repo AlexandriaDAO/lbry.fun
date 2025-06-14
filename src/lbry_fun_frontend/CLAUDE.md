@@ -56,6 +56,7 @@ Uses React Router with nested routes:
 ### Development Notes
 
 - Uses Tailwind CSS for styling
+- Uses Shadcn components wherever possible
 - Internet Identity for authentication
 - FontAwesome icons
 - Theme provider for dark/light mode
