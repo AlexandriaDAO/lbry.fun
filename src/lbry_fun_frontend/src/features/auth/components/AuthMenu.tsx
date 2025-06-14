@@ -69,8 +69,8 @@ export default function AuthMenu() {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<div className="w-[42px] h-[42px] border border-white dark:border-gray-700 rounded-full cursor-pointer bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
-					<UserCircle size={24} className="text-gray-700 dark:text-gray-300" />
+				<div className="w-[42px] h-[42px] border border-white border-gray-700 rounded-full cursor-pointer bg-gray-200 bg-gray-800 flex items-center justify-center">
+					<UserCircle size={24} className="text-gray-700 text-gray-300" />
 				</div>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="w-56" side="bottom" align="end">

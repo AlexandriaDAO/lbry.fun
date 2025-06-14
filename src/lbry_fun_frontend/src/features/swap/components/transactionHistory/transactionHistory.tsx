@@ -5,15 +5,12 @@ import React, { useEffect } from "react";
 // import fetchTransaction, { TransactionType } from "../../thunks/secondaryIcrc/getTransactions";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import TransactionHistoryObj from "./transactionHistoryObj";
-import { useTheme } from "@/providers/ThemeProvider";
 import { RootState } from "@/store";
 
 const TransactionHistory = () => {
     const dispatch = useAppDispatch();
     const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
     const swap = useAppSelector((state: RootState) => state.swap);
-    const { theme } = useTheme();
-    const isDark = theme === "dark";
 
     useEffect(() => {
         if(!isAuthenticated || !principal) return;

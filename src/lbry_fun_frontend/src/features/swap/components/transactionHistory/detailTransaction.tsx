@@ -6,15 +6,12 @@ import { useNavigate, useParams, useSearchParams } from "react-router";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 // import { TransactionType } from "../../thunks/secondaryIcrc/getTransactions";
 import MainLayout from "@/layouts/MainLayout";
-import { useTheme } from "@/providers/ThemeProvider";
 
 const DetailTransaction = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const swap = useAppSelector(state => state.swap);
     // const [transactaion, setTransaction] = useState<TransactionType>();
-    const { theme } = useTheme();
-    const isDark = theme === "dark";
 
     // useEffect(() => {
     //     const id = searchParams.get("id");

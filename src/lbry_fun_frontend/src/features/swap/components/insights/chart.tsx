@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import type { ECBasicOption } from 'echarts/types/dist/shared';
-import { useTheme } from '../../../../providers/ThemeProvider';
 
 interface ChartProps {
     dataXaxis: any;
@@ -29,8 +28,6 @@ const LineChart: React.FC<ChartProps> = ({
     yAxis2format,
 }) => {
     const chartRef = useRef<HTMLDivElement | null>(null);
-    const { theme } = useTheme();
-    const isDarkMode = theme === 'dark';
 
     // Helper function to resolve CSS custom properties
     const resolveColor = (colorString: string): string => {
@@ -46,7 +43,7 @@ const LineChart: React.FC<ChartProps> = ({
 
     useEffect(() => {
         if (chartRef.current && dataYaxis && dataYaxis.length > 0) {
-            const myChart = echarts.init(chartRef.current, isDarkMode ? 'dark' : undefined);
+            const myChart = echarts.init(chartRef.current, 'dark');
             
             // Resolve CSS custom properties to actual color values
             const resolvedLineColor = resolveColor(lineColor);
@@ -81,7 +78,7 @@ const LineChart: React.FC<ChartProps> = ({
                         nameLocation: 'middle',
                         nameGap: 60,
                         nameTextStyle: {
-                            color: isDarkMode ? '#ccc' : '#666',
+                            color: '#ccc',
                             fontSize: 14
                         },
                         splitLine: {
@@ -164,7 +161,7 @@ const LineChart: React.FC<ChartProps> = ({
                 myChart.dispose();
             };
         }
-    }, [dataXaxis, dataYaxis, xAxisLabel, yAxisLabel, lineColor, gardientColor, isDarkMode, dataYaxis2, lineColor2, yAxisLabel2, yAxis2format]);
+    }, [dataXaxis, dataYaxis, xAxisLabel, yAxisLabel, lineColor, gardientColor, dataYaxis2, lineColor2, yAxisLabel2, yAxis2format]);
 
     return (
         <div className="w-full">

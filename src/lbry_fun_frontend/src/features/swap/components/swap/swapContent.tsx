@@ -183,39 +183,39 @@ const SwapContent: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="border border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 py-5 px-5 rounded-2xl ms-3">
+        <div className="border border-gray-400 border-gray-600 bg-white bg-gray-800 py-5 px-5 rounded-2xl ms-3">
           <ul className="ps-0">
             <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor dark:text-gray-200">
+              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor text-gray-200">
                 Network Fees
               </strong>
-              <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor dark:text-gray-200">
+              <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor text-gray-200">
                 {icp_fee} ICP
               </span>
             </li>
             <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor dark:text-gray-200">
+              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor text-gray-200">
                 Send
               </strong>
-              <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor dark:text-gray-200 break-all">
+              <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor text-gray-200 break-all">
                 {amount} ICP
               </span>
             </li>
             <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor dark:text-gray-200">
+              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor text-gray-200">
                 Receive
               </strong>
-              <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor dark:text-gray-200 break-all">
+              <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor text-gray-200 break-all">
                 {tentativeSecondary.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}
               </span>
             </li>
             <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor dark:text-gray-200">
-                For each ICP you swap, you'll receive <span className="text-[#FF9900] dark:text-yellow-400">{tentativeSecondary}</span> {swap.activeSwapPool?.[1].secondary_token_symbol} tokens.
+              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor text-gray-200">
+                For each ICP you swap, you'll receive <span className="text-[#FF9900] text-yellow-400">{tentativeSecondary}</span> {swap.activeSwapPool?.[1].secondary_token_symbol} tokens.
               </strong>
             </li>
             <li>
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor dark:text-gray-200">
+              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor text-gray-200">
                 Please review the details carefully, as swaps are irreversible and cannot be undone once confirmed.
               </strong>
             </li>

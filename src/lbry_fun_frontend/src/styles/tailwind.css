@@ -10,102 +10,25 @@
 
 @layer base {
   :root {
-    /* Cyberpunk Background System */
-    --color-background-primary: 240 5% 4%;              /* Dark void background */
-    --color-background-secondary: 240 8% 7%;            /* Card backgrounds */
-    --color-background-accent: 240 10% 10%;             /* Highlighted areas */
-    --color-background-muted: 240 8% 7%;                /* Subtle backgrounds */
-    
-    /* Cyberpunk Text System */
-    --color-text-primary: 220 20% 90%;                  /* Light text on dark */
-    --color-text-secondary: 220 15% 70%;                /* Muted text */
-    --color-text-accent: 300 100% 70%;                  /* Electric magenta accent */
-    --color-text-inverse: 240 5% 4%;                    /* Dark text (rare usage) */
-    
-    /* Cyberpunk Interactive System */
-    --color-interactive-primary: 180 100% 50%;          /* Electric cyan buttons/links */
-    --color-interactive-primary-hover: 120 100% 50%;    /* Neon green hover */
-    --color-interactive-secondary: 240 10% 10%;         /* Secondary buttons */
-    --color-interactive-accent: 300 100% 70%;           /* Electric magenta accents */
-    
-    /* Cyberpunk Status System */
-    --color-status-success: 120 100% 50%;               /* Matrix green */
-    --color-status-success-fg: 240 5% 4%;               /* Dark text on green */
-    --color-status-warning: 45 100% 60%;                /* Electric amber */
-    --color-status-warning-fg: 240 5% 4%;               /* Dark text on amber */
-    --color-status-error: 0 100% 60%;                   /* Electric red */
-    --color-status-error-fg: 220 20% 90%;               /* Light text on red */
-    --color-status-info: 210 100% 60%;                  /* Electric blue */
-    --color-status-info-fg: 240 5% 4%;                  /* Dark text on blue */
-    
-    /* Cyberpunk Border System */
-    --color-border-primary: 180 50% 30%;                /* Cyan-tinted borders */
-    --color-border-muted: 220 20% 20%;                  /* Dark borders */
-    --color-border-accent: 300 100% 70%;                /* Magenta accent borders */
-    
-    /* Cyberpunk Effect System */
-    --color-effect-glow: 180 100% 50%;                  /* Cyan glow effects */
-    --color-effect-shadow: 240 5% 4%;                   /* Deep shadows */
-    --color-effect-neon: 300 100% 70%;                  /* Magenta neon accents */
-    
-    /* Cyberpunk Chart System */
-    --color-chart-primary: 180 100% 60%;                /* Cyan charts */
-    --color-chart-secondary: 120 100% 60%;              /* Green charts */
-    --color-chart-accent: 300 100% 70%;                 /* Magenta charts */
-    --color-chart-success: 120 100% 50%;                /* Matrix green charts */
-    --color-chart-warning: 45 100% 60%;                 /* Amber charts */
-    --color-chart-error: 0 100% 60%;                    /* Red charts */
-    
-    /* Legacy Compatibility (will be phased out) */
-    --background: var(--color-background-primary);
-    --foreground: var(--color-text-primary);
-    --muted: var(--color-background-muted);
-    --muted-foreground: var(--color-text-secondary);
-    --popover: var(--color-background-secondary);
-    --popover-foreground: var(--color-text-primary);
-    --border: var(--color-border-primary);
-    --input: var(--color-border-muted);
-    --card: var(--color-background-secondary);
-    --card-foreground: var(--color-text-primary);
-    --primary: var(--color-interactive-primary);
-    --primary-foreground: var(--color-text-accent);
-    --secondary: var(--color-interactive-secondary);
-    --secondary-foreground: var(--color-text-primary);
-    --info: var(--color-status-info);
-    --info-foreground: var(--color-status-info-fg);
-    --warning: var(--color-status-warning);
-    --warning-foreground: var(--color-status-warning-fg);
-    --accent: var(--color-background-accent);
-    --accent-foreground: var(--color-text-primary);
-    --destructive: var(--color-status-error);
-    --destructive-foreground: var(--color-status-error-fg);
-    --constructive: var(--color-status-success);
-    --constructive-foreground: var(--color-status-success-fg);
-    --ring: 215 20.2% 65.1%;
-
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    /* Enhanced Dark Mode - Deeper cyberpunk */
+    /* Cyberpunk Background System - Enhanced Dark Mode */
     --color-background-primary: 240 8% 3%;              /* Deeper void */
     --color-background-secondary: 240 10% 5%;           /* Darker cards */
     --color-background-accent: 240 12% 7%;              /* Darker highlights */
     --color-background-muted: 240 10% 5%;               /* Darker subtle areas */
     
-    /* Brighter text for contrast */
+    /* Cyberpunk Text System - Enhanced for dark mode */
     --color-text-primary: 220 30% 95%;                  /* Brighter text */
     --color-text-secondary: 220 20% 75%;                /* Brighter muted text */
     --color-text-accent: 300 100% 80%;                  /* Brighter magenta */
     --color-text-inverse: 240 8% 3%;                    /* Deeper dark text */
     
-    /* Enhanced interactive colors */
+    /* Cyberpunk Interactive System - Enhanced */
     --color-interactive-primary: 180 100% 60%;          /* Brighter cyan */
     --color-interactive-primary-hover: 120 100% 60%;    /* Brighter green */
     --color-interactive-secondary: 240 12% 7%;          /* Darker secondary */
     --color-interactive-accent: 300 100% 80%;           /* Brighter magenta */
     
-    /* Enhanced status colors */
+    /* Cyberpunk Status System - Enhanced */
     --color-status-success: 120 100% 60%;               /* Brighter matrix green */
     --color-status-success-fg: 240 8% 3%;               /* Dark text on bright green */
     --color-status-warning: 45 100% 70%;                /* Brighter electric amber */
@@ -115,17 +38,17 @@
     --color-status-info: 210 100% 70%;                  /* Brighter electric blue */
     --color-status-info-fg: 240 8% 3%;                  /* Dark text on bright blue */
     
-    /* Enhanced borders */
+    /* Cyberpunk Border System - Enhanced */
     --color-border-primary: 180 60% 40%;                /* Brighter cyan borders */
     --color-border-muted: 220 20% 15%;                  /* Darker muted borders */
     --color-border-accent: 300 100% 80%;                /* Brighter magenta borders */
     
-    /* Enhanced effects */
+    /* Cyberpunk Effect System - Enhanced */
     --color-effect-glow: 180 100% 60%;                  /* Brighter glow */
     --color-effect-shadow: 0 0% 0%;                     /* True black shadows */
     --color-effect-neon: 300 100% 80%;                  /* Brighter neon */
     
-    /* Brighter charts for dark mode */
+    /* Cyberpunk Chart System - Enhanced */
     --color-chart-primary: 180 100% 70%;                /* Brighter cyan */
     --color-chart-secondary: 120 100% 70%;              /* Brighter green */
     --color-chart-accent: 300 100% 80%;                 /* Brighter magenta */
@@ -133,11 +56,13 @@
     --color-chart-warning: 45 100% 70%;                 /* Brighter amber */
     --color-chart-error: 0 100% 70%;                    /* Brighter red */
     
-    /* Legacy Compatibility - Dark Mode */
+    /* Legacy Compatibility */
     --background: var(--color-background-primary);
     --foreground: var(--color-text-primary);
     --muted: var(--color-background-muted);
     --muted-foreground: var(--color-text-secondary);
+    --popover: var(--color-background-secondary);
+    --popover-foreground: var(--color-text-primary);
     --accent: var(--color-background-accent);
     --accent-foreground: var(--color-text-accent);
     --border: var(--color-border-primary);

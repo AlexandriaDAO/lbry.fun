@@ -29,13 +29,11 @@ export default function App() {
     }, []);
 
     return (
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-            <ReduxProvider>
-                <InternetIdentityProvider>
-                    {/* <UserProvider> Removed </UserProvider> */}
-                    {isReady ? <AppRoutes /> : null}
-                </InternetIdentityProvider>
-            </ReduxProvider>
-        </ThemeProvider>
+        <ReduxProvider>
+            <InternetIdentityProvider>
+                {/* <UserProvider> Removed </UserProvider> */}
+                {isReady ? <AppRoutes /> : null}
+            </InternetIdentityProvider>
+        </ReduxProvider>
     )
 }

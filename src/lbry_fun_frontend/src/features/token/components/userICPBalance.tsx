@@ -41,8 +41,8 @@ const UserICPBalance = () => {
                         />
                     </svg>
                     <div>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold">Notice:</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-gray-300 font-semibold">Notice:</p>
+                        <p className="text-xs text-gray-400">
                             <strong>2 ICP</strong> is required to create new tokens.
                         </p>
                     </div>

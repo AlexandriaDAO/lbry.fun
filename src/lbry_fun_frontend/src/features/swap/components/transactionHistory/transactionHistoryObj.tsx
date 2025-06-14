@@ -2,7 +2,6 @@ import { faCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { useNavigate } from "react-router";
-import { useTheme } from "@/providers/ThemeProvider";
 
 const TransactionHistoryObj: React.FC<{
     timestamp: string;

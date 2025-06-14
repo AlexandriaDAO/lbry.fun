@@ -15,6 +15,7 @@ mod token_testing;
 mod individual_canister_tests;
 mod integrated_token_tests;
 mod phase1_environment_tests;
+mod phase2_token_operations;
 
 fn main() {
     println!("\n=== Running Token Environment Tests ===");

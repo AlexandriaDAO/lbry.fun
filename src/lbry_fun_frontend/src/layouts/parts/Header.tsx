@@ -3,7 +3,6 @@ import { useAppSelector } from "@/store/hooks/useAppSelector";
 import Logo from "@/components/Logo";
 import Tabs from "@/components/Tabs";
 import { useIdentity } from "@/hooks/useIdentity";
-import { ModeToggle } from "@/lib/components/mode-toggle";
 import AuthMenu from "@/features/auth/components/AuthMenu";
 
 export const Entry = () => {
@@ -15,7 +14,6 @@ export const Entry = () => {
 
 	return (
 		<div className="flex items-center gap-2">
-			<ModeToggle />
 			<AuthMenu />
 		</div>
 	);

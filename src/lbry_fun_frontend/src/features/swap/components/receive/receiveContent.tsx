@@ -77,24 +77,24 @@ const ReceiveContent = () => {
                     <div className="relative inline-block w-full mb-4">
                         <div
                             onClick={() => setIsOpen(!isOpen)}
-                            className="flex justify-between items-center border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-800 py-4 px-5 lg:text-2xl md:text-xl sm:text-lg xs:text-base font-semibold cursor-pointer"
+                            className="flex justify-between items-center border border-gray-300 border-gray-600 rounded-full bg-white bg-gray-800 py-4 px-5 lg:text-2xl md:text-xl sm:text-lg xs:text-base font-semibold cursor-pointer"
                         >
                             <div className='flex items-center'>
                                 {selectedImage ? <img className='h-5 w-5 me-3' src={selectedImage} alt="Selected" /> : null}
-                                <span className='lg:text-xl md:text-lg sm:text-sm font-medium text-black dark:text-white'>{selectedOption}</span>
+                                <span className='lg:text-xl md:text-lg sm:text-sm font-medium text-black text-white'>{selectedOption}</span>
                             </div>
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
                         {isOpen && (
-                            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+                            <div className="absolute z-10 mt-1 w-full bg-white bg-gray-800 border border-gray-300 border-gray-600 rounded-lg shadow-lg">
                                 {dynamicOptions.map((option, index) => {
                                     return (
                                         <div
                                             key={index}
                                             onClick={() => handleSelect(option)}
-                                            className="flex items-center py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer dark:text-white"
+                                            className="flex items-center py-2 px-4 hover:bg-gray-100 hover:bg-gray-700 cursor-pointer text-white"
                                         >
                                             {option.img ? (
                                                 <img src={option.img} alt={option.label} className="h-5 w-5 mr-3" />
@@ -117,11 +117,11 @@ const ReceiveContent = () => {
                     <div className="relative inline-block w-full mb-4">
                         <div
                             onClick={() => setNetworkOpen(!networkOpen)}
-                            className="flex justify-between items-center border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-800 py-4 px-5 lg:text-2xl md:text-xl sm:text-lg xs:text-base font-semibold cursor-pointer"
+                            className="flex justify-between items-center border border-gray-300 border-gray-600 rounded-full bg-white bg-gray-800 py-4 px-5 lg:text-2xl md:text-xl sm:text-lg xs:text-base font-semibold cursor-pointer"
                         >
 
                             <div className='flex items-center'>
-                                <span className='lg:text-xl md:text-lg sm:text-sm font-medium text-black dark:text-white'>{selectedNetwork}</span>
+                                <span className='lg:text-xl md:text-lg sm:text-sm font-medium text-black text-white'>{selectedNetwork}</span>
 
 
                             </div>
@@ -130,12 +130,12 @@ const ReceiveContent = () => {
                             </svg>
                         </div>
                         {networkOpen && (
-                            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+                            <div className="absolute z-10 mt-1 w-full bg-white bg-gray-800 border border-gray-300 border-gray-600 rounded-lg shadow-lg">
                                 {networkOptions.map((option, index) => (
                                     <div
                                         key={index}
                                         onClick={() => handleNetworkSelect(option)}
-                                        className="flex items-center py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer dark:text-white"
+                                        className="flex items-center py-2 px-4 hover:bg-gray-100 hover:bg-gray-700 cursor-pointer text-white"
                                     >
                                         <img src={option.img} alt={option.label} className="h-5 w-5 mr-3" />
                                         <span>{option.label}</span>
@@ -158,9 +158,9 @@ const ReceiveContent = () => {
                             />}
                         </div>
                         <div className="w-[calc(100%-140px)]">
-                            <label className='mb-2 text-xl font-medium dark:text-white'>ICP Address</label>
-                            <div className='border border-gray-400 dark:border-gray-600 py-5 px-5 rounded-borderbox flex items-center justify-between bg-white dark:bg-gray-800'>
-                                <p className='truncate text-lg font-medium text-radiocolor dark:text-gray-300 me-5'>{principal ? principal.toString() : ""}</p>
+                            <label className='mb-2 text-xl font-medium text-white'>ICP Address</label>
+                            <div className='border border-gray-400 border-gray-600 py-5 px-5 rounded-borderbox flex items-center justify-between bg-white bg-gray-800'>
+                                <p className='truncate text-lg font-medium text-radiocolor text-gray-300 me-5'>{principal ? principal.toString() : ""}</p>
                                 <div>
                                     {isAuthenticated && principal && <CopyHelper account={principal} />}
                                 </div>
@@ -169,18 +169,18 @@ const ReceiveContent = () => {
                     </div>
                 </div>
                 <div className='ms-0 2xl:ms-3 xl:ms-3 lg:ms-3 md:ms-3 sm:ms-0'>
-                    <div className='border border-gray-400 dark:border-gray-600 text-white py-5 px-5 rounded-2xl bg-white dark:bg-gray-800'>
+                    <div className='border border-gray-400 border-gray-600 text-white py-5 px-5 rounded-2xl bg-white bg-gray-800'>
                         <ul className='ps-0'>
                             <li className='flex justify-between mb-5'>
-                                <strong className='text-lg font-medium me-1 text-radiocolor dark:text-gray-300'>Minimum deposit amount</strong>
-                                <span className='text-lg font-medium text-radiocolor dark:text-gray-300'>0.001 {selectedOption}</span>
+                                <strong className='text-lg font-medium me-1 text-radiocolor text-gray-300'>Minimum deposit amount</strong>
+                                <span className='text-lg font-medium text-radiocolor text-gray-300'>0.001 {selectedOption}</span>
                             </li>
                             <li className='flex justify-between mb-5'>
-                                <strong className='text-lg font-medium me-1 text-radiocolor dark:text-gray-300'>Network Fees:</strong>
-                                <span className='text-lg font-medium text-radiocolor dark:text-gray-300'><span className='text-multycolor'>{fee}</span> {selectedOption}</span>
+                                <strong className='text-lg font-medium me-1 text-radiocolor text-gray-300'>Network Fees:</strong>
+                                <span className='text-lg font-medium text-radiocolor text-gray-300'><span className='text-multycolor'>{fee}</span> {selectedOption}</span>
                             </li>
                             <li>
-                                <p className='text-lg font-medium text-radiocolor dark:text-gray-300'>Do not deposit assets other than those listed as this may result in irretrievability of deposited assets.</p>
+                                <p className='text-lg font-medium text-radiocolor text-gray-300'>Do not deposit assets other than those listed as this may result in irretrievability of deposited assets.</p>
                             </li>
                         </ul>
                     </div>

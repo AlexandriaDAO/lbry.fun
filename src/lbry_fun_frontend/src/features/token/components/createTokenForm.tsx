@@ -260,21 +260,21 @@ const CreateTokenForm: React.FC = () => {
           <div className="p-4 border-t border-border text-sm text-muted-foreground">
             <div className="space-y-3">
               <div>
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Secondary Tokens:</h4>
+                <h4 className="font-semibold text-gray-800 text-gray-200 mb-1">Secondary Tokens:</h4>
                 <ul className="list-disc list-inside pl-4 space-y-1">
                   <li>Mint at a fixed rate of $0.01 in ICP.</li>
                   <li>Burn to create Primary Tokens & recover 50% of their initial ICP cost.</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Primary Tokens:</h4>
+                <h4 className="font-semibold text-gray-800 text-gray-200 mb-1">Primary Tokens:</h4>
                 <ul className="list-disc list-inside pl-4 space-y-1">
                   <li>No fixed price; created by burning Secondary Tokens.</li>
                   <li>Minting difficulty increases with each epoch (less Primary Token per Secondary Token burned over time).</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">ICP Revenue Flow (from Secondary Token minting):</h4>
+                <h4 className="font-semibold text-gray-800 text-gray-200 mb-1">ICP Revenue Flow (from Secondary Token minting):</h4>
                 <ul className="list-disc list-inside pl-4 space-y-1">
                   <li>1% fee to ALEX stakers.</li>
                   <li>49.5% to Primary Token buybacks & locked liquidity.</li>
@@ -564,7 +564,7 @@ const CreateTokenForm: React.FC = () => {
                 disabled={!form.initial_reward_per_burn_unit}
               />
               {form.primary_max_supply && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 text-gray-400 mt-1">
                   Max: {Math.floor((parseInt(form.primary_max_supply) - parseInt(form.tge_allocation || '1')) * 0.1).toLocaleString()} (10% of remaining supply)
                 </p>
               )}
@@ -598,11 +598,11 @@ const CreateTokenForm: React.FC = () => {
               />
               {form.initial_secondary_burn && (
                 <>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 text-gray-400 mt-1">
                     Initial Valuation: ${(parseInt(form.initial_secondary_burn) * 0.005).toLocaleString()} USD
                   </p>
                   {parseInt(form.initial_secondary_burn) * 0.005 < 1000 && (
-                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                    <p className="text-xs text-yellow-600 text-yellow-400 mt-1">
                       ⚠️ Initial valuation below $1,000 threshold - vulnerable to bot attacks
                     </p>
                   )}
@@ -656,7 +656,7 @@ const CreateTokenForm: React.FC = () => {
                 onChange={handleChange}
               />
               {renderError('halving_step')}
-              {halvingStepWarning && <p className="text-yellow-600 dark:text-yellow-400 text-sm mt-1">{halvingStepWarning}</p>}
+              {halvingStepWarning && <p className="text-yellow-600 text-yellow-400 text-sm mt-1">{halvingStepWarning}</p>}
               <Slider
                 min={25}
                 max={99}
@@ -673,8 +673,8 @@ const CreateTokenForm: React.FC = () => {
         <div className="space-y-2">
           {(form.initial_reward_per_burn_unit && form.primary_max_supply && 
             parseInt(form.initial_reward_per_burn_unit) > (parseInt(form.primary_max_supply) - parseInt(form.tge_allocation || '1')) * 0.1) && (
-            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+            <div className="mt-4 p-3 bg-yellow-50 bg-yellow-900/20 border border-yellow-200 border-yellow-800 rounded-lg">
+              <p className="text-sm text-yellow-800 text-yellow-200">
                 ⚠️ High reward exceeds 10% of remaining supply - this enables unfair launches where bots can monopolize early epochs. Reduce initial reward to ensure at least 3 meaningful distribution epochs.
               </p>
             </div>
@@ -683,16 +683,16 @@ const CreateTokenForm: React.FC = () => {
           {previewGraphData && previewGraphData.minted_per_epoch_data_y && (
             <>
               {previewGraphData.minted_per_epoch_data_y.length < 3 && (
-                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-800 dark:text-red-200">
+                <div className="mt-4 p-3 bg-red-50 bg-red-900/20 border border-red-200 border-red-800 rounded-lg">
+                  <p className="text-sm text-red-800 text-red-200">
                     🚨 UNFAIR LAUNCH: Only {previewGraphData.minted_per_epoch_data_y.length} epochs - insufficient time for community participation. Minimum 3 epochs required to prevent bot monopolization.
                   </p>
                 </div>
               )}
               
               {previewGraphData.minted_per_epoch_data_y.length > 30 && (
-                <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                <div className="mt-4 p-3 bg-yellow-50 bg-yellow-900/20 border border-yellow-200 border-yellow-800 rounded-lg">
+                  <p className="text-sm text-yellow-800 text-yellow-200">
                     ⚠️ Extended distribution ({previewGraphData.minted_per_epoch_data_y.length} epochs) may reduce liquidity - consider adjusting parameters
                   </p>
                 </div>

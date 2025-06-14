@@ -208,27 +208,27 @@ const SendContent = () => {
                     <div className="relative inline-block w-full mb-4">
                         <div
                             onClick={() => setIsOpen(!isOpen)}
-                            className="flex justify-between items-center border border-gray-300 dark:border-gray-700 rounded-full bg-white dark:bg-gray-800 py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-3 2xl:px-5 xl:px-5 lg:px-4 md:px-3 sm:px-3 text-2xl font-semibold cursor-pointer"
+                            className="flex justify-between items-center border border-gray-300 border-gray-700 rounded-full bg-white bg-gray-800 py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-3 2xl:px-5 xl:px-5 lg:px-4 md:px-3 sm:px-3 text-2xl font-semibold cursor-pointer"
                         >
                             <div className='flex items-center'>
                                 {selectedImage ? 
                                      <img className='h-5 w-5 me-3' src={selectedImage} alt={selectedOption} /> : 
                                      (selectedOption !== "Select an option" && <div className='h-5 w-5 me-3 bg-gray-200 rounded-full'></div>)
                                 }
-                                <span className='lg:text-xl md:text-lg xs:text-base font-medium text-black dark:text-gray-200'>{selectedOption}</span>
+                                <span className='lg:text-xl md:text-lg xs:text-base font-medium text-black text-gray-200'>{selectedOption}</span>
                             </div>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
                         {isOpen && (
-                            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg">
+                            <div className="absolute z-10 mt-1 w-full bg-white bg-gray-800 border border-gray-300 border-gray-700 rounded-lg shadow-lg">
                                 {dynamicSendOptions.map((option, index) => {
                                     return (
                                         <div
                                             key={index}
                                             onClick={() => handleSelect(option)}
-                                            className="flex items-center py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer dark:text-gray-200"
+                                            className="flex items-center py-2 px-4 hover:bg-gray-100 hover:bg-gray-700 cursor-pointer text-gray-200"
                                         >
                                             {option.img ? (
                                                 <img src={option.img} alt={option.label} className="h-5 w-5 mr-3" />
@@ -246,11 +246,11 @@ const SendContent = () => {
                     </div>
                     <div className='flex items-center mb-4'>
                         <span className='flex text-2xl font-bold w-circlewidth h-circleheight bg-balancebox rounded-full text-white justify-center items-center me-3'>2</span>
-                        <strong className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium dark:text-gray-200'>Enter the Principal ID</strong>
+                        <strong className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-gray-200'>Enter the Principal ID</strong>
                     </div>
-                    <div className='border bg-white dark:bg-gray-800 dark:border-gray-700 py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-3 2xl:px-5 xl:px-5 lg:px-4 md:px-3 sm:px-3 rounded-full mb-4' >
+                    <div className='border bg-white bg-gray-800 border-gray-700 py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-3 2xl:px-5 xl:px-5 lg:px-4 md:px-3 sm:px-3 rounded-full mb-4' >
                         <input 
-                            className={`text-multygray dark:text-gray-300 bg-transparent text-xl font-medium placeholder-multygray dark:placeholder-gray-400 focus:outline-none focus:border-transparent w-full ${principalError ? 'border-red-500' : ''}`} 
+                            className={`text-multygray text-gray-300 bg-transparent text-xl font-medium placeholder-multygray placeholder-gray-400 focus:outline-none focus:border-transparent w-full ${principalError ? 'border-red-500' : ''}`} 
                             type='text' 
                             onChange={(e) => { handleDestinationPrincipalChange(e) }} 
                             value={destinationPrincipal} 
@@ -264,17 +264,17 @@ const SendContent = () => {
                     )}
                     <div className='flex items-center mb-4'>
                         <span className='flex text-2xl font-bold w-circlewidth h-circleheight bg-balancebox rounded-full text-white justify-center items-center me-3'>3</span>
-                        <strong className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium dark:text-gray-200'>Enter the amount</strong>
+                        <strong className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-gray-200'>Enter the amount</strong>
                     </div>
-                    <div className='border bg-white dark:bg-gray-800 dark:border-gray-700 py-5 px-5 rounded-borderbox mb-7'>
+                    <div className='border bg-white bg-gray-800 border-gray-700 py-5 px-5 rounded-borderbox mb-7'>
                         <div className='mb-3 w-full'>
                             <div className='flex justify-between mb-3'>
-                                <h4 className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-darkgray dark:text-gray-300'>Amount</h4>
-                                <input className='text-darkgray dark:text-gray-200 mr-[-10px] text-right bg-transparent lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium placeholder-darkgray dark:placeholder-gray-400 focus:outline-none focus:border-transparent w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' type='number' onChange={(e) => { handleAmountChange(e) }} value={amount} />
+                                <h4 className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-darkgray text-gray-300'>Amount</h4>
+                                <input className='text-darkgray text-gray-200 mr-[-10px] text-right bg-transparent lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium placeholder-darkgray placeholder-gray-400 focus:outline-none focus:border-transparent w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' type='number' onChange={(e) => { handleAmountChange(e) }} value={amount} />
                             </div>
                             <div className='flex justify-between'>
                                 <div className='flex items-center'>
-                                    <strong className='text-base text-multygray dark:text-gray-300 font-medium me-2'>Available Balance:<span className='text-base text-darkgray dark:text-gray-200 ms-2'>{availableBalance}</span></strong>
+                                    <strong className='text-base text-multygray text-gray-300 font-medium me-2'>Available Balance:<span className='text-base text-darkgray text-gray-200 ms-2'>{availableBalance}</span></strong>
                                     {selectedOption === "ICP" && <img className='w-5 h-5' src="images/8-logo.png" alt="icp" />}
                                     {selectedOption === (swap.activeSwapPool?.[1]?.primary_token_symbol || "PRIMARY") && 
                                         (primaryLogoFromState ? 
@@ -287,7 +287,7 @@ const SendContent = () => {
                                             <div className='w-5 h-5 bg-gray-200 rounded-full'></div>)
                                     }
                                 </div>
-                                <Link role="button" to="" className='text-[#A7B1D7] dark:text-blue-400 underline text-base font-medium' onClick={() => { handleMax() }}>Max</Link>
+                                <Link role="button" to="" className='text-[#A7B1D7] text-blue-400 underline text-base font-medium' onClick={() => { handleMax() }}>Max</Link>
                             </div>
                         </div>
                     </div>
@@ -313,19 +313,19 @@ const SendContent = () => {
                     </div>}
                 </div>
                 <div className='ms-0 2xl:ms-3 xl:ms-3 lg:ms-3 md:ms-3 sm:ms-0'>
-                    {selectedOption !== "Select an option" ? <div className='border border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 py-5 px-5 rounded-2xl'>
+                    {selectedOption !== "Select an option" ? <div className='border border-gray-400 border-gray-600 bg-white bg-gray-800 py-5 px-5 rounded-2xl'>
                         <ul className='ps-0 pb-7'>
                             <li className='flex justify-between mb-5'>
-                                <strong className='text-lg font-semibold me-1 text-radiocolor dark:text-gray-200'>Send</strong>
-                                <span className='text-lg font-semibold text-radiocolor dark:text-gray-200'>{amount}</span>
+                                <strong className='text-lg font-semibold me-1 text-radiocolor text-gray-200'>Send</strong>
+                                <span className='text-lg font-semibold text-radiocolor text-gray-200'>{amount}</span>
                             </li>
                             <li className='flex justify-between mb-5'>
-                                <strong className='text-lg font-semibold me-5 text-radiocolor dark:text-gray-200 whitespace-nowrap'>Send to</strong>
-                                <h6 className='truncate text-lg font-semibold text-radiocolor dark:text-gray-200'>{destinationPrincipal}</h6>
+                                <strong className='text-lg font-semibold me-5 text-radiocolor text-gray-200 whitespace-nowrap'>Send to</strong>
+                                <h6 className='truncate text-lg font-semibold text-radiocolor text-gray-200'>{destinationPrincipal}</h6>
                             </li>
                             <li className='flex justify-between mb-5'>
-                                <strong className='text-lg font-semibold me-1 text-radiocolor dark:text-gray-200'>Network Fees</strong>
-                                <span className='text-lg font-semibold text-radiocolor dark:text-gray-200'><span className='text-multycolor dark:text-blue-400'>{fee}</span> {selectedOption}</span>
+                                <strong className='text-lg font-semibold me-1 text-radiocolor text-gray-200'>Network Fees</strong>
+                                <span className='text-lg font-semibold text-radiocolor text-gray-200'><span className='text-multycolor text-blue-400'>{fee}</span> {selectedOption}</span>
                             </li>
                         </ul>
                     </div> : <></>}

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { ActorSubclass } from "@dfinity/agent";
-import { useTheme } from "@/providers/ThemeProvider";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import { _SERVICE as _SERVICESWAP } from "../../../../../../declarations/icp_swap/icp_swap.did";
@@ -50,16 +49,16 @@ const RedeemContent: React.FC = () => {
   return (
     <div>
       <div className="mb-5 2xl:mb-10 xl:mb-7 lg:mb-7 md:mb-6 sm:mb-5">
-        <h3 className="text-tabsheading 2xl:text-xxltabsheading xl:text-xltabsheading lg:text-lgtabsheading md:text-mdtabsheading sm:text-smtabsheading font-bold dark:text-white">
+        <h3 className="text-tabsheading 2xl:text-xxltabsheading xl:text-xltabsheading lg:text-lgtabsheading md:text-mdtabsheading sm:text-smtabsheading font-bold text-white">
           Redeem
         </h3>
       </div>
       <div className="grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-1 sm:grid-cols-1">
         <div className="me-0 2xl:me-2 xl:me-2 lg:me-2 md:me-0 sm:me-0 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-3 sm:mb-3">
           <div className="block 2xl:flex xl:flex lg:flex md:flex sm:block justify-between mb-5 w-full">
-            <div className={`bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-700 text-black dark:text-white py-5 px-7 rounded-borderbox me-0 2xl:me-2 xl:me-2 lg:me-2 md:me-2 sm:me-0 w-full 2xl:w-6/12 xl:w-6/12 lg:w-6/12 md:w-6/12 sm:w-full mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3`}>
+            <div className={`bg-white bg-gray-800 border border-gray-400 border-gray-700 text-black text-white py-5 px-7 rounded-borderbox me-0 2xl:me-2 xl:me-2 lg:me-2 md:me-2 sm:me-0 w-full 2xl:w-6/12 xl:w-6/12 lg:w-6/12 md:w-6/12 sm:w-full mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3`}>
               <div className="flex justify-between">
-                <h2 className="text-swapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-black dark:text-white">
+                <h2 className="text-swapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-black text-white">
                   Archived ICP {swap.archivedBalance}
                 </h2>
                 <div>

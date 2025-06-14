@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "@/providers/ThemeProvider";
 
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
@@ -17,7 +16,6 @@ import { Entry } from "@/layouts/parts/Header";
 import { RootState } from "@/store";
 
 const StakeContent = () => {
-    const { theme } = useTheme();
     const dispatch = useAppDispatch();
 
     const swap = useAppSelector((state: RootState) => state.swap);
@@ -124,26 +122,26 @@ const StakeContent = () => {
                 <div className='grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 mb-7'>
                     <div className='stake me-2'>
                         <div className="mb-4">
-                            <label className="flex items-center text-radiocolor dark:text-white">
-                                <span className="ml-2 text-tabsheading 2xl:text-xxltabsheading xl:text-xltabsheading lg:text-lgtabsheading md:text-mdtabsheading sm:text-smtabsheading font-bold dark:text-white">Stake</span>
+                            <label className="flex items-center text-radiocolor text-white">
+                                <span className="ml-2 text-tabsheading 2xl:text-xxltabsheading xl:text-xltabsheading lg:text-lgtabsheading md:text-mdtabsheading sm:text-smtabsheading font-bold text-white">Stake</span>
                             </label>
                         </div>
-                        <div className='border border-gray-400 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white py-5 px-7 rounded-borderbox mb-3'>
-                            <h2 className='sm:text-2xl xs:text-xl text-radiocolor dark:text-white flex justify-between mb-5'>
+                        <div className='border border-gray-400 border-gray-700 bg-white bg-gray-800 text-black text-white py-5 px-7 rounded-borderbox mb-3'>
+                            <h2 className='sm:text-2xl xs:text-xl text-radiocolor text-white flex justify-between mb-5'>
                                 <span className='flex font-extrabold'>Staked</span>
                                 <span className='font-semibold flex'>{swap.stakeInfo.stakedPrimary}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span>
                             </h2>
                             <ul className='ps-0'>
                                 <li className='mb-4'>
                                     <div className='flex justify-between'>
-                                        <strong className='sm:text-lg xs:text-sm text-radiocolor dark:text-white font-semibold me-1'>Estimated Returns</strong>
+                                        <strong className='sm:text-lg xs:text-sm text-radiocolor text-white font-semibold me-1'>Estimated Returns</strong>
                                         <div className='text-right'>
                                             <div className='flex flex-col items-end'>
                                                 <div>
-                                                    <strong className='sm:text-lg xs:text-sm text-radiocolor dark:text-white font-semibold'>{apr}</strong>
-                                                    <span className='text-sm text-gray-500 dark:text-gray-400 ml-1'>per hour</span>
+                                                    <strong className='sm:text-lg xs:text-sm text-radiocolor text-white font-semibold'>{apr}</strong>
+                                                    <span className='text-sm text-gray-500 text-gray-400 ml-1'>per hour</span>
                                                 </div>
-                                                <div className='text-sm text-gray-500 dark:text-gray-400'>
+                                                <div className='text-sm text-gray-500 text-gray-400'>
                                                     {annualizedApr} per year
                                                 </div>
                                             </div>
@@ -158,27 +156,27 @@ const StakeContent = () => {
                                 </li> */}
                                 <li className='mb-4'>
                                     <div className='flex justify-between'>
-                                        <strong className='sm:text-lg xs:text-sm text-radiocolor dark:text-white font-semibold me-1'>Cumulative Stake by Community</strong>
-                                        <strong className='sm:text-lg xs:text-sm text-radiocolor dark:text-white font-semibold me-1'>{swap.totalStaked}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</strong>
+                                        <strong className='sm:text-lg xs:text-sm text-white font-semibold me-1'>Cumulative Stake by Community</strong>
+                                        <strong className='sm:text-lg xs:text-sm text-white font-semibold me-1'>{swap.totalStaked}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</strong>
                                     </div>
                                 </li>
                                 <li>
                                     <div className='flex justify-between'>
-                                        <strong className='sm:text-lg xs:text-sm text-radiocolor dark:text-white font-semibold me-1'>Stakers</strong>
-                                        <strong className='sm:text-lg xs:text-sm text-radiocolor dark:text-white font-semibold me-1'>{swap.totalStakers}</strong>
+                                        <strong className='sm:text-lg xs:text-sm text-white font-semibold me-1'>Stakers</strong>
+                                        <strong className='sm:text-lg xs:text-sm text-white font-semibold me-1'>{swap.totalStakers}</strong>
                                     </div>
                                 </li>
                             </ul>
                         </div>
                         <div className='flex items-center mb-3'>
-                            <strong className='text-2xl font-medium dark:text-white'>Stake Amount</strong>
+                            <strong className='text-2xl font-medium text-white'>Stake Amount</strong>
                         </div>
-                        <div className='border border-gray-400 dark:border-gray-700 bg-white dark:bg-gray-800 py-8 px-5 rounded-borderbox mb-7'>
+                        <div className='border border-gray-700 bg-gray-800 py-8 px-5 rounded-borderbox mb-7'>
                             <div className='mb-3'>
                                 <div className='flex justify-between mb-5'>
-                                    <h4 className='text-2xl font-medium text-darkgray dark:text-white'>Amount</h4>
+                                    <h4 className='text-2xl font-medium text-white'>Amount</h4>
                                     <input
-                                        className='text-darkgray dark:text-white mr-[-10px] text-right bg-transparent text-2xl font-medium placeholder-darkgray dark:placeholder-gray-400 w-full focus:outline-none focus:border-transparent'
+                                        className='text-white mr-[-10px] text-right bg-transparent text-2xl font-medium placeholder-gray-400 w-full focus:outline-none focus:border-transparent'
                                         type='number'
                                         min={0}
                                         value={amount}
@@ -188,14 +186,14 @@ const StakeContent = () => {
                                 </div>
                                 <div className='flex justify-between'>
                                     <div className='flex items-center'>
-                                        <strong className='text-base text-multygray dark:text-gray-400 font-medium me-2'>Available Balance:<span className='text-base text-darkgray dark:text-white ms-2'>{primary.primaryBal}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span></strong>
+                                        <strong className='text-base text-gray-400 font-medium me-2'>Available Balance:<span className='text-base text-white ms-2'>{primary.primaryBal}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span></strong>
                                         {primaryTokenLogoFromState ? (
                                             <img className='w-5 h-5' src={primaryTokenLogoFromState} alt={swap.activeSwapPool?.[1]?.primary_token_name || "Primary token logo"} />
                                         ) : (
                                             <div className='w-5 h-5 bg-gray-200 rounded-full'></div>
                                         )}
                                     </div>
-                                    <Link to="" role="button" className='text-[#A7B1D7] dark:text-gray-400 underline text-base font-bold hover:text-[#8494C7] dark:hover:text-gray-300' onClick={() => handleMaxPrimary()} >Max</Link>
+                                    <Link to="" role="button" className='text-gray-400 underline text-base font-bold hover:text-gray-300' onClick={() => handleMaxPrimary()} >Max</Link>
                                 </div>
                             </div>
                         </div>
