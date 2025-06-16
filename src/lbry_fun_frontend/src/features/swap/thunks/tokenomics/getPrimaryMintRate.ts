@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import LedgerService from "@/utils/LedgerService";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 import { getICRCActor, getTokenomicsActor } from "@/features/auth/utils/authUtils";
 import { RootState } from "@/store";
 // Define the asyn thunk
@@ -17,9 +17,8 @@ const getPrimaryMintRate = createAsyncThunk<
       state.swap.activeSwapPool?.[1].tokenomics_canister_id
     );
     const result = await actor.get_current_primary_rate();
-    const LedgerServices = LedgerService();
     // The result is in e8s format, need to convert to natural units
-    const rateInNaturalUnits = LedgerServices.e8sToIcp(result);
+    const rateInNaturalUnits = TokenConversionService.e8sToNatural(result);
     return rateInNaturalUnits.toString();
   } catch (error) {
     if (error instanceof Error) {

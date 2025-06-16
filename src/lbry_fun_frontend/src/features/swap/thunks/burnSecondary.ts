@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 import { getActorSwap, getICRCActor } from "@/features/auth/utils/authUtils";
 import getCanisterBal from "@/features/icp-ledger/thunks/getCanisterBal";
 import getCanisterArchivedBal from "./getCanisterArchivedBal";
@@ -28,12 +29,13 @@ const burnSecondary = createAsyncThunk<
       );
       const icp_swap_canister_id =
         state.swap.activeSwapPool?.[1].icp_swap_canister_id;
-      let amountFormat: bigint = BigInt(Number(amount));
-      let amountFormate8s: bigint = BigInt(Number(amount) * 10 ** 8);
+      // Convert user input to e8s format for backend operations
+      const amountFormat = TokenConversionService.naturalToE8s(amount);
+      const amountFormate8s = amountFormat;
 
-      // Get the secondary token fee from state
+      // Get the secondary token fee from state and convert to e8s
       const secondaryFee = state.swap.secondaryFee;
-      const feeInE8s = BigInt(Math.ceil(Number(secondaryFee) * 10 ** 8));
+      const feeInE8s = TokenConversionService.naturalToE8s(secondaryFee);
       
       // Add fee buffer to approval amount
       const approvalAmount = amountFormate8s + feeInE8s;

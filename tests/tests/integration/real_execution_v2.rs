@@ -13,7 +13,7 @@ const E8S: u64 = 100_000_000;
 const TOKEN_CREATION_FEE: u64 = 200_000_000; // 2 ICP in e8s
 
 // Include WASM files
-const LBRY_FUN_WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/lbry_fun.wasm");
+const LBRY_FUN_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/lbry_fun.wasm");
 
 // Mock canister that returns success for any update call
 fn create_mock_canister(pic: &PocketIc) -> Principal {
@@ -78,11 +78,11 @@ fn test_token_deployment_flow() {
 fn test_wasm_files_available() {
     // Check that all required WASM files exist
     let wasm_files = vec![
-        ("ICP Ledger", include_bytes!("../src/icp_ledger_canister/ledger.wasm").len()),
-        ("ICRC1 Ledger", include_bytes!("../src/lbry_fun/src/ic-icrc1-ledger.wasm").len()),
-        ("Tokenomics", include_bytes!("../target/wasm32-unknown-unknown/release/tokenomics.wasm").len()),
-        ("ICP Swap", include_bytes!("../target/wasm32-unknown-unknown/release/icp_swap.wasm").len()),
-        ("Logs", include_bytes!("../target/wasm32-unknown-unknown/release/logs.wasm").len()),
+        ("ICP Ledger", include_bytes!("../../../src/icp_ledger_canister/ledger.wasm").len()),
+        ("ICRC1 Ledger", include_bytes!("../../../src/lbry_fun/src/ic-icrc1-ledger.wasm").len()),
+        ("Tokenomics", include_bytes!("../../../target/wasm32-unknown-unknown/release/tokenomics.wasm").len()),
+        ("ICP Swap", include_bytes!("../../../target/wasm32-unknown-unknown/release/icp_swap.wasm").len()),
+        ("Logs", include_bytes!("../../../target/wasm32-unknown-unknown/release/logs.wasm").len()),
     ];
     
     for (name, size) in wasm_files {

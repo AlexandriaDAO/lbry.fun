@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import { Account } from "@dfinity/ledger-icp";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 import { getICRCActor } from "@/features/auth/utils/authUtils";
 import { RootState } from "@/store";
 import { TransferArg } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
@@ -26,7 +27,8 @@ const transferSecondary = createAsyncThunk<
         throw new Error("No active swap pool found");
       }
       const actor = await getICRCActor(state.swap.activeSwapPool?.[1].secondary_token_id);
-      const amountFormat = BigInt(Math.floor(Number(amount) * 10 ** 8));
+      // Convert user input to e8s format for backend operations
+      const amountFormat = TokenConversionService.naturalToE8s(amount);
       let recipientAccount: Account;
       
       recipientAccount = {

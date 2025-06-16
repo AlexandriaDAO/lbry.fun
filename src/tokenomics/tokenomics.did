@@ -3,7 +3,6 @@ type Configs = record {
   secondary_token_id : principal;
   halving_step : nat64;
   initial_primary_mint : nat64;
-  max_primary_phase : nat64;
   primary_token_id : principal;
   swap_canister_id : principal;
   frontend_canister_id : principal;
@@ -35,7 +34,6 @@ type InitArgs = record {
   halving_step : nat64;
   initial_reward_per_burn_unit : nat64;
   initial_primary_mint : nat64;
-  max_primary_phase : nat64;
   primary_token_id : opt principal;
   swap_canister_id : opt principal;
   frontend_canister_id : opt principal;

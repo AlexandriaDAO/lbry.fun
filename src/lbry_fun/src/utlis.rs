@@ -152,7 +152,6 @@ pub struct TokenomicsInitArgs {
     pub max_primary_supply: u64,
     pub initial_primary_mint: u64,
     pub initial_secondary_burn: u64,
-    pub max_primary_phase: u64,
     pub halving_step: u64,
     pub initial_reward_per_burn_unit: u64,
 }

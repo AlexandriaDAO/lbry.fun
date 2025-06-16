@@ -27,7 +27,7 @@ use icrc_ledger_types::icrc2::transfer_from::{TransferFromArgs, TransferFromErro
 use num_bigint::BigUint;
 use serde::Deserialize;
 
-const LBRY_FUN_CANISTER_ID: &str = "j362g-ziaaa-aaaap-qkt7q-cai";
+const LBRY_FUN_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";
 
 #[warn(non_snake_case)]
 #[derive(CandidType, Deserialize, Debug)]
@@ -615,17 +615,17 @@ async fn mint_primary(
 
     match result {
         Ok(bytes) => {
-            // where CandidString can represent the serialized ExecutionError
-            match candid::decode_one::<Result<String, String>>(&bytes) {
+            // Decode the response which returns Result<String, ExecutionError>
+            match candid::decode_one::<Result<String, ExecutionError>>(&bytes) {
                 Ok(Ok(success_msg)) => Ok(success_msg),
-                Ok(Err(err_msg)) => Err(format!("Ledger error: {}", err_msg)),
+                Ok(Err(exec_err)) => Err(format!("Tokenomics error: {:?}", exec_err)),
                 Err(e) => Err(format!("Failed to decode successful response: {}", e)),
             }
         }
         Err((code, msg)) => {
             ic_cdk::println!("Error: {:?}", msg);
             Err(format!(
-                "Failed to call ledger: (code: {:?}, message: \"{}\")",
+                "Failed to call tokenomics: (code: {:?}, message: \"{}\")",
                 code, msg
             ))
         }

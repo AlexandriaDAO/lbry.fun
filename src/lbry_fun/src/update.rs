@@ -38,7 +38,6 @@ async fn create_token(
     secondary_token_description: String,
     secondary_logo: String,
     primary_max_supply: u64,
-    primary_max_phase_mint: u64,
     initial_primary_mint: u64,
     initial_secondary_burn: u64,
     halving_step: u64,
@@ -114,7 +113,6 @@ async fn create_token(
         primary_max_supply.into(),
         initial_primary_mint,
         initial_secondary_burn,
-        primary_max_phase_mint,
         halving_step,
         initial_reward_per_burn_unit,
     )
@@ -173,7 +171,6 @@ async fn create_token(
             logs_canister_id,
             initial_primary_mint,
             initial_secondary_burn,
-            primary_max_phase_mint,
             halving_step,
             caller: user_principal,
             created_time: ic_cdk::api::time(),
@@ -286,7 +283,6 @@ async fn install_tokenomics_wasm_on_existing_canister(
     max_primary_supply: u64,
     initial_primary_mint: u64,
     initial_secondary_burn: u64,
-    max_primary_phase: u64,
     halving_step: u64,
     initial_reward_per_burn_unit: u64,
 ) -> Result<(), String> {
@@ -298,7 +294,6 @@ async fn install_tokenomics_wasm_on_existing_canister(
         max_primary_supply,
         initial_primary_mint,
         initial_secondary_burn,
-        max_primary_phase,
         halving_step,
         initial_reward_per_burn_unit,
     };

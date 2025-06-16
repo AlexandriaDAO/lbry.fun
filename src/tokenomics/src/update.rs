@@ -14,6 +14,7 @@ use crate::{
     add_to_total_secondary_burned,
     fetch_total_minted_primary,
     get_current_threshold_index,
+    get_mint_cap,
     get_principal,
     get_total_secondary_burn,
     update_to_current_threshold,
@@ -34,7 +35,7 @@ pub async fn mint_primary(
     let mut phase_mint_primary: u64 = 0;
     let mut total_burned_secondary: u64 = get_total_secondary_burn();
     let max_primary_supply=get_config().max_primary_supply;
-    let max_primary_phase=get_config().max_primary_phase;
+    let max_primary_phase=get_mint_cap(max_primary_supply);
     let primary_mint_per_threshold=get_tokenomics_schedule().primary_mint_per_threshold;
     let secondary_burn_thresholds=get_tokenomics_schedule().secondary_burn_thresholds;
 
@@ -292,7 +293,8 @@ pub async fn mint_primary(
         })?;
     }
 
-    // Check for maximum primary per transaction (50 primary = 500_000 after multiplication by 10000)
+    // Check for maximum primary per transaction - hardcoded to 0.1% of max supply
+    // This prevents large single burns from monopolizing entire epochs 
     let max_phase_in_e8s=max_primary_phase*100_000_000;
     if phase_mint_primary >  max_phase_in_e8s{
         return Err(
@@ -301,8 +303,9 @@ pub async fn mint_primary(
                 "mint_primary",
                 ExecutionError::MaxPrimaryPerTrnxReached {
                     reason: format!(
-                        "This would mint {} primary which exceeds the maximum of 50 primary per transaction",
-                        (phase_mint_primary as f64) / 10000.0
+                        "This would mint {} primary which exceeds the maximum of {} primary per transaction (0.1% of supply)",
+                        (phase_mint_primary as f64) / 10000.0,
+                        (max_primary_phase as f64) / 100_000_000.0
                     ),
                 }
             )

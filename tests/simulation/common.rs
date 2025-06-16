@@ -67,7 +67,6 @@ pub struct TokenRecord {
     pub secondary_token_name: String,
     pub primary_token_symbol: String,
     pub icp_swap_canister_id: Principal,
-    pub primary_max_phase_mint: u64,
     pub halving_step: u64,
     pub primary_max_supply: u64,
     pub initial_primary_mint: u64,

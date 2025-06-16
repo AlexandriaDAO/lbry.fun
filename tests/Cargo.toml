@@ -7,7 +7,6 @@ edition = "2021"
 name = "tests"
 path = "main.rs"
 
-[workspace]
 
 [dependencies]
 candid = "0.10.0"

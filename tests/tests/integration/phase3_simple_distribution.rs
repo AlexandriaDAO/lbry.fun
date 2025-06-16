@@ -32,11 +32,11 @@ mod simple_distribution_tests {
         // Advance time 1 hour
         env.pic.advance_time(Duration::from_secs(3600));
         
-        // Call trigger_distribution
+        // Call dev_trigger_distribution
         let result = env.pic.update_call(
             env.icp_swap,
             env.test_users[&"alice".to_string()],
-            "trigger_distribution",
+            "dev_trigger_distribution",
             Encode!().expect("Empty args")
         );
         

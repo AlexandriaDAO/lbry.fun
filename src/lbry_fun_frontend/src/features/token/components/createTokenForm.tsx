@@ -34,7 +34,6 @@ export interface TokenFormValues {
   primary_max_supply: string;
   tge_allocation: string;
   initial_secondary_burn: string;
-  primary_max_phase_mint: string;
   halving_step: string;
   initial_reward_per_burn_unit: string;
 }
@@ -67,7 +66,6 @@ const CreateTokenForm: React.FC = () => {
     primary_max_supply: '1000000',
     tge_allocation: '1',
     initial_secondary_burn: '1000000',
-    primary_max_phase_mint: '50000',
     primary_token_logo_base64: '',
     halving_step: '70',
     initial_reward_per_burn_unit: '2000',
@@ -90,7 +88,7 @@ const CreateTokenForm: React.FC = () => {
     const requiredFields: Array<keyof TokenFormValues> = [
       'primary_token_symbol', 'primary_token_name', 'primary_token_description', 'primary_token_logo_base64',
       'secondary_token_symbol', 'secondary_token_name', 'secondary_token_description', 'secondary_token_logo_base64',
-      'initial_secondary_burn', 'primary_max_phase_mint', 'halving_step'
+      'initial_secondary_burn', 'halving_step'
     ];
     requiredFields.forEach(field => {
       if (!form[field]) {
@@ -106,7 +104,7 @@ const CreateTokenForm: React.FC = () => {
     }
     
     const numericFields: Array<keyof TokenFormValues> = [
-      'initial_secondary_burn', 'primary_max_phase_mint', 'primary_max_supply', 'initial_reward_per_burn_unit'
+      'initial_secondary_burn', 'primary_max_supply', 'initial_reward_per_burn_unit'
     ];
     numericFields.forEach(field => {
       if (form[field] && isNaN(Number(form[field]))) {
@@ -148,7 +146,6 @@ const CreateTokenForm: React.FC = () => {
     const numericFieldNames: Array<keyof TokenFormValues> = [
       'primary_max_supply',
       'initial_secondary_burn',
-      'primary_max_phase_mint',
       'halving_step',
       'initial_reward_per_burn_unit'
     ];
@@ -189,7 +186,6 @@ const CreateTokenForm: React.FC = () => {
       primary_max_supply: (BigInt(form.primary_max_supply) * BigInt(E8S)).toString(),
       initial_primary_mint: (BigInt(form.tge_allocation) * BigInt(E8S)).toString(),
       initial_secondary_burn: (BigInt(form.initial_secondary_burn) * BigInt(E8S)).toString(),
-      primary_max_phase_mint: (BigInt(form.primary_max_phase_mint) * BigInt(E8S)).toString(),
       initial_reward_per_burn_unit: (BigInt(form.initial_reward_per_burn_unit) * BigInt(E8S)).toString(),
       halving_step: form.halving_step,
     };
@@ -451,8 +447,7 @@ const CreateTokenForm: React.FC = () => {
                   ...prev,
                   initial_secondary_burn: '200000',
                   initial_reward_per_burn_unit: '100',
-                  halving_step: '35',
-                  primary_max_phase_mint: prev.primary_max_phase_mint || '50000'
+                  halving_step: '35'
                 }));
               }}
               className="p-4 border-2 border-border rounded-lg hover:border-primary transition-colors"
@@ -469,8 +464,7 @@ const CreateTokenForm: React.FC = () => {
                   ...prev,
                   initial_secondary_burn: '500000',
                   initial_reward_per_burn_unit: '500',
-                  halving_step: '45',
-                  primary_max_phase_mint: prev.primary_max_phase_mint || '50000'
+                  halving_step: '45'
                 }));
               }}
               className="p-4 border-2 border-border rounded-lg hover:border-primary transition-colors"
@@ -487,8 +481,7 @@ const CreateTokenForm: React.FC = () => {
                   ...prev,
                   initial_secondary_burn: '1000000',
                   initial_reward_per_burn_unit: '2000',
-                  halving_step: '70',
-                  primary_max_phase_mint: prev.primary_max_phase_mint || '50000'
+                  halving_step: '70'
                 }));
               }}
               className="p-4 border-2 border-border rounded-lg hover:border-primary transition-colors"
@@ -609,35 +602,7 @@ const CreateTokenForm: React.FC = () => {
                 </>
               )}
             </div>
-            {/* primary_max_phase_mint input and slider - Grid Item 4 */}
-            <div className="mb-10 md:mb-0"> {/* Adjusted margin for grid layout, was mb-10 */}
-               <div className="flex items-center mb-1">
-                <Label className="block text-lg font-medium text-foreground me-2">
-                  Mint Cap <span className="text-red-500">*:</span>
-                </Label>
-                <TooltipIcon 
-                  text="A cap on how many Primary Tokens can be minted in any single burn transaction, regardless of how many Secondary Tokens are burned. This smooths out supply."
-                />
-              </div>
-              <Input
-                type="text"
-                name='primary_max_phase_mint'
-                className={`w-full border rounded-2xl px-3 py-2 h-[60px] mb-2 text-muted-foreground placeholder:text-muted-foreground bg-input text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-sm ${errors.primary_max_phase_mint ? 'border-red-500' : 'border-border'}`}
-                placeholder="e.g. 1000 per phase"
-                value={form.primary_max_phase_mint}
-                onChange={handleChange}
-              />
-              {renderError('primary_max_phase_mint')}
-              <Slider
-                min={100}
-                max={100000}
-                step={100}
-                value={[parseInt(form.primary_max_phase_mint) || 0]}
-                onValueChange={(value) => handleSliderChange('primary_max_phase_mint', value)}
-                disabled={!form.primary_max_phase_mint}
-              />
-            </div>
-            {/* halving_step input and slider - Grid Item 5 */}
+            {/* halving_step input and slider - Grid Item 4 */}
             <div className="mb-10 md:mb-0">
               <div className="flex items-center mb-1">
                 <Label className="block text-lg font-medium text-foreground me-2">

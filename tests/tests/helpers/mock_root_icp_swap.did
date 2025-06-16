@@ -1,0 +1,24 @@
+// Minimal DID for mock root icp_swap canister
+service : {
+    // Accept ICP transfers
+    icrc1_transfer : (record {
+        to : record { owner : principal; subaccount : opt blob };
+        fee : opt nat;
+        memo : opt blob;
+        from_subaccount : opt blob;
+        created_at_time : opt nat64;
+        amount : nat;
+    }) -> (variant { Ok : nat; Err : variant { 
+        BadFee : record { expected_fee : nat };
+        BadBurn : record { min_burn_amount : nat };
+        InsufficientFunds : record { balance : nat };
+        TooOld;
+        CreatedInFuture : record { ledger_time : nat64 };
+        TemporarilyUnavailable;
+        Duplicate : record { duplicate_of : nat };
+        GenericError : record { error_code : nat; message : text };
+    }});
+    
+    // Basic query to check it's alive
+    icrc1_name : () -> (text) query;
+}

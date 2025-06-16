@@ -3,6 +3,7 @@ import { _SERVICE as _SERVICESWAP } from "../../../../../declarations/icp_swap/i
 import { _SERVICE as _SERVICEALEX } from "../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 import { getActorSwap, getICRCActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage, getErrorMessage } from "../utlis/erorrs";
 import { RootState } from "@/store";
@@ -25,13 +26,12 @@ const stakePrimary = createAsyncThunk<
       );
       const icp_swap_canister_id =       state.swap.activeSwapPool?.[1].icp_swap_canister_id;
       
-      let amountFormat: bigint = BigInt(
-        Number(Number(amount) * 10 ** 8).toFixed(0)
-      );
+      // Convert user input to e8s format for backend operations
+      const amountFormat = TokenConversionService.naturalToE8s(amount);
 
-      // Get the primary token fee from state
+      // Get the primary token fee from state and convert to e8s
       const primaryFee = state.primary.primaryFee;
-      const feeInE8s = BigInt(Math.ceil(Number(primaryFee) * 10 ** 8));
+      const feeInE8s = TokenConversionService.naturalToE8s(primaryFee);
       
       // Add fee buffer to approval amount
       const approvalAmount = amountFormat + feeInE8s;

@@ -16,7 +16,7 @@ struct Stake {
 const ICP_TRANSFER_FEE: u64 = 10_000;
 
 // Helper to get stake info for a user
-fn get_stake_info(env: &TokenTestEnvironment, user: &str) -> Stake {
+fn get_stake_info(env: &TokenTestEnvironment, user: &str) -> Option<Stake> {
     let user_principal = env.test_users[&user.to_string()];
     let result = env.pic.query_call(
         env.icp_swap,
@@ -33,7 +33,7 @@ fn trigger_distribution(env: &mut TokenTestEnvironment) -> Result<String, String
     let result = env.pic.update_call(
         env.icp_swap,
         env.test_users[&"alice".to_string()],
-        "trigger_distribution",
+        "dev_trigger_distribution",
         Encode!().expect("Empty args")
     );
     
@@ -84,112 +84,33 @@ mod distribution_tests {
         // Step 1: Setup environment
         let mut env = TokenTestEnvironment::new();
         
-        // Step 2: Get alice and bob staked with smaller amounts for testing
-        // First, let's just get some ICP into the swap pool for distribution
-        let alice_icp_before = get_icp_balance(&env, "alice");
-        println!("Alice ICP before swap: {}", alice_icp_before);
+        // Step 2: Setup alice with primary tokens and stake them
+        // Use the helper function which handles the full flow properly
+        setup_user_with_primary(&mut env, "alice", 100 * E8S).unwrap();
+        println!("Alice has primary tokens");
         
-        approve_icp(&mut env, "alice", 51 * E8S).unwrap();
-        let swap_result = swap_icp(&mut env, "alice", 50 * E8S);
-        println!("Swap result: {:?}", swap_result);
+        // Stake Alice's primary tokens
+        let alice_primary = get_primary_balance(&env, "alice");
+        println!("Alice primary balance: {}", alice_primary);
         
-        // Wait a bit for state update
-        env.pic.advance_time(Duration::from_secs(1));
-        
-        // Get secondary tokens and burn for primary - use smaller amounts
-        let secondary_balance_alice = get_secondary_balance(&env, "alice");
-        let alice_icp_after = get_icp_balance(&env, "alice");
-        println!("Alice secondary balance: {}", secondary_balance_alice);
-        println!("Alice ICP after swap: {}", alice_icp_after);
-        
-        // Burn just 100 secondary tokens (natural units) to get some primary
-        if secondary_balance_alice >= 100 * E8S {
-            // Approve secondary for burning
-            let approve_args = ApproveArgs {
-                from_subaccount: None,
-                spender: Account {
-                    owner: env.icp_swap,
-                    subaccount: None,
-                },
-                amount: Nat::from(100 * E8S + 10_000),
-                expected_allowance: None,
-                expires_at: None,
-                fee: None,
-                memo: None,
-                created_at_time: None,
-            };
-            
-            env.pic.update_call(
-                env.secondary_token,
-                env.test_users[&"alice".to_string()],
-                "icrc2_approve",
-                Encode!(&approve_args).expect("Failed to encode"),
-            ).unwrap();
-            
-            // Burn 100 secondary tokens
-            let from_subaccount: Option<[u8; 32]> = None;
-            env.pic.update_call(
-                env.icp_swap,
-                env.test_users[&"alice".to_string()],
-                "burn_secondary",
-                Encode!(&100u64, &from_subaccount).expect("Failed to encode"),
-            ).ok(); // Ignore errors for now
+        if alice_primary >= 100 * E8S {
+            approve_primary(&mut env, "alice", alice_primary).unwrap();
+            stake_primary(&mut env, "alice", 100 * E8S).unwrap();
+            println!("Alice staked 100 primary tokens");
         }
         
-        // Check if we got any primary tokens
-        let primary_balance_alice = get_primary_balance(&env, "alice");
-        println!("Alice primary balance after burn: {}", primary_balance_alice);
+        // Setup Bob with twice as many primary tokens
+        setup_user_with_primary(&mut env, "bob", 200 * E8S).unwrap();
+        println!("Bob has primary tokens");
         
-        // If we have primary tokens, stake them
-        if primary_balance_alice >= 10 * E8S {
-            approve_primary(&mut env, "alice", primary_balance_alice).unwrap();
-            stake_primary(&mut env, "alice", primary_balance_alice - E8S).unwrap(); // Keep some unstaked
-        }
+        // Stake Bob's primary tokens
+        let bob_primary = get_primary_balance(&env, "bob");
+        println!("Bob primary balance: {}", bob_primary);
         
-        // Do the same for Bob but with different amounts
-        approve_icp(&mut env, "bob", 100 * E8S).unwrap();
-        swap_icp(&mut env, "bob", 100 * E8S).unwrap();
-        
-        let secondary_balance_bob = get_secondary_balance(&env, "bob");
-        println!("Bob secondary balance: {}", secondary_balance_bob);
-        
-        if secondary_balance_bob >= 200 * E8S {
-            let approve_args = ApproveArgs {
-                from_subaccount: None,
-                spender: Account {
-                    owner: env.icp_swap,
-                    subaccount: None,
-                },
-                amount: Nat::from(200 * E8S + 10_000),
-                expected_allowance: None,
-                expires_at: None,
-                fee: None,
-                memo: None,
-                created_at_time: None,
-            };
-            
-            env.pic.update_call(
-                env.secondary_token,
-                env.test_users[&"bob".to_string()],
-                "icrc2_approve",
-                Encode!(&approve_args).expect("Failed to encode"),
-            ).unwrap();
-            
-            let from_subaccount: Option<[u8; 32]> = None;
-            env.pic.update_call(
-                env.icp_swap,
-                env.test_users[&"bob".to_string()],
-                "burn_secondary",
-                Encode!(&200u64, &from_subaccount).expect("Failed to encode"),
-            ).ok();
-        }
-        
-        let primary_balance_bob = get_primary_balance(&env, "bob");
-        println!("Bob primary balance after burn: {}", primary_balance_bob);
-        
-        if primary_balance_bob >= 10 * E8S {
-            approve_primary(&mut env, "bob", primary_balance_bob).unwrap();
-            stake_primary(&mut env, "bob", primary_balance_bob - E8S).unwrap();
+        if bob_primary >= 200 * E8S {
+            approve_primary(&mut env, "bob", bob_primary).unwrap();
+            stake_primary(&mut env, "bob", 200 * E8S).unwrap();
+            println!("Bob staked 200 primary tokens");
         }
         
         // Step 3: Check initial ICP pool balance
@@ -207,12 +128,13 @@ mod distribution_tests {
         // Expected: 1% of pool distributed, with 49.5% going to stakers
         let expected_total_distribution = initial_pool / 100; // 1% of pool
         let expected_staker_distribution = (expected_total_distribution * 495) / 1000; // 49.5% of the 1%
+        // Alice has 100 tokens staked, Bob has 200, so 1:2 ratio
         let alice_expected = expected_staker_distribution / 3; // 1/3 of staker distribution
         let bob_expected = (expected_staker_distribution * 2) / 3; // 2/3 of staker distribution
         
         // Step 7: Check reward balances via get_stake
-        let alice_stake = get_stake_info(&env, "alice");
-        let bob_stake = get_stake_info(&env, "bob");
+        let alice_stake = get_stake_info(&env, "alice").expect("Alice should have a stake");
+        let bob_stake = get_stake_info(&env, "bob").expect("Bob should have a stake");
         
         println!("Alice reward: {}, expected: {}", alice_stake.reward_icp, alice_expected);
         println!("Bob reward: {}, expected: {}", bob_stake.reward_icp, bob_expected);
@@ -290,7 +212,7 @@ mod distribution_tests {
         trigger_distribution(&mut env).unwrap();
         
         // Check alice has unclaimed rewards
-        let stake_info = get_stake_info(&env, "alice");
+        let stake_info = get_stake_info(&env, "alice").expect("Alice should have a stake");
         assert!(stake_info.reward_icp > 0, "Alice should have rewards");
         let reward_amount = stake_info.reward_icp;
         println!("Alice's reward amount: {}", reward_amount);
@@ -309,7 +231,7 @@ mod distribution_tests {
         assert_eq!(alice_icp_after, expected_after, "ICP balance should increase by reward minus fee");
         
         // Verify rewards reset to 0
-        let stake_info_after = get_stake_info(&env, "alice");
+        let stake_info_after = get_stake_info(&env, "alice").expect("Alice should still have a stake");
         assert_eq!(stake_info_after.reward_icp, 0, "Rewards should be reset after claim");
     }
     
@@ -326,7 +248,7 @@ mod distribution_tests {
         let primary_before = get_primary_balance(&env, "alice");
         
         // Verify stake exists
-        let stake_before = get_stake_info(&env, "alice");
+        let stake_before = get_stake_info(&env, "alice").expect("Alice should have a stake");
         assert_eq!(stake_before.amount, 1000 * E8S, "Should have 1000 tokens staked");
         
         // Call un_stake_all_primary
@@ -339,7 +261,7 @@ mod distribution_tests {
         
         // Verify stake record shows 0
         let stake_after = get_stake_info(&env, "alice");
-        assert_eq!(stake_after.amount, 0, "Stake amount should be 0 after unstaking");
+        assert!(stake_after.is_none() || stake_after.unwrap().amount == 0, "Stake should be removed or have 0 amount after unstaking");
     }
     
     #[test]
@@ -356,7 +278,7 @@ mod distribution_tests {
         trigger_distribution(&mut env).unwrap();
         
         // Verify rewards exist
-        let stake_info = get_stake_info(&env, "alice");
+        let stake_info = get_stake_info(&env, "alice").expect("Alice should have a stake");
         let reward_amount = stake_info.reward_icp;
         assert!(reward_amount > 0, "Should have rewards before unstaking");
         
@@ -369,7 +291,7 @@ mod distribution_tests {
         assert!(primary_balance >= 1000 * E8S, "Tokens should be returned");
         
         // Verify rewards still claimable
-        let stake_info_after = get_stake_info(&env, "alice");
+        let stake_info_after = get_stake_info(&env, "alice").expect("Alice should still have stake info");
         assert_eq!(stake_info_after.reward_icp, reward_amount, "Rewards should persist after unstaking");
         
         // Claim rewards

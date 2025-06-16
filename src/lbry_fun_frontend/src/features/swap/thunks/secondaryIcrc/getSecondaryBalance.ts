@@ -1,7 +1,7 @@
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
-import LedgerService from "@/utils/LedgerService";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 import { getICRCActor } from "@/features/auth/utils/authUtils";
 import { RootState } from "@/store";
 
@@ -23,14 +23,10 @@ const getSecondaryBalance = createAsyncThunk<
         owner: Principal.fromText(account),
         subaccount: [],
       });
-      const LedgerServices = LedgerService();
-      // const fromatedBal=LedgerServices.e8sToIcp(result).toString();
-      const fromatedBal = (
-        Math.floor(LedgerServices.e8sToIcp(result) * 10 ** 4) /
-        10 ** 4
-      ).toFixed(4);
-
-      return fromatedBal;
+      
+      // Convert e8s to natural units and format for display
+      const formattedBal = TokenConversionService.formatE8sDisplay(result, 4);
+      return formattedBal;
     } catch (error) {
       console.error(error);
       if (error instanceof Error) {

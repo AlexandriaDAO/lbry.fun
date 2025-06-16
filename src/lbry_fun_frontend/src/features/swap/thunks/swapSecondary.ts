@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 import {
   getActorSwap,
   getIcpLedgerActor,
@@ -16,12 +17,10 @@ const swapSecondary = createAsyncThunk<
     try {
       const actorSwap = await getActorSwap(canisterId);
       const actorIcpLedger = await getIcpLedgerActor();
-      let amountFormat: bigint = BigInt(
-        Number(Number(amount) * 10 ** 8).toFixed(0)
-      );
-      let amountFormatApprove: bigint = BigInt(
-        Number((Number(amount) + 0.0001) * 10 ** 8).toFixed(0)
-      );
+      // Convert user input to e8s format for backend operations
+      const amountFormat = TokenConversionService.naturalToE8s(amount);
+      // Add fee buffer for approval (0.0001 ICP fee)
+      const amountFormatApprove = TokenConversionService.naturalToE8s(Number(amount) + 0.0001);
 
       const checkApproval = await actorIcpLedger.icrc2_allowance({
         account: {

@@ -13,7 +13,6 @@ pub struct InitArgs {
     pub max_primary_supply: u64,
     pub initial_primary_mint: u64,
     pub initial_secondary_burn: u64,
-    pub max_primary_phase:u64,
     pub halving_step: u64,
     pub initial_reward_per_burn_unit: u64,
 }
@@ -30,7 +29,6 @@ fn initialize_globals(args: InitArgs) {
                 max_primary_supply: args.max_primary_supply,
                 initial_primary_mint: args.initial_primary_mint,
                 initial_secondary_burn: args.initial_secondary_burn,
-                max_primary_phase:args.max_primary_phase,
                 halving_step: args.halving_step,
             })
             .unwrap();
@@ -83,11 +81,6 @@ fn init(args: Option<InitArgs>) {
             if init_args.initial_secondary_burn == 0 {
                 ic_cdk::trap(
                     "Initialization failed: 'initial_secondary_burn' must be greater than 0.",
-                );
-            }
-            if init_args.max_primary_phase == 0 {
-                ic_cdk::trap(
-                    "Initialization failed: 'max_primary_phase' must be greater than 0.",
                 );
             }
             if init_args.initial_reward_per_burn_unit == 0 {

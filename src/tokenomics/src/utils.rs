@@ -23,6 +23,14 @@ pub const TOKEN_LOGS_LIMIT: u64 = 100_000;
 pub fn get_principal(id: &str) -> Principal {
     Principal::from_text(id).expect(&format!("Invalid principal: {}", id))
 }
+
+/// Calculate the mint cap as 0.1% of the maximum primary supply
+/// This hardcoded limit ensures fair distribution by preventing large single burns
+pub fn get_mint_cap(max_primary_supply: u64) -> u64 {
+    // Calculate 0.1% of max_primary_supply
+    // Using integer division to avoid floating point arithmetic
+    max_primary_supply / 1000
+}
 pub(crate) fn add_to_total_secondary_burned(amount: u64) -> Result<(), ExecutionError> {
     let current_total = get_total_secondary_burn();
     let new_total = current_total.checked_add(amount).ok_or_else(||

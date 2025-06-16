@@ -30,7 +30,6 @@ type TokenRecord = record {
   secondary_token_name : text;
   primary_token_symbol : text;
   icp_swap_canister_id : principal;
-  primary_max_phase_mint : nat64;
   halving_step : nat64;
   primary_token_max_supply : nat64;
   initial_primary_mint : nat64;
@@ -61,7 +60,6 @@ service : () -> {
       text,
       text,
       text,
-      nat64,
       nat64,
       nat64,
       nat64,

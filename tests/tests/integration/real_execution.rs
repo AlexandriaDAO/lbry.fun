@@ -9,11 +9,11 @@ const E8S: u64 = 100_000_000;
 const TOKEN_CREATION_FEE: u64 = 200_000_000; // 2 ICP in e8s
 
 // Include WASM files
-const ICP_LEDGER_WASM: &[u8] = include_bytes!("../src/icp_ledger_canister/ledger.wasm");
-const ICRC1_LEDGER_WASM: &[u8] = include_bytes!("../src/lbry_fun/src/ic-icrc1-ledger.wasm");
-const TOKENOMICS_WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/tokenomics.wasm");
-const ICP_SWAP_WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/icp_swap.wasm");
-const LOGS_WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/logs.wasm");
+const ICP_LEDGER_WASM: &[u8] = include_bytes!("../../../src/icp_ledger_canister/ledger.wasm");
+const ICRC1_LEDGER_WASM: &[u8] = include_bytes!("../../../src/lbry_fun/src/ic-icrc1-ledger.wasm");
+const TOKENOMICS_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/tokenomics.wasm");
+const ICP_SWAP_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/icp_swap.wasm");
+const LOGS_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/logs.wasm");
 
 #[derive(CandidType, Deserialize, Clone)]
 struct Account {

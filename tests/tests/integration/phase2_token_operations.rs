@@ -642,6 +642,8 @@ mod test_stake_primary {
     use super::*;
 
     fn setup_user_with_primary(env: &mut TokenTestEnvironment, user: &str, target_amount: u64) -> Result<(), String> {
+        println!("Setting up {} with target {} primary tokens (e8s)", user, target_amount);
+        
         // First get secondary tokens, then burn them for primary tokens
         let secondary_needed = target_amount * 10; // Rough estimate - we need enough secondary to burn for primary
         
@@ -649,19 +651,25 @@ mod test_stake_primary {
         let icp_needed = (secondary_needed * 100) / 400; // Reverse formula
         let approve_amount = icp_needed + 100_000;
         
+        println!("Swapping {} ICP for secondary tokens", icp_needed);
         approve_icp(env, user, approve_amount)?;
         swap_icp(env, user, icp_needed)?;
         
         // Now burn secondary tokens for primary tokens
         let secondary_balance = get_secondary_balance(env, user);
+        println!("Got {} secondary tokens (e8s)", secondary_balance);
         let burn_amount = std::cmp::min(secondary_needed / E8S, secondary_balance / E8S); // Convert to natural units
         
         if burn_amount == 0 {
             return Err(format!("Not enough secondary tokens to burn for primary"));
         }
         
-        // Approve secondary tokens for burning
-        let approve_amount = burn_amount * E8S + 100_000;
+        // Use a larger amount to ensure we get some primary tokens
+        // The initial_secondary_burn is 5000 * E8S, so let's burn at least that much in natural units
+        let burn_amount_fixed = 50000u64; // 50000 natural units
+        
+        // Approve secondary tokens for burning (need to convert to e8s)
+        let approve_amount = burn_amount_fixed * E8S + 100_000;
         let approve_args = ApproveArgs {
             from_subaccount: None,
             spender: Account {
@@ -688,15 +696,38 @@ mod test_stake_primary {
             .ok_or_else(|| format!("User {} not found", user))?;
         
         let from_subaccount: Option<[u8; 32]> = None;
-        env.pic.update_call(
+        
+        println!("Burning {} secondary tokens (natural units) for primary", burn_amount_fixed);
+        let result = env.pic.update_call(
             env.icp_swap,
             *user_principal,
             "burn_secondary",
-            Encode!(&burn_amount, &from_subaccount).expect("Failed to encode args"),
-        ).map_err(|e| format!("Failed to burn secondary: {:?}", e))?;
+            Encode!(&burn_amount_fixed, &from_subaccount).expect("Failed to encode args"),
+        );
+        
+        match result {
+            Ok(response) => {
+                println!("Burn call successful, decoding response...");
+                // The burn_secondary function returns Result<String, ExecutionError>
+                match candid::decode_one::<Result<String, String>>(&response) {
+                    Ok(Ok(msg)) => {
+                        println!("Burn succeeded: {}", msg);
+                        println!("Burn message indicates: {}", msg);
+                    },
+                    Ok(Err(e)) => return Err(format!("Burn failed: {}", e)),
+                    Err(e) => {
+                        println!("Failed to decode burn response: {:?}", e);
+                        println!("Raw response bytes: {:?}", response);
+                    }
+                }
+            }
+            Err(e) => return Err(format!("Failed to call burn_secondary: {:?}", e)),
+        }
         
         // Verify we got some primary tokens
         let primary_balance = get_primary_balance(env, user);
+        println!("Primary balance after burn: {} (e8s)", primary_balance);
+        
         if primary_balance >= target_amount {
             Ok(())
         } else if primary_balance > 0 {

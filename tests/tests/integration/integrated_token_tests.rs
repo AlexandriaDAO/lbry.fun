@@ -1,5 +1,6 @@
 use candid::{decode_one, Encode, Principal, CandidType, Deserialize};
 use pocket_ic::PocketIc;
+use crate::mock_root_icp_swap::deploy_mock_root_icp_swap;
 use std::collections::HashMap;
 use num_traits::cast::ToPrimitive;
 
@@ -8,15 +9,15 @@ const E8S: u64 = 100_000_000;
 const ICP_TRANSFER_FEE: u64 = 10_000;
 
 // Include WASM files
-const TOKENOMICS_WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/tokenomics.wasm");
-const ICP_SWAP_WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/icp_swap.wasm");
-const LOGS_WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/logs.wasm");
-const ICRC1_LEDGER_WASM: &[u8] = include_bytes!("../src/lbry_fun/src/ic-icrc1-ledger.wasm");
+const TOKENOMICS_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/tokenomics.wasm");
+const ICP_SWAP_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/icp_swap.wasm");
+const LOGS_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/logs.wasm");
+const ICRC1_LEDGER_WASM: &[u8] = include_bytes!("../../../src/lbry_fun/src/ic-icrc1-ledger.wasm");
 // Using ICRC1 ledger for ICP as well for testing
-const ICP_LEDGER_WASM: &[u8] = include_bytes!("../src/lbry_fun/src/ic-icrc1-ledger.wasm");
+const ICP_LEDGER_WASM: &[u8] = include_bytes!("../../../src/lbry_fun/src/ic-icrc1-ledger.wasm");
 
 // Import types from individual_canister_tests
-use crate::individual_canister_tests::{TokenomicsInitArgs, IcpSwapInitArgs, LogsInitArgs, LedgerArg, InitArgs, FeatureFlags, ArchiveOptions, Account, MetadataValue};
+use crate::individual_canister_tests::{TokenomicsInitArgs, TokenomicsRealInitArgs, IcpSwapInitArgs, LogsInitArgs, LedgerArg, InitArgs, FeatureFlags, ArchiveOptions, Account, MetadataValue};
 
 // ICP Ledger specific types
 #[derive(CandidType, Deserialize)]
@@ -39,7 +40,7 @@ enum LedgerCanisterPayload {
     Init(LedgerCanisterInitPayload),
 }
 
-// Test environment that wires together all 5 canisters
+// Test environment that wires together all 6 canisters
 pub struct TokenTestEnvironment {
     pub pic: PocketIc,
     pub primary_token: Principal,
@@ -48,6 +49,7 @@ pub struct TokenTestEnvironment {
     pub icp_swap: Principal,
     pub logs: Principal,
     pub icp_ledger: Principal,
+    pub lbry_fun: Principal,
     pub test_users: HashMap<String, Principal>,
 }
 
@@ -104,8 +106,11 @@ impl TokenTestEnvironment {
         let logs = pic.create_canister();
         let icp_ledger = pic.create_canister();
         
+        // Create a mock lbry_fun canister for testing distribution
+        let lbry_fun = pic.create_canister();
+        
         // Add cycles to all canisters
-        for canister in &[primary_token, secondary_token, tokenomics, icp_swap, logs, icp_ledger] {
+        for canister in &[primary_token, secondary_token, tokenomics, icp_swap, logs, icp_ledger, lbry_fun] {
             pic.add_cycles(*canister, 10_000_000_000_000);
         }
         
@@ -123,6 +128,7 @@ impl TokenTestEnvironment {
             icp_swap,
             logs,
             icp_ledger,
+            lbry_fun,
             test_users,
         };
         
@@ -133,6 +139,9 @@ impl TokenTestEnvironment {
     }
     
     fn initialize_canisters(&mut self) {
+        // 0. Deploy mock root icp_swap canister (needed for distribution)
+        deploy_mock_root_icp_swap(&self.pic);
+        
         // 1. Deploy ICP Ledger
         self.deploy_icp_ledger();
         
@@ -150,6 +159,9 @@ impl TokenTestEnvironment {
         
         // 6. Deploy Logs
         self.deploy_logs();
+        
+        // 7. Deploy mock lbry_fun canister (just needs to receive ICP transfers)
+        self.deploy_mock_lbry_fun();
         
         println!("✓ All canisters deployed and initialized");
     }
@@ -283,8 +295,8 @@ impl TokenTestEnvironment {
     }
     
     fn deploy_tokenomics(&self) {
-        // Deploy tokenomics with test parameters
-        let init_args = candid::Encode!(&Some(TokenomicsInitArgs {
+        // Deploy tokenomics with test parameters using the correct InitArgs type
+        let init_args = candid::Encode!(&Some(TokenomicsRealInitArgs {
             primary_token_id: Some(self.primary_token),
             secondary_token_id: Some(self.secondary_token),
             swap_canister_id: Some(self.icp_swap),
@@ -292,7 +304,6 @@ impl TokenTestEnvironment {
             max_primary_supply: 1_000_000 * E8S,
             initial_primary_mint: 10_000 * E8S,
             initial_secondary_burn: 5_000 * E8S,
-            max_primary_phase: 100_000 * E8S,
             halving_step: 50, // Percentage value between 25 and 90
             initial_reward_per_burn_unit: 100,
         })).expect("Failed to encode tokenomics args");
@@ -343,6 +354,49 @@ impl TokenTestEnvironment {
         );
         
         println!("✓ Logs deployed");
+    }
+    
+    fn deploy_mock_lbry_fun(&self) {
+        // Deploy a mock lbry_fun canister using the ICRC1 ledger as a simple receiver
+        // This just needs to be able to receive ICP transfers for distribution testing
+        let init_args = Encode!(&LedgerArg::Init(
+            InitArgs {
+                decimals: Some(8),
+                token_symbol: "MOCK".to_string(),
+                token_name: "Mock LBRY".to_string(),
+                minting_account: Account {
+                    owner: Principal::anonymous(),
+                    subaccount: None,
+                },
+                initial_balances: vec![],
+                metadata: vec![],
+                maximum_number_of_accounts: None,
+                accounts_overflow_trim_quantity: None,
+                fee_collector_account: None,
+                transfer_fee: candid::Nat::from(10_000u64),
+                feature_flags: Some(FeatureFlags { icrc2: true }),
+                max_memo_length: None,
+                archive_options: ArchiveOptions {
+                    num_blocks_to_archive: 10_000,
+                    max_transactions_per_response: None,
+                    trigger_threshold: 10_000,
+                    max_message_size_bytes: None,
+                    cycles_for_archive_creation: None,
+                    node_max_memory_size_bytes: None,
+                    controller_id: Principal::anonymous(),
+                },
+            }
+        ))
+        .expect("Failed to encode mock lbry_fun init args");
+        
+        self.pic.install_canister(
+            self.lbry_fun,
+            ICRC1_LEDGER_WASM.to_vec(),
+            init_args,
+            Some(Principal::anonymous()),
+        );
+        
+        println!("✓ Mock lbry_fun deployed at: {}", self.lbry_fun);
     }
     
     // User operations
