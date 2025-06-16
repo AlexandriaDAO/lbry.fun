@@ -1,92 +1,71 @@
-import { useAppDispatch } from "@/store/hooks/useAppDispatch";
-import { faCheck, faExclamation } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useEffect } from "react";
-// import fetchTransaction, { TransactionType } from "../../thunks/secondaryIcrc/getTransactions";
-import { useAppSelector } from "@/store/hooks/useAppSelector";
-import TransactionHistoryObj from "./transactionHistoryObj";
-import { RootState } from "@/store";
+import React from "react";
+import { useTransactionHistory } from "../../hooks/useTransactionHistory";
+import { Button } from "@/lib/components/button";
+import RefreshButton from "../../shared/RefreshButton";
+import TransactionItem from "./TransactionItem";
 
 const TransactionHistory = () => {
-    const dispatch = useAppDispatch();
-    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
-    const swap = useAppSelector((state: RootState) => state.swap);
+    const {
+        transactions,
+        loading,
+        error,
+        hasMore,
+        refreshTransactions,
+        loadMoreTransactions,
+        isEmpty
+    } = useTransactionHistory();
 
-    useEffect(() => {
-        if(!isAuthenticated || !principal) return;
-        // dispatch(fetchTransaction(principal));
-    }, [isAuthenticated, principal, dispatch]);
-    return (<>
-        <div className="overflow-x-auto lg:overflow-x-auto">
-            <table className="min-w-full border-collapse">
-                <thead>
-                    <tr>
-                        <th className="pb-3 pt-10 text-left">
-                            <div className='text-xl font-medium text-foreground items-center flex'>
-                                <span className='me-2 flex'>Timestamp</span>
-                                <div className='relative h-5 w-5 group'>
-                                    <div className='h-5 w-5 border-2 border-multycolor flex justify-center items-center rounded-full'>
-                                        <FontAwesomeIcon className='text-multycolor text-xs position-relative' icon={faExclamation} />
-                                        <span className={`${isDark ? 'bg-muted text-foreground' : 'bg-[#C5CFF9] text-black'} p-3 rounded-2xl absolute bottom-0 left-full ml-3 text-xs font-light w-48 z-10 opacity-0 group-hover:opacity-100 before:content-[''] before:block before:absolute before:border-t-[10px] before:border-t-transparent before:border-b-[10px] before:border-b-transparent before:border-l-[20px] before:rotate-[164deg] before:border-l-[#C5CFF9] before:top-[70%] before:-translate-y-1/2 before:left-[-15px]`}>Transaction timestamp </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </th>
-                        <th className="px-6 pb-3 pt-10">
-                            <div className='text-xl font-medium text-foreground items-center flex'>
-                                <span className='me-2 flex'>Type</span>
-                                <div className='relative h-5 w-5 group'>
-                                    <div className='h-5 w-5 border-2 border-multycolor flex justify-center items-center rounded-full'>
-                                        <FontAwesomeIcon className='text-multycolor text-xs position-relative' icon={faExclamation} />
-                                        <span className={`${isDark ? 'bg-muted text-foreground' : 'bg-[#C5CFF9] text-black'} p-3 rounded-2xl absolute bottom-0 left-full ml-3 text-xs font-light w-48 z-10 opacity-0 group-hover:opacity-100 before:content-[''] before:block before:absolute before:border-t-[10px] before:border-t-transparent before:border-b-[10px] before:border-b-transparent before:border-l-[20px] before:rotate-[164deg] before:border-l-[#C5CFF9] before:top-[70%] before:-translate-y-1/2 before:left-[-15px] text-left`}>Transaction type</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </th>
-                        <th className="px-6 pb-3 pt-10 text-left">
-                            <div className='text-xl font-medium text-foreground items-center flex'>
-                                <span className='me-2 flex'>Amount</span>
-                                <div className='relative h-5 w-5 group'>
-                                    <div className='h-5 w-5 border-2 border-multycolor flex justify-center items-center rounded-full'>
-                                        <FontAwesomeIcon className='text-multycolor text-xs position-relative' icon={faExclamation} />
-                                        <span className={`${isDark ? 'bg-muted text-foreground' : 'bg-[#C5CFF9] text-black'} p-3 rounded-2xl absolute bottom-0 left-full ml-3 text-xs font-light w-48 z-10 opacity-0 group-hover:opacity-100 before:content-[''] before:block before:absolute before:border-t-[10px] before:border-t-transparent before:border-b-[10px] before:border-b-transparent before:border-l-[20px] before:rotate-[164deg] before:border-l-[#C5CFF9] before:top-[70%] before:-translate-y-1/2 before:left-[-15px]`}>Transaction amount</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </th>
-                        <th className="px-6 pb-3 pt-10 text-left">
-                            <div className='text-xl font-medium text-foreground items-center flex'>
-                                <span className='me-2 flex'>Fee</span>
-                                <div className='relative h-5 w-5 group'>
-                                    <div className='h-5 w-5 border-2 border-multycolor flex justify-center items-center rounded-full'>
-                                        <FontAwesomeIcon className='text-multycolor text-xs position-relative' icon={faExclamation} />
-                                        <span className={`${isDark ? 'bg-muted text-foreground' : 'bg-[#C5CFF9] text-black'} p-3 rounded-2xl absolute bottom-0 left-full ml-3 text-xs font-light w-48 z-10 opacity-0 group-hover:opacity-100 before:content-[''] before:block before:absolute before:border-t-[10px] before:border-t-transparent before:border-b-[10px] before:border-b-transparent before:border-l-[20px] before:rotate-[164deg] before:border-l-[#C5CFF9] before:top-[70%] before:-translate-y-1/2 before:left-[-15px]`}>Transaction fee</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </th>
-                        <th className="px-6 pb-3 pt-10 text-left">
-                            <div className='text-xl font-medium text-foreground items-center flex'>
-                                <span className='me-2 flex'>Status</span>
-                                <div className='relative h-5 w-5 group'>
-                                    <div className='h-5 w-5 border-2 border-multycolor flex justify-center items-center rounded-full'>
-                                        <FontAwesomeIcon className='text-multycolor text-xs position-relative' icon={faExclamation} />
-                                        <span className={`${isDark ? 'bg-muted text-foreground' : 'bg-[#C5CFF9] text-black'} p-3 rounded-2xl absolute bottom-0 left-full ml-3 text-xs font-light w-48 z-10 opacity-0 group-hover:opacity-100 before:content-[''] before:block before:absolute before:border-t-[10px] before:border-t-transparent before:border-b-[10px] before:border-b-transparent before:border-l-[20px] before:rotate-[164deg] before:border-l-[#C5CFF9] before:top-[70%] before:-translate-y-1/2 before:left-[-15px]`}>Transaction status</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody className="text-foreground text-sm font-light">
-                    {/* {swap.transactions?.map((trx: TransactionType, i) => {
-                        return (
-                            <TransactionHistoryObj key={trx.timestamp} timestamp={trx.timestamp} amount={trx.amount} type={trx.type} from={trx.from} to={trx.to} fee={trx.fee} index={i} />
-                        );
-                    })} */}
-                </tbody>
-            </table>
+    if (error) {
+        return (
+            <div className="p-4 text-center">
+                <p className="text-red-500 mb-4">Error loading transactions: {error}</p>
+                <Button onClick={refreshTransactions}>Retry</Button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-medium text-foreground">Recent Transactions</h3>
+                    <RefreshButton 
+                        onRefresh={refreshTransactions}
+                        loading={loading}
+                        toastMessage="Refreshing transactions..."
+                    />
+                </div>
+            </div>
+
+            {isEmpty && !loading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                    <p>No transactions found</p>
+                    <p className="text-sm">Your transaction history will appear here once you start trading</p>
+                </div>
+            ) : (
+                <div className="space-y-2">
+                    {transactions.map((transaction) => (
+                        <TransactionItem
+                            key={transaction.id}
+                            transaction={transaction}
+                        />
+                    ))}
+                    
+                    {hasMore && (
+                        <div className="text-center pt-4">
+                            <Button 
+                                onClick={loadMoreTransactions}
+                                disabled={loading}
+                                variant="outline"
+                            >
+                                {loading ? "Loading..." : "Load More"}
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
-    </>);
+    );
 }
+
 export default TransactionHistory;

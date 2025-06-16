@@ -84,12 +84,10 @@ const burnSecondary = createAsyncThunk<
         dispatch(getCanisterArchivedBal());
         return "success";
       } else if ("Err" in result) {
-        console.log(result.Err);
         const errorMessage = getErrorMessage(result.Err);
         return rejectWithValue(errorMessage);
       }
     } catch (error) {
-      console.error(error);
 
       if (error instanceof Error) {
         return rejectWithValue({ title: error.message, message: "" });

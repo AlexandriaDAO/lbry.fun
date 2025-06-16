@@ -45,11 +45,9 @@ const transferPrimary = createAsyncThunk<
       const result = await actor.icrc1_transfer(transferArg);
       if ("Ok" in result) return "success";
       else {
-        console.log("error is ", result.Err);
         throw result.Err;
       }
     } catch (error) {
-      console.error(error);
       if (error instanceof Error) {
         return rejectWithValue(error.message);
       }

@@ -13,8 +13,6 @@ const TransactionHistoryObj: React.FC<{
     index: number;
 }> = ({ timestamp, amount, type, from, to, fee, index }) => {
     const navigate = useNavigate();
-    const { theme } = useTheme();
-    const isDark = theme === "dark";
 
     const handleClick = (id: any) => {
         localStorage.setItem("tab", "trx");
@@ -22,7 +20,7 @@ const TransactionHistoryObj: React.FC<{
     }
 
     return (<>
-        <tr className={`border-b ${isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-300 hover:bg-gray-100'}`} role="button" onClick={() => { handleClick(index) }}>
+        <tr className="border-b border-gray-300 hover:bg-gray-100" role="button" onClick={() => { handleClick(index) }}>
             <td className="py-3 text-left text-base font-medium text-foreground">{timestamp}</td>
             <td className="py-3 px-6 text-left text-base font-medium text-foreground">
                 <button className={`${type === "mint" ? "bg-mintbtnbg" : "bg-sendbtnbg"} bg-opacity-30 px-3 rounded-bordertb`}>{type}</button>

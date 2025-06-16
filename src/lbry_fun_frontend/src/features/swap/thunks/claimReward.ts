@@ -1,9 +1,6 @@
-import { ActorSubclass } from "@dfinity/agent";
-import { _SERVICE as _SERVICESWAP } from "../../../../../declarations/icp_swap/icp_swap.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getActorSwap } from "@/features/auth/utils/authUtils";
 import { ErrorMessage, getErrorMessage } from "../utlis/erorrs";
-import { message } from "antd/es";
 import { RootState } from "@/store";
 
 // Define the async thunk
@@ -34,7 +31,6 @@ const claimReward = createAsyncThunk<
       return rejectWithValue(errorMessage);
     }
   } catch (error) {
-    console.error(error);
 
     if (error instanceof Error) {
       return rejectWithValue({ title: error.message, message: "" });

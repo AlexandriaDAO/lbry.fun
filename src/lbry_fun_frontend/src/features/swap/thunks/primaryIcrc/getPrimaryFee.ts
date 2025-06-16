@@ -1,4 +1,3 @@
-import { _SERVICE as _SERVICEALEX } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import LedgerService from "@/utils/LedgerService";
 import {  getICRCActor } from "@/features/auth/utils/authUtils";
@@ -28,7 +27,6 @@ const getPrimaryFee = createAsyncThunk<
 
     return fromatedFee;
   } catch (error) {
-    console.error("Failed to get ALEX fee:", error);
 
     if (error instanceof Error) {
       return rejectWithValue(error.message);

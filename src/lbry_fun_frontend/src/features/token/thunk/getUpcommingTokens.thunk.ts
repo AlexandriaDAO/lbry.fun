@@ -28,14 +28,13 @@ const getUpcomming = createAsyncThunk<
           primary_token_id: record.primary_token_id.toString(),
           secondary_token_id: record.secondary_token_id.toString(),
           tokenomics_canister_id: record.tokenomics_canister_id.toString(),
-          primary_max_phase_mint: record.primary_max_phase_mint.toString(),
+          logs_canister_id: record.logs_canister_id.toString(),
+          halving_step: record.halving_step.toString(),
           primary_token_max_supply: record.primary_token_max_supply.toString(),
           initial_primary_mint: record.initial_primary_mint.toString(),
           initial_secondary_burn: record.initial_secondary_burn.toString(),
           created_time: record.created_time.toString(),
-          liquidity_provided_at: record.liquidity_provided_at
-            ? record.liquidity_provided_at.toString()
-            : null,
+          liquidity_provided_at: record.liquidity_provided_at.toString(),
           isLive: record.is_live,
         },
       ]

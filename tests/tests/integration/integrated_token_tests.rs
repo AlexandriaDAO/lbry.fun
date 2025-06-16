@@ -145,8 +145,8 @@ impl TokenTestEnvironment {
         // 1. Deploy ICP Ledger
         self.deploy_icp_ledger();
         
-        // 2. Deploy Primary Token (with icp_swap as minting account)
-        self.deploy_icrc1_token(self.primary_token, "Test Primary", "TPT", self.icp_swap, 8);
+        // 2. Deploy Primary Token (with tokenomics as minting account)
+        self.deploy_icrc1_token(self.primary_token, "Test Primary", "TPT", self.tokenomics, 8);
         
         // 3. Deploy Secondary Token  
         self.deploy_icrc1_token(self.secondary_token, "Test Secondary", "TST", self.icp_swap, 8);
@@ -241,14 +241,14 @@ impl TokenTestEnvironment {
     
     fn deploy_icrc1_token(&self, canister_id: Principal, name: &str, symbol: &str, minting_account: Principal, decimals: u8) {
         // Deploy ICRC1 token with proper initialization
-        // For primary token, give the minting account (icp_swap) an initial balance
+        // For primary token, give the minting account (tokenomics) an initial balance
         let initial_balances = if canister_id == self.primary_token {
             vec![(
                 Account {
                     owner: minting_account,
                     subaccount: None,
                 },
-                candid::Nat::from(1_000_000 * E8S), // 1M tokens for testing
+                candid::Nat::from(21_000_000 * E8S), // 21M tokens (full supply) for testing
             )]
         } else {
             vec![]
@@ -301,7 +301,7 @@ impl TokenTestEnvironment {
             secondary_token_id: Some(self.secondary_token),
             swap_canister_id: Some(self.icp_swap),
             frontend_canister_id: Some(Principal::anonymous()), // Use anonymous for testing
-            max_primary_supply: 1_000_000 * E8S,
+            max_primary_supply: 21_000_000 * E8S,
             initial_primary_mint: 10_000 * E8S,
             initial_secondary_burn: 5_000 * E8S,
             halving_step: 50, // Percentage value between 25 and 90

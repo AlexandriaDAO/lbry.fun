@@ -1,4 +1,3 @@
-import { _SERVICE as _SERVICEALEX } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import { TokenConversionService } from "@/utils/TokenConversionService";
@@ -28,7 +27,6 @@ const getAccountPrimaryBalance = createAsyncThunk<
     const formattedBal = TokenConversionService.formatE8sDisplay(result, 4);
     return formattedBal;
   } catch (error) {
-    console.error("Failed to get ALEX balance:", error);
 
     if (error instanceof Error) {
       return rejectWithValue(error.message);

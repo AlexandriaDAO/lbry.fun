@@ -3,8 +3,7 @@ import { useAppDispatch } from '../../../../store/hooks/useAppDispatch';
 import { useAppSelector } from "../../../../store/hooks/useAppSelector";
 import { RootState } from "@/store";
 
-import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swap/icp_swap.did';
-import { _SERVICE as _SERVICEALEX} from '../../../../../../ICRC/ICRC.did' 
+ 
 import getAccountPrimaryBalance from "../../thunks/primaryIcrc/getAccountPrimaryBalance";
 
 const GetPrimaryBal = () => {

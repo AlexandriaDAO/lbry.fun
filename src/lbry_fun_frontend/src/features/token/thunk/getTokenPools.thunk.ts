@@ -28,11 +28,11 @@ const getTokenPools = createAsyncThunk<
           secondary_token_id: record.secondary_token_id.toString(),
           tokenomics_canister_id: record.tokenomics_canister_id.toString(),
           logs_canister_id: record.logs_canister_id.toString(),
-          primary_max_phase_mint: record.primary_max_phase_mint.toString(),
+          halving_step: record.halving_step.toString(),
           primary_token_max_supply: record.primary_token_max_supply.toString(),
           initial_primary_mint: record.initial_primary_mint.toString(),
           initial_secondary_burn: record.initial_secondary_burn.toString(),
-          liquidity_provided_at: record.liquidity_provided_at ? record.liquidity_provided_at.toString() : null,
+          liquidity_provided_at: record.liquidity_provided_at.toString(),
           isLive: record.is_live,
           created_time: record.created_time.toString(),
         },
@@ -79,13 +79,13 @@ export type TokenRecordStringified = {
   primary_token_symbol: string;
   icp_swap_canister_id: string;
   logs_canister_id: string;
-  primary_max_phase_mint: string;
+  halving_step: string;
   primary_token_max_supply: string;
   initial_primary_mint: string;
   primary_token_id: string;
   caller: string;
   initial_secondary_burn: string;
-  liquidity_provided_at: string | null;
+  liquidity_provided_at: string;
   isLive: boolean;
   created_time: string;
   primary_token_logo_base64?: string;

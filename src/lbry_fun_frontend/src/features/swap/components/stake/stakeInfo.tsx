@@ -20,7 +20,6 @@ const StakedInfo: React.FC<StakedInfoProps> = ({ setLoadingModalV, setActionType
     const dispatch = useAppDispatch();
     const swap = useAppSelector((state: RootState) => state.swap);
     const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
-    const { theme } = useTheme();
 
     useEffect(() => {
         if(isAuthenticated && principal) dispatch(getStakeInfo(principal));

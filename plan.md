@@ -96,7 +96,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "myato-p2xgd-cww3b-lbxou-5eri7-idm5t-s7lcp-jph75-zb6o4-wozfx-lqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "hf3mq-izayf-xs7oy-tgnxp-tt7oj-45lwz-ja355-5tp2i-wuqpc-tlgxu-qae"; subaccount = null }; amount = (9_900_000_000 : nat) })'
 
 dfx identity use default
 

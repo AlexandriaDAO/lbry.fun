@@ -12,20 +12,17 @@ import transferSecondary from "./thunks/secondaryIcrc/transferSecondary";
 import getALlStakesInfo from "./thunks/getAllStakesInfo";
 import getArchivedBal from "./thunks/getArchivedBal";
 import redeemArchivedBalance from "./thunks/redeemArchivedBalance";
-// import fetchTransaction from "./thunks/secondaryIcrc/getTransactions";
-// import getSpendingBalance from "./thunks/lbryIcrc/getSpendingBalance";
-// import getPrimarySpendingBalance from "./thunks/alexIcrc/getPrimarySpendingBalance";
-
-// import { TransactionType } from "./thunks/secondaryIcrc/getTransactions";
 import getStakersCount from "./thunks/getStakersCount";
 import getCanisterArchivedBal from "./thunks/getCanisterArchivedBal";
 import getAverageApy from "./thunks/getAverageApy";
 import getSecondaryFee from "./thunks/secondaryIcrc/getSecondaryFee";
 import getAllLogs from "./thunks/insights/getAllLogs.thunk";
+import fetchTransactionHistory from "./thunks/fetchTransactionHistory.thunk";
 import { ErrorMessage } from "./utlis/erorrs";
 import { TokenRecordStringified } from "../token/thunk/getTokenPools.thunk";
 import fetchTokenLogosForPool from "../token/thunk/fetchTokenLogosForPoolThunk";
 import { ProcessedLogsData } from "./types/logs";
+import { TransactionHistoryState } from "./types/transactionTypes";
 
 // Define the interface for our node state
 export interface StakeInfo {
@@ -64,6 +61,7 @@ export interface SwapState {
   logsData: ProcessedLogsData | null;
   logsLoading: boolean;
   logsError: string | null;
+  transactionHistory: TransactionHistoryState;
 }
 
 // Define the initial state using the ManagerState interface
@@ -93,6 +91,14 @@ const initialState: SwapState = {
   logsLoading: false,
   logsError: null,
   activeSwapPool: null,
+  transactionHistory: {
+    transactions: [],
+    loading: false,
+    error: null,
+    lastFetch: null,
+    hasMore: true,
+    currentPage: 0
+  }
 };
 
 const swapSlice = createSlice({
@@ -111,6 +117,12 @@ const swapSlice = createSlice({
     },
     setActiveSwapPool: (state, action) => {
       state.activeSwapPool = action.payload;
+    },
+    resetTransactionHistory: (state) => {
+      state.transactionHistory.transactions = [];
+      state.transactionHistory.currentPage = 0;
+      state.transactionHistory.hasMore = true;
+      state.transactionHistory.error = null;
     }
   },
   extraReducers: (builder: ActionReducerMapBuilder<SwapState>) => {
@@ -332,25 +344,6 @@ const swapSlice = createSlice({
           title: action.payload?.title || "",
         };
       })
-      // .addCase(fetchTransaction.pending, (state) => {
-      //   // toast.info("Fetching!");
-      //   state.loading = true;
-      //   state.error = null;
-      // })
-      // .addCase(fetchTransaction.fulfilled, (state, action) => {
-      //   // toast.success("Fetched Transactions!");
-      //   state.loading = false;
-      //   state.transactions = action.payload;
-      //   state.error = null;
-      // })
-      // .addCase(fetchTransaction.rejected, (state, action) => {
-      //   toast.error("Error while fetching transactions!");
-      //   state.loading = false;
-      //   state.error = {
-      //     message: "",
-      //     title: action.payload || "",
-      //   };
-      // })
       .addCase(getStakersCount.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -447,8 +440,32 @@ const swapSlice = createSlice({
           state.activeSwapPool = [state.activeSwapPool[0], updatedRecord];
         }
         // No loading state change, it's a background update
+      })
+      .addCase(fetchTransactionHistory.pending, (state) => {
+        state.transactionHistory.loading = true;
+        state.transactionHistory.error = null;
+      })
+      .addCase(fetchTransactionHistory.fulfilled, (state, action) => {
+        const { transactions, hasMore } = action.payload;
+        
+        if (state.transactionHistory.currentPage === 0) {
+          // First page - replace transactions
+          state.transactionHistory.transactions = transactions;
+        } else {
+          // Subsequent pages - append transactions
+          state.transactionHistory.transactions.push(...transactions);
+        }
+        
+        state.transactionHistory.loading = false;
+        state.transactionHistory.hasMore = hasMore;
+        state.transactionHistory.lastFetch = Date.now();
+        state.transactionHistory.currentPage += 1;
+      })
+      .addCase(fetchTransactionHistory.rejected, (state, action) => {
+        state.transactionHistory.loading = false;
+        state.transactionHistory.error = action.payload || "Failed to fetch transactions";
       });
   },
 });
-export const { flagHandler ,setActiveSwapPool} = swapSlice.actions;
+export const { flagHandler, setActiveSwapPool, resetTransactionHistory } = swapSlice.actions;
 export default swapSlice.reducer;

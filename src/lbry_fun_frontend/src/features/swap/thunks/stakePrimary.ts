@@ -1,6 +1,3 @@
-import { ActorSubclass } from "@dfinity/agent";
-import { _SERVICE as _SERVICESWAP } from "../../../../../declarations/icp_swap/icp_swap.did";
-import { _SERVICE as _SERVICEALEX } from "../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import { TokenConversionService } from "@/utils/TokenConversionService";
@@ -73,7 +70,6 @@ const stakePrimary = createAsyncThunk<
 
       const actorSwap = await getActorSwap(icp_swap_canister_id);
       const result = await actorSwap.stake_primary(amountFormat, []);
-      console.log("result is is ", result);
       if ("Ok" in result) return "success";
       if ("Err" in result) {
         const errorMessage = getErrorMessage(result.Err);

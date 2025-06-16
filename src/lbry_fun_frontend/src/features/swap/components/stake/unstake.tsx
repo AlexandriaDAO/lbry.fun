@@ -15,7 +15,6 @@ interface UnstakeProps {
 const Unstake: React.FC<UnstakeProps> = ({ setLoadingModalV, setActionType}) => {
     const dispatch = useAppDispatch();
     const swap = useAppSelector((state) => state.swap);
-    const { theme } = useTheme();
 
     const handleUnstake = (e: any) => {
         e.preventDefault();

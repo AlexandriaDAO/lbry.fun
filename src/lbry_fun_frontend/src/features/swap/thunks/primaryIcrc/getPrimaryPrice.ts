@@ -3,7 +3,6 @@
 
 
 
-// import { getIcpSwapFactoryCanister } from "@/features/auth/utils/authUtils";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
 const getPrimaryPrice = createAsyncThunk<string, void, { rejectValue: string }>(
@@ -18,7 +17,6 @@ const getPrimaryPrice = createAsyncThunk<string, void, { rejectValue: string }>(
       return "1";
     } catch (error) {
       if (error instanceof Error) {
-        console.log("error is", error);
         return rejectWithValue(error.message);
       }
       return rejectWithValue(

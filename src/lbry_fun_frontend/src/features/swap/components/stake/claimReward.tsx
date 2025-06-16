@@ -14,7 +14,6 @@ interface StakedInfoProps {
 const ClaimReward: React.FC<StakedInfoProps> = ({ setLoadingModalV, setActionType }) => {
     const dispatch = useAppDispatch();
     const swap = useAppSelector((state) => state.swap);
-    const { theme } = useTheme();
 
     const handleClaim = (e: any) => {
         e.preventDefault();

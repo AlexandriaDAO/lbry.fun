@@ -15,7 +15,6 @@ import ErrorModal from "../errorModal";
 import { Entry } from "@/layouts/parts/Header";
 
 const RedeemContent: React.FC = () => {
-  const { theme } = useTheme();
   const dispatch = useAppDispatch();
   const { principal, isAuthenticated } = useAppSelector((state) => state.auth);
   const swap = useAppSelector((state) => state.swap);

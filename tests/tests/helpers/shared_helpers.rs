@@ -3,6 +3,97 @@ use crate::integrated_token_tests::TokenTestEnvironment;
 use candid::{CandidType, Encode, Principal, Nat};
 use serde::{Deserialize, Serialize};
 
+// ExecutionError type definition for testing
+// This matches the ExecutionError enum from icp_swap/src/error.rs
+#[derive(Debug, CandidType, Deserialize, Clone)]
+pub enum ExecutionError {
+    // Amount related errors
+    MinimumRequired {
+        required: u64,
+        provided: u64,
+        token: String,
+        details: String,
+    },
+    InvalidAmount {
+        reason: String,
+        amount: u64,
+        details: String,
+    },
+    // Balance errors
+    InsufficientBalance {
+        required: u64,
+        available: u64,
+        token: String,
+        details: String,
+    },
+    InsufficientCanisterBalance {
+        required: u64,
+        available: u64,
+        details: String,
+    },
+    InsufficientAllowance {
+        required: candid::Nat,
+        available: candid::Nat,
+    },
+    InsufficientBalanceRewardDistribution {
+        available: u128,
+        details: String,
+    },
+    // Operation errors
+    TransferFailed {
+        source: String,
+        dest: String,
+        token: String,
+        amount: u64,
+        details: String,
+        reason: String,
+    },
+    MintFailed {
+        token: String,
+        amount: u64,
+        reason: String,
+        details: String,
+    },
+    BurnFailed {
+        token: String,
+        amount: u64,
+        reason: String,
+        details: String,
+    },
+    // Math errors
+    AdditionOverflow {
+        operation: String,
+        details: String,
+    },
+    MultiplicationOverflow {
+        operation: String,
+        details: String,
+    },
+    Underflow {
+        operation: String,
+        details: String,
+    },
+    DivisionFailed {
+        operation: String,
+        details: String,
+    },
+    RewardDistributionError {
+        reason: String,
+    },
+    // External errors
+    CanisterCallFailed {
+        canister: String,
+        method: String,
+        details: String,
+    },
+    RateLookupFailed {
+        details: String,
+    },
+    // General errors
+    StateError(String),
+    Unauthorized(String),
+}
+
 pub const E8S: u64 = 100_000_000;
 
 // ICRC-2 types
@@ -49,8 +140,9 @@ pub use crate::phase2_token_operations::{
 // Setup helper for getting primary tokens
 pub fn setup_user_with_primary(env: &mut TokenTestEnvironment, user: &str, target_amount: u64) -> Result<(), String> {
     // First get secondary tokens, then burn them for primary tokens
-    // Let's use realistic amounts - swap 20 ICP to get secondary tokens
-    let icp_to_swap = 20 * E8S; // 20 ICP
+    // Let's swap 100 ICP which should give us 4000 natural units (100 * 40)
+    // We'll burn only 100 units to start with, just to see if minting works
+    let icp_to_swap = 100 * E8S; // 100 ICP
     let approve_amount = icp_to_swap + 100_000;
     
     println!("Setting up {} with target {} primary tokens (e8s)", user, target_amount);
@@ -63,8 +155,8 @@ pub fn setup_user_with_primary(env: &mut TokenTestEnvironment, user: &str, targe
     let secondary_balance = get_secondary_balance(env, user);
     println!("Got {} secondary tokens (e8s)", secondary_balance);
     
-    // Burn a smaller amount - just 100 tokens (natural units) to ensure it works
-    let burn_amount = 100u64; // 100 natural units
+    // Burn the initial_secondary_burn amount (5000 natural units) to trigger first minting
+    let burn_amount = 5000u64; // 5000 natural units - matches tokenomics initial_secondary_burn
     
     // Check if we have enough secondary tokens (need burn_amount * E8S e8s)
     if secondary_balance < burn_amount * E8S {
@@ -111,8 +203,16 @@ pub fn setup_user_with_primary(env: &mut TokenTestEnvironment, user: &str, targe
     match burn_result {
         Ok(bytes) => {
             println!("Burn call successful, decoding response...");
-            // The response is a candid-encoded Result, we just need to check if it succeeded
-            // If it failed, the canister call itself would have failed
+            // The burn_secondary function returns Result<String, ExecutionError>
+            // We need to decode it properly
+            match candid::decode_one::<Result<String, ExecutionError>>(&bytes) {
+                Ok(Ok(msg)) => println!("Burn succeeded with message: {}", msg),
+                Ok(Err(e)) => return Err(format!("Burn failed with error: {:?}", e)),
+                Err(e) => {
+                    println!("Failed to decode burn response: {:?}", e);
+                    println!("Raw response bytes length: {}", bytes.len());
+                }
+            }
             println!("Burn operation completed");
         },
         Err(e) => return Err(format!("Failed to call burn_secondary: {:?}", e)),
