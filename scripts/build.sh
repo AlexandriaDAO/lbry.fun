@@ -3,8 +3,8 @@
 
 set -ex 
 
-# dfx stop
-# dfx start --clean --background
+dfx stop
+dfx start --clean --background
 
 # Step 2: II Canister
 dfx deps pull

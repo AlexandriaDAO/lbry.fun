@@ -152,7 +152,7 @@ const BurnContent = () => {
                                         <h4 className=' lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium'>{swap.activeSwapPool&&swap.activeSwapPool[1].primary_token_symbol}</h4>
                                     </div>
                                 </div>
-                                <h3 className={`text-right  lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium ${tentativePrimary > 50 ? 'text-red-500' : ''}`}>
+                                <h3 className={`text-right  lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium`}>
                                     {tentativePrimary.toFixed(4)}
                                 </h3>
                             </div>
@@ -161,24 +161,21 @@ const BurnContent = () => {
                             type="button"
                             className={`bg-interactive-primary text-primary-foreground w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-4 ${parseInt(amountSecondary.toString()) === 0 ||
                                     swap.loading ||
-                                    amountSecondary > maxBurnAllowed ||
-                                    tentativePrimary > 50
+                                    amountSecondary > maxBurnAllowed
                                     ? 'text-muted-foreground cursor-not-allowed opacity-50'
                                     : 'cursor-pointer'
                                 }`}
                             style={{
                                 opacity: parseInt(amountSecondary.toString()) === 0 ||
                                     swap.loading ||
-                                    amountSecondary > maxBurnAllowed ||
-                                    tentativePrimary > 50
+                                    amountSecondary > maxBurnAllowed
                                     ? 0.5
                                     : 1, // when disabled
                             }}
                             disabled={
                                 amountSecondary === 0 ||
                                 swap.loading === true ||
-                                amountSecondary > maxBurnAllowed ||
-                                tentativePrimary > 50
+                                amountSecondary > maxBurnAllowed
                             }
                             onClick={(e) => {
                                 handleSubmit(e);

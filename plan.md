@@ -13,7 +13,7 @@ Before we start building this out though, I want to do some planning with you. U
 - Dynamic price feeds from kongswap.
 - y-axis label on graphs 1, 2 and 4
 - Consistent slider and input option for all 4 parameters with default values.
-
+- Annual APY history in the logs canister.
 - Understand if the countdown is reliable across timezones.
 
 
@@ -29,7 +29,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "jbehk-d7e5s-kzkv5-jjzej-rwuck-6xs3b-e3rxx-uspyq-f7wb6-3mqgb-yqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "myato-p2xgd-cww3b-lbxou-5eri7-idm5t-s7lcp-jph75-zb6o4-wozfx-lqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
 
 dfx identity use default
 

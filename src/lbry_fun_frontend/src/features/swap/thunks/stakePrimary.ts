@@ -29,6 +29,13 @@ const stakePrimary = createAsyncThunk<
         Number(Number(amount) * 10 ** 8).toFixed(0)
       );
 
+      // Get the primary token fee from state
+      const primaryFee = state.primary.primaryFee;
+      const feeInE8s = BigInt(Math.ceil(Number(primaryFee) * 10 ** 8));
+      
+      // Add fee buffer to approval amount
+      const approvalAmount = amountFormat + feeInE8s;
+
       const checkApproval = await actor.icrc2_allowance({
         account: {
           owner: Principal.fromText(userPrincipal),
@@ -40,13 +47,13 @@ const stakePrimary = createAsyncThunk<
         },
       });
 
-      if (checkApproval.allowance < amountFormat) {
+      if (checkApproval.allowance < approvalAmount) {
         const resultPrimaryApprove = await actor.icrc2_approve({
           spender: {
             owner: Principal.fromText(icp_swap_canister_id),
             subaccount: [],
           },
-          amount: amountFormat,
+          amount: approvalAmount,
           fee: [],
           memo: [],
           from_subaccount: [],

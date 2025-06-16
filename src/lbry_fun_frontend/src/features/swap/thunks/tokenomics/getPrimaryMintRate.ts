@@ -18,10 +18,9 @@ const getPrimaryMintRate = createAsyncThunk<
     );
     const result = await actor.get_current_primary_rate();
     const LedgerServices = LedgerService();
-    const fromatedBal = LedgerServices.e8sToIcp(
-      result * BigInt(10000)
-    ).toString();
-    return fromatedBal;
+    // The result is in e8s format, need to convert to natural units
+    const rateInNaturalUnits = LedgerServices.e8sToIcp(result);
+    return rateInNaturalUnits.toString();
   } catch (error) {
     if (error instanceof Error) {
       return rejectWithValue(error.message);

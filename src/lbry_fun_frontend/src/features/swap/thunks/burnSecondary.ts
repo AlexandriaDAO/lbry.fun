@@ -31,6 +31,13 @@ const burnSecondary = createAsyncThunk<
       let amountFormat: bigint = BigInt(Number(amount));
       let amountFormate8s: bigint = BigInt(Number(amount) * 10 ** 8);
 
+      // Get the secondary token fee from state
+      const secondaryFee = state.swap.secondaryFee;
+      const feeInE8s = BigInt(Math.ceil(Number(secondaryFee) * 10 ** 8));
+      
+      // Add fee buffer to approval amount
+      const approvalAmount = amountFormate8s + feeInE8s;
+
       const checkApproval = await actor.icrc2_allowance({
         account: {
           owner: Principal.fromText(userPrincipal),
@@ -41,13 +48,13 @@ const burnSecondary = createAsyncThunk<
           subaccount: [],
         },
       });
-      if (checkApproval.allowance < amountFormate8s) {
+      if (checkApproval.allowance < approvalAmount) {
         const resultLbryApprove = await actor.icrc2_approve({
           spender: {
             owner: Principal.fromText(icp_swap_canister_id),
             subaccount: [],
           },
-          amount: amountFormate8s,
+          amount: approvalAmount,
           fee: [],
           memo: [],
           from_subaccount: [],

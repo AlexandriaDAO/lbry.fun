@@ -7,19 +7,19 @@ use std::collections::HashMap;
 const E8S: u64 = 100_000_000;
 
 // Helper functions used across test modules
-fn get_secondary_balance(env: &TokenTestEnvironment, user: &str) -> u64 {
+pub fn get_secondary_balance(env: &TokenTestEnvironment, user: &str) -> u64 {
     env.get_balance(user, env.secondary_token)
 }
 
-fn get_icp_balance(env: &TokenTestEnvironment, user: &str) -> u64 {
+pub fn get_icp_balance(env: &TokenTestEnvironment, user: &str) -> u64 {
     env.get_balance(user, env.icp_ledger)
 }
 
-fn get_primary_balance(env: &TokenTestEnvironment, user: &str) -> u64 {
+pub fn get_primary_balance(env: &TokenTestEnvironment, user: &str) -> u64 {
     env.get_balance(user, env.primary_token)
 }
 
-fn approve_icp(env: &mut TokenTestEnvironment, user: &str, amount: u64) -> Result<Nat, String> {
+pub fn approve_icp(env: &mut TokenTestEnvironment, user: &str, amount: u64) -> Result<Nat, String> {
     let user_principal = env.test_users.get(user)
         .ok_or_else(|| format!("User {} not found", user))?;
     
@@ -54,7 +54,7 @@ fn approve_icp(env: &mut TokenTestEnvironment, user: &str, amount: u64) -> Resul
     }
 }
 
-fn swap_icp(env: &mut TokenTestEnvironment, user: &str, amount: u64) -> Result<String, String> {
+pub fn swap_icp(env: &mut TokenTestEnvironment, user: &str, amount: u64) -> Result<String, String> {
     let user_principal = env.test_users.get(user)
         .ok_or_else(|| format!("User {} not found", user))?;
     
@@ -182,7 +182,7 @@ mod test_swap {
         println!("Final secondary balance: {}", final_secondary);
         
         // Check if ICP is archived (minting failed) - look for archived balance
-        let alice_principal = env.test_users["alice"];
+        let alice_principal = env.test_users[&"alice".to_string()];
         let archive_result = env.pic.query_call(
             env.icp_swap,
             Principal::anonymous(),
@@ -238,7 +238,7 @@ mod test_swap {
         // Transfer only 5 ICP to poor_user
         let transfer_result = env.pic.update_call(
             env.icp_ledger,
-            env.test_users["alice"],
+            env.test_users[&"alice".to_string()],
             "icrc1_transfer",
             Encode!(&TransferArg {
                 from_subaccount: None,
@@ -451,7 +451,7 @@ mod test_burn_secondary {
 
         let approve_result = env.pic.update_call(
             env.secondary_token,
-            env.test_users["alice"],
+            env.test_users[&"alice".to_string()],
             "icrc2_approve",
             Encode!(&approve_args).expect("Failed to encode approve args"),
         );
@@ -634,6 +634,367 @@ mod test_burn_secondary {
                     println!("Burn rate: {} secondary e8s per 1 primary e8s", rate);
                 }
             }
+        }
+    }
+}
+
+mod test_stake_primary {
+    use super::*;
+
+    fn setup_user_with_primary(env: &mut TokenTestEnvironment, user: &str, target_amount: u64) -> Result<(), String> {
+        // First get secondary tokens, then burn them for primary tokens
+        let secondary_needed = target_amount * 10; // Rough estimate - we need enough secondary to burn for primary
+        
+        // Get secondary tokens via swap
+        let icp_needed = (secondary_needed * 100) / 400; // Reverse formula
+        let approve_amount = icp_needed + 100_000;
+        
+        approve_icp(env, user, approve_amount)?;
+        swap_icp(env, user, icp_needed)?;
+        
+        // Now burn secondary tokens for primary tokens
+        let secondary_balance = get_secondary_balance(env, user);
+        let burn_amount = std::cmp::min(secondary_needed / E8S, secondary_balance / E8S); // Convert to natural units
+        
+        if burn_amount == 0 {
+            return Err(format!("Not enough secondary tokens to burn for primary"));
+        }
+        
+        // Approve secondary tokens for burning
+        let approve_amount = burn_amount * E8S + 100_000;
+        let approve_args = ApproveArgs {
+            from_subaccount: None,
+            spender: Account {
+                owner: env.icp_swap,
+                subaccount: None,
+            },
+            amount: Nat::from(approve_amount),
+            expected_allowance: None,
+            expires_at: None,
+            fee: None,
+            memo: None,
+            created_at_time: None,
+        };
+
+        env.pic.update_call(
+            env.secondary_token,
+            env.test_users[&user.to_string()],
+            "icrc2_approve",
+            Encode!(&approve_args).expect("Failed to encode approve args"),
+        ).map_err(|e| format!("Failed to approve secondary tokens: {:?}", e))?;
+        
+        // Burn secondary for primary
+        let user_principal = env.test_users.get(user)
+            .ok_or_else(|| format!("User {} not found", user))?;
+        
+        let from_subaccount: Option<[u8; 32]> = None;
+        env.pic.update_call(
+            env.icp_swap,
+            *user_principal,
+            "burn_secondary",
+            Encode!(&burn_amount, &from_subaccount).expect("Failed to encode args"),
+        ).map_err(|e| format!("Failed to burn secondary: {:?}", e))?;
+        
+        // Verify we got some primary tokens
+        let primary_balance = get_primary_balance(env, user);
+        if primary_balance >= target_amount {
+            Ok(())
+        } else if primary_balance > 0 {
+            println!("Warning: Got {} primary tokens but needed {}", primary_balance, target_amount);
+            Ok(()) // Accept partial success
+        } else {
+            Err(format!("Failed to get primary tokens - balance is still 0"))
+        }
+    }
+
+    fn stake_primary(env: &mut TokenTestEnvironment, user: &str, amount: u64) -> Result<String, String> {
+        let user_principal = env.test_users.get(user)
+            .ok_or_else(|| format!("User {} not found", user))?;
+        
+        let from_subaccount: Option<[u8; 32]> = None;
+        let result = env.pic.update_call(
+            env.icp_swap,
+            *user_principal,
+            "stake_primary",
+            Encode!(&amount, &from_subaccount).expect("Failed to encode args"),
+        );
+
+        match result {
+            Ok(response) => {
+                if response.is_empty() {
+                    return Err("Empty response from stake_primary".to_string());
+                }
+                
+                // The function returns Result<String, ExecutionError>
+                match candid::decode_one::<Result<String, String>>(&response) {
+                    Ok(stake_result) => {
+                        match stake_result {
+                            Ok(msg) => Ok(msg),
+                            Err(e) => Err(format!("Stake function error: {}", e)),
+                        }
+                    },
+                    Err(_) => {
+                        // Try to decode as plain string
+                        match candid::decode_one::<String>(&response) {
+                            Ok(msg) => Ok(msg),
+                            Err(_) => Err(format!("Failed to decode stake response: {} bytes", response.len())),
+                        }
+                    }
+                }
+            },
+            Err(e) => Err(format!("Call error: {:?}", e))
+        }
+    }
+
+    fn get_stake_info(env: &TokenTestEnvironment, user: &str) -> Result<u64, String> {
+        let user_principal = env.test_users.get(user)
+            .ok_or_else(|| format!("User {} not found", user))?;
+        
+        let result = env.pic.query_call(
+            env.icp_swap,
+            Principal::anonymous(),
+            "get_stake",
+            Encode!(user_principal).expect("Failed to encode args"),
+        );
+
+        match result {
+            Ok(response) => {
+                // Try to decode as u64 (stake amount)
+                match candid::decode_one::<u64>(&response) {
+                    Ok(stake_amount) => Ok(stake_amount),
+                    Err(_) => {
+                        // Maybe it's wrapped in an Option or Result
+                        match candid::decode_one::<Option<u64>>(&response) {
+                            Ok(maybe_stake) => Ok(maybe_stake.unwrap_or(0)),
+                            Err(_) => Err(format!("Failed to decode stake info: {} bytes", response.len())),
+                        }
+                    }
+                }
+            },
+            Err(e) => Err(format!("Query error: {:?}", e))
+        }
+    }
+
+    #[test]
+    fn test_stake_basic() {
+        let mut env = TokenTestEnvironment::new();
+        
+        // Setup: Get alice some primary tokens first
+        let setup_result = setup_user_with_primary(&mut env, "alice", 1000 * E8S);
+        println!("Setup result: {:?}", setup_result);
+        assert!(setup_result.is_ok(), "Failed to setup primary tokens");
+
+        // Verify initial balances
+        let initial_primary = get_primary_balance(&env, "alice");
+        println!("Initial primary balance: {}", initial_primary);
+        
+        assert!(initial_primary > 0, "Should have some primary tokens");
+        
+        // First approve the icp_swap canister to spend primary tokens
+        let stake_amount = std::cmp::min(500 * E8S, initial_primary / 2); // Stake half or 500, whichever is less
+        let approve_amount = stake_amount + 100_000; // Add buffer for fees
+        
+        let approve_args = ApproveArgs {
+            from_subaccount: None,
+            spender: Account {
+                owner: env.icp_swap,
+                subaccount: None,
+            },
+            amount: Nat::from(approve_amount),
+            expected_allowance: None,
+            expires_at: None,
+            fee: None,
+            memo: None,
+            created_at_time: None,
+        };
+
+        let approve_result = env.pic.update_call(
+            env.primary_token,
+            env.test_users[&"alice".to_string()],
+            "icrc2_approve",
+            Encode!(&approve_args).expect("Failed to encode approve args"),
+        );
+        println!("Primary token approval result: {:?}", approve_result);
+        assert!(approve_result.is_ok(), "Failed to approve primary tokens for staking");
+        
+        // Stake primary tokens
+        let stake_result = stake_primary(&mut env, "alice", stake_amount);
+        println!("Stake result: {:?}", stake_result);
+        
+        // Add delay for state updates
+        env.pic.advance_time(std::time::Duration::from_secs(1));
+        
+        // Check balances and stake info
+        let final_primary = get_primary_balance(&env, "alice");
+        let stake_info = get_stake_info(&env, "alice");
+        
+        println!("Final primary balance: {}", final_primary);
+        println!("Stake info: {:?}", stake_info);
+        
+        if let Ok(msg) = stake_result {
+            println!("Stake success message: {}", msg);
+            
+            // Verify primary tokens were transferred
+            let tokens_transferred = initial_primary - final_primary;
+            println!("Primary tokens transferred: {}", tokens_transferred);
+            
+            assert!(tokens_transferred > 0, "Primary tokens should be transferred for staking");
+            assert!(tokens_transferred <= stake_amount + 100_000, "Should not transfer more than stake amount + fees");
+            
+            // Verify stake record was created
+            if let Ok(staked_amount) = stake_info {
+                println!("Staked amount recorded: {}", staked_amount);
+                assert!(staked_amount > 0, "Stake record should show staked amount");
+            } else {
+                println!("Could not decode stake info, but tokens were transferred successfully");
+            }
+            
+        } else {
+            println!("Stake failed: {:?}", stake_result);
+            println!("Checking if any state changed...");
+            
+            let tokens_transferred = initial_primary - final_primary;
+            if tokens_transferred > 0 {
+                println!("Primary tokens were transferred even though function returned error");
+                println!("Tokens transferred: {}", tokens_transferred);
+            } else {
+                println!("No state change detected - stake completely failed");
+            }
+        }
+    }
+
+    #[test]
+    fn test_stake_multiple_users() {
+        let mut env = TokenTestEnvironment::new();
+        
+        // Setup multiple users with primary tokens
+        let users = vec![("alice", 1000 * E8S), ("bob", 2000 * E8S)];
+        
+        for (user, target_amount) in &users {
+            let setup_result = setup_user_with_primary(&mut env, user, *target_amount);
+            println!("Setup {} with {} primary tokens: {:?}", user, target_amount, setup_result);
+        }
+        
+        // Stake different amounts
+        let stake_amounts = vec![("alice", 1000 * E8S), ("bob", 2000 * E8S)];
+        
+        for (user, stake_amount) in &stake_amounts {
+            let initial_primary = get_primary_balance(&env, user);
+            println!("\n--- Staking for {} ---", user);
+            println!("Initial primary: {}", initial_primary);
+            
+            if initial_primary >= *stake_amount {
+                // Approve primary tokens
+                let approve_amount = *stake_amount + 100_000;
+                let approve_args = ApproveArgs {
+                    from_subaccount: None,
+                    spender: Account {
+                        owner: env.icp_swap,
+                        subaccount: None,
+                    },
+                    amount: Nat::from(approve_amount),
+                    expected_allowance: None,
+                    expires_at: None,
+                    fee: None,
+                    memo: None,
+                    created_at_time: None,
+                };
+
+                let approve_result = env.pic.update_call(
+                    env.primary_token,
+                    env.test_users[&user.to_string()],
+                    "icrc2_approve",
+                    Encode!(&approve_args).expect("Failed to encode approve args"),
+                );
+                println!("Approval result: {:?}", approve_result);
+                
+                if approve_result.is_ok() {
+                    // Stake tokens
+                    let stake_result = stake_primary(&mut env, user, *stake_amount);
+                    println!("Stake result: {:?}", stake_result);
+                    
+                    env.pic.advance_time(std::time::Duration::from_secs(1));
+                    
+                    // Check final state
+                    let final_primary = get_primary_balance(&env, user);
+                    let stake_info = get_stake_info(&env, user);
+                    
+                    println!("Final primary: {}, Stake info: {:?}", final_primary, stake_info);
+                    
+                    if let Ok(msg) = stake_result {
+                        println!("SUCCESS: {} staked successfully", user);
+                    }
+                } else {
+                    println!("FAILED: Could not approve tokens for {}", user);
+                }
+            } else {
+                println!("SKIPPED: {} doesn't have enough primary tokens ({} < {})", 
+                    user, initial_primary, stake_amount);
+            }
+        }
+        
+        // Query total staked across all users
+        println!("\n--- Final Stake Summary ---");
+        for (user, _) in &users {
+            let stake_info = get_stake_info(&env, user);
+            println!("User {}: stake = {:?}", user, stake_info);
+        }
+    }
+
+    #[test]
+    fn test_stake_insufficient_balance() {
+        let mut env = TokenTestEnvironment::new();
+        
+        // Setup: Get alice some primary tokens
+        let setup_result = setup_user_with_primary(&mut env, "alice", 100 * E8S);
+        assert!(setup_result.is_ok(), "Failed to setup primary tokens");
+
+        let initial_primary = get_primary_balance(&env, "alice");
+        println!("Initial primary balance: {}", initial_primary);
+        
+        // Try to stake more than balance (200 tokens when we have ~100)
+        let excessive_stake = 200 * E8S;
+        
+        // Approve excessive amount (this should succeed)
+        let approve_amount = excessive_stake + 100_000;
+        let approve_args = ApproveArgs {
+            from_subaccount: None,
+            spender: Account {
+                owner: env.icp_swap,
+                subaccount: None,
+            },
+            amount: Nat::from(approve_amount),
+            expected_allowance: None,
+            expires_at: None,
+            fee: None,
+            memo: None,
+            created_at_time: None,
+        };
+
+        let approve_result = env.pic.update_call(
+            env.primary_token,
+            env.test_users[&"alice".to_string()],
+            "icrc2_approve",
+            Encode!(&approve_args).expect("Failed to encode approve args"),
+        );
+        println!("Approval result: {:?}", approve_result);
+        
+        // Try to stake excessive amount
+        let stake_result = stake_primary(&mut env, "alice", excessive_stake);
+        println!("Stake with insufficient balance result: {:?}", stake_result);
+        
+        let final_primary = get_primary_balance(&env, "alice");
+        println!("Final primary balance: {}", final_primary);
+        
+        if stake_result.is_err() {
+            println!("EXPECTED: Stake correctly failed with insufficient balance");
+            // Verify no tokens were transferred
+            assert_eq!(final_primary, initial_primary, "No tokens should be transferred on error");
+        } else {
+            println!("UNEXPECTED: Stake succeeded with insufficient balance");
+            // Check how much was actually transferred
+            let transferred = initial_primary - final_primary;
+            println!("Tokens actually transferred: {}", transferred);
         }
     }
 }

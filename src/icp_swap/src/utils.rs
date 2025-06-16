@@ -300,28 +300,46 @@ pub(crate) async fn get_total_primary_staked() -> Result<u64, ExecutionError> {
 }
 pub(crate) async fn fetch_canister_icp_balance() -> Result<u64, ExecutionError> {
     let canister_id = ic_cdk::api::id();
-    let account_identifier = AccountIdentifier::new(&canister_id, &DEFAULT_SUBACCOUNT);
-    let balance_args = AccountBalanceArgs {
-        account: account_identifier,
-    };
-
-    // Call the ledger canister's `account_balance` method and extract the balance in e8s (u64)
     let icp_ledger_id = get_config().icp_ledger_id;
-    let result = ic_ledger_types
-        ::account_balance(icp_ledger_id, balance_args).await
-        .map_err(|e|
-            ExecutionError::new_with_log(
+    
+    // Use ICRC-1 standard balance query
+    let account = Account {
+        owner: canister_id,
+        subaccount: None,
+    };
+    
+    let result: Result<(Nat,), (RejectionCode, String)> = ic_cdk::call(
+        icp_ledger_id,
+        "icrc1_balance_of",
+        (account,)
+    ).await;
+    
+    match result {
+        Ok((balance,)) => {
+            // Convert Nat to u64
+            balance.0.try_into().map_err(|_| 
+                ExecutionError::new_with_log(
+                    caller(),
+                    "fetch_canister_icp_balance",
+                    ExecutionError::MultiplicationOverflow {
+                        operation: "fetch_canister_icp_balance".to_string(),
+                        details: "Balance exceeds u64 maximum".to_string(),
+                    }
+                )
+            )
+        },
+        Err((code, msg)) => {
+            Err(ExecutionError::new_with_log(
                 caller(),
                 "fetch_canister_icp_balance",
                 ExecutionError::CanisterCallFailed {
                     canister: icp_ledger_id.to_string(),
-                    method: "account_balance".to_string(),
-                    details: format!("Rejection call failed: {:?}", e),
+                    method: "icrc1_balance_of".to_string(),
+                    details: format!("Call failed with code {:?}: {}", code, msg),
                 }
-            )
-        );
-    // Convert the Tokens to u64 (in e8s) and return
-    result.map(|tokens| tokens.e8s())
+            ))
+        }
+    }
 }
 
 pub(crate) async fn get_primary_fee() -> Result<u64, ExecutionError> {

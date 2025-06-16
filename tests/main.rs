@@ -16,6 +16,13 @@ mod individual_canister_tests;
 mod integrated_token_tests;
 mod phase1_environment_tests;
 mod phase2_token_operations;
+mod shared_helpers;
+mod phase3_distribution;
+mod phase3_simple_distribution;
+mod phase3_timer_distribution;
+mod phase3_comprehensive_distribution;
+mod phase3_test_staking_only;
+mod phase3_debug_stake;
 
 fn main() {
     println!("\n=== Running Token Environment Tests ===");

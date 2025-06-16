@@ -136,8 +136,8 @@ impl TokenTestEnvironment {
         // 1. Deploy ICP Ledger
         self.deploy_icp_ledger();
         
-        // 2. Deploy Primary Token
-        self.deploy_icrc1_token(self.primary_token, "Test Primary", "TPT", self.tokenomics, 8);
+        // 2. Deploy Primary Token (with icp_swap as minting account)
+        self.deploy_icrc1_token(self.primary_token, "Test Primary", "TPT", self.icp_swap, 8);
         
         // 3. Deploy Secondary Token  
         self.deploy_icrc1_token(self.secondary_token, "Test Secondary", "TST", self.icp_swap, 8);
@@ -229,6 +229,19 @@ impl TokenTestEnvironment {
     
     fn deploy_icrc1_token(&self, canister_id: Principal, name: &str, symbol: &str, minting_account: Principal, decimals: u8) {
         // Deploy ICRC1 token with proper initialization
+        // For primary token, give the minting account (icp_swap) an initial balance
+        let initial_balances = if canister_id == self.primary_token {
+            vec![(
+                Account {
+                    owner: minting_account,
+                    subaccount: None,
+                },
+                candid::Nat::from(1_000_000 * E8S), // 1M tokens for testing
+            )]
+        } else {
+            vec![]
+        };
+        
         let init_args = Encode!(&LedgerArg::Init(
             InitArgs {
                 decimals: Some(decimals),
@@ -238,7 +251,7 @@ impl TokenTestEnvironment {
                     owner: minting_account,
                     subaccount: None,
                 },
-                initial_balances: vec![],
+                initial_balances,
                 metadata: vec![],
                 maximum_number_of_accounts: None,
                 accounts_overflow_trim_quantity: None,

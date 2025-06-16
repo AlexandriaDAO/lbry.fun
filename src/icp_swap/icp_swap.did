@@ -95,12 +95,14 @@ type PaginatedLogs = record {
   current_page : nat64;
 };
 type Result = variant { Ok : text; Err : ExecutionError };
+type Result_1 = variant { Ok : text; Err : text };
 type SecondaryRatio = record { time : nat64; ratio : nat64 };
 type Stake = record { time : nat64; reward_icp : nat64; amount : nat64 };
 service : (opt InitArgs) -> {
   burn_secondary : (nat64, opt blob) -> (Result);
   caller_subaccount : () -> (text) query;
   claim_icp_reward : (opt blob) -> (Result);
+  dev_trigger_distribution : () -> (Result_1);
   get_all_apy_values : () -> (vec record { nat32; nat }) query;
   get_all_archive_balances : () -> (
       vec record { principal; ArchiveBalance },

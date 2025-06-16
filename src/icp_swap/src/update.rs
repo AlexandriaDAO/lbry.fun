@@ -1738,3 +1738,12 @@ pub enum XRCResponse {
     Ok(ExchangeRateResponse),
     Err(ExchangeRateError),
 }
+
+// Development-only method to manually trigger distribution
+// WARNING: This should NOT be included in production builds
+#[update]
+pub async fn dev_trigger_distribution() -> Result<String, String> {
+    // In production, this should check if caller is authorized or return error
+    distribute_reward().await
+        .map_err(|e| format!("Distribution failed: {}", e))
+}
