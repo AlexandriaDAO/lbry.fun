@@ -4,18 +4,32 @@
   canisterArchivedBal: Number,
   canisterUnClaimedIcp: Number
 ) => {
-  console.log("secondaryRatio", secondaryRatio);
-  console.log("canisterBal", canisterBal);
-  console.log("canisterArchivedBal", canisterArchivedBal);
-  console.log("canisterUnClaimedIcp", canisterUnClaimedIcp);
+  console.log("Burn calculation debug:", {
+    secondaryRatio,
+    canisterBal,
+    canisterArchivedBal,
+    canisterUnClaimedIcp
+  });
+  
   let lbryPerIcp = Number(secondaryRatio) * 2;
   let canisterBalance = Number(canisterBal);
   let totalArchivedBalance = Number(canisterArchivedBal);
   let totalUnclaimedBalance = Number(canisterUnClaimedIcp);
   let remainingBalance =
     canisterBalance - (totalUnclaimedBalance + totalArchivedBalance);
-  let actualAvailable = remainingBalance / 2; // 50% for stakers
+  
+  // Backend does NOT reserve 50% for burns
+  // Burning actually increases ICP reserves, so full remaining balance is available
+  let actualAvailable = remainingBalance;
   let maxAllowed = actualAvailable * lbryPerIcp;
+  
+  console.log("Burn calculation result:", {
+    remainingBalance,
+    actualAvailable,
+    maxAllowed,
+    lbryPerIcp
+  });
+  
   if (maxAllowed < 0) {
     return 0;
   }

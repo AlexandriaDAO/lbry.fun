@@ -27,12 +27,12 @@ const BurnContent = () => {
     const tokenomics = useAppSelector((state: RootState) => state.tokenomics);
 
     const [amountSecondary, setAmountSecondary] = useState(0);
-    const [tentativeICP, setTentativeICP] = useState(Number);
-    const [tentativePrimary, setTentativePrimary] = useState(Number);
+    const [tentativeICP, setTentativeICP] = useState(0);
+    const [tentativePrimary, setTentativePrimary] = useState(0);
     const [loadingModalV, setLoadingModalV] = useState(false);
     const [successModalV, setSucessModalV] = useState(false);
     const [errorModalV, setErrorModalV] = useState({ flag: false, title: "", message: "" });
-    const [maxBurnAllowed, setMaxburnAllowed] = useState(Number);
+    const [maxBurnAllowed, setMaxburnAllowed] = useState(0);
 
     const handleSubmit = (event: any) => {
         event.preventDefault();
@@ -77,18 +77,19 @@ const BurnContent = () => {
         if (Number(e.target.value) >= 0) {
 
             setAmountSecondary(Number(e.target.value));
-            setTentativeICP((Number(e.target.value) / Number(swap.secondaryRatio)) / 2);
-            setTentativePrimary(Number(e.target.value) * Number(tokenomics.primaryMintRate));
+            setTentativeICP((Number(e.target.value) / Number(swap.secondaryRatio.data)) / 2);
+            const mintRate = Number(tokenomics.primaryMintRate) || 0;
+            setTentativePrimary(Number(e.target.value) * mintRate);
         }
     }
     const handleMaxLbry = () => {
-        const userBal = Math.floor(Math.max(0, Number(swap.secondaryBalance) - Number(swap.secondaryFee))); // Ensure non-negative user balance
-        const secondaryRatio = Number(swap.secondaryRatio);
+        const userBal = Math.floor(Math.max(0, Number(swap.secondaryBalance.data) - Number(swap.secondaryFee.data))); // Ensure non-negative user balance
+        const secondaryRatio = Number(swap.secondaryRatio.data);
         const primaryMintRate = Number(tokenomics.primaryMintRate);
 
         setAmountSecondary(userBal);
         setTentativeICP(userBal / (secondaryRatio * 2));
-        setTentativePrimary(userBal * primaryMintRate);
+        setTentativePrimary(userBal * (primaryMintRate || 0));
     };
 
     useEffect(() => {
@@ -134,7 +135,7 @@ const BurnContent = () => {
                             </div>
                             <div className='flex justify-between'>
                                 <div className='flex items-center'>
-                                    <strong className='text-base text-multygray text-gray-300 font-medium me-1'>Balance:<span className='text-darkgray text-gray-200 ms-2'>{swap.secondaryBalance} {swap?.activeSwapPool&&swap?.activeSwapPool[1]?.secondary_token_symbol}</span></strong>
+                                    <strong className='text-base text-multygray text-gray-300 font-medium me-1'>Balance:<span className='text-darkgray text-gray-200 ms-2'>{swap.secondaryBalance.data} {swap?.activeSwapPool&&swap?.activeSwapPool[1]?.secondary_token_symbol}</span></strong>
                                     {secondaryLogoFromState ? (
                                         <img className='w-4 h-4' src={secondaryLogoFromState} alt={swap.activeSwapPool?.[1]?.secondary_token_symbol || "Secondary token logo"} />
                                     ) : (

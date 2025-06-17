@@ -23,6 +23,7 @@ import { TokenRecordStringified } from "../token/thunk/getTokenPools.thunk";
 import fetchTokenLogosForPool from "../token/thunk/fetchTokenLogosForPoolThunk";
 import { ProcessedLogsData } from "./types/logs";
 import { TransactionHistoryState } from "./types/transactionTypes";
+import { CacheableData, updateCacheEntry, invalidatePoolCache, CACHE_DURATIONS } from "../../utils/cacheManager";
 
 // Define the interface for our node state
 export interface StakeInfo {
@@ -36,15 +37,20 @@ export interface CanisterArchived {
 }
 
 export interface SwapState {
-  secondaryRatio: string;
-  secondaryBalance: string;
-  secondaryFee: string;
-  archivedBalance: string;
+  // Cached data with timestamps
+  secondaryRatio: CacheableData<string>;
+  secondaryBalance: CacheableData<string>;
+  secondaryFee: CacheableData<string>;
+  archivedBalance: CacheableData<string>;
+  stakeInfo: CacheableData<StakeInfo>;
+  totalStakers: CacheableData<string>;
+  totalStaked: CacheableData<string>;
+  canisterArchivedBal: CacheableData<CanisterArchived>;
+  averageAPY: CacheableData<number>;
+  logsData: CacheableData<ProcessedLogsData | null>;
+  
+  // Non-cached data
   maxLbryBurn: Number;
-  stakeInfo: StakeInfo;
-  totalStakers: string;
-  totalStaked: string;
-  canisterArchivedBal: CanisterArchived;
   loading: boolean;
   swapSuccess: boolean;
   burnSuccess: boolean;
@@ -53,28 +59,34 @@ export interface SwapState {
   unstakeSuccess: boolean;
   transferSuccess: boolean;
   redeeemSuccess: boolean;
-  // transactions: TransactionType[];
-  averageAPY: number;
   error: ErrorMessage | null;
   spendingBalance: string;
   activeSwapPool: [string, TokenRecordStringified] | null;
-  logsData: ProcessedLogsData | null;
   logsLoading: boolean;
   logsError: string | null;
   transactionHistory: TransactionHistoryState;
+  
+  // Global loading states for data orchestration
+  isLoadingCriticalData: boolean;
+  isLoadingSecondaryData: boolean;
 }
 
 // Define the initial state using the ManagerState interface
 const initialState: SwapState = {
-  secondaryRatio: "0",
-  secondaryFee: "0",
-  secondaryBalance: "0",
-  archivedBalance: "0",
+  // Cached data with timestamps
+  secondaryRatio: { data: "0", lastFetch: null },
+  secondaryFee: { data: "0", lastFetch: null },
+  secondaryBalance: { data: "0", lastFetch: null },
+  archivedBalance: { data: "0", lastFetch: null },
+  stakeInfo: { data: { stakedPrimary: "0", rewardIcp: "0", unix_stake_time: "0" }, lastFetch: null },
+  totalStakers: { data: "0", lastFetch: null },
+  canisterArchivedBal: { data: { canisterUnClaimedIcp: 0, canisterArchivedBal: 0 }, lastFetch: null },
+  totalStaked: { data: "0", lastFetch: null },
+  averageAPY: { data: 0, lastFetch: null },
+  logsData: { data: null, lastFetch: null },
+  
+  // Non-cached data
   maxLbryBurn: 0,
-  stakeInfo: { stakedPrimary: "0", rewardIcp: "0", unix_stake_time: "0" },
-  totalStakers: "0",
-  canisterArchivedBal: { canisterUnClaimedIcp: 0, canisterArchivedBal: 0 },
-  totalStaked: "0",
   swapSuccess: false,
   redeeemSuccess: false,
   successStake: false,
@@ -82,12 +94,9 @@ const initialState: SwapState = {
   successClaimReward: false,
   unstakeSuccess: false,
   transferSuccess: false,
-  // transactions: [],
   loading: false,
-  averageAPY: 0,
   error: null,
   spendingBalance: "0",
-  logsData: null,
   logsLoading: false,
   logsError: null,
   activeSwapPool: null,
@@ -98,7 +107,11 @@ const initialState: SwapState = {
     lastFetch: null,
     hasMore: true,
     currentPage: 0
-  }
+  },
+  
+  // Global loading states
+  isLoadingCriticalData: false,
+  isLoadingSecondaryData: false
 };
 
 const swapSlice = createSlice({
@@ -115,7 +128,37 @@ const swapSlice = createSlice({
       state.redeeemSuccess = false;
       state.error = null;
     },
+    setIsLoadingCriticalData: (state, action) => {
+      state.isLoadingCriticalData = action.payload;
+    },
+    setIsLoadingSecondaryData: (state, action) => {
+      state.isLoadingSecondaryData = action.payload;
+    },
     setActiveSwapPool: (state, action) => {
+      const newPoolId = action.payload?.[0];
+      const currentPoolId = state.activeSwapPool?.[0];
+      
+      // If switching to a different pool, invalidate pool-specific cache
+      if (newPoolId && currentPoolId && newPoolId !== currentPoolId) {
+        // Invalidate cached data for pool-specific items
+        state.secondaryRatio.lastFetch = null;
+        state.secondaryBalance.lastFetch = null;
+        state.secondaryFee.lastFetch = null;
+        state.archivedBalance.lastFetch = null;
+        state.stakeInfo.lastFetch = null;
+        state.totalStakers.lastFetch = null;
+        state.totalStaked.lastFetch = null;
+        state.canisterArchivedBal.lastFetch = null;
+        state.averageAPY.lastFetch = null;
+        state.logsData.lastFetch = null;
+        
+        // Reset transaction history
+        state.transactionHistory.transactions = [];
+        state.transactionHistory.currentPage = 0;
+        state.transactionHistory.hasMore = true;
+        state.transactionHistory.lastFetch = null;
+      }
+      
       state.activeSwapPool = action.payload;
     },
     resetTransactionHistory: (state) => {
@@ -123,6 +166,41 @@ const swapSlice = createSlice({
       state.transactionHistory.currentPage = 0;
       state.transactionHistory.hasMore = true;
       state.transactionHistory.error = null;
+    },
+    cleanupExpiredCache: (state) => {
+      const now = Date.now();
+      
+      // Check each cached field and invalidate if expired
+      if (state.secondaryRatio.lastFetch && (now - state.secondaryRatio.lastFetch) > CACHE_DURATIONS.SECONDARY_RATIO) {
+        state.secondaryRatio.lastFetch = null;
+      }
+      if (state.secondaryBalance.lastFetch && (now - state.secondaryBalance.lastFetch) > CACHE_DURATIONS.BALANCES) {
+        state.secondaryBalance.lastFetch = null;
+      }
+      if (state.secondaryFee.lastFetch && (now - state.secondaryFee.lastFetch) > CACHE_DURATIONS.FEES) {
+        state.secondaryFee.lastFetch = null;
+      }
+      if (state.archivedBalance.lastFetch && (now - state.archivedBalance.lastFetch) > CACHE_DURATIONS.BALANCES) {
+        state.archivedBalance.lastFetch = null;
+      }
+      if (state.stakeInfo.lastFetch && (now - state.stakeInfo.lastFetch) > CACHE_DURATIONS.STAKE_INFO) {
+        state.stakeInfo.lastFetch = null;
+      }
+      if (state.totalStakers.lastFetch && (now - state.totalStakers.lastFetch) > CACHE_DURATIONS.TOTAL_STAKED) {
+        state.totalStakers.lastFetch = null;
+      }
+      if (state.totalStaked.lastFetch && (now - state.totalStaked.lastFetch) > CACHE_DURATIONS.TOTAL_STAKED) {
+        state.totalStaked.lastFetch = null;
+      }
+      if (state.canisterArchivedBal.lastFetch && (now - state.canisterArchivedBal.lastFetch) > CACHE_DURATIONS.BALANCES) {
+        state.canisterArchivedBal.lastFetch = null;
+      }
+      if (state.averageAPY.lastFetch && (now - state.averageAPY.lastFetch) > CACHE_DURATIONS.AVERAGE_APY) {
+        state.averageAPY.lastFetch = null;
+      }
+      if (state.logsData.lastFetch && (now - state.logsData.lastFetch) > CACHE_DURATIONS.LOGS_DATA) {
+        state.logsData.lastFetch = null;
+      }
     }
   },
   extraReducers: (builder: ActionReducerMapBuilder<SwapState>) => {
@@ -132,7 +210,7 @@ const swapSlice = createSlice({
         state.error = null;
       })
       .addCase(getSecondaryratio.fulfilled, (state, action) => {
-        state.secondaryRatio = action.payload;
+        state.secondaryRatio = updateCacheEntry(action.payload, state.activeSwapPool?.[0]);
         state.loading = false;
         state.error = null;
       })
@@ -146,7 +224,7 @@ const swapSlice = createSlice({
         state.error = null;
       })
       .addCase(getSecondaryBalance.fulfilled, (state, action) => {
-        state.secondaryBalance = action.payload;
+        state.secondaryBalance = updateCacheEntry(action.payload, state.activeSwapPool?.[0]);
         state.loading = false;
         state.error = null;
       })
@@ -164,7 +242,7 @@ const swapSlice = createSlice({
         state.error = null;
       })
       .addCase(getStakeInfo.fulfilled, (state, action) => {
-        state.stakeInfo = action.payload;
+        state.stakeInfo = updateCacheEntry(action.payload, state.activeSwapPool?.[0]);
         state.loading = false;
         state.error = null;
       })
@@ -182,7 +260,7 @@ const swapSlice = createSlice({
       })
       .addCase(getALlStakesInfo.fulfilled, (state, action) => {
         // toast.success("Fetched all staked info!");
-        state.totalStaked = action.payload;
+        state.totalStaked = updateCacheEntry(action.payload, state.activeSwapPool?.[0]);
         state.loading = false;
         state.error = null;
       })
@@ -314,7 +392,7 @@ const swapSlice = createSlice({
       })
       .addCase(getArchivedBal.fulfilled, (state, action) => {
         // toast.success("Successfully fetched archived balance!");
-        state.archivedBalance = action.payload;
+        state.archivedBalance = updateCacheEntry(action.payload, state.activeSwapPool?.[0]);
         state.loading = false;
         state.error = null;
       })
@@ -350,7 +428,7 @@ const swapSlice = createSlice({
       })
       .addCase(getStakersCount.fulfilled, (state, action) => {
         state.loading = false;
-        state.totalStakers = action.payload;
+        state.totalStakers = updateCacheEntry(action.payload, state.activeSwapPool?.[0]);
         state.error = null;
       })
       .addCase(getStakersCount.rejected, (state, action) => {
@@ -367,7 +445,7 @@ const swapSlice = createSlice({
       })
       .addCase(getCanisterArchivedBal.fulfilled, (state, action) => {
         state.loading = false;
-        state.canisterArchivedBal = action.payload;
+        state.canisterArchivedBal = updateCacheEntry(action.payload, state.activeSwapPool?.[0]);
         state.error = null;
       })
       .addCase(getCanisterArchivedBal.rejected, (state, action) => {
@@ -384,7 +462,7 @@ const swapSlice = createSlice({
       })
       .addCase(getAverageApy.fulfilled, (state, action) => {
         state.loading = false;
-        state.averageAPY = action.payload;
+        state.averageAPY = updateCacheEntry(action.payload, state.activeSwapPool?.[0]);
         state.error = null;
       })
       .addCase(getAverageApy.rejected, (state, action) => {
@@ -400,7 +478,7 @@ const swapSlice = createSlice({
         state.error = null;
       })
       .addCase(getSecondaryFee.fulfilled, (state, action) => {
-        state.secondaryFee = action.payload;
+        state.secondaryFee = updateCacheEntry(action.payload, state.activeSwapPool?.[0]);
         state.loading = false;
         state.error = null;
       })
@@ -416,7 +494,7 @@ const swapSlice = createSlice({
         state.logsLoading = true;
       })
       .addCase(getAllLogs.fulfilled, (state, action) => {
-        state.logsData = action.payload;
+        state.logsData = updateCacheEntry(action.payload, state.activeSwapPool?.[0]);
         state.logsLoading = false;
       })
       .addCase(getAllLogs.rejected, (state, action) => {
@@ -467,5 +545,5 @@ const swapSlice = createSlice({
       });
   },
 });
-export const { flagHandler, setActiveSwapPool, resetTransactionHistory } = swapSlice.actions;
+export const { flagHandler, setActiveSwapPool, resetTransactionHistory, cleanupExpiredCache, setIsLoadingCriticalData, setIsLoadingSecondaryData } = swapSlice.actions;
 export default swapSlice.reducer;

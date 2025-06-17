@@ -18,9 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { RootState } from "@/store";
 import TokenomicsGraphsBackend from './TokenomicsGraphsBackend';
 import TooltipIcon from './TooltipIcon';
-
-// Define E8S constant for conversion
-const E8S = 100_000_000;
+import { TokenConversionService } from '@/utils/TokenConversionService';
 
 export interface TokenFormValues {
   primary_token_symbol: string;
@@ -183,10 +181,10 @@ const CreateTokenForm: React.FC = () => {
     // Convert whole token values to e8s for the backend
     const formDataForBackend = {
       ...form,
-      primary_max_supply: (BigInt(form.primary_max_supply) * BigInt(E8S)).toString(),
-      initial_primary_mint: (BigInt(form.tge_allocation) * BigInt(E8S)).toString(),
-      initial_secondary_burn: (BigInt(form.initial_secondary_burn) * BigInt(E8S)).toString(),
-      initial_reward_per_burn_unit: (BigInt(form.initial_reward_per_burn_unit) * BigInt(E8S)).toString(),
+      primary_max_supply: (BigInt(form.primary_max_supply) * BigInt(TokenConversionService.getE8S())).toString(),
+      initial_primary_mint: (BigInt(form.tge_allocation) * BigInt(TokenConversionService.getE8S())).toString(),
+      initial_secondary_burn: (BigInt(form.initial_secondary_burn) * BigInt(TokenConversionService.getE8S())).toString(),
+      initial_reward_per_burn_unit: (BigInt(form.initial_reward_per_burn_unit) * BigInt(TokenConversionService.getE8S())).toString(),
       halving_step: form.halving_step,
     };
 

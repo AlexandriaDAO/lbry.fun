@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import LedgerService from "@/utils/LedgerService";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 import { Principal } from "@dfinity/principal";
 import { getIcpLedgerActor } from "@/features/auth/utils/authUtils";
 import { RootState } from "@/store";
@@ -23,8 +23,7 @@ const getCanisterBal = createAsyncThunk<
       owner: Principal.fromText(icp_swap_canister_id),
       subaccount: []
     });
-    const LedgerServices=LedgerService();
-    const formatedAccountBal = (Math.floor(LedgerServices.e8sToIcp(resultAccountBal) * 10 ** 4) / 10 ** 4).toFixed(4);
+    const formatedAccountBal = (Math.floor(TokenConversionService.e8sToNatural(resultAccountBal) * 10 ** 4) / 10 ** 4).toFixed(4);
     return ({formatedAccountBal})
   } catch (error) {
     console.error("Failed to get ICP Balance:", error);

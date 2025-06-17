@@ -382,6 +382,8 @@
 
     "terser-webpack-plugin": "^5.3.10",
 
+    "ts-jest": "^29.4.0",
+
     "ts-loader": "^9.5.1",
 
     "url": "^0.11.4",

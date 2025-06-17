@@ -1,8 +1,7 @@
-// With ICP sending logic (incomplete, need to make the caller of send ICP the owner)
+// Utility functions for formatting principals and account identifiers
 import { AccountIdentifier, LedgerCanister } from "@dfinity/ledger-icp";
 import { Principal } from "@dfinity/principal";
-
-const E8S_PER_ICP = 100_000_000;
+import { TokenConversionService } from "@/utils/TokenConversionService";
 
 const LedgerService = () => {
   const shortPrincipal = (UID: Principal | null): string => {
@@ -18,18 +17,6 @@ const LedgerService = () => {
     return `${accountIdText.slice(0, 5)}...${accountIdText.slice(-3)}`;
   };
 
-  const e8sToIcp = (e8s: bigint): number => {
-    return Number(e8s) / E8S_PER_ICP;
-  };
-
-  const displayIcp = (icp: number): string => {
-    return icp.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 }) + " ICP";
-  };
-
-  const displayE8sAsIcp = (e8s: bigint): string => {
-    return displayIcp(e8sToIcp(e8s));
-  };
-
   const sendIcp = async (amount: number, to: string): Promise<bigint> => {
     const ledgerCanister = LedgerCanister.create();
   
@@ -37,7 +24,7 @@ const LedgerService = () => {
   
     const transferRequest = {
       to: toAccountIdentifier,
-      amount: BigInt(amount * E8S_PER_ICP),
+      amount: TokenConversionService.naturalToE8s(amount),
     };
   
     const blockHeight = await ledgerCanister.transfer(transferRequest);
@@ -47,9 +34,6 @@ const LedgerService = () => {
   return {
     shortPrincipal,
     shortAccountId,
-    e8sToIcp,
-    displayIcp,
-    displayE8sAsIcp,
     sendIcp,
   };
 };

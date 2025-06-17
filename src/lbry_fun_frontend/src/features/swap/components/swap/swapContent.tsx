@@ -16,6 +16,7 @@ import LoadingModal from "../loadingModal";
 import ErrorModal from "../errorModal";
 import { Entry } from "@/layouts/parts/Header";
 import { RootState } from "@/store";
+import SwapContentSkeleton from "./swapContentSkeleton";
 
 
 const SwapContent: React.FC = () => {
@@ -58,11 +59,11 @@ const SwapContent: React.FC = () => {
     }
   };
   useEffect(() => {
-    setSecondaryRatio(Number(swap.secondaryRatio));
+    setSecondaryRatio(Number(swap.secondaryRatio.data));
     setTentativeSecondary(
-      parseFloat((Number(swap.secondaryRatio) * Number(amount)).toFixed(4))
+      parseFloat((Number(swap.secondaryRatio.data) * Number(amount)).toFixed(4))
     );
-  }, [swap.secondaryRatio]);
+  }, [swap.secondaryRatio.data]);
   useEffect(() => {
     if (!isAuthenticated || !principal || !swap.activeSwapPool?.[1].secondary_token_id) return;
     if (swap.swapSuccess === true) {
@@ -91,6 +92,12 @@ const SwapContent: React.FC = () => {
       setInputState('focus');
     }
   }, [amount])
+
+  // Show skeleton while critical data is loading
+  if (!swap.secondaryRatio.data || swap.secondaryRatio.data === "0" || !swap.activeSwapPool) {
+    return <SwapContentSkeleton />;
+  }
+
   return (
     <div>
       <div className="mb-5 2xl:mb-10 xl:mb-7 lg:mb-7 md:mb-6 sm:mb-5">
@@ -144,7 +151,7 @@ const SwapContent: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <strong className="text-base text-muted-foreground font-medium me-1">
-                  Balance: {swap.secondaryBalance} {swap.activeSwapPool?.[1].secondary_token_symbol}
+                  Balance: {swap.secondaryBalance.data} {swap.activeSwapPool?.[1].secondary_token_symbol}
                 </strong>
               </div>
             </div>

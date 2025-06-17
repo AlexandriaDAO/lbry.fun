@@ -42,17 +42,13 @@ const AccountCards: React.FC = () => {
     // icp ledger
     useEffect(() => {
         if (isAuthenticated && principal) {
-            dispatch(getIcpBal(principal));
+            // Only fetch user-specific data that's not part of the centralized loader
             dispatch(getAccountId(principal));
-            // Check if ICP price is needed
-            if (!icpPrice || !icpPriceTimestamp || (Date.now() - icpPriceTimestamp > ICP_PRICE_STALE_THRESHOLD_MS)) {
-                console.log("AccountCards: dispatching getIcpPrice due to stale/missing data.");
-                dispatch(getIcpPrice());
-            } else {
-                console.log("AccountCards: using existing fresh ICP price from store.");
-            }
+            // ICP balance is already fetched by useSwapDataLoader's loadCriticalData
+            // ICP price is already fetched by useSwapDataLoader's loadCriticalData
+            console.log("AccountCards: Relying on centralized data loader for ICP price and balance");
         }
-    }, [isAuthenticated, principal, dispatch, icpPrice, icpPriceTimestamp]);
+    }, [isAuthenticated, principal, dispatch]);
     useEffect(() => {
         if (!isAuthenticated || !principal) return;
         if (

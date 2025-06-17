@@ -43,6 +43,41 @@ export class TokenConversionService {
     const natural = this.e8sToNatural(e8sAmount);
     return this.formatDisplay(natural, decimals);
   }
+
+  /**
+   * Alias for e8sToNatural for compatibility with LedgerService
+   * @param e8s - Amount in e8s format
+   * @returns Amount in ICP (natural units)
+   */
+  static e8sToIcp(e8s: bigint): number {
+    return this.e8sToNatural(e8s);
+  }
+
+  /**
+   * Formats ICP amount with 2 decimal places and " ICP" suffix
+   * @param icp - Amount in ICP (natural units)
+   * @returns Formatted string with " ICP" suffix
+   */
+  static displayIcp(icp: number): string {
+    return icp.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 }) + " ICP";
+  }
+
+  /**
+   * Converts e8s to ICP and formats with 2 decimal places and " ICP" suffix
+   * @param e8s - Amount in e8s format
+   * @returns Formatted string with " ICP" suffix
+   */
+  static displayE8sAsIcp(e8s: bigint): string {
+    return this.displayIcp(this.e8sToIcp(e8s));
+  }
+
+  /**
+   * Get the E8S constant
+   * @returns The E8S constant (100,000,000)
+   */
+  static getE8S(): number {
+    return this.E8S;
+  }
 }
 
 // Export the E8S constant for use elsewhere

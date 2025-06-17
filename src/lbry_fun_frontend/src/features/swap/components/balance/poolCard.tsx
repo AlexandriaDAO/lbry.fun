@@ -14,6 +14,7 @@ import { Actor, HttpAgent } from "@dfinity/agent";
 import { idlFactory as icrc1IdlFactory } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did.js";
 import type { Value as Icrc1Value } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did.d.ts";
 import { setActiveSwapPool } from '@/features/swap/swapSlice';
+import { TokenConversionService } from "@/utils/TokenConversionService";
 
 const PoolCard: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -260,11 +261,11 @@ const PoolCard: React.FC = () => {
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-semibold text-primary-foreground/70">Initial Supply:</span>
-                                    <span className="text-primary-foreground">{activeSwapPoolFromRedux[1].initial_primary_mint}</span>
+                                    <span className="text-primary-foreground">{TokenConversionService.formatE8sDisplay(activeSwapPoolFromRedux[1].initial_primary_mint, 0)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-semibold text-primary-foreground/70">Burn Unit:</span>
-                                    <span className="text-primary-foreground">{activeSwapPoolFromRedux[1].initial_secondary_burn}</span>
+                                    <span className="text-primary-foreground">{TokenConversionService.formatE8sDisplay(activeSwapPoolFromRedux[1].initial_secondary_burn, 0)}</span>
                                 </div>
                                 {activeSwapPoolFromRedux[1].isLive ? (
                                     <div className="flex justify-between">

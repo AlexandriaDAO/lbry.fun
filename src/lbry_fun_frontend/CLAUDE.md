@@ -2,6 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Recent Performance Optimizations
+
+### Completed Optimizations (2025-06-17)
+1. **Skeleton Loaders**: Added to Swap and Stake tabs for immediate UI rendering
+2. **Request Deduplication**: Middleware prevents duplicate API calls  
+3. **ICP Price Caching**: Fixed duplicate fetches (was 4+, now 1 with 5-min cache)
+4. **Burn Calculation Fix**: Frontend now matches backend logic (no 50% reserve for burns)
+5. **Performance Monitoring**: Added metrics tracking in development mode
+
+### Key Architectural Improvements
+- Progressive loading: UI shows immediately with skeleton loaders
+- Request deduplication middleware in Redux store
+- Performance monitoring utility for tracking data fetch times
+- Fixed burn validation to match backend expectations
+
 ## Frontend Architecture
 
 This is a React TypeScript frontend for a crypto token launchpad built on the Internet Computer blockchain. The application uses a feature-based architecture with Redux Toolkit for state management.
@@ -37,12 +52,30 @@ This is a React TypeScript frontend for a crypto token launchpad built on the In
 - `IcpSwapActor` - Token swapping operations  
 - `TokenomicsActor` - Supply dynamics and mint rates
 
-**Token Value Handling**: 
-- Frontend displays natural numbers (e.g., 1.5 tokens)
-- Most backend token operations (transfers, approvals) expect e8s format (8 decimal places)
-- EXCEPTION: The icp_swap canister's `burn_secondary` and `swap` methods expect natural units
-- Conversion typically happens in thunks using `TokenConversionService`
-- Always verify the specific backend method's unit expectations
+**Token Value Conversions**: 
+
+ALWAYS use `TokenConversionService` for ALL conversions. Never hardcode E8S values.
+
+**Quick Reference**:
+```typescript
+// User input → Backend (most methods)
+const e8sAmount = TokenConversionService.naturalToE8s(userInput);
+
+// Backend → Display
+const display = TokenConversionService.e8sToNatural(backendValue);
+
+// Direct formatting with decimals
+const formatted = TokenConversionService.formatE8sDisplay(e8sValue, 4);
+
+// ICP-specific formatting (2 decimals + " ICP")
+const icpDisplay = TokenConversionService.displayE8sAsIcp(e8sValue);
+```
+
+**Critical Exception**: `burn_secondary` expects natural units:
+```typescript
+const burnAmount = BigInt(amount); // NO conversion!
+await icpSwapActor.burn_secondary(burnAmount);
+```
 
 **State Management Flow**:
 1. Components dispatch thunks

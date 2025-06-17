@@ -3,6 +3,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { Principal } from "@dfinity/principal";
 import { getIcpLedgerActor } from "@/features/auth/utils/authUtils";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 
 // Define the async thunk
 const transferICP = createAsyncThunk<
@@ -19,7 +20,7 @@ const transferICP = createAsyncThunk<
     try {
       const actor = await getIcpLedgerActor();
       const amountFormat = {
-        e8s: BigInt(Math.floor(Number(amount) * 10 ** 8)),
+        e8s: TokenConversionService.naturalToE8s(amount),
       };
       let recipientAccountId: AccountIdentifier;
       if (accountType === "principal") {

@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import LedgerService from "@/utils/LedgerService";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 import {  getICRCActor } from "@/features/auth/utils/authUtils";
 import { RootState } from "@/store";
 
@@ -19,9 +19,8 @@ const getPrimaryFee = createAsyncThunk<
       state.swap.activeSwapPool?.[1].primary_token_id
     );
     const result = await actor.icrc1_fee();
-    const LedgerServices = LedgerService();
     const fromatedFee = (
-      Math.floor(LedgerServices.e8sToIcp(result) * 10 ** 4) /
+      Math.floor(TokenConversionService.e8sToNatural(result) * 10 ** 4) /
       10 ** 4
     ).toFixed(4);
 

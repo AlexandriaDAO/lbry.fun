@@ -557,9 +557,9 @@ mod test_burn_secondary {
         // This test simulates burning near a tokenomics halving boundary
         // We'll burn tokens and observe rate changes
         
-        // Setup: Get alice plenty of secondary tokens
-        let setup_result = setup_user_with_secondary(&mut env, "alice", 10000 * E8S);
-        assert!(setup_result.is_ok(), "Failed to setup secondary tokens");
+        // Setup: Get alice some secondary tokens (reduced from 10000 to 1000 to fit Alice's balance)
+        let setup_result = setup_user_with_secondary(&mut env, "alice", 1000 * E8S);
+        assert!(setup_result.is_ok(), "Failed to setup secondary tokens: {:?}", setup_result);
 
         // Query current tokenomics schedule to understand halving points
         let schedule_result = env.pic.query_call(

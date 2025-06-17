@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
-import LedgerService from "@/utils/LedgerService";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 import { StakeInfo } from "../swapSlice";
 import { getActorSwap } from "@/features/auth/utils/authUtils";
 import { RootState } from "@/store";
@@ -23,12 +23,11 @@ const getStakeInfo = createAsyncThunk<
     const result = await actor.get_stake(Principal.fromText(account));
     if (result.length > 0) {
       // Stake exists
-      const LedgerServices = LedgerService();
       const formattedStake = result?.[0]?.amount
-        ? LedgerServices.e8sToIcp(result[0].amount).toString()
+        ? TokenConversionService.e8sToNatural(result[0].amount).toString()
         : "0";
       const formattedReward = result?.[0]?.reward_icp
-        ? LedgerServices.e8sToIcp(result[0].reward_icp).toString()
+        ? TokenConversionService.e8sToNatural(result[0].reward_icp).toString()
         : "0";
       const unix_stake_time = result?.[0]?.time
         ? result?.[0]?.time.toString()

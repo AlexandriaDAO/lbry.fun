@@ -242,17 +242,7 @@ impl TokenTestEnvironment {
     fn deploy_icrc1_token(&self, canister_id: Principal, name: &str, symbol: &str, minting_account: Principal, decimals: u8) {
         // Deploy ICRC1 token with proper initialization
         // For primary token, give the minting account (tokenomics) an initial balance
-        let initial_balances = if canister_id == self.primary_token {
-            vec![(
-                Account {
-                    owner: minting_account,
-                    subaccount: None,
-                },
-                candid::Nat::from(21_000_000 * E8S), // 21M tokens (full supply) for testing
-            )]
-        } else {
-            vec![]
-        };
+        let initial_balances = vec![];  // Don't pre-mint any tokens
         
         let init_args = Encode!(&LedgerArg::Init(
             InitArgs {

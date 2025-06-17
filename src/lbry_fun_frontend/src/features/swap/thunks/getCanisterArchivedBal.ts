@@ -1,6 +1,6 @@
 import { _SERVICE as _SERVICESWAP } from "../../../../../declarations/icp_swap/icp_swap.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import LedgerService from "@/utils/LedgerService";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 import { getActorSwap } from "@/features/auth/utils/authUtils";
 import { CanisterArchived } from "../swapSlice";
 import { RootState } from "@/store";
@@ -14,7 +14,6 @@ const getCanisterArchivedBal = createAsyncThunk<
   "icp_swap/getCanisterArchivedBal",
   async (_, { getState, rejectWithValue }) => {
     try {
-      const LedgerServices = LedgerService();
       const state = getState();
 
       if (!state.swap.activeSwapPool) {
@@ -25,8 +24,8 @@ const getCanisterArchivedBal = createAsyncThunk<
       );
       const resultArchived = await actor.get_total_archived_balance();
       const resultUnclaimed = await actor.get_total_unclaimed_icp_reward();
-      const resultArchivedNumber = LedgerServices.e8sToIcp(resultArchived);
-      const resultUnclaimedNumber = LedgerServices.e8sToIcp(resultUnclaimed);
+      const resultArchivedNumber = TokenConversionService.e8sToNatural(resultArchived);
+      const resultUnclaimedNumber = TokenConversionService.e8sToNatural(resultUnclaimed);
       return {
         canisterArchivedBal: resultArchivedNumber,
         canisterUnClaimedIcp: resultUnclaimedNumber,

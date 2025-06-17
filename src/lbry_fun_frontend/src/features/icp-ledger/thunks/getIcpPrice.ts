@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { RootState } from "@/store"; // Import RootState
+import { RootState } from "@/store";
+import { getActorSwap, validateActor } from "@/features/auth/utils/authUtils";
 
 const ICP_PRICE_STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -19,32 +19,43 @@ const getIcpPrice = createAsyncThunk<
     return icpPrice as number;
   }
 
-  console.log("Fetching fresh ICP price from CoinGecko.");
-  try {
-    const options = {
-      method: "GET",
-      url: "https://api.coingecko.com/api/v3/coins/markets",
-      params: {
-        vs_currency: "usd",
-        ids: "internet-computer",
-      },
-      headers: {
-        accept: "application/json",
-        "x-cg-demo-api-key": process.env.REACT_APP_COIN_GECKO_ID,
-      },
-    };
-    
-    console.log("Using CoinGecko API Key:", process.env.REACT_APP_COIN_GECKO_ID);
-    const response = await axios.request(options);
-    console.log("ICP Price:", response.data[0].current_price);
-    return response.data[0].current_price;
-  } catch (error) {
-    console.error("Failed to get ICP price (full error object):", error);
+  // Check if we have an active swap pool to get the ICP price from
+  if (!state.swap.activeSwapPool) {
+    console.warn("No active swap pool found, using fallback ICP price of $10.00");
+    return 10.0;
+  }
 
-    if (error instanceof Error) {
-      return rejectWithValue(error.message);
+  console.log("Fetching fresh ICP price from XRC canister via icp_swap canister.");
+  try {
+    const actor = await getActorSwap(state.swap.activeSwapPool[1].icp_swap_canister_id);
+    
+    // Validate actor before using it
+    if (!validateActor(actor, "ICP Swap")) {
+      console.warn("Unable to connect to swap canister, using fallback ICP price of $10.00");
+      return 10.0;
     }
-    return rejectWithValue("An unknown error occurred while fetching ICP price");
+
+    // Get the secondary ratio (ICP price in cents) from the canister
+    const result = await actor.get_current_secondary_ratio();
+    const priceInCents = Number(result);
+    
+    // Convert from cents to dollars (e.g., 1000 cents = $10.00)
+    const priceInDollars = priceInCents / 100;
+    
+    console.log("ICP Price from XRC canister:", priceInDollars);
+    return priceInDollars;
+  } catch (error) {
+    console.error("Failed to get ICP price from XRC canister:", error);
+
+    // If we have a cached price, use it even if it's stale rather than failing completely
+    if (icpPrice) {
+      console.warn("XRC canister call failed, using cached ICP price:", icpPrice);
+      return icpPrice as number;
+    }
+
+    // As a last resort, return a fallback price to prevent complete failure
+    console.warn("No cached price available, using fallback ICP price of $10.00");
+    return 10.0;
   }
 });
 

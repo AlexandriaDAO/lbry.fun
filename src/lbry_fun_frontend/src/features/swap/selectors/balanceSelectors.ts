@@ -6,12 +6,12 @@ export const selectPrimaryBalance = (state: RootState) => state.primary.primaryB
 export const selectPrimaryFee = (state: RootState) => state.primary.primaryFee;
 export const selectPrimaryPriceUsd = (state: RootState) => state.primary.primaryPriceUsd;
 
-export const selectSecondaryBalance = (state: RootState) => state.swap.secondaryBalance;
-export const selectSecondaryFee = (state: RootState) => state.swap.secondaryFee;
-export const selectSecondaryRatio = (state: RootState) => state.swap.secondaryRatio;
+export const selectSecondaryBalance = (state: RootState) => state.swap.secondaryBalance.data;
+export const selectSecondaryFee = (state: RootState) => state.swap.secondaryFee.data;
+export const selectSecondaryRatio = (state: RootState) => state.swap.secondaryRatio.data;
 
-export const selectArchivedBalance = (state: RootState) => state.swap.archivedBalance;
-export const selectCanisterArchivedBal = (state: RootState) => state.swap.canisterArchivedBal;
+export const selectArchivedBalance = (state: RootState) => state.swap.archivedBalance.data;
+export const selectCanisterArchivedBal = (state: RootState) => state.swap.canisterArchivedBal.data;
 
 // Normalized balance selectors
 export const selectNormalizedBalances = createSelector(
@@ -43,10 +43,10 @@ export const selectBalanceLoading = createSelector(
 );
 
 // Staking selectors
-export const selectStakeInfo = (state: RootState) => state.swap.stakeInfo;
-export const selectTotalStaked = (state: RootState) => state.swap.totalStaked;
-export const selectTotalStakers = (state: RootState) => state.swap.totalStakers;
-export const selectAverageAPY = (state: RootState) => state.swap.averageAPY;
+export const selectStakeInfo = (state: RootState) => state.swap.stakeInfo.data;
+export const selectTotalStaked = (state: RootState) => state.swap.totalStaked.data;
+export const selectTotalStakers = (state: RootState) => state.swap.totalStakers.data;
+export const selectAverageAPY = (state: RootState) => state.swap.averageAPY.data;
 
 export const selectNormalizedStaking = createSelector(
   [selectStakeInfo, selectTotalStaked, selectTotalStakers, selectAverageAPY],

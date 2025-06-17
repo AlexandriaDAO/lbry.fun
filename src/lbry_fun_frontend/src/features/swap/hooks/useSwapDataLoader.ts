@@ -1,7 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
-import { RootState } from '@/store';
+import { RootState, store } from '@/store';
+import { performanceMonitor } from '../utils/performanceMonitor';
+import { initializeCacheWarming, getCacheWarmingManager } from '@/utils/cacheWarming';
+import { setIsLoadingCriticalData, setIsLoadingSecondaryData } from '../swapSlice';
 
 // Import thunks for data fetching
 import getSecondaryratio from '../thunks/getSecondaryratio';
@@ -22,36 +25,33 @@ export enum LoadingPhase {
   LOADING_POOL = 'LOADING_POOL',
   LOADING_CRITICAL = 'LOADING_CRITICAL',
   LOADING_SECONDARY = 'LOADING_SECONDARY',
-  READY = 'READY',
-  ERROR = 'ERROR'
+  READY = 'READY'
 }
 
 interface UseSwapDataLoaderReturn {
   loadingPhase: LoadingPhase;
   isSwapReady: boolean;
   criticalDataLoaded: boolean;
-  error: string | null;
-  retryLoading: () => void;
 }
 
 export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
   const dispatch = useAppDispatch();
-  const { activeSwapPool } = useAppSelector((state: RootState) => state.swap);
+  const { activeSwapPool, isLoadingCriticalData, isLoadingSecondaryData } = useAppSelector((state: RootState) => state.swap);
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
   
   const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>(LoadingPhase.IDLE);
-  const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
 
   // Critical data that must be loaded before rendering
   const loadCriticalData = useCallback(async () => {
-    if (!activeSwapPool) return;
+    if (!activeSwapPool || isLoadingCriticalData) return;
     
+    dispatch(setIsLoadingCriticalData(true));
     setLoadingPhase(LoadingPhase.LOADING_CRITICAL);
+    performanceMonitor.startMetric('loadCriticalData');
     
     try {
-      // Load critical data in parallel
-      const criticalPromises = [
+      // Separate public data (always loads) from user data (only when authenticated)
+      const publicDataPromises = [
         dispatch(getSecondaryratio()).unwrap(),
         dispatch(getPrimaryMintRate()).unwrap(),
         dispatch(getSecondaryFee()).unwrap(),
@@ -61,31 +61,52 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
         dispatch(getCanisterArchivedBal()).unwrap(), // Also needed for burn calculations
       ];
 
+      // Load public data first - these should work without authentication
+      try {
+        await Promise.all(publicDataPromises);
+      } catch (publicErr) {
+        console.warn('Some public data failed to load:', publicErr);
+        // Continue anyway - UI can show with partial data
+      }
+
       // If authenticated, also load user-specific critical data
       if (isAuthenticated && principal) {
-        criticalPromises.push(
+        const userDataPromises = [
           dispatch(getIcpBal(principal)).unwrap(),
           dispatch(getAccountPrimaryBalance(principal)).unwrap(),
           dispatch(getSecondaryBalance(principal)).unwrap()
-        );
-      }
+        ];
 
-      await Promise.all(criticalPromises);
+        try {
+          await Promise.all(userDataPromises);
+        } catch (userErr) {
+          console.warn('User data failed to load:', userErr);
+          // This is OK - user might not have balances yet
+        }
+      }
       
-      setLoadingPhase(LoadingPhase.LOADING_SECONDARY);
+      performanceMonitor.endMetric('loadCriticalData', 'success');
     } catch (err) {
-      setError('Failed to load critical data');
-      setLoadingPhase(LoadingPhase.ERROR);
-      throw err;
+      performanceMonitor.endMetric('loadCriticalData', 'error', err instanceof Error ? err.message : 'Unknown error');
+      // Only show error for complete failure, not partial failures
+      console.error('Critical data loading error:', err);
+    } finally {
+      dispatch(setIsLoadingCriticalData(false));
     }
-  }, [activeSwapPool, dispatch, isAuthenticated, principal]);
+    
+    // Always proceed to secondary loading regardless of errors
+    setLoadingPhase(LoadingPhase.LOADING_SECONDARY);
+  }, [activeSwapPool, dispatch, isAuthenticated, principal, isLoadingCriticalData]);
 
   // Secondary data that can be loaded after initial render
   const loadSecondaryData = useCallback(async () => {
-    if (!activeSwapPool || !isAuthenticated || !principal) {
+    if (!activeSwapPool || !isAuthenticated || !principal || isLoadingSecondaryData) {
       setLoadingPhase(LoadingPhase.READY);
       return;
     }
+    
+    dispatch(setIsLoadingSecondaryData(true));
+    performanceMonitor.startMetric('loadSecondaryData');
     
     try {
       // Load secondary data in parallel
@@ -96,14 +117,26 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
 
       await Promise.all(secondaryPromises);
       
+      performanceMonitor.endMetric('loadSecondaryData', 'success');
       setLoadingPhase(LoadingPhase.READY);
     } catch (err) {
+      performanceMonitor.endMetric('loadSecondaryData', 'error', err instanceof Error ? err.message : 'Unknown error');
       // Secondary data failures are non-critical
       console.error('Failed to load secondary data:', err);
       // Still mark as ready since critical data is loaded
       setLoadingPhase(LoadingPhase.READY);
+    } finally {
+      dispatch(setIsLoadingSecondaryData(false));
     }
-  }, [activeSwapPool, dispatch, isAuthenticated, principal]);
+  }, [activeSwapPool, dispatch, isAuthenticated, principal, isLoadingSecondaryData]);
+
+  // Initialize cache warming manager
+  useEffect(() => {
+    const cacheManager = initializeCacheWarming(dispatch, () => store.getState());
+    return () => {
+      cacheManager.stop();
+    };
+  }, [dispatch]);
 
   // Main loading orchestration
   useEffect(() => {
@@ -113,36 +146,23 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
         return;
       }
 
-      try {
-        await loadCriticalData();
-        await loadSecondaryData();
-      } catch (err) {
-        console.error('Data loading failed:', err);
-        
-        // Implement exponential backoff retry
-        if (retryCount < 3) {
-          const delay = Math.pow(2, retryCount) * 1000;
-          setTimeout(() => {
-            setRetryCount(prev => prev + 1);
-          }, delay);
-        }
+      // Always try to load data, don't let errors block the UI
+      await loadCriticalData();
+      await loadSecondaryData();
+      
+      // Start cache warming after initial load if not already running
+      const cacheManager = getCacheWarmingManager();
+      if (cacheManager && !cacheManager.isRunning()) {
+        cacheManager.start();
       }
     };
 
     loadData();
-  }, [activeSwapPool, retryCount, loadCriticalData, loadSecondaryData]);
-
-  const retryLoading = useCallback(() => {
-    setError(null);
-    setRetryCount(0);
-    setLoadingPhase(LoadingPhase.IDLE);
-  }, []);
+  }, [activeSwapPool]); // Only depend on activeSwapPool to prevent unnecessary re-runs
 
   return {
     loadingPhase,
     isSwapReady: loadingPhase === LoadingPhase.READY,
-    criticalDataLoaded: [LoadingPhase.LOADING_SECONDARY, LoadingPhase.READY].includes(loadingPhase),
-    error,
-    retryLoading
+    criticalDataLoaded: [LoadingPhase.LOADING_SECONDARY, LoadingPhase.READY].includes(loadingPhase)
   };
 };

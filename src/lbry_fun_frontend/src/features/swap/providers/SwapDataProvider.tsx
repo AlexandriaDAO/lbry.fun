@@ -6,8 +6,6 @@ interface SwapDataContextValue {
   loadingPhase: LoadingPhase;
   isSwapReady: boolean;
   criticalDataLoaded: boolean;
-  error: string | null;
-  retryLoading: () => void;
 }
 
 const SwapDataContext = createContext<SwapDataContextValue | undefined>(undefined);
@@ -26,31 +24,10 @@ interface SwapDataProviderProps {
 
 export const SwapDataProvider: React.FC<SwapDataProviderProps> = ({ children }) => {
   const swapDataLoader = useSwapDataLoader();
-  const { loadingPhase, criticalDataLoaded, error, retryLoading } = swapDataLoader;
 
-  // Show error state with retry option - this is critical and should block
-  if (error && loadingPhase === LoadingPhase.ERROR) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <div className="text-center space-y-2">
-          <p className="text-lg font-medium text-destructive">
-            Failed to load swap data
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {error}
-          </p>
-          <button
-            onClick={retryLoading}
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Always provide context - let children handle loading states
+  // Always provide context and render children
+  // Let individual components handle loading states with skeleton loaders
+  // This ensures UI is always visible, even when not authenticated
   return (
     <SwapDataContext.Provider value={swapDataLoader}>
       {children}

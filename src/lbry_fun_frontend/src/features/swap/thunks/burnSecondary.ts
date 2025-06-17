@@ -32,11 +32,10 @@ const burnSecondary = createAsyncThunk<
       
       // IMPORTANT: Backend burn_secondary expects amount in natural units (e.g., 1 for 1 token)
       // The backend will internally convert to e8s by multiplying by 100_000_000
-      const amountFormat = BigInt(amount);
-      const amountFormate8s = amountFormat;
+      const amountNatural = BigInt(amount);
 
       // Get the secondary token fee from state and convert to e8s
-      const secondaryFee = state.swap.secondaryFee;
+      const secondaryFee = state.swap.secondaryFee.data || "0";
       const feeInE8s = TokenConversionService.naturalToE8s(secondaryFee);
       
       // Approval amount needs to be in e8s format
@@ -83,12 +82,13 @@ const burnSecondary = createAsyncThunk<
       
       console.log("Burn request details:", {
         amountNatural: amount,
-        amountSentToBackend: amountFormat.toString(),
+        amountSentToBackend: amountNatural.toString(),
         secondaryRatio: state.swap.secondaryRatio,
         expectedIcpReturn: (Number(amount) / Number(state.swap.secondaryRatio) / 2)
       });
       
-      const result = await actorSwap.burn_secondary(amountFormat, []);
+      // burn_secondary expects natural units, NOT e8s
+      const result = await actorSwap.burn_secondary(amountNatural, []);
       if ("Ok" in result) {
         dispatch(getCanisterBal());
         dispatch(getCanisterArchivedBal());

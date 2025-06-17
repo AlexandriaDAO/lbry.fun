@@ -110,3 +110,23 @@ export const getICRCActor = (canisterId:string) =>
 export const getLogs = () => getActor(log_canister_id, createActorLogs, logs);
 export const getLbryFunActor = () =>
   getActor(lbry_fun_canister_id, createActorLbryFun, lbry_fun);
+
+// Helper function to check if user is authenticated
+export const isUserAuthenticated = async (): Promise<boolean> => {
+  try {
+    const client = await getAuthClient();
+    return await client.isAuthenticated();
+  } catch (error) {
+    console.error("Error checking authentication status:", error);
+    return false;
+  }
+};
+
+// Helper function to validate actor before use
+export const validateActor = <T>(actor: T, actorName: string): boolean => {
+  if (!actor || typeof actor !== 'object') {
+    console.warn(`${actorName} actor is undefined or invalid. User may not be authenticated.`);
+    return false;
+  }
+  return true;
+};

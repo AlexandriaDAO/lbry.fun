@@ -14,6 +14,7 @@ import SuccessModal from "../successModal";
 import ErrorModal from "../errorModal";
 import { Entry } from "@/layouts/parts/Header";
 import { RootState } from "@/store";
+import StakeContentSkeleton from "./stakeContentSkeleton";
 
 const StakeContent = () => {
     const dispatch = useAppDispatch();
@@ -52,11 +53,11 @@ const StakeContent = () => {
     };
 
     useEffect(() => {
-        const estimatedUserRewardIcp = Number(swap.stakeInfo.stakedPrimary) * swap.averageAPY;
+        const estimatedUserRewardIcp = Number(swap.stakeInfo.data.stakedPrimary) * swap.averageAPY.data;
         setUserEstimatedReward(estimatedUserRewardIcp);
 
-        const estimatedRewardIcp = Number(swap.totalStaked) * swap.averageAPY;
-        const stakedUsd = Number(swap.totalStaked) * Number(primary.primaryPriceUsd);
+        const estimatedRewardIcp = Number(swap.totalStaked.data) * swap.averageAPY.data;
+        const stakedUsd = Number(swap.totalStaked.data) * Number(primary.primaryPriceUsd);
 
         // Check if `stakedUsd` is valid before dividing
         if (stakedUsd > 0) {
@@ -68,7 +69,7 @@ const StakeContent = () => {
             setApr(''); // Fallback value if division by zero
             setAnnualizedApr('');
         }
-    }, [primary.primaryPriceUsd, icpLedger.icpPrice, swap.averageAPY, swap.stakeInfo.stakedPrimary]);
+    }, [primary.primaryPriceUsd, icpLedger.icpPrice, swap.averageAPY.data, swap.stakeInfo.data.stakedPrimary]);
 
 
     useEffect(() => {
@@ -101,6 +102,11 @@ const StakeContent = () => {
 
     const primaryTokenLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
 
+    // Show skeleton while critical data is loading
+    if (!swap.activeSwapPool || swap.totalStaked === undefined || primary.primaryBal === undefined) {
+        return <StakeContentSkeleton />;
+    }
+
     return (
         <>
             <style>
@@ -129,7 +135,7 @@ const StakeContent = () => {
                         <div className='border border-gray-400 border-gray-700 bg-white bg-gray-800 text-black text-white py-5 px-7 rounded-borderbox mb-3'>
                             <h2 className='sm:text-2xl xs:text-xl text-radiocolor text-white flex justify-between mb-5'>
                                 <span className='flex font-extrabold'>Staked</span>
-                                <span className='font-semibold flex'>{swap.stakeInfo.stakedPrimary}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span>
+                                <span className='font-semibold flex'>{swap.stakeInfo.data.stakedPrimary}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span>
                             </h2>
                             <ul className='ps-0'>
                                 <li className='mb-4'>
@@ -157,13 +163,13 @@ const StakeContent = () => {
                                 <li className='mb-4'>
                                     <div className='flex justify-between'>
                                         <strong className='sm:text-lg xs:text-sm text-white font-semibold me-1'>Cumulative Stake by Community</strong>
-                                        <strong className='sm:text-lg xs:text-sm text-white font-semibold me-1'>{swap.totalStaked}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</strong>
+                                        <strong className='sm:text-lg xs:text-sm text-white font-semibold me-1'>{swap.totalStaked.data}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</strong>
                                     </div>
                                 </li>
                                 <li>
                                     <div className='flex justify-between'>
                                         <strong className='sm:text-lg xs:text-sm text-white font-semibold me-1'>Stakers</strong>
-                                        <strong className='sm:text-lg xs:text-sm text-white font-semibold me-1'>{swap.totalStakers}</strong>
+                                        <strong className='sm:text-lg xs:text-sm text-white font-semibold me-1'>{swap.totalStakers.data}</strong>
                                     </div>
                                 </li>
                             </ul>

@@ -17,7 +17,7 @@ const ClaimReward: React.FC<StakedInfoProps> = ({ setLoadingModalV, setActionTyp
 
     const handleClaim = (e: any) => {
         e.preventDefault();
-        dispatch(claimReward({reward:swap.stakeInfo.rewardIcp}));
+        dispatch(claimReward({reward:swap.stakeInfo.data.rewardIcp}));
         setActionType("Claiming ICP rewards");
         setLoadingModalV(true);
     }

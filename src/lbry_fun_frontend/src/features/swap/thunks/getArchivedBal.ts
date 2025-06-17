@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
-import LedgerService from "@/utils/LedgerService";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 import { getActorSwap } from "@/features/auth/utils/authUtils";
 import { RootState } from "@/store";
 
@@ -22,12 +22,10 @@ const getArchivedBal = createAsyncThunk<
       Principal.fromText(account)
     );
 
-    const LedgerServices = LedgerService();
-
     if (result[0] && result.length > 0) {
       // Assuming ArchiveBalance is a bigint-compatible type or can be converted to bigint
       const archiveBalance = BigInt(result[0].icp);
-      const formattedBal = LedgerServices.e8sToIcp(archiveBalance).toString();
+      const formattedBal = TokenConversionService.e8sToNatural(archiveBalance).toString();
       return formattedBal;
     } else {
       return "0";
