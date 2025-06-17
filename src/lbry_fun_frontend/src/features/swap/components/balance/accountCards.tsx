@@ -36,7 +36,7 @@ const AccountCards: React.FC = () => {
     const handleRefresh = () => {
         if (!isAuthenticated || !principal) return;
         dispatch(getIcpBal(principal));
-        dispatch(getIcpPrice());
+        // ICP price will be refreshed if stale through the thunk's internal caching
         toast.info("Refreshing balance!")
     }
     // icp ledger

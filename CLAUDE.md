@@ -87,7 +87,11 @@ All tests are done with a 'mock' canister using the pocket-ic library in the pro
 - Build: Webpack, cargo, dfx
 
 ## Important Notes
-- Frontend uses e8s token values in backend, natural numbers in frontend
+- Token Value Handling: 
+  - Frontend displays natural numbers (e.g., 1.5 tokens)
+  - Backend token transfers (icrc1_transfer, icrc2_transfer_from) expect e8s values
+  - CRITICAL: The icp_swap canister's burn_secondary and swap methods expect natural units, NOT e8s
+  - Always check the specific backend method's expectations before converting values
 - Kongswap is deployed here for full liquidity functionality, but the repo is not in this codebase.
 - Uses WASM compilation with `ic-wasm` for size optimization
 

@@ -37,7 +37,12 @@ This is a React TypeScript frontend for a crypto token launchpad built on the In
 - `IcpSwapActor` - Token swapping operations  
 - `TokenomicsActor` - Supply dynamics and mint rates
 
-**Token Value Handling**: Backend uses e8s format (8 decimal places), frontend displays natural numbers - conversion happens in thunks.
+**Token Value Handling**: 
+- Frontend displays natural numbers (e.g., 1.5 tokens)
+- Most backend token operations (transfers, approvals) expect e8s format (8 decimal places)
+- EXCEPTION: The icp_swap canister's `burn_secondary` and `swap` methods expect natural units
+- Conversion typically happens in thunks using `TokenConversionService`
+- Always verify the specific backend method's unit expectations
 
 **State Management Flow**:
 1. Components dispatch thunks

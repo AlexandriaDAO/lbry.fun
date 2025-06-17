@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import "./style.css"
 
@@ -8,32 +8,29 @@ import BalanceContent from './components/balance/balanceContent';
 import SwapContent from './components/swap/swapContent';
 import SendContent from './components/send/sendContent';
 import BurnContent from './components/burn/burnContent';
-import { useAppDispatch } from '@/store/hooks/useAppDispatch';
-import getSecondaryratio from './thunks/getSecondaryratio';
-import getPrimaryMintRate from './thunks/tokenomics/getPrimaryMintRate';
 import StakeContent from './components/stake/stakeContent';
 import ReceiveContent from './components/receive/receiveContent';
 import RedeemContent from './components/redeem/redeemContent';
 import TransactionHistory from './components/transactionHistory/transactionHistory';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
-import getSecondaryFee from './thunks/secondaryIcrc/getSecondaryFee';
-import getPrimaryFee from './thunks/primaryIcrc/getPrimaryFee';
 import Insights from './components/insights/insights';
 import InfoCard from './components/info/InfoCard';
 
-import getTokenPools from '../token/thunk/getTokenPools.thunk';
-import { setActiveSwapPool } from './swapSlice';
-import fetchTokenLogosForPool from '../token/thunk/fetchTokenLogosForPoolThunk';
+import { SwapDataProvider } from './providers/SwapDataProvider';
+import { SwapErrorBoundary } from './components/SwapErrorBoundary';
+import { usePoolInitializer, PoolInitState } from './hooks/usePoolInitializer';
+import { LoaderCircle } from 'lucide-react';
 
 const SwapMain = () => {
-    const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
     const swap = useAppSelector(state => state.swap);
-    const { tokenPools, loading: lbryFunLoading, error: lbryFunError, success: lbryFunSuccess } = useAppSelector((state) => state.lbryFun);
     const idFromUrl = searchParams.get("id");
+    
+    // Use the pool initializer hook
+    const { poolInitState, isPoolReady, error: poolError } = usePoolInitializer();
 
     const tabs = [
         { id: 1, path: 'balance', label: 'Balance', hover: null, content: <BalanceContent /> },
@@ -52,63 +49,52 @@ const SwapMain = () => {
     const activeTab = tabs.find(tab => tab.path === currentPath)?.id || 1;
 
     useEffect(() => {
-        dispatch(getSecondaryratio());
-        dispatch(getPrimaryMintRate());
-        dispatch(getSecondaryFee());
-        dispatch(getPrimaryFee());
         if (localStorage.getItem("tab")) {
             navigate('/swap/stake');
             localStorage.removeItem("tab");
         }
     }, []);
 
-    useEffect(() => {
-        if (tokenPools.length === 0 && !lbryFunLoading && !lbryFunError) {
-            dispatch(getTokenPools());
-        }
-    }, [dispatch, tokenPools.length, lbryFunLoading, lbryFunError]);
+    // Show loading state while pool is initializing
+    if (poolInitState === PoolInitState.LOADING_POOLS || poolInitState === PoolInitState.SETTING_POOL) {
+        return (
+            <div className='tabs py-10 2xl:py-20 xl:py-16 lg:py-14 md:py-12 sm:py-10'>
+                <div className='container px-5'>
+                    <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                        <LoaderCircle size={48} className="animate-spin text-primary" />
+                        <p className="text-lg font-medium text-foreground">
+                            Loading token pool...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-    useEffect(() => {
-        if (swap.burnSuccess === true) {
-            dispatch(getSecondaryratio());
-        }
-    }, [swap]);
+    // Show error state for invalid pool
+    if (poolInitState === PoolInitState.INVALID_POOL || poolInitState === PoolInitState.ERROR) {
+        return (
+            <div className='tabs py-10 2xl:py-20 xl:py-16 lg:py-14 md:py-12 sm:py-10'>
+                <div className='container px-5'>
+                    <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                        <div className="text-center space-y-2">
+                            <p className="text-lg font-medium text-destructive">
+                                {poolError || 'Failed to load token pool'}
+                            </p>
+                            <button
+                                onClick={() => navigate('/')}
+                                className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                            >
+                                Back to Token List
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-    useEffect(() => {
-        if (!idFromUrl) {
-            if (swap.activeSwapPool !== null) {
-                dispatch(setActiveSwapPool(null));
-            }
-            navigate('/');
-            return;
-        }
-
-        if (lbryFunLoading || lbryFunError) {
-            return;
-        }
-
-        const pool = tokenPools.find((p) => p[0] === idFromUrl);
-
-        if (pool) {
-            if (!swap.activeSwapPool || swap.activeSwapPool[0] !== pool[0]) {
-                dispatch(setActiveSwapPool(pool));
-                const poolData = pool[1];
-                if ((poolData.primary_token_id && !poolData.primary_token_logo_base64) || 
-                    (poolData.secondary_token_id && !poolData.secondary_token_logo_base64)) {
-                    dispatch(fetchTokenLogosForPool({
-                        poolId: pool[0],
-                        primaryTokenId: poolData.primary_token_id,
-                        secondaryTokenId: poolData.secondary_token_id,
-                    }));
-                }
-            }
-        } else if (lbryFunSuccess) {
-            if (swap.activeSwapPool !== null) {
-                dispatch(setActiveSwapPool(null));
-            }
-        }
-    }, [idFromUrl, tokenPools, lbryFunLoading, lbryFunError, dispatch, swap.activeSwapPool, lbryFunSuccess, navigate]);
-
+    // Only render main content when pool is ready
     return (
         <div className='tabs py-10 2xl:py-20 xl:py-16 lg:py-14 md:py-12 sm:py-10'>
             <div className='container px-5'>
@@ -134,7 +120,18 @@ const SwapMain = () => {
                         </div>
 
                         <div className="mt-4">
-                            {tabs.find(tab => tab.path === currentPath)?.content}
+                            <SwapErrorBoundary>
+                                {isPoolReady ? (
+                                    <SwapDataProvider>
+                                        {tabs.find(tab => tab.path === currentPath)?.content}
+                                    </SwapDataProvider>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center min-h-[200px]">
+                                        <LoaderCircle size={32} className="animate-spin text-primary" />
+                                        <p className="mt-2 text-sm text-muted-foreground">Initializing...</p>
+                                    </div>
+                                )}
+                            </SwapErrorBoundary>
                         </div>
                     </div>
                 </div>

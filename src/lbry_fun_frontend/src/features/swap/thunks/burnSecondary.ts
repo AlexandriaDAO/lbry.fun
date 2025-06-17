@@ -29,16 +29,18 @@ const burnSecondary = createAsyncThunk<
       );
       const icp_swap_canister_id =
         state.swap.activeSwapPool?.[1].icp_swap_canister_id;
-      // Convert user input to e8s format for backend operations
-      const amountFormat = TokenConversionService.naturalToE8s(amount);
+      
+      // IMPORTANT: Backend burn_secondary expects amount in natural units (e.g., 1 for 1 token)
+      // The backend will internally convert to e8s by multiplying by 100_000_000
+      const amountFormat = BigInt(amount);
       const amountFormate8s = amountFormat;
 
       // Get the secondary token fee from state and convert to e8s
       const secondaryFee = state.swap.secondaryFee;
       const feeInE8s = TokenConversionService.naturalToE8s(secondaryFee);
       
-      // Add fee buffer to approval amount
-      const approvalAmount = amountFormate8s + feeInE8s;
+      // Approval amount needs to be in e8s format
+      const approvalAmount = TokenConversionService.naturalToE8s(amount) + feeInE8s;
 
       const checkApproval = await actor.icrc2_allowance({
         account: {
@@ -78,6 +80,14 @@ const burnSecondary = createAsyncThunk<
       const actorSwap = await getActorSwap(
         state.swap.activeSwapPool?.[1].icp_swap_canister_id
       );
+      
+      console.log("Burn request details:", {
+        amountNatural: amount,
+        amountSentToBackend: amountFormat.toString(),
+        secondaryRatio: state.swap.secondaryRatio,
+        expectedIcpReturn: (Number(amount) / Number(state.swap.secondaryRatio) / 2)
+      });
+      
       const result = await actorSwap.burn_secondary(amountFormat, []);
       if ("Ok" in result) {
         dispatch(getCanisterBal());

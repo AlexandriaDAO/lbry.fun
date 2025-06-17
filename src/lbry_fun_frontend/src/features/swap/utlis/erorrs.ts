@@ -24,7 +24,9 @@ export const getErrorMessage = (error: ExecutionError): ErrorMessage => {
   }
 
   if ("InsufficientCanisterBalance" in error) {
-    return { title: "Insufficient Canister Balance", message: getMessage(undefined, undefined, error.InsufficientCanisterBalance!.details) };
+    const details = error.InsufficientCanisterBalance!.details || "No details provided";
+    console.log("InsufficientCanisterBalance details:", details);
+    return { title: "Insufficient Canister Balance", message: getMessage(undefined, undefined, details) };
   }
 
   if ("InsufficientBalanceRewardDistribution" in error) {

@@ -34,7 +34,7 @@ const PoolCard: React.FC = () => {
         if (isAuthenticated && principal) {
             dispatch(getIcpBal(principal));
             dispatch(getAccountId(principal));
-            dispatch(getIcpPrice());
+            // ICP price is already fetched in useSwapDataLoader
         }
     }, [isAuthenticated, principal, dispatch]);
     useEffect(() => {

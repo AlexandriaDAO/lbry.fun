@@ -67,6 +67,47 @@ pub struct GetExchangeRateRequest {
     timestamp: Option<u64>,
 }
 
+// Tokenomics ExecutionError type that matches the tokenomics canister's error enum
+#[derive(Debug, CandidType, Deserialize, Clone)]
+pub enum TokenomicsExecutionError {
+    MintFailed {
+        token: String,
+        amount: u64,
+        reason: String,
+        details: String,
+    },
+    AdditionOverflow {
+        operation: String,
+        details: String,
+    },
+    MultiplicationOverflow {
+        operation: String,
+        details: String,
+    },
+    Underflow {
+        operation: String,
+        details: String,
+    },
+    DivisionFailed {
+        operation: String,
+        details: String,
+    },
+    CanisterCallFailed {
+        canister: String,
+        method: String,
+        details: String,
+    },
+    MaxMintPrimaryReached {
+        reason: String,
+    },
+    MaxPrimaryPerTrnxReached {
+        reason: String,
+    },
+    NoMorePrimaryCanbeMinted {
+        reason: String,
+    },
+}
+
 //swap
 #[update(guard = "not_anon")]
 pub async fn swap(
@@ -182,6 +223,12 @@ pub async fn swap(
 
 #[allow(non_snake_case)]
 #[update(guard = "not_anon")]
+/// Burns secondary tokens and returns ICP to the caller
+/// 
+/// # Parameters
+/// - `amount_secondary`: Amount in natural units (e.g., 1 for 1 token, NOT in e8s format)
+///   The function will internally convert to e8s by multiplying by 100_000_000
+/// - `from_subaccount`: Optional subaccount for the transaction
 pub async fn burn_secondary(
     amount_secondary: u64,
     from_subaccount: Option<[u8; 32]>,
@@ -615,11 +662,42 @@ async fn mint_primary(
 
     match result {
         Ok(bytes) => {
-            // Decode the response which returns Result<String, ExecutionError>
-            match candid::decode_one::<Result<String, ExecutionError>>(&bytes) {
+            // Decode the response which returns Result<String, TokenomicsExecutionError>
+            match candid::decode_one::<Result<String, TokenomicsExecutionError>>(&bytes) {
                 Ok(Ok(success_msg)) => Ok(success_msg),
-                Ok(Err(exec_err)) => Err(format!("Tokenomics error: {:?}", exec_err)),
-                Err(e) => Err(format!("Failed to decode successful response: {}", e)),
+                Ok(Err(exec_err)) => {
+                    // Convert tokenomics error to a string with proper details
+                    match exec_err {
+                        TokenomicsExecutionError::MintFailed { token, amount, reason, details } => {
+                            Err(format!("Mint failed for {} tokens ({}): {} - {}", amount, token, reason, details))
+                        },
+                        TokenomicsExecutionError::MaxMintPrimaryReached { reason } => {
+                            Err(format!("Maximum primary token supply reached: {}", reason))
+                        },
+                        TokenomicsExecutionError::MaxPrimaryPerTrnxReached { reason } => {
+                            Err(format!("Transaction exceeds maximum allowed per transaction: {}", reason))
+                        },
+                        TokenomicsExecutionError::NoMorePrimaryCanbeMinted { reason } => {
+                            Err(format!("No more primary tokens can be minted: {}", reason))
+                        },
+                        TokenomicsExecutionError::AdditionOverflow { operation, details } => {
+                            Err(format!("Addition overflow in {}: {}", operation, details))
+                        },
+                        TokenomicsExecutionError::MultiplicationOverflow { operation, details } => {
+                            Err(format!("Multiplication overflow in {}: {}", operation, details))
+                        },
+                        TokenomicsExecutionError::Underflow { operation, details } => {
+                            Err(format!("Underflow in {}: {}", operation, details))
+                        },
+                        TokenomicsExecutionError::DivisionFailed { operation, details } => {
+                            Err(format!("Division failed in {}: {}", operation, details))
+                        },
+                        TokenomicsExecutionError::CanisterCallFailed { canister, method, details } => {
+                            Err(format!("Call to {}.{} failed: {}", canister, method, details))
+                        },
+                    }
+                },
+                Err(e) => Err(format!("Failed to decode tokenomics response: {}", e)),
             }
         }
         Err((code, msg)) => {

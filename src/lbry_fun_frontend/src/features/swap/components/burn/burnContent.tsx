@@ -37,6 +37,38 @@ const BurnContent = () => {
     const handleSubmit = (event: any) => {
         event.preventDefault();
         if (!isAuthenticated || !principal) return;
+        
+        // Debug logging for burn calculation
+        console.log("Burn Debug Info:", {
+            amountSecondary,
+            maxBurnAllowed,
+            secondaryRatio: swap.secondaryRatio,
+            canisterBalance: icpLedger.canisterBalance,
+            canisterArchivedBal: swap.canisterArchivedBal.canisterArchivedBal,
+            canisterUnClaimedIcp: swap.canisterArchivedBal.canisterUnClaimedIcp,
+            tentativeICP,
+            tentativePrimary
+        });
+        
+        // Add frontend validation to prevent burns exceeding max allowed
+        if (maxBurnAllowed === 0) {
+            setErrorModalV({
+                flag: true,
+                title: "Burning Not Available",
+                message: "The canister has insufficient ICP balance. Someone needs to mint secondary tokens first to add ICP to the pool."
+            });
+            return;
+        }
+        
+        if (amountSecondary > maxBurnAllowed) {
+            setErrorModalV({
+                flag: true,
+                title: "Burn Amount Exceeds Maximum",
+                message: `Maximum burn allowed is ${maxBurnAllowed.toFixed(4)} based on available canister balance`
+            });
+            return;
+        }
+        
         dispatch(burnSecondary({ amount: amountSecondary.toString(), userPrincipal: principal }));
         setLoadingModalV(true);
     }
@@ -76,13 +108,7 @@ const BurnContent = () => {
         }
     }, [isAuthenticated, principal, swap, icpLedger.canisterBalance, tokenomics.primaryMintRate, dispatch]);
 
-    useEffect(() => {
-        if (isAuthenticated && principal && swap.activeSwapPool) {
-            dispatch(getSecondaryBalance(principal));
-            dispatch(getCanisterBal());
-            dispatch(getCanisterArchivedBal());
-        }
-    }, [isAuthenticated, principal, swap.activeSwapPool, dispatch]);
+    // getCanisterArchivedBal is now loaded as critical data in useSwapDataLoader
 
     useEffect(() => {
         setMaxburnAllowed(calculateMaxBurnAllowed(swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))

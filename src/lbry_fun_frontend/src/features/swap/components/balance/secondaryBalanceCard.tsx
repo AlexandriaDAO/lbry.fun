@@ -5,12 +5,15 @@ import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRotate } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "sonner";
+import { useSwapData } from "../../providers/SwapDataProvider";
+import BalanceCardSkeleton from "./balanceCardSkeleton";
 
 const SecondaryBalanceCard = () => {
     const dispatch = useAppDispatch();
     const icpSwap = useAppSelector(state => state.swap);
     const activeSwapPool = useAppSelector(state => state.swap.activeSwapPool);
     const auth = useAppSelector((state) => state.auth);
+    const { criticalDataLoaded } = useSwapData();
 
     const handleRefresh = () => {
         if (!auth.isAuthenticated || !auth.principal) return;
@@ -19,6 +22,11 @@ const SecondaryBalanceCard = () => {
     }
 
     const secondaryLogoFromState = activeSwapPool?.[1]?.secondary_token_logo_base64;
+
+    // Show skeleton while critical data is loading
+    if (!criticalDataLoaded) {
+        return <BalanceCardSkeleton />;
+    }
 
     return (<>
         <div className="w-full"

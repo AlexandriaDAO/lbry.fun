@@ -117,4 +117,4 @@ dfx identity use default
 
 
 
-Before we start building this out though, I want to do some planning with you. Ultra Think through this. I first want you to make a project plan for this. Inside the appropriate markdown file please build an in depth plan for the task. Have high level checkpoints for each major step and feature, then in each checkpoint have a broken down list of small tasks you'll need to do to complete that checkpoint. We will then review this plan together.
+Before we start building this out though, I want to do some planning with you. Ultrathink through this. I first want you to make a project plan for this. Inside the appropriate markdown file please build an in depth plan for the task. Have high level checkpoints for each major step and feature, then in each checkpoint have a broken down list of small tasks you'll need to do to complete that checkpoint. We will then review this plan together.

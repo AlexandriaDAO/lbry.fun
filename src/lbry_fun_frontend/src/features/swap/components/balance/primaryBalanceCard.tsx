@@ -10,12 +10,15 @@ import { Principal } from "@dfinity/principal";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { idlFactory as icrc1IdlFactory } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did.js";
 import type { Value as Icrc1Value } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
+import { useSwapData } from "../../providers/SwapDataProvider";
+import BalanceCardSkeleton from "./balanceCardSkeleton";
 
 const PrimaryBalanceCard = () => {
     const primary = useAppSelector(state => state.primary);
     const swap = useAppSelector(state => state.swap);
     const auth = useAppSelector(state => state.auth);
     const dispatch = useAppDispatch();
+    const { criticalDataLoaded } = useSwapData();
     const [primaryBalUsd, setPrimaryBalUsd] = useState(0);
 
     const handleRefresh = () => {
@@ -32,6 +35,11 @@ const PrimaryBalanceCard = () => {
     }, [primary.primaryBal, primary.primaryPriceUsd])
 
     const primaryLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
+
+    // Show skeleton while critical data is loading
+    if (!criticalDataLoaded) {
+        return <BalanceCardSkeleton />;
+    }
 
     return (<>
         <div className="w-full"

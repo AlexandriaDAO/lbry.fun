@@ -1,24 +1,14 @@
-import React, { useEffect } from "react";
+import React from "react";
 
 import PrimaryBalanceCard from "./primaryBalanceCard";
-import { useAppDispatch } from "@/store/hooks/useAppDispatch";
-import { useAppSelector } from "@/store/hooks/useAppSelector";
-
-import getAccountPrimaryBalance from "../../thunks/primaryIcrc/getAccountPrimaryBalance";
 import SecondaryBalanceCard from "./secondaryBalanceCard";
-import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance";
-import { RootState } from "@/store";
+import { useSwapData } from "../../providers/SwapDataProvider";
 
 const BalanceContent: React.FC = () => {
-    const dispatch = useAppDispatch();
-    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+    const { isSwapReady } = useSwapData();
 
-    useEffect(() => {
-        if (isAuthenticated && principal) {
-            dispatch(getAccountPrimaryBalance(principal));
-            dispatch(getSecondaryBalance(principal));
-        }
-    }, [isAuthenticated, principal, dispatch]);
+    // Data is already loaded by SwapDataProvider
+    // No need to fetch here anymore
 
     return (
         <>
