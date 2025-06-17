@@ -42,21 +42,17 @@ export const requestDeduplicationMiddleware: Middleware = store => next => actio
     
     if (!isExpired) {
       // Request is still pending or recently completed, skip this duplicate
-      console.log(`[Deduplication] 🚫 Skipping duplicate request: ${action.type} (key: ${key})`);
-      // For Redux Toolkit async thunks, we need to return nothing to skip the action
-      // The original thunk will handle the fulfilled/rejected actions
-      console.log(`[Deduplication] 📊 Stats: ${pendingRequests.size} pending requests in cache`);
+      // Only log for specific actions during debugging
+      // if (process.env.NODE_ENV === 'development' && action.type.includes('specificAction')) {
+      //   console.log(`[Deduplication] 🚫 Skipping duplicate: ${action.type}`);
+      // }
       return;
     } else {
       // Clean up expired request
-      console.log(`[Deduplication] 🧹 Cleaning up expired request: ${action.type} (key: ${key})`);
       pendingRequests.delete(key);
     }
   }
 
-  // Process the action and store it in our deduplication cache
-  console.log(`[Deduplication] ✅ Processing request: ${action.type} (key: ${key})`);
-  
   // Store the request immediately to prevent race conditions
   pendingRequests.set(key, {
     promise: Promise.resolve(), // Placeholder, we don't have access to the actual promise
@@ -66,7 +62,6 @@ export const requestDeduplicationMiddleware: Middleware = store => next => actio
   // Clean up after cache duration
   setTimeout(() => {
     pendingRequests.delete(key);
-    console.log(`[Deduplication] 🧹 Auto-cleaned expired request: ${key}`);
   }, CACHE_DURATION);
   
   // Pass the action through

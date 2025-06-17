@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import { TokenConversionService } from "@/utils/TokenConversionService";
-import { getActorSwap, getICRCActor } from "@/features/auth/utils/authUtils";
+import { getActorSwap, getICRCActor, validateActor } from "@/features/auth/utils/authUtils";
 import getCanisterBal from "@/features/icp-ledger/thunks/getCanisterBal";
 import getCanisterArchivedBal from "./getCanisterArchivedBal";
 import { ErrorMessage, getErrorMessage } from "../utlis/erorrs";
@@ -27,6 +27,15 @@ const burnSecondary = createAsyncThunk<
       const actor = await getICRCActor(
         state.swap.activeSwapPool?.[1].secondary_token_id
       );
+      
+      // Validate ICRC actor before using it
+      if (!validateActor(actor, "Secondary Token ICRC")) {
+        return rejectWithValue({ 
+          title: "Unable to connect to secondary token canister", 
+          message: "Please ensure you are authenticated." 
+        });
+      }
+      
       const icp_swap_canister_id =
         state.swap.activeSwapPool?.[1].icp_swap_canister_id;
       
@@ -35,7 +44,7 @@ const burnSecondary = createAsyncThunk<
       const amountNatural = BigInt(amount);
 
       // Get the secondary token fee from state and convert to e8s
-      const secondaryFee = state.swap.secondaryFee.data || "0";
+      const secondaryFee = state.swap.secondaryFee || "0";
       const feeInE8s = TokenConversionService.naturalToE8s(secondaryFee);
       
       // Approval amount needs to be in e8s format
@@ -79,6 +88,14 @@ const burnSecondary = createAsyncThunk<
       const actorSwap = await getActorSwap(
         state.swap.activeSwapPool?.[1].icp_swap_canister_id
       );
+      
+      // Validate ICP Swap actor before using it
+      if (!validateActor(actorSwap, "ICP Swap")) {
+        return rejectWithValue({ 
+          title: "Unable to connect to ICP swap canister", 
+          message: "Please ensure you are authenticated." 
+        });
+      }
       
       console.log("Burn request details:", {
         amountNatural: amount,

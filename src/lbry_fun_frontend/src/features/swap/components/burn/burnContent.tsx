@@ -76,20 +76,30 @@ const BurnContent = () => {
 
         if (Number(e.target.value) >= 0) {
 
-            setAmountSecondary(Number(e.target.value));
-            setTentativeICP((Number(e.target.value) / Number(swap.secondaryRatio.data)) / 2);
+            const amount = Number(e.target.value);
+            setAmountSecondary(amount);
+            
+            const ratio = Number(swap.secondaryRatio) || 0;
+            const icpAmount = ratio > 0 ? (amount / ratio) / 2 : 0;
+            setTentativeICP(isNaN(icpAmount) ? 0 : icpAmount);
+            
             const mintRate = Number(tokenomics.primaryMintRate) || 0;
-            setTentativePrimary(Number(e.target.value) * mintRate);
+            const primaryAmount = amount * mintRate;
+            setTentativePrimary(isNaN(primaryAmount) ? 0 : primaryAmount);
         }
     }
     const handleMaxLbry = () => {
-        const userBal = Math.floor(Math.max(0, Number(swap.secondaryBalance.data) - Number(swap.secondaryFee.data))); // Ensure non-negative user balance
-        const secondaryRatio = Number(swap.secondaryRatio.data);
+        const userBal = Math.floor(Math.max(0, Number(swap.secondaryBalance) - Number(swap.secondaryFee))); // Ensure non-negative user balance
+        const secondaryRatio = Number(swap.secondaryRatio);
         const primaryMintRate = Number(tokenomics.primaryMintRate);
 
         setAmountSecondary(userBal);
-        setTentativeICP(userBal / (secondaryRatio * 2));
-        setTentativePrimary(userBal * (primaryMintRate || 0));
+        
+        const icpAmount = secondaryRatio > 0 ? userBal / (secondaryRatio * 2) : 0;
+        setTentativeICP(isNaN(icpAmount) ? 0 : icpAmount);
+        
+        const primaryAmount = userBal * (primaryMintRate || 0);
+        setTentativePrimary(isNaN(primaryAmount) ? 0 : primaryAmount);
     };
 
     useEffect(() => {
@@ -99,7 +109,12 @@ const BurnContent = () => {
             dispatch(getSecondaryBalance(principal))
             setLoadingModalV(false);
             setSucessModalV(true);
-            setMaxburnAllowed(calculateMaxBurnAllowed(swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))
+            setMaxburnAllowed(calculateMaxBurnAllowed(
+                swap.secondaryRatio, 
+                icpLedger.canisterBalance, 
+                swap.canisterArchivedBal?.canisterArchivedBal || 0, 
+                swap.canisterArchivedBal?.canisterUnClaimedIcp || 0
+            ))
         }
         if (swap.error && swap.activeSwapPool) {
             dispatch(getSecondaryBalance(principal));
@@ -112,7 +127,12 @@ const BurnContent = () => {
     // getCanisterArchivedBal is now loaded as critical data in useSwapDataLoader
 
     useEffect(() => {
-        setMaxburnAllowed(calculateMaxBurnAllowed(swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal.canisterArchivedBal, swap.canisterArchivedBal.canisterUnClaimedIcp))
+        setMaxburnAllowed(calculateMaxBurnAllowed(
+            swap.secondaryRatio, 
+            icpLedger.canisterBalance, 
+            swap.canisterArchivedBal?.canisterArchivedBal || 0, 
+            swap.canisterArchivedBal?.canisterUnClaimedIcp || 0
+        ))
     }, [swap.activeSwapPool, swap.canisterArchivedBal, swap.secondaryRatio, icpLedger.canisterBalance]);
 
     const primaryLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
@@ -135,7 +155,7 @@ const BurnContent = () => {
                             </div>
                             <div className='flex justify-between'>
                                 <div className='flex items-center'>
-                                    <strong className='text-base text-multygray text-gray-300 font-medium me-1'>Balance:<span className='text-darkgray text-gray-200 ms-2'>{swap.secondaryBalance.data} {swap?.activeSwapPool&&swap?.activeSwapPool[1]?.secondary_token_symbol}</span></strong>
+                                    <strong className='text-base text-multygray text-gray-300 font-medium me-1'>Balance:<span className='text-darkgray text-gray-200 ms-2'>{swap.secondaryBalance} {swap?.activeSwapPool&&swap?.activeSwapPool[1]?.secondary_token_symbol}</span></strong>
                                     {secondaryLogoFromState ? (
                                         <img className='w-4 h-4' src={secondaryLogoFromState} alt={swap.activeSwapPool?.[1]?.secondary_token_symbol || "Secondary token logo"} />
                                     ) : (

@@ -4,7 +4,6 @@ import { Principal } from "@dfinity/principal";
 import { TokenConversionService } from "@/utils/TokenConversionService";
 import { getICRCActor, validateActor } from "@/features/auth/utils/authUtils";
 import { RootState } from "@/store";
-import { shouldFetchData, CACHE_DURATIONS, recordCacheHit, recordCacheMiss } from "@/utils/cacheManager";
 
 // Define the async thunk
 const getSecondaryBalance = createAsyncThunk<
@@ -20,18 +19,7 @@ const getSecondaryBalance = createAsyncThunk<
         throw new Error("No active swap pool found");
       }
 
-      const currentPoolId = state.swap.activeSwapPool[0];
-      const cachedBalance = state.swap.secondaryBalance;
-
-      // Check if we should use cached data (balances change frequently, so shorter cache)
-      if (!shouldFetchData(cachedBalance, CACHE_DURATIONS.BALANCES, currentPoolId)) {
-        console.log("Using cached secondary balance from Redux store.");
-        recordCacheHit();
-        return cachedBalance.data;
-      }
-
-      console.log("Fetching fresh secondary balance from canister.");
-      recordCacheMiss();
+      // Fetching secondary balance from canister
 
       const actor = await getICRCActor(state.swap.activeSwapPool[1].secondary_token_id);
       

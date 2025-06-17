@@ -15,7 +15,7 @@ const getIcpPrice = createAsyncThunk<
   const { icpPrice, icpPriceTimestamp } = state.icpLedger;
 
   if (icpPrice && icpPriceTimestamp && (Date.now() - icpPriceTimestamp < ICP_PRICE_STALE_THRESHOLD_MS)) {
-    console.log("Using cached ICP price from Redux store.");
+    // Using cached ICP price from Redux store
     return icpPrice as number;
   }
 
@@ -25,7 +25,7 @@ const getIcpPrice = createAsyncThunk<
     return 10.0;
   }
 
-  console.log("Fetching fresh ICP price from XRC canister via icp_swap canister.");
+  // Fetching fresh ICP price from XRC canister via icp_swap canister
   try {
     const actor = await getActorSwap(state.swap.activeSwapPool[1].icp_swap_canister_id);
     
@@ -42,7 +42,7 @@ const getIcpPrice = createAsyncThunk<
     // Convert from cents to dollars (e.g., 1000 cents = $10.00)
     const priceInDollars = priceInCents / 100;
     
-    console.log("ICP Price from XRC canister:", priceInDollars);
+    // ICP Price from XRC canister
     return priceInDollars;
   } catch (error) {
     console.error("Failed to get ICP price from XRC canister:", error);

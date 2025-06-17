@@ -58,7 +58,7 @@ const RedeemContent: React.FC = () => {
             <div className={`bg-white bg-gray-800 border border-gray-400 border-gray-700 text-black text-white py-5 px-7 rounded-borderbox me-0 2xl:me-2 xl:me-2 lg:me-2 md:me-2 sm:me-0 w-full 2xl:w-6/12 xl:w-6/12 lg:w-6/12 md:w-6/12 sm:w-full mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3`}>
               <div className="flex justify-between">
                 <h2 className="text-swapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-black text-white">
-                  Archived ICP {swap.archivedBalance.data}
+                  Archived ICP {swap.archivedBalance}
                 </h2>
                 <div>
                 </div>

@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { Principal } from "@dfinity/principal";
 import { TokenConversionService } from "@/utils/TokenConversionService";
-import { getActorSwap, getICRCActor } from "@/features/auth/utils/authUtils";
+import { getActorSwap, getICRCActor, validateActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage, getErrorMessage } from "../utlis/erorrs";
 import { RootState } from "@/store";
 
@@ -21,7 +21,16 @@ const stakePrimary = createAsyncThunk<
       const actor = await getICRCActor(
         state.swap.activeSwapPool?.[1].primary_token_id
       );
-      const icp_swap_canister_id =       state.swap.activeSwapPool?.[1].icp_swap_canister_id;
+      
+      // Validate Primary Token ICRC actor before using it
+      if (!validateActor(actor, "Primary Token ICRC")) {
+        return rejectWithValue({ 
+          title: "Unable to connect to primary token canister", 
+          message: "Please ensure you are authenticated." 
+        });
+      }
+      
+      const icp_swap_canister_id = state.swap.activeSwapPool?.[1].icp_swap_canister_id;
       
       // Convert user input to e8s format for backend operations
       const amountFormat = TokenConversionService.naturalToE8s(amount);
@@ -69,6 +78,15 @@ const stakePrimary = createAsyncThunk<
       }
 
       const actorSwap = await getActorSwap(icp_swap_canister_id);
+      
+      // Validate ICP Swap actor before using it
+      if (!validateActor(actorSwap, "ICP Swap")) {
+        return rejectWithValue({ 
+          title: "Unable to connect to ICP swap canister", 
+          message: "Please ensure you are authenticated." 
+        });
+      }
+      
       const result = await actorSwap.stake_primary(amountFormat, []);
       if ("Ok" in result) return "success";
       if ("Err" in result) {

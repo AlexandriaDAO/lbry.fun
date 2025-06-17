@@ -17,7 +17,7 @@ const ICRC1_LEDGER_WASM: &[u8] = include_bytes!("../../../src/lbry_fun/src/ic-ic
 const ICP_LEDGER_WASM: &[u8] = include_bytes!("../../../src/lbry_fun/src/ic-icrc1-ledger.wasm");
 
 // Import types from individual_canister_tests
-use crate::individual_canister_tests::{TokenomicsInitArgs, TokenomicsRealInitArgs, IcpSwapInitArgs, LogsInitArgs, LedgerArg, InitArgs, FeatureFlags, ArchiveOptions, Account, MetadataValue};
+use crate::individual_canister_tests::{TokenomicsInitArgs, TokenomicsRealInitArgs, IcpSwapInitArgs, LogsInitArgs, LedgerArg, InitArgs, FeatureFlags, ArchiveOptions, Account, MetadataValue, SecondaryRatio};
 
 // ICP Ledger specific types
 #[derive(CandidType, Deserialize)]
@@ -311,6 +311,16 @@ impl TokenTestEnvironment {
     fn deploy_icp_swap(&self) {
         // Deploy ICP swap
         let init_args = candid::Encode!(&Some(IcpSwapInitArgs {
+            stakes: None,
+            archived_transaction_log: None,
+            total_unclaimed_icp_reward: None,
+            secondary_ratio: Some(SecondaryRatio {
+                ratio: 400, // Default ICP price of $4.00
+                time: 0,
+            }),
+            total_archived_balance: None,
+            apy: None,
+            distribution_intervals: None,
             primary_token_id: Some(self.primary_token),
             secondary_token_id: Some(self.secondary_token),
             tokenomics_canister_id: Some(self.tokenomics),
@@ -597,6 +607,30 @@ impl TokenTestEnvironment {
     pub fn get_unclaimed_rewards(&self, user: &str) -> u64 {
         // Get unclaimed ICP rewards
         0
+    }
+    
+    // Test helper to verify secondary ratio is set correctly
+    pub fn get_secondary_ratio(&self) -> u64 {
+        let args = Encode!().expect("Failed to encode empty args");
+        
+        let result = self.pic.query_call(
+            self.icp_swap,
+            Principal::anonymous(),
+            "get_current_secondary_ratio",
+            args,
+        );
+        
+        match result {
+            Ok(reply) => {
+                let ratio: u64 = decode_one(&reply)
+                    .expect("Failed to decode ratio");
+                ratio
+            }
+            Err(e) => {
+                println!("Warning: Failed to get secondary ratio: {}", e);
+                0
+            }
+        }
     }
 }
 

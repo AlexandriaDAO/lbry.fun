@@ -128,7 +128,7 @@ const SendContent = () => {
         else if (selectedOption === (swap.activeSwapPool?.[1]?.secondary_token_symbol || "SECONDARY")) {
             const userBal = Math.max(
                 0,
-                Number(swap.secondaryBalance.data) - (Number(swap.secondaryFee.data) * 1)
+                Number(swap.secondaryBalance) - (Number(swap.secondaryFee) * 1)
             ).toFixed(4);
             setAmount(userBal);
         }
@@ -159,11 +159,11 @@ const SendContent = () => {
             setAvailableBalnce(primary.primaryBal + " " + (swap.activeSwapPool?.[1]?.primary_token_symbol || "PRIMARY"));
         }
         else if (selectedOption === (swap.activeSwapPool?.[1]?.secondary_token_symbol || "SECONDARY")) {
-            setAvailableBalnce(swap.secondaryBalance.data + " " + (swap.activeSwapPool?.[1]?.secondary_token_symbol || "SECONDARY"));
+            setAvailableBalnce(swap.secondaryBalance + " " + (swap.activeSwapPool?.[1]?.secondary_token_symbol || "SECONDARY"));
         } else if (selectedOption === "Select an option") {
             setAvailableBalnce("");
         }
-    }, [selectedOption, icpLedger.accountBalance, primary.primaryBal, swap.secondaryBalance.data, swap.activeSwapPool]);
+    }, [selectedOption, icpLedger.accountBalance, primary.primaryBal, swap.secondaryBalance, swap.activeSwapPool]);
 
     useEffect(() => {
         if(!isAuthenticated || !principal) return;

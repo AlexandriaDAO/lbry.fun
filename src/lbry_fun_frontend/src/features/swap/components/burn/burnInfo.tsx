@@ -21,7 +21,7 @@ const BurnInfo: React.FC<BurnInfoProps> = ({ maxBurnAllowed }) => {
             <span className='lg:text-lg md:text-base sm:text-sm font-medium text-black text-gray-200'>{maxBurnAllowed.toFixed(4)}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.secondary_token_name}</span>
           </li>
           <li className='flex justify-between mb-5'>
-            <strong className='lg:text-lg md:text-base sm:text-sm font-medium me-1 text-black text-gray-200'>{Number(swap.secondaryRatio.data).toFixed(4)} Secondary
+            <strong className='lg:text-lg md:text-base sm:text-sm font-medium me-1 text-black text-gray-200'>{Number(swap.secondaryRatio).toFixed(4)} Secondary
               <span className='mx-2'><FontAwesomeIcon icon={faArrowRightLong} className="text-gray-200" /></span>0.5 ICP/
             </strong>
           </li>
@@ -33,7 +33,7 @@ const BurnInfo: React.FC<BurnInfoProps> = ({ maxBurnAllowed }) => {
           </li>
           <li className='flex justify-between'>
             <strong className='lg:text-lg md:text-base sm:text-sm font-medium me-1 text-black text-gray-200'>Network Fees</strong>
-            <span className='lg:text-lg md:text-base sm:text-sm font-medium text-black text-gray-200'><span className='text-multycolor text-blue-400'>{swap.secondaryFee.data}</span>  {swap.activeSwapPool&& swap.activeSwapPool[1]?.secondary_token_symbol}</span>
+            <span className='lg:text-lg md:text-base sm:text-sm font-medium text-black text-gray-200'><span className='text-multycolor text-blue-400'>{swap.secondaryFee}</span>  {swap.activeSwapPool&& swap.activeSwapPool[1]?.secondary_token_symbol}</span>
           </li>
         </ul>
       </div>

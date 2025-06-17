@@ -41,8 +41,8 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
     }
   };
 
-  const formatTimestamp = (timestamp: Date) => {
-    return format(timestamp, 'PPpp');
+  const formatTimestamp = (timestamp: number) => {
+    return format(new Date(timestamp), 'PPpp');
   };
 
   const shortenAddress = (address: string) => {
@@ -68,7 +68,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
               {transaction.status.toUpperCase()}
             </Badge>
             <Badge variant="outline">
-              {transaction.token.toUpperCase()}
+              {transaction.tokenTicker?.toUpperCase() || transaction.token.toUpperCase()}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">

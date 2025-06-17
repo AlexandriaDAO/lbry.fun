@@ -1,9 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
-import { RootState, store } from '@/store';
+import { RootState } from '@/store';
 import { performanceMonitor } from '../utils/performanceMonitor';
-import { initializeCacheWarming, getCacheWarmingManager } from '@/utils/cacheWarming';
 import { setIsLoadingCriticalData, setIsLoadingSecondaryData } from '../swapSlice';
 
 // Import thunks for data fetching
@@ -130,14 +129,6 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
     }
   }, [activeSwapPool, dispatch, isAuthenticated, principal, isLoadingSecondaryData]);
 
-  // Initialize cache warming manager
-  useEffect(() => {
-    const cacheManager = initializeCacheWarming(dispatch, () => store.getState());
-    return () => {
-      cacheManager.stop();
-    };
-  }, [dispatch]);
-
   // Main loading orchestration
   useEffect(() => {
     const loadData = async () => {
@@ -149,12 +140,6 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
       // Always try to load data, don't let errors block the UI
       await loadCriticalData();
       await loadSecondaryData();
-      
-      // Start cache warming after initial load if not already running
-      const cacheManager = getCacheWarmingManager();
-      if (cacheManager && !cacheManager.isRunning()) {
-        cacheManager.start();
-      }
     };
 
     loadData();

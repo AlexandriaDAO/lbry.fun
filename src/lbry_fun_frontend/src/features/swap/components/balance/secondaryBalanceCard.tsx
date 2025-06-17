@@ -54,7 +54,7 @@ const SecondaryBalanceCard = () => {
                 </div>
                 
 
-                <h4 className='text-2xl font-medium mb-1 text-primary-foreground'>{icpSwap.secondaryBalance.data}</h4>
+                <h4 className='text-2xl font-medium mb-1 text-primary-foreground'>{icpSwap.secondaryBalance}</h4>
                 {/* <span className='text-base text-lightgray font-medium'>= $10</span> */}
             </div>
         </div>

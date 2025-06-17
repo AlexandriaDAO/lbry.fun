@@ -4,6 +4,7 @@ import { TokenConversionService } from "@/utils/TokenConversionService";
 import {
   getActorSwap,
   getIcpLedgerActor,
+  validateActor,
 } from "@/features/auth/utils/authUtils";
 import { ErrorMessage, getErrorMessage } from "../utlis/erorrs";
 // Define the async thunk
@@ -16,7 +17,24 @@ const swapSecondary = createAsyncThunk<
   async ({ amount, userPrincipal,canisterId }, { rejectWithValue }) => {
     try {
       const actorSwap = await getActorSwap(canisterId);
+      
+      // Validate ICP Swap actor before using it
+      if (!validateActor(actorSwap, "ICP Swap")) {
+        return rejectWithValue({ 
+          title: "Unable to connect to ICP swap canister", 
+          message: "Please ensure you are authenticated." 
+        });
+      }
+      
       const actorIcpLedger = await getIcpLedgerActor();
+      
+      // Validate ICP Ledger actor before using it
+      if (!validateActor(actorIcpLedger, "ICP Ledger")) {
+        return rejectWithValue({ 
+          title: "Unable to connect to ICP ledger canister", 
+          message: "Please ensure you are authenticated." 
+        });
+      }
       // Convert user input to e8s format for backend operations
       const amountFormat = TokenConversionService.naturalToE8s(amount);
       // Add fee buffer for approval (0.0001 ICP fee)
@@ -69,7 +87,7 @@ const swapSecondary = createAsyncThunk<
         return rejectWithValue({title:error.message,message:""});
       }
     }
-    return rejectWithValue({title:"An unknown error occurred while Swaping",message:""});
+    return rejectWithValue({title:"An unknown error occurred while Swapping",message:""});
   }
 );
 

@@ -1,7 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getActorSwap, validateActor } from "@/features/auth/utils/authUtils";
 import { RootState } from "@/store";
-import { shouldFetchData, CACHE_DURATIONS, recordCacheHit, recordCacheMiss } from "@/utils/cacheManager"; 
 
 const getSecondaryratio = createAsyncThunk<
   string, // Return type of the payload
@@ -16,28 +15,6 @@ const getSecondaryratio = createAsyncThunk<
     if (!state.swap.activeSwapPool) {
       return "0";
     }
-
-    const currentPoolId = state.swap.activeSwapPool[0];
-    const cachedRatio = state.swap.secondaryRatio;
-
-    // Check if we should use cached data
-    const shouldFetch = shouldFetchData(cachedRatio, CACHE_DURATIONS.SECONDARY_RATIO, currentPoolId);
-    console.log(`[Cache Debug] Secondary Ratio - Should fetch: ${shouldFetch}`, {
-      currentPoolId,
-      cachedPoolId: cachedRatio.poolId,
-      lastFetch: cachedRatio.lastFetch,
-      cacheExpiry: cachedRatio.lastFetch ? new Date(cachedRatio.lastFetch + CACHE_DURATIONS.SECONDARY_RATIO).toISOString() : 'N/A',
-      now: new Date().toISOString()
-    });
-    
-    if (!shouldFetch) {
-      console.log("✅ [Cache Hit] Using cached secondary ratio from Redux store.");
-      recordCacheHit();
-      return cachedRatio.data;
-    }
-
-    console.log("🔄 [Cache Miss] Fetching fresh secondary ratio from canister.");
-    recordCacheMiss();
 
     const actor = await getActorSwap(state.swap.activeSwapPool[1].icp_swap_canister_id);
     

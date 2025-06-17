@@ -22,6 +22,10 @@ const fetchTransactionHistory = createAsyncThunk<
         state.swap.activeSwapPool[1].primary_token_id,
         state.swap.activeSwapPool[1].secondary_token_id
       ];
+      
+      // Get token tickers from the active swap pool
+      const primaryTicker = state.swap.activeSwapPool[1].primary_token_ticker;
+      const secondaryTicker = state.swap.activeSwapPool[1].secondary_token_ticker;
 
       // Fetch from both token canisters in parallel
       const [primaryActor, secondaryActor] = await Promise.all([
@@ -39,15 +43,15 @@ const fetchTransactionHistory = createAsyncThunk<
       
       const primaryTransactions = primaryResult.transactions
         .filter((tx: any) => isUserTransaction(tx, userPrincipalObj))
-        .map((tx: any) => formatTransaction(tx, 'primary'));
+        .map((tx: any, index: number) => formatTransaction(tx, 'primary', primaryTicker, startIndex + index));
         
       const secondaryTransactions = secondaryResult.transactions
         .filter((tx: any) => isUserTransaction(tx, userPrincipalObj))
-        .map((tx: any) => formatTransaction(tx, 'secondary'));
+        .map((tx: any, index: number) => formatTransaction(tx, 'secondary', secondaryTicker, startIndex + index));
 
-      // Combine and sort by timestamp
+      // Combine and sort by timestamp (already in milliseconds)
       const allTransactions = [...primaryTransactions, ...secondaryTransactions]
-        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        .sort((a, b) => b.timestamp - a.timestamp);
 
       return {
         transactions: allTransactions,
@@ -73,22 +77,32 @@ function isUserTransaction(transaction: any, userPrincipal: Principal): boolean 
   );
 }
 
-function formatTransaction(transaction: any, tokenType: 'primary' | 'secondary'): TransactionData {
+function formatTransaction(transaction: any, tokenType: 'primary' | 'secondary', tokenTicker?: string, txIndex?: number): TransactionData {
   const amount = transaction.mint?.[0]?.amount ||
                 transaction.transfer?.[0]?.amount ||
                 transaction.burn?.[0]?.amount || 0n;
+  
+  // Create a truly unique ID using timestamp + transaction index + random component
+  const from = transaction.transfer?.[0]?.from?.owner?.toString() || 
+               transaction.burn?.[0]?.from?.owner?.toString() || '';
+  const to = transaction.transfer?.[0]?.to?.owner?.toString() || 
+             transaction.mint?.[0]?.to?.owner?.toString() || '';
+  
+  // Include from/to addresses and index in the ID to ensure uniqueness
+  const randomSuffix = Math.random().toString(36).substring(7);
+  const uniqueId = `${tokenType}-${transaction.timestamp}-${transaction.kind}-${amount.toString()}-${txIndex || 0}-${randomSuffix}`;
                 
   return {
-    id: `${tokenType}-${transaction.timestamp}`,
-    timestamp: new Date(Number(transaction.timestamp) / 1_000_000),
+    id: uniqueId,
+    timestamp: Number(transaction.timestamp) / 1_000_000, // Store as milliseconds
     kind: transaction.kind,
     amount: TokenConversionService.formatE8sDisplay(amount, 4),
-    from: transaction.transfer?.[0]?.from?.owner?.toString(),
-    to: transaction.transfer?.[0]?.to?.owner?.toString() || 
-         transaction.mint?.[0]?.to?.owner?.toString(),
+    from,
+    to,
     fee: transaction.transfer?.[0]?.fee?.[0] ? 
          TokenConversionService.formatE8sDisplay(transaction.transfer[0].fee[0], 4) : undefined,
     token: tokenType,
+    tokenTicker: tokenTicker || tokenType, // Use ticker if available, fallback to type
     status: 'completed'
   };
 }

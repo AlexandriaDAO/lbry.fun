@@ -1,5 +1,6 @@
 use candid::{decode_one, Encode, Principal, Nat, CandidType, Deserialize};
 use pocket_ic::PocketIc;
+use std::collections::HashMap;
 
 // Include WASM files
 const TOKENOMICS_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/tokenomics.wasm");
@@ -37,8 +38,38 @@ pub struct TokenomicsRealInitArgs {
     pub initial_reward_per_burn_unit: u64,
 }
 
+#[derive(CandidType, Deserialize, Default, Clone)]
+pub struct SecondaryRatio {
+    pub ratio: u64,
+    pub time: u64,
+}
+
+#[derive(CandidType, Deserialize, Clone)]
+pub struct Stake {
+    pub amount: u64,
+    pub time: u64,
+    pub reward_icp: u64,
+}
+
+#[derive(CandidType, Deserialize, Clone)]
+pub struct ArchiveBalance {
+    pub icp: u64,
+}
+
+#[derive(CandidType, Deserialize, Clone, Default)]
+pub struct DailyValues {
+    pub values: std::collections::HashMap<u32, u128>,
+}
+
 #[derive(CandidType, Deserialize)]
 pub struct IcpSwapInitArgs {
+    pub stakes: Option<Vec<(Principal, Stake)>>,
+    pub archived_transaction_log: Option<Vec<(Principal, ArchiveBalance)>>,
+    pub total_unclaimed_icp_reward: Option<u64>,
+    pub secondary_ratio: Option<SecondaryRatio>,
+    pub total_archived_balance: Option<u64>,
+    pub apy: Option<Vec<(u32, DailyValues)>>,
+    pub distribution_intervals: Option<u32>,
     pub primary_token_id: Option<Principal>,
     pub secondary_token_id: Option<Principal>,
     pub tokenomics_canister_id: Option<Principal>,
@@ -175,12 +206,22 @@ pub fn test_icp_swap_canister_deployment() {
     let icp_swap_id = pic.create_canister();
     pic.add_cycles(icp_swap_id, 2_000_000_000_000);
     
-    let init_args = Encode!(&IcpSwapInitArgs {
+    let init_args = Encode!(&Some(IcpSwapInitArgs {
+        stakes: None,
+        archived_transaction_log: None,
+        total_unclaimed_icp_reward: None,
+        secondary_ratio: Some(SecondaryRatio {
+            ratio: 400, // Default ICP price of $4.00
+            time: 0,
+        }),
+        total_archived_balance: None,
+        apy: None,
+        distribution_intervals: None,
         primary_token_id: Some(primary_token_id),
         secondary_token_id: Some(secondary_token_id),
         tokenomics_canister_id: Some(tokenomics_id),
         icp_ledger_id: None, // Use default ICP ledger for testing
-    }).expect("Failed to encode ICP swap init args");
+    })).expect("Failed to encode ICP swap init args");
     
     pic.install_canister(
         icp_swap_id,

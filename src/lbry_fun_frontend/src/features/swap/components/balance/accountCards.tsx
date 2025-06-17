@@ -46,7 +46,7 @@ const AccountCards: React.FC = () => {
             dispatch(getAccountId(principal));
             // ICP balance is already fetched by useSwapDataLoader's loadCriticalData
             // ICP price is already fetched by useSwapDataLoader's loadCriticalData
-            console.log("AccountCards: Relying on centralized data loader for ICP price and balance");
+            // ICP balance and price are fetched by centralized data loader
         }
     }, [isAuthenticated, principal, dispatch]);
     useEffect(() => {

@@ -1,7 +1,7 @@
 import { ActorSubclass } from "@dfinity/agent";
 import { _SERVICE as _SERVICESWAP } from "../../../../../declarations/icp_swap/icp_swap.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getActorSwap } from "@/features/auth/utils/authUtils";
+import { getActorSwap, validateActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage, getErrorMessage } from "../utlis/erorrs";
 import { RootState } from "@/store";
 
@@ -18,6 +18,15 @@ const unstake = createAsyncThunk<
       throw new Error("No active swap pool found");
     }
     const actor = await getActorSwap(state.swap.activeSwapPool?.[1].icp_swap_canister_id);
+    
+    // Validate ICP Swap actor before using it
+    if (!validateActor(actor, "ICP Swap")) {
+      return rejectWithValue({ 
+        title: "Unable to connect to ICP swap canister", 
+        message: "Please ensure you are authenticated." 
+      });
+    }
+    
     const result = await actor.un_stake_all_primary([]);
     if ("Ok" in result) return "success";
     else if ("Err" in result) {

@@ -59,11 +59,11 @@ const SwapContent: React.FC = () => {
     }
   };
   useEffect(() => {
-    setSecondaryRatio(Number(swap.secondaryRatio.data));
+    setSecondaryRatio(Number(swap.secondaryRatio));
     setTentativeSecondary(
-      parseFloat((Number(swap.secondaryRatio.data) * Number(amount)).toFixed(4))
+      parseFloat((Number(swap.secondaryRatio) * Number(amount)).toFixed(4))
     );
-  }, [swap.secondaryRatio.data]);
+  }, [swap.secondaryRatio]);
   useEffect(() => {
     if (!isAuthenticated || !principal || !swap.activeSwapPool?.[1].secondary_token_id) return;
     if (swap.swapSuccess === true) {
@@ -94,7 +94,7 @@ const SwapContent: React.FC = () => {
   }, [amount])
 
   // Show skeleton while critical data is loading
-  if (!swap.secondaryRatio.data || swap.secondaryRatio.data === "0" || !swap.activeSwapPool) {
+  if (!swap.secondaryRatio || swap.secondaryRatio === "0" || !swap.activeSwapPool) {
     return <SwapContentSkeleton />;
   }
 
@@ -151,7 +151,7 @@ const SwapContent: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <strong className="text-base text-muted-foreground font-medium me-1">
-                  Balance: {swap.secondaryBalance.data} {swap.activeSwapPool?.[1].secondary_token_symbol}
+                  Balance: {swap.secondaryBalance} {swap.activeSwapPool?.[1].secondary_token_symbol}
                 </strong>
               </div>
             </div>

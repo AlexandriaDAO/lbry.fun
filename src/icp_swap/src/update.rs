@@ -160,6 +160,11 @@ pub async fn swap(
         ),
     );
     let icp_rate_in_cents: u64 = get_current_secondary_ratio();
+    register_info_log(
+        caller,
+        "swap",
+        &format!("Current secondary ratio: {}", icp_rate_in_cents),
+    );
     // checke here if return
     let secondary_amount: u64 = amount_icp.checked_mul(icp_rate_in_cents).ok_or_else(|| {
         ExecutionError::new_with_log(

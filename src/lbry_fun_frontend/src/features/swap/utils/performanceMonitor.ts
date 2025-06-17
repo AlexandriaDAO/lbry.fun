@@ -1,4 +1,4 @@
-import { getCacheMetrics } from '@/utils/cacheManager';
+// Cache metrics removed - no longer using CacheableData wrapper
 
 interface PerformanceMetric {
   name: string;
@@ -30,7 +30,10 @@ class PerformanceMonitor {
       status: 'pending'
     });
 
-    console.log(`[Performance] Started: ${name}`);
+    // Only log in development if explicitly enabled
+    if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_DEBUG_PERFORMANCE) {
+      console.log(`[Performance] Started: ${name}`);
+    }
   }
 
   /**
@@ -56,11 +59,14 @@ class PerformanceMonitor {
       error
     });
 
-    const statusEmoji = status === 'success' ? '✅' : '❌';
-    console.log(
-      `[Performance] ${statusEmoji} ${name}: ${duration.toFixed(2)}ms`,
-      error ? `(Error: ${error})` : ''
-    );
+    // Only log in development if explicitly enabled
+    if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_DEBUG_PERFORMANCE) {
+      const statusEmoji = status === 'success' ? '✅' : '❌';
+      console.log(
+        `[Performance] ${statusEmoji} ${name}: ${duration.toFixed(2)}ms`,
+        error ? `(Error: ${error})` : ''
+      );
+    }
 
     // Log slow operations
     if (duration > 1000) {
@@ -123,7 +129,6 @@ class PerformanceMonitor {
     if (!this.enabled) return;
 
     const summary = this.getSummary();
-    const cacheMetrics = getCacheMetrics();
     
     console.group('[Performance Summary]');
     console.log(`Total Operations: ${summary.totalOperations}`);
@@ -135,23 +140,15 @@ class PerformanceMonitor {
         `Slowest Operation: ${summary.slowestOperation.name} (${summary.slowestOperation.duration?.toFixed(2)}ms)`
       );
     }
-    
-    // Cache performance metrics
-    console.log(`Cache Hit Rate: ${cacheMetrics.hitRate}%`);
-    console.log(`Cache Hits: ${cacheMetrics.hits}`);
-    console.log(`Cache Misses: ${cacheMetrics.misses}`);
-    console.log(`Cache Invalidations: ${cacheMetrics.invalidations}`);
-    
     console.groupEnd();
   }
 
   /**
-   * Get combined performance and cache metrics
+   * Get performance metrics
    */
   getFullMetrics() {
     return {
-      performance: this.getSummary(),
-      cache: getCacheMetrics()
+      performance: this.getSummary()
     };
   }
 }
@@ -179,8 +176,12 @@ export function trackThunk<T>(
 
 // Add global logging for development
 if (process.env.NODE_ENV === 'development') {
-  // Log summary every 30 seconds
+  // Log summary every 5 minutes (instead of 30 seconds)
   setInterval(() => {
-    performanceMonitor.logSummary();
-  }, 30000);
+    const summary = performanceMonitor.getSummary();
+    // Only log if there's actual activity
+    if (summary.totalOperations > 0) {
+      performanceMonitor.logSummary();
+    }
+  }, 5 * 60 * 1000);
 }
