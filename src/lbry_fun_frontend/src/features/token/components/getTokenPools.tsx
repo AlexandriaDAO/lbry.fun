@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import getTokenPools from "../thunk/getTokenPools.thunk";
+import getPoolsTvl from "../thunk/getPoolsTvl.thunk";
 import { Button } from "@/lib/components/button";
 import { useNavigate } from "react-router-dom";
 import { lbryFunFlagHandler } from '@/features/token/lbryFunSlice'; // If you need to reset flags
@@ -11,6 +12,7 @@ import { HttpAgent, Actor } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { idlFactory as icrc1IdlFactory } from "../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did.js";
 import type { Value as Icrc1Value } from "../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did.d.ts";
+import { TokenConversionService } from "@/utils/TokenConversionService";
 
 // Token Logo Component that reuses existing logo fetching logic
 const TokenLogo: React.FC<{
@@ -99,7 +101,7 @@ const TokenLogo: React.FC<{
 const GetTokenPools = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { tokenPools, loading, error, success } = useAppSelector((state) => state.lbryFun);
+  const { tokenPools, loading, error, success, tvlData, tvlLoading } = useAppSelector((state) => state.lbryFun);
 
   useEffect(() => {
     // Fetch if pools are not loaded, not currently loading, and there was no previous persistent error
@@ -112,6 +114,14 @@ const GetTokenPools = () => {
     //    dispatch(getTokenPools());
     // }
   }, [dispatch, tokenPools.length, loading, error, success]);
+
+  // Fetch TVL data when token pools are loaded
+  useEffect(() => {
+    if (tokenPools.length > 0 && !tvlLoading && Object.keys(tvlData).length === 0) {
+      const icpSwapCanisterIds = tokenPools.map(([_, record]) => record.icp_swap_id);
+      dispatch(getPoolsTvl(icpSwapCanisterIds));
+    }
+  }, [dispatch, tokenPools, tvlLoading, tvlData]);
 
   if (loading) return <p className="text-gray-500">Loading token pools...</p>;
 
@@ -188,13 +198,31 @@ const GetTokenPools = () => {
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center text-xs text-muted-foreground/80">
-                    <span>Created {new Date(Number(record.created_time) / 1000000).toLocaleDateString()}</span>
-                    {record.liquidity_provided_at && (
-                      <span className="flex items-center gap-1">
-                        💧 <span>Liquidity Added</span>
-                      </span>
-                    )}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs text-muted-foreground/80">
+                      <span>Created {new Date(Number(record.created_time) / 1000000).toLocaleDateString()}</span>
+                      {record.liquidity_provided_at && (
+                        <span className="flex items-center gap-1">
+                          💧 <span>Liquidity Added</span>
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* TVL Display */}
+                    <div className="flex items-center justify-between p-2 bg-primary/5 rounded-lg border border-primary/10">
+                      <span className="text-sm font-medium text-muted-foreground">Liquidity:</span>
+                      <div className="text-right">
+                        {tvlLoading ? (
+                          <div className="w-16 h-4 bg-muted animate-pulse rounded" />
+                        ) : tvlData[record.icp_swap_id] ? (
+                          <span className="text-sm font-bold text-primary">
+                            ${TokenConversionService.formatE8sDisplay(tvlData[record.icp_swap_id]!.tvl, 0)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No liquidity</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>

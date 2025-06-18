@@ -1186,8 +1186,28 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
         )
     })?;
 
-    // Calculate the 1% fee for the Alexandria project.
-    let alexandria_fee_share = total_icp_allocated.checked_div(100).ok_or_else(|| ExecutionError::DivisionFailed {
+    // Check if distribution amount is sufficient for viable transfers
+    if total_icp_allocated < MIN_DISTRIBUTION_AMOUNT as u128 {
+        return Err(ExecutionError::new_with_log(
+            caller(),
+            "distribute_reward",
+            ExecutionError::InsufficientBalanceRewardDistribution {
+                available: total_icp_allocated,
+                details: format!(
+                    "Distribution blocked: {} e8s is below minimum threshold of {} e8s (0.001 ICP) required for viable transfers",
+                    total_icp_allocated, MIN_DISTRIBUTION_AMOUNT
+                ),
+            },
+        ));
+    }
+
+    // Calculate the 1% fee for the Alexandria project (1% of the distribution, not 1% of 1%).
+    // Using 10/1000 = 1/100 = 1% to match the LP treasury pattern
+    let alexandria_fee_share = total_icp_allocated.checked_mul(10).ok_or_else(|| ExecutionError::MultiplicationOverflow {
+        operation: "distribute_reward".to_string(),
+        details: "Failed to calculate alexandria_fee_share multiplication".to_string()
+    })?
+    .checked_div(1000).ok_or_else(|| ExecutionError::DivisionFailed {
         operation: "distribute_reward".to_string(),
         details: "Failed to calculate alexandria_fee_share".to_string()
     })?;

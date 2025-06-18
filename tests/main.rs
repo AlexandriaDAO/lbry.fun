@@ -59,6 +59,9 @@ mod token_testing;
 #[path = "tests/helpers/mock_root_icp_swap.rs"]
 mod mock_root_icp_swap;
 
+// Operational validation tests - large-scale real operations
+mod operational_validation;
+
 fn main() {
     println!("\n=== Running Token Environment Tests ===");
     

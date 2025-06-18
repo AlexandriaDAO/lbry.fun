@@ -4,6 +4,7 @@ import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { RootState } from '@/store';
 import { performanceMonitor } from '../utils/performanceMonitor';
 import { setIsLoadingCriticalData, setIsLoadingSecondaryData } from '../swapSlice';
+import { useIcpBalance } from '@/hooks/useIcpBalance';
 
 // Import thunks for data fetching
 import getSecondaryratio from '../thunks/getSecondaryratio';
@@ -13,7 +14,6 @@ import getPrimaryFee from '../thunks/primaryIcrc/getPrimaryFee';
 import getAccountPrimaryBalance from '../thunks/primaryIcrc/getAccountPrimaryBalance';
 import getSecondaryBalance from '../thunks/secondaryIcrc/getSecondaryBalance';
 import getStakedInfo from '../thunks/getStakedInfo';
-import getIcpBal from '@/features/icp-ledger/thunks/getIcpBal';
 import getIcpPrice from '@/features/icp-ledger/thunks/getIcpPrice';
 import getCanisterBal from '@/features/icp-ledger/thunks/getCanisterBal';
 import getArchivedBal from '../thunks/getArchivedBal';
@@ -37,6 +37,9 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
   const dispatch = useAppDispatch();
   const { activeSwapPool, isLoadingCriticalData, isLoadingSecondaryData } = useAppSelector((state: RootState) => state.swap);
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+  
+  // Use the optimized ICP balance hook
+  useIcpBalance();
   
   const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>(LoadingPhase.IDLE);
 
@@ -71,7 +74,6 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
       // If authenticated, also load user-specific critical data
       if (isAuthenticated && principal) {
         const userDataPromises = [
-          dispatch(getIcpBal(principal)).unwrap(),
           dispatch(getAccountPrimaryBalance(principal)).unwrap(),
           dispatch(getSecondaryBalance(principal)).unwrap()
         ];

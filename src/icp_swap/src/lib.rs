@@ -24,5 +24,6 @@ pub mod constants;
 pub mod dex_integration;
 
 use ic_stable_structures::memory_manager::{ MemoryId, MemoryManager, VirtualMemory };
+use crate::dex_integration::PoolReply;
 
 ic_cdk::export_candid!();

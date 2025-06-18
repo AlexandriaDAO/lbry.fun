@@ -249,6 +249,27 @@ pub struct PoolInfo {
     pub lp_token_supply: Nat,
 }
 
+#[derive(CandidType, Debug, Deserialize, Serialize)]
+pub struct PoolsReply {
+    pub pools: Vec<PoolReply>,
+    pub total_tvl: Nat,
+    pub total_24h_volume: Nat,
+    pub total_24h_lp_fee: Nat,
+    pub total_24h_num_swaps: Nat,
+}
+
+#[derive(CandidType, Debug, Deserialize, Serialize)]
+pub struct PoolReply {
+    pub pool_id: u32,
+    pub symbol: String,
+    pub balance_0: Nat,
+    pub balance_1: Nat,
+    pub tvl: Nat,
+    pub rolling_24h_volume: Nat,
+    pub lp_token_supply: Nat,
+    pub price: f64,
+}
+
 pub async fn get_pool_reserves() -> Result<PoolReserves, String> {
     let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
     let primary_token_symbol = get_primary_token_symbol()
@@ -289,6 +310,22 @@ pub async fn get_pool_reserves() -> Result<PoolReserves, String> {
         }
         Err(e) => Err(format!("Failed to query pool: {:?}", e)),
     }
+}
+
+pub async fn get_all_pools() -> Result<PoolsReply, String> {
+    let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
+    let result: Result<(PoolsReply,), _> = ic_cdk::call(kong_principal, "pools", (None::<String>,)).await;
+    result.map(|(r,)| r).map_err(|e| format!("Failed to call pools: {:?}", e))
+}
+
+pub async fn get_ranked_pools_by_tvl() -> Result<Vec<PoolReply>, String> {
+    let pools_reply = get_all_pools().await?;
+    let mut ranked_pools = pools_reply.pools;
+    
+    // Sort pools by TVL in descending order
+    ranked_pools.sort_by(|a, b| b.tvl.cmp(&a.tvl));
+    
+    Ok(ranked_pools)
 }
 
 pub async fn mint_tokens_with_icp(icp_amount: u64) -> Result<Nat, String> {

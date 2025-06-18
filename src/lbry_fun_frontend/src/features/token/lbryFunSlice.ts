@@ -8,6 +8,7 @@ import getLiveTokens from "./thunk/getLiveTokens.thunk";
 import fetchTokenLogosForPool from "./thunk/fetchTokenLogosForPoolThunk";
 import { ErrorMessage } from "@/features/swap/utlis/erorrs";
 import previewTokenomics from "./thunk/previewTokenomics.thunk";
+import getPoolsTvl, { TokenTvlMap } from "./thunk/getPoolsTvl.thunk";
 
 export interface GraphData {
   cumulative_supply_data_x: string[];
@@ -31,6 +32,8 @@ export interface LbryFunState {
   previewGraphData: GraphData | null;
   previewLoading: boolean;
   previewError: string | null;
+  tvlData: TokenTvlMap;
+  tvlLoading: boolean;
 }
 
 // Define the initial state using the ManagerState interface
@@ -44,6 +47,8 @@ const initialState: LbryFunState = {
   previewGraphData: null,
   previewLoading: false,
   previewError: null,
+  tvlData: {},
+  tvlLoading: false,
 };
 
 const lbryFunSlice = createSlice({
@@ -162,6 +167,18 @@ const lbryFunSlice = createSlice({
       .addCase(previewTokenomics.rejected, (state, action) => {
         state.previewLoading = false;
         state.previewError = action.payload?.message ?? 'An unknown error occurred';
+      })
+      .addCase(getPoolsTvl.pending, (state) => {
+        state.tvlLoading = true;
+      })
+      .addCase(getPoolsTvl.fulfilled, (state, action) => {
+        state.tvlLoading = false;
+        state.tvlData = action.payload;
+      })
+      .addCase(getPoolsTvl.rejected, (state, action) => {
+        state.tvlLoading = false;
+        // TVL loading failure is non-critical, just log it
+        console.warn("Failed to load TVL data:", action.payload);
       });
   },
 });

@@ -52,17 +52,18 @@ mod simple_distribution_tests {
                 
                 // The distribution returns an error when no stakers exist, but still distributes to LBRY and LP
                 if decoded.is_err() {
-            // Even though it returns an error, LBRY fee (1% of 1%) and LP treasury (49.5% of 1%) 
+            // Even though it returns an error, LBRY fee (1% of distribution) and LP treasury (49.5% of distribution) 
             // should still be distributed before the error
             assert!(pool_after < pool_before, "Pool should decrease even with error");
             
             let distributed = pool_before - pool_after;
-            let total_1_percent = pool_before / 100; // 1% of pool
-            let expected_lbry_fee = total_1_percent / 100; // 1% of the 1% goes to LBRY
+            let total_1_percent = pool_before / 100; // 1% of pool to be distributed
+            let expected_lbry_fee = total_1_percent / 100; // 1% of the distribution (1% of 1% = 0.01% of pool)
             
             println!("Distributed: {}, Expected LBRY fee: ~{}", distributed, expected_lbry_fee);
             
             // Only the LBRY fee is transferred out; LP treasury is tracked internally
+            // LBRY gets 1% of the 1% distribution = 0.01% of total pool
             // Allow for transfer fees
             assert!(distributed >= expected_lbry_fee.saturating_sub(ICP_TRANSFER_FEE));
             assert!(distributed <= expected_lbry_fee + ICP_TRANSFER_FEE);

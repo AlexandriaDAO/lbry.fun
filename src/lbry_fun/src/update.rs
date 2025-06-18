@@ -613,8 +613,8 @@ async fn _process_fee_treasury() -> Result<String, String> {
         }
     };
 
-    // Minimum 0.1 ICP to process
-    if balance < 10_000_000 {
+    // Minimum 0.01 ICP to process
+    if balance < 1_000_000 {
         let log_msg = "Not enough fees to process. Skipping run.".to_string();
         ic_cdk::println!("{}", log_msg);
         return Ok(log_msg);

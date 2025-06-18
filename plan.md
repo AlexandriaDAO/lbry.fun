@@ -60,3 +60,47 @@ Before we start building this out though, I want to do some planning with you. U
 
 
 
+
+
+
+  Complete ICP Flow from Swap Function with Thresholds
+
+  When users swap ICP for secondary tokens:
+  - 100% of ICP goes directly to the icp_swap canister's balance
+  - ICP accumulates until hourly distribution
+
+  Every hour (automatic distribution):
+  - 1% of the total ICP pool is distributed as follows:
+    - 49.5% → Stakers (added to claimable rewards)
+    - 49.5% → LP Treasury (internal accounting)
+    - 1% → LBRY buyback (immediate transfer)
+
+  Sub-distribution Details:
+
+  LBRY Buyback (1% of distribution)
+
+  - Threshold: None - transfers immediately if > 0
+  - Destination: Sent directly to lbry_fun canister
+  - Purpose: Buyback and burn LBRY tokens
+
+  Stakers Rewards (49.5% of distribution)
+
+  - Distribution Threshold: Must have at least 1,000,000 e8s (0.01 ICP) to distribute
+  - Claiming Threshold: Users must have > 1,000,000 e8s (0.01 ICP) rewards to claim
+  - Process: Rewards accumulate in each staker's reward_icp field proportional to their stake
+  - No stakers case: Returns error, but LBRY and LP treasury still get their shares
+
+  LP Treasury (49.5% of distribution)
+
+  - Accumulation: Stored internally in LP_TREASURY state
+  - Deployment Threshold: 1 ICP minimum (100,000,000 e8s)
+  - Deployment Process: When threshold met, uses 2% of treasury balance to:
+    - 1% for buying primary tokens on DEX
+    - 1% paired with bought tokens to add liquidity
+  - Deployment Frequency: Checked periodically by internal timer
+
+  Example with 10,000 ICP pool:
+  - 100 ICP distributed per hour
+  - 1 ICP → LBRY (immediate transfer)
+  - 49.5 ICP → LP treasury (waits for 1 ICP minimum)
+  - 49.5 ICP → Stakers (distributed if > 0.01 ICP total)
