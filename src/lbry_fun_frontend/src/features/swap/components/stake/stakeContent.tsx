@@ -128,23 +128,23 @@ const StakeContent = () => {
                 <div className='grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 mb-7'>
                     <div className='stake me-2'>
                         <div className="mb-4">
-                            <label className="flex items-center text-radiocolor text-white">
+                            <label className="flex items-center text-white">
                                 <span className="ml-2 text-tabsheading 2xl:text-xxltabsheading xl:text-xltabsheading lg:text-lgtabsheading md:text-mdtabsheading sm:text-smtabsheading font-bold text-white">Stake</span>
                             </label>
                         </div>
-                        <div className='border border-gray-400 border-gray-700 bg-white bg-gray-800 text-black text-white py-5 px-7 rounded-borderbox mb-3'>
-                            <h2 className='sm:text-2xl xs:text-xl text-radiocolor text-white flex justify-between mb-5'>
+                        <div className='border border-gray-700 bg-gray-800 text-white py-5 px-7 rounded-borderbox mb-3'>
+                            <h2 className='sm:text-2xl xs:text-xl text-white flex justify-between mb-5'>
                                 <span className='flex font-extrabold'>Staked</span>
                                 <span className='font-semibold flex'>{swap.stakeInfo.stakedPrimary}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span>
                             </h2>
                             <ul className='ps-0'>
                                 <li className='mb-4'>
                                     <div className='flex justify-between'>
-                                        <strong className='sm:text-lg xs:text-sm text-radiocolor text-white font-semibold me-1'>Estimated Returns</strong>
+                                        <strong className='sm:text-lg xs:text-sm text-white font-semibold me-1'>Estimated Returns</strong>
                                         <div className='text-right'>
                                             <div className='flex flex-col items-end'>
                                                 <div>
-                                                    <strong className='sm:text-lg xs:text-sm text-radiocolor text-white font-semibold'>{apr}</strong>
+                                                    <strong className='sm:text-lg xs:text-sm text-white font-semibold'>{apr}</strong>
                                                     <span className='text-sm text-gray-500 text-gray-400 ml-1'>per hour</span>
                                                 </div>
                                                 <div className='text-sm text-gray-500 text-gray-400'>
@@ -206,7 +206,7 @@ const StakeContent = () => {
                         <div>
                             {isAuthenticated ? <button
                                 type="button"
-                                className={`bg-interactive-primary text-primary-foreground w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 ${parseFloat(amount) === 0 || swap.loading ? 'text-muted-foreground cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                                className={`bg-primary-action text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 ${parseFloat(amount) === 0 || swap.loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-90'}`}
                                 style={{
                                     opacity: parseFloat(amount) === 0 || swap.loading ? 0.5 : 1, // when disabled
                                 }}

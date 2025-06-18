@@ -5,6 +5,7 @@ import getTokenPools from "../thunk/getTokenPools.thunk";
 import { Button } from "@/lib/components/button";
 import { useNavigate } from "react-router-dom";
 import { lbryFunFlagHandler } from '@/features/token/lbryFunSlice'; // If you need to reset flags
+import { setActiveTokenView } from '@/store/slices/uiSlice';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/lib/components/card";
 import { HttpAgent, Actor } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
@@ -116,7 +117,17 @@ const GetTokenPools = () => {
 
   return (
     <div className="w-full">
-      <h2 className="text-2xl font-bold mb-6 text-foreground">All Tokens</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-foreground">All Tokens</h2>
+        <Button 
+          variant="primary" 
+          scale="md"
+          className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold"
+          onClick={() => dispatch(setActiveTokenView('CreateToken'))}
+        >
+          <span className="mr-2">➕</span> Create a Token
+        </Button>
+      </div>
       {tokenPools?.length === 0 ? (
         <p className="text-gray-500">No tokens found.</p>
       ) : (

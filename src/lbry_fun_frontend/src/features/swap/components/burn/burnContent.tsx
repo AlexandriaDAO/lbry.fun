@@ -18,6 +18,7 @@ import BurnInfo from "./burnInfo";
 import calculateMaxBurnAllowed from "./calculateMaxBurnAllowed";
 import { Entry } from "@/layouts/parts/Header";
 import { RootState } from "@/store";
+import fetchTransactionHistory from "../../thunks/fetchTransactionHistory.thunk";
 
 const BurnContent = () => {
     const dispatch = useAppDispatch();
@@ -38,17 +39,6 @@ const BurnContent = () => {
         event.preventDefault();
         if (!isAuthenticated || !principal) return;
         
-        // Debug logging for burn calculation
-        console.log("Burn Debug Info:", {
-            amountSecondary,
-            maxBurnAllowed,
-            secondaryRatio: swap.secondaryRatio,
-            canisterBalance: icpLedger.canisterBalance,
-            canisterArchivedBal: swap.canisterArchivedBal.canisterArchivedBal,
-            canisterUnClaimedIcp: swap.canisterArchivedBal.canisterUnClaimedIcp,
-            tentativeICP,
-            tentativePrimary
-        });
         
         // Add frontend validation to prevent burns exceeding max allowed
         if (maxBurnAllowed === 0) {
@@ -107,6 +97,8 @@ const BurnContent = () => {
         if (swap.burnSuccess === true && swap.activeSwapPool) {
             dispatch(flagHandler())
             dispatch(getSecondaryBalance(principal))
+            // Refresh transaction history after successful burn
+            dispatch(fetchTransactionHistory({ userPrincipal: principal, startIndex: 0 }));
             setLoadingModalV(false);
             setSucessModalV(true);
             setMaxburnAllowed(calculateMaxBurnAllowed(
@@ -146,16 +138,16 @@ const BurnContent = () => {
                 </div>
                 <div className='grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 mb-12'>
                     <div className='me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 mb-3 2xl:mb-0 xl:mb-0 lg:mb-3 md:mb-3 sm:mb-3'>
-                        <div className='bg-white bg-gray-800 border border-gray-700 py-5 px-5 rounded-borderbox mb-7'>
+                        <div className='bg-gray-800 border border-gray-700 py-5 px-5 rounded-borderbox mb-7'>
                             <div className='flex justify-between mb-3'>
-                                <h4 className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-multygray text-gray-300'>Amount</h4>
-                                <input className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-darkgray text-gray-200 text-right bg-transparent w-full placeholder-darkgray placeholder-gray-400 focus:outline-none focus:border-transparent' type='integer' value={amountSecondary + ""} min={0} onChange={(e) => {
+                                <h4 className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-gray-300'>Amount</h4>
+                                <input className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-gray-200 text-right bg-transparent w-full placeholder-gray-400 focus:outline-none focus:border-transparent' type='integer' value={amountSecondary + ""} min={0} onChange={(e) => {
                                     handleAmountSecondaryChange(e)
                                 }} />
                             </div>
                             <div className='flex justify-between'>
                                 <div className='flex items-center'>
-                                    <strong className='text-base text-multygray text-gray-300 font-medium me-1'>Balance:<span className='text-darkgray text-gray-200 ms-2'>{swap.secondaryBalance} {swap?.activeSwapPool&&swap?.activeSwapPool[1]?.secondary_token_symbol}</span></strong>
+                                    <strong className='text-base text-gray-300 font-medium me-1'>Balance:<span className='text-gray-200 ms-2'>{swap.secondaryBalance} {swap?.activeSwapPool&&swap?.activeSwapPool[1]?.secondary_token_symbol}</span></strong>
                                     {secondaryLogoFromState ? (
                                         <img className='w-4 h-4' src={secondaryLogoFromState} alt={swap.activeSwapPool?.[1]?.secondary_token_symbol || "Secondary token logo"} />
                                     ) : (
@@ -168,7 +160,7 @@ const BurnContent = () => {
                             </div>
                         </div>
                         <h5 className='text-xl font-medium mb-4 text-gray-200'>you get</h5>
-                        <div className='border border-gray-700 bg-[#efefef] bg-gray-800 py-4 px-5 rounded-full mb-4'>
+                        <div className='border border-gray-700 bg-gray-800 py-4 px-5 rounded-full mb-4'>
                             <div className='flex justify-between'>
                                 <div className='flex items-center'>
                                     <div className='me-3'>
@@ -183,7 +175,7 @@ const BurnContent = () => {
                                 </h3>
                             </div>
                         </div>
-                        <div className='border border-gray-700 bg-[#efefef] bg-gray-800 py-4 px-5 rounded-full mb-4'>
+                        <div className='border border-gray-700 bg-gray-800 py-4 px-5 rounded-full mb-4'>
                             <div className='flex justify-between'>
                                 <div className='flex items-center'>
                                     <div className='me-3'>
@@ -206,11 +198,11 @@ const BurnContent = () => {
                         </div>
                         {isAuthenticated ? <button
                             type="button"
-                            className={`bg-interactive-primary text-primary-foreground w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-4 ${parseInt(amountSecondary.toString()) === 0 ||
+                            className={`bg-primary-action text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-4 ${parseInt(amountSecondary.toString()) === 0 ||
                                     swap.loading ||
                                     amountSecondary > maxBurnAllowed
-                                    ? 'text-muted-foreground cursor-not-allowed opacity-50'
-                                    : 'cursor-pointer'
+                                    ? 'opacity-50 cursor-not-allowed'
+                                    : 'cursor-pointer hover:opacity-90'
                                 }`}
                             style={{
                                 opacity: parseInt(amountSecondary.toString()) === 0 ||

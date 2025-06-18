@@ -32,31 +32,8 @@ mod staking_tests {
     fn test_basic_staking() {
         let mut env = TokenTestEnvironment::new();
         
-        // Give alice some primary tokens directly (bypass burning)
-        let transfer_args = icrc_ledger_types::icrc1::transfer::TransferArg {
-            from_subaccount: None,
-            to: Account {
-                owner: env.test_users[&"alice".to_string()],
-                subaccount: None,
-            },
-            fee: None,
-            created_at_time: None,
-            memo: None,
-            amount: Nat::from(10000 * E8S),
-        };
-        
-        // Transfer from icp_swap (minting account) to alice
-        let result = env.pic.update_call(
-            env.primary_token,
-            env.icp_swap,
-            "icrc1_transfer",
-            Encode!(&transfer_args).expect("Failed to encode transfer args"),
-        );
-        
-        match result {
-            Ok(_) => println!("Transferred primary tokens to alice"),
-            Err(e) => panic!("Failed to transfer primary tokens: {:?}", e),
-        }
+        // Give alice primary tokens using the proper helper
+        setup_user_with_primary(&mut env, "alice", 1000 * E8S).expect("Failed to setup alice with primary tokens");
         
         // Check alice's balance
         let alice_balance = get_primary_balance(&env, "alice");
@@ -150,7 +127,8 @@ mod staking_tests {
         
         assert!(stake_info.is_some(), "Alice should have stake info");
         if let Some(stake) = stake_info {
-            assert_eq!(stake.amount, stake_amount, "Stake amount should match");
+            // The staked amount will be less by the transfer fee (10,000 e8s)
+            assert_eq!(stake.amount, stake_amount - 10_000, "Stake amount should match (minus fee)");
         }
     }
 }

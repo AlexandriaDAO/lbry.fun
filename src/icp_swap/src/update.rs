@@ -9,7 +9,8 @@ use crate::{
 };
 use crate::{get_stake, storage::*};
 use crate::{get_user_archive_balance, utils::*};
-use crate::{constants::*, dex_integration::*};
+use crate::storage::{get_accumulated_primary_tokens, add_to_accumulated_primary_tokens, withdraw_from_accumulated_primary_tokens};
+use crate::{constants::*, dex_integration::{*, get_pool_reserves, mint_tokens_with_icp}};
 use candid::{CandidType, Nat, Principal};
 use ic_cdk::{self, caller, update};
 use ic_ledger_types::{
@@ -717,7 +718,7 @@ async fn mint_primary(
 //stake
 #[allow(non_snake_case)]
 #[update(guard = "not_anon")]
-async fn stake_primary(
+pub async fn stake_primary(
     amount: u64,
     from_subaccount: Option<[u8; 32]>,
 ) -> Result<String, ExecutionError> {
@@ -832,7 +833,7 @@ async fn stake_primary(
 
 #[allow(non_snake_case)]
 #[update(guard = "not_anon")]
-async fn un_stake_all_primary(from_subaccount: Option<[u8; 32]>) -> Result<String, ExecutionError> {
+pub async fn un_stake_all_primary(from_subaccount: Option<[u8; 32]>) -> Result<String, ExecutionError> {
     let caller = ic_cdk::caller();
     let _guard =
         CallerGuard::new(caller).map_err(|e| ExecutionError::Unauthorized(e.to_string()))?;
@@ -961,53 +962,125 @@ async fn provide_liquidity_from_treasury() {
     }
     
     let result: Result<String, ExecutionError> = async {
-        // Use a fixed 50% of the treasury for deployment.
-        let deploy_percent = 50;
+        // Use 2% of the treasury for deployment (1% buyback + 1% LP).
+        let deploy_percent = 2;
         
         let primary_token_symbol = get_primary_token_symbol()
             .await
             .map_err(|e| ExecutionError::StateError(format!("Failed to get primary token symbol: {}", e)))?;
 
         let icp_to_deploy = (treasury_balance * deploy_percent) / 100;
-        let icp_for_buyback = icp_to_deploy / 2;
-        let icp_for_pairing = icp_to_deploy - icp_for_buyback;
+        
+        // Check if pool has liquidity
+        let pool_reserves = get_pool_reserves().await
+            .map_err(|e| ExecutionError::StateError(format!("Failed to get pool reserves: {}", e)))?;
+        
+        if pool_reserves.icp_reserve < 100_000_000 { // Less than 1 ICP
+            // Pool has no liquidity - use all 2% to mint tokens and add initial liquidity
+            let tokens_to_mint = mint_tokens_with_icp(icp_to_deploy).await
+                .map_err(|e| ExecutionError::StateError(format!("Failed to mint tokens with ICP: {}", e)))?;
+            
+            let lp_result = add_liquidity_to_kong(
+                primary_token_symbol,
+                tokens_to_mint,
+                Nat::from(icp_to_deploy),
+            )
+            .await
+            .map_err(|e| ExecutionError::StateError(format!("Failed to add initial liquidity: {}", e)))?;
+            
+            // Update treasury balance
+            withdraw_from_lp_treasury(icp_to_deploy)?;
+            
+            return Ok(format!(
+                "Successfully bootstrapped pool with {} e8s ICP. Added {} LP tokens.",
+                icp_to_deploy, lp_result.add_lp_token_amount
+            ));
+        }
+        
+        // Pool has liquidity - proceed with normal buyback and LP provision
+        let mut icp_for_buyback = icp_to_deploy / 2;
+        let mut icp_for_pairing = icp_to_deploy - icp_for_buyback;
+        
+        // Check if we have accumulated tokens from previous failed attempts
+        let accumulated_tokens = get_accumulated_primary_tokens();
+        let mut total_primary_tokens_nat = Nat::from(accumulated_tokens);
+        
+        // Only buy more if we don't have enough accumulated
+        if accumulated_tokens < 1_000_000 { // Less than 0.01 tokens (assuming 8 decimals)
+            // 2. Execute buyback on DEX with no slippage protection
+            let primary_tokens_bought_nat = execute_swap_on_dex_no_slippage(
+                "ICP".to_string(),
+                Nat::from(icp_for_buyback),
+                primary_token_symbol.clone(),
+            )
+            .await
+            .map_err(|e| ExecutionError::StateError(format!("Failed to execute swap on DEX: {}", e)))?;
 
-        // 2. Execute buyback on DEX
-        let primary_tokens_bought_nat = execute_swap_on_dex(
-            "ICP".to_string(),
-            Nat::from(icp_for_buyback),
-            primary_token_symbol.clone(),
-        )
-        .await
-        .map_err(|e| ExecutionError::StateError(format!("Failed to execute swap on DEX: {}", e)))?;
-
-        if primary_tokens_bought_nat == Nat::from(0u32) {
-            return Err(ExecutionError::StateError("Buyback resulted in zero primary tokens. Aborting.".to_string()));
+            if primary_tokens_bought_nat == Nat::from(0u32) {
+                return Err(ExecutionError::StateError("Buyback resulted in zero primary tokens. Aborting.".to_string()));
+            }
+            
+            total_primary_tokens_nat = total_primary_tokens_nat + primary_tokens_bought_nat;
+        } else {
+            // We have accumulated tokens, adjust ICP allocation
+            // Use all ICP for pairing since we already have tokens
+            icp_for_pairing = icp_to_deploy;
         }
 
         // 3. Add liquidity to DEX with the assets we have.
         // The DEX will handle the ratio, leaving any "dust" unspent.
-        let lp_result = add_liquidity_to_kong(
-            primary_token_symbol,
-            primary_tokens_bought_nat.clone(),
+        let lp_result = match add_liquidity_to_kong(
+            primary_token_symbol.clone(),
+            total_primary_tokens_nat.clone(),
             Nat::from(icp_for_pairing),
         )
-        .await
-        .map_err(|e| ExecutionError::StateError(format!("Failed to add liquidity: {}", e)))?;
+        .await {
+            Ok(result) => result,
+            Err(e) => {
+                // LP failed - save the primary tokens for next attempt
+                let tokens_to_save: u64 = total_primary_tokens_nat.0.try_into()
+                    .map_err(|_| ExecutionError::StateError("Could not convert tokens to u64".to_string()))?;
+                
+                // Only save newly bought tokens (not the ones already accumulated)
+                let new_tokens = tokens_to_save.saturating_sub(accumulated_tokens);
+                if new_tokens > 0 {
+                    add_to_accumulated_primary_tokens(new_tokens)?;
+                }
+                
+                return Err(ExecutionError::StateError(format!(
+                    "Failed to add liquidity: {}. Saved {} primary tokens for next attempt", 
+                    e, new_tokens
+                )));
+            }
+        };
 
         // 4. Update treasury balance with the actual amounts used.
         let icp_provided_for_lp: u64 = lp_result.amount_1.0.try_into()
             .map_err(|_| ExecutionError::StateError("Could not convert LP amount to u64".to_string()))?;
 
-        let final_icp_spent = icp_for_buyback + icp_provided_for_lp;
-        withdraw_from_lp_treasury(final_icp_spent)?;
+        // Calculate tokens actually used in LP
+        let tokens_used_in_lp: u64 = lp_result.amount_0.0.try_into()
+            .map_err(|_| ExecutionError::StateError("Could not convert LP token amount to u64".to_string()))?;
         
-        let primary_tokens_bought: u64 = primary_tokens_bought_nat.0.try_into()
-            .map_err(|_| ExecutionError::StateError("Could not convert bought tokens amount to u64".to_string()))?;
+        // Clear accumulated tokens if we used them
+        if accumulated_tokens > 0 {
+            let tokens_to_clear = tokens_used_in_lp.min(accumulated_tokens);
+            withdraw_from_accumulated_primary_tokens(tokens_to_clear)?;
+        }
+        
+        let final_icp_spent = if accumulated_tokens >= 1_000_000 {
+            // We used accumulated tokens, only spent ICP on liquidity
+            icp_provided_for_lp
+        } else {
+            // Normal case - spent on both buyback and liquidity
+            icp_for_buyback + icp_provided_for_lp
+        };
+        
+        withdraw_from_lp_treasury(final_icp_spent)?;
 
         Ok(format!(
-            "Successfully deployed {} e8s ICP ({}% of treasury). Bought {} primary tokens, added {} to LP.",
-            final_icp_spent, deploy_percent, primary_tokens_bought, lp_result.add_lp_token_amount
+            "Successfully deployed {} e8s ICP ({}% of treasury). Used {} primary tokens (including {} accumulated), added {} to LP.",
+            final_icp_spent, deploy_percent, tokens_used_in_lp, accumulated_tokens.min(tokens_used_in_lp), lp_result.add_lp_token_amount
         ))
     }.await;
     
@@ -1019,16 +1092,6 @@ async fn provide_liquidity_from_treasury() {
     }
 }
 
-const LIQUIDITY_PROVISION_INTERVAL_NS: u64 = 4 * 60 * 60 * 1_000_000_000; // 4 hours
-
-pub fn schedule_liquidity_provision() {
-    ic_cdk::spawn(async {
-        provide_liquidity_from_treasury().await;
-        
-        // Schedule the next provision in 4 hours.
-        ic_cdk_timers::set_timer(std::time::Duration::from_nanos(LIQUIDITY_PROVISION_INTERVAL_NS), schedule_liquidity_provision);
-    });
-}
 
 pub async fn distribute_reward() -> Result<String, ExecutionError> {
     register_info_log(
@@ -1329,11 +1392,18 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
         "Successfully distributed reward. Completed.",
     );
 
+    // Provide liquidity from treasury after distribution
+    if LP_TREASURY.with(|cell| *cell.borrow().get()) >= MIN_ICP_FOR_PROVISION_E8S {
+        ic_cdk::spawn(async {
+            provide_liquidity_from_treasury().await;
+        });
+    }
+
     Ok("Success".to_string())
 }
 
 #[update(guard = "not_anon")]
-async fn claim_icp_reward(from_subaccount: Option<[u8; 32]>) -> Result<String, ExecutionError> {
+pub async fn claim_icp_reward(from_subaccount: Option<[u8; 32]>) -> Result<String, ExecutionError> {
     let caller = ic_cdk::caller();
     let _guard =
         CallerGuard::new(caller).map_err(|e| ExecutionError::Unauthorized(e.to_string()))?;
@@ -1569,7 +1639,7 @@ pub async fn get_icp_rate_in_cents() -> Result<u64, ExecutionError> {
 }
 
 #[update(guard = "not_anon")]
-async fn redeem(from_subaccount: Option<[u8; 32]>) -> Result<String, ExecutionError> {
+pub async fn redeem(from_subaccount: Option<[u8; 32]>) -> Result<String, ExecutionError> {
     let caller = ic_cdk::caller();
     let _guard =
         CallerGuard::new(caller).map_err(|e| ExecutionError::Unauthorized(e.to_string()))?;

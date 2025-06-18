@@ -1,7 +1,6 @@
 import React, { Suspense, useState } from "react";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import Logo from "@/components/Logo";
-import Tabs from "@/components/Tabs";
 import { useIdentity } from "@/hooks/useIdentity";
 import AuthMenu from "@/features/auth/components/AuthMenu";
 
@@ -30,8 +29,7 @@ const Header = () => {
 		<header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
 			<div className="container flex h-14 max-w-screen-2xl items-center">
 				<Logo />
-				<div className="hidden md:flex flex-1 items-center justify-between ml-4">
-					<Tabs />
+				<div className="hidden md:flex flex-1 items-center justify-end ml-4">
 					<nav className="flex items-center">
 						<Entry />
 					</nav>
@@ -53,10 +51,7 @@ const Header = () => {
 			{isMenuOpen && (
 				<div className="md:hidden">
 					<nav className="flex flex-col items-center px-2 py-4 border-t border-border/40">
-						<Tabs />
-						<div className="mt-4">
-							<Entry />
-						</div>
+						<Entry />
 					</nav>
 				</div>
 			)}

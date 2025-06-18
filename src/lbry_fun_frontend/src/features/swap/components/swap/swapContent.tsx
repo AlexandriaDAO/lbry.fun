@@ -17,6 +17,7 @@ import ErrorModal from "../errorModal";
 import { Entry } from "@/layouts/parts/Header";
 import { RootState } from "@/store";
 import SwapContentSkeleton from "./swapContentSkeleton";
+import fetchTransactionHistory from "../../thunks/fetchTransactionHistory.thunk";
 
 
 const SwapContent: React.FC = () => {
@@ -68,6 +69,8 @@ const SwapContent: React.FC = () => {
     if (!isAuthenticated || !principal || !swap.activeSwapPool?.[1].secondary_token_id) return;
     if (swap.swapSuccess === true) {
       dispatch(getSecondaryBalance(principal));
+      // Refresh transaction history after successful swap
+      dispatch(fetchTransactionHistory({ userPrincipal: principal, startIndex: 0 }));
       dispatch(flagHandler());
       setLoadingModalV(false);
       setSucessModalV(true);
@@ -164,10 +167,7 @@ const SwapContent: React.FC = () => {
               <button
                 type="button"
                 className={`w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 
-      ${parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? 'text-[#fff] cursor-not-allowed' : 'bg-balancebox text-white cursor-pointer'}`}
-                style={{
-                  backgroundColor: parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? '#5555FF' : '', // when disabled
-                }}
+      ${parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-primary-action text-white cursor-pointer hover:opacity-90'}`}
                 disabled={parseFloat(amount) === 0 || swap.loading || parseFloat(amount) < minimum_icp || amount === ""}
                 onClick={handleSubmit}
               >
@@ -190,10 +190,10 @@ const SwapContent: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="border border-gray-400 border-gray-600 bg-white bg-gray-800 py-5 px-5 rounded-2xl ms-3">
+        <div className="border border-gray-600 bg-gray-800 py-5 px-5 rounded-2xl ms-3">
           <ul className="ps-0">
             <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor text-gray-200">
+              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-gray-200">
                 Network Fees
               </strong>
               <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor text-gray-200">
@@ -201,7 +201,7 @@ const SwapContent: React.FC = () => {
               </span>
             </li>
             <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor text-gray-200">
+              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-gray-200">
                 Send
               </strong>
               <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor text-gray-200 break-all">
@@ -209,7 +209,7 @@ const SwapContent: React.FC = () => {
               </span>
             </li>
             <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor text-gray-200">
+              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-gray-200">
                 Receive
               </strong>
               <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor text-gray-200 break-all">
@@ -217,12 +217,12 @@ const SwapContent: React.FC = () => {
               </span>
             </li>
             <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor text-gray-200">
+              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-gray-200">
                 For each ICP you swap, you'll receive <span className="text-[#FF9900] text-yellow-400">{tentativeSecondary}</span> {swap.activeSwapPool?.[1].secondary_token_symbol} tokens.
               </strong>
             </li>
             <li>
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-radiocolor text-gray-200">
+              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-gray-200">
                 Please review the details carefully, as swaps are irreversible and cannot be undone once confirmed.
               </strong>
             </li>

@@ -6,7 +6,7 @@ import { useAppSelector } from '@/store/hooks/useAppSelector';
 import previewTokenomics from '../thunk/previewTokenomics.thunk';
 import { RootState } from '@/store';
 import { TailSpin } from 'react-loader-spinner';
-import { GraphData } from '../lbryFunSlice';
+import { GraphData, clearPreviewError } from '../lbryFunSlice';
 
 interface TokenomicsGraphsBackendProps {
   primaryMaxSupply: string;
@@ -94,6 +94,11 @@ const TokenomicsGraphsBackend: React.FC<TokenomicsGraphsBackendProps> = ({
   const [copySuccess, setCopySuccess] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
 
+  // Clear any previous errors when component mounts
+  useEffect(() => {
+    dispatch(clearPreviewError());
+  }, [dispatch]);
+
   useEffect(() => {
     const newWarnings: string[] = [];
     if (initialSecondaryBurn && primaryMaxSupply && tgeAllocation && halvingStep) {
@@ -134,12 +139,14 @@ const TokenomicsGraphsBackend: React.FC<TokenomicsGraphsBackendProps> = ({
 
     if (primary_max_supply > 0 && initial_secondary_burn > 0 && halving_step > 0 && initial_reward_per_burn_unit > 0) {
         dispatch(previewTokenomics({args: {
-            primary_max_supply,
-            tge_allocation,
-            initial_secondary_burn,
-            halving_step,
-            initial_reward_per_burn_unit,
-        }}));
+            primary_max_supply: primary_max_supply.toString(),
+            tge_allocation: tge_allocation.toString(),
+            initial_secondary_burn: initial_secondary_burn.toString(),
+            halving_step: halving_step.toString(),
+            initial_reward_per_burn_unit: initial_reward_per_burn_unit.toString(),
+        }})).catch((error) => {
+            console.error("Failed to dispatch previewTokenomics:", error);
+        });
     }
   }, [primaryMaxSupply, tgeAllocation, initialSecondaryBurn, halvingStep, initialRewardPerBurnUnit, dispatch]);
 

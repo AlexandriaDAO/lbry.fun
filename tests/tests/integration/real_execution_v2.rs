@@ -32,7 +32,7 @@ fn test_token_deployment_flow() {
     let pic = PocketIc::new();
     
     // Create test user
-    let _test_user = Principal::from_text("xkbqi-2qaaa-aaaah-qbpqc-cai").unwrap();
+    let _test_user = Principal::from_text("rdmx6-jaaaa-aaaaa-aaadq-cai").unwrap();
     
     // Create mock ICP ledger
     let icp_ledger_id = create_mock_canister(&pic);

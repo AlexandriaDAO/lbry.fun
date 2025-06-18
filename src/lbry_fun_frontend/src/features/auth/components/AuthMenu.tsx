@@ -3,17 +3,8 @@ import {
 	Copy,
 	LogIn,
 	LogOut,
-	UserCircle,
 } from "lucide-react";
 
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/lib/components/dropdown-menu";
 import { useLogout } from "@/hooks/useLogout";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import { useIdentity } from "@/hooks/useIdentity";
@@ -21,6 +12,8 @@ import { Button } from "@/lib/components/button";
 import { Skeleton } from "@/lib/components/skeleton";
 import { principalToString } from "@/utils/principal";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { useIcpBalance } from "@/hooks/useIcpBalance";
 
 export default function AuthMenu() {
 	const logout = useLogout();
@@ -31,6 +24,7 @@ export default function AuthMenu() {
 		isLoading: authReduxLoading, 
 		isInitialized: authReduxInitialized 
 	} = useAppSelector(state => state.auth);
+	const { balance } = useIcpBalance();
 
 	const handleLogin = () => {
 		if (login) {
@@ -38,17 +32,18 @@ export default function AuthMenu() {
 		}
 	};
 
-	const handleCopyPrincipal = () => {
+	const handleCopyPrincipal = (e: React.MouseEvent) => {
+		e.stopPropagation();
 		if (principal) {
 			navigator.clipboard.writeText(principal);
-			toast.success("Principal copied to clipboard!");
+			toast.success("Principal ID copied!");
 		}
 	}
 
 	const isMenuLoading = !authReduxInitialized || authReduxLoading || isLoggingIn;
 
 	if (isMenuLoading) {
-		return <Skeleton className="h-[42px] w-[42px] rounded-full" />;
+		return <Skeleton className="h-10 w-48 rounded-full" />;
 	}
 
 	if (!isAuthenticated) {
@@ -56,36 +51,47 @@ export default function AuthMenu() {
 			<Button 
 				onClick={handleLogin} 
 				variant="outline" 
-				className="rounded-full p-2 h-[42px] w-[42px]"
+				className="rounded-full px-4 py-2 h-10 flex items-center gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
 				disabled={!login}
 			>
-				<LogIn size={18} />
+				<LogIn size={16} />
+				<span className="text-sm font-medium">Login</span>
 			</Button>
 		);
 	}
 
-	const displayPrincipal = principal ? principalToString(principal) : "Principal ID";
+	const displayPrincipal = principal ? principalToString(principal) : "";
 
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<div className="w-[42px] h-[42px] border border-white border-gray-700 rounded-full cursor-pointer bg-gray-200 bg-gray-800 flex items-center justify-center">
-					<UserCircle size={24} className="text-gray-700 text-gray-300" />
+		<div className="flex items-center gap-2">
+			<div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-secondary/30 border border-border/50">
+				<div className="flex flex-col items-end">
+					<span className="text-[10px] text-muted-foreground uppercase tracking-wider">Balance</span>
+					<span className="text-sm font-semibold text-foreground">
+						{balance || "0.0000"} ICP
+					</span>
 				</div>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent className="w-56" side="bottom" align="end">
-				{principal && (
-					<DropdownMenuItem className="cursor-pointer" onClick={handleCopyPrincipal}>
-						<span className="truncate">{displayPrincipal}</span>
-						<Copy className="ml-auto h-4 w-4" />
-					</DropdownMenuItem>
-				)}
-				<DropdownMenuSeparator />
-				<DropdownMenuItem className="cursor-pointer" onClick={logout}>
-					<LogOut className="mr-2 h-4 w-4" />
-					<span>Log out</span>
-				</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
+				<div className="w-px h-8 bg-border/50" />
+				<button
+					onClick={handleCopyPrincipal}
+					className="group flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+					title={`Copy Principal ID: ${principal}`}
+				>
+					<span className="text-xs font-mono text-muted-foreground group-hover:text-foreground transition-colors">
+						{displayPrincipal}
+					</span>
+					<Copy className="h-3 w-3 text-muted-foreground group-hover:text-foreground transition-colors" />
+				</button>
+			</div>
+			<Button
+				onClick={logout}
+				variant="outline"
+				size="sm"
+				className="rounded-full px-4 py-2 h-10 flex items-center gap-2 hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-colors"
+			>
+				<LogOut size={16} />
+				<span className="text-sm font-medium">Logout</span>
+			</Button>
+		</div>
 	);
 }

@@ -129,10 +129,10 @@ mod comprehensive_distribution_tests {
         assert!(pool_balance >= 300 * E8S, "Pool should have at least 300 ICP");
         
         println!("\n=== Phase 2: Setup Stakers ===");
-        // Mint primary tokens directly for testing (bypassing broken burn)
-        mint_primary_tokens(&mut env, "alice", 1000 * E8S).unwrap();
-        mint_primary_tokens(&mut env, "bob", 2000 * E8S).unwrap();
-        mint_primary_tokens(&mut env, "charlie", 3000 * E8S).unwrap();
+        // Setup users with primary tokens
+        setup_user_with_primary(&mut env, "alice", 1000 * E8S).unwrap();
+        setup_user_with_primary(&mut env, "bob", 2000 * E8S).unwrap();
+        setup_user_with_primary(&mut env, "charlie", 3000 * E8S).unwrap();
         
         // Verify primary balances
         let alice_primary = get_primary_balance(&env, "alice");
@@ -143,32 +143,23 @@ mod comprehensive_distribution_tests {
         println!("Bob primary balance: {} e8s", bob_primary);
         println!("Charlie primary balance: {} e8s", charlie_primary);
         
-        // Stake primary tokens - try with a smaller amount first
-        let stake_amount = 1000 * E8S; // 1000 tokens
-        println!("\nAttempting to stake {} e8s", stake_amount);
+        // Stake primary tokens - leave some for transfer fees
+        println!("\nStaking primary tokens...");
         
-        // Approve with much larger amount to ensure it's not a fee issue
-        let approval_result = approve_primary(&mut env, "alice", stake_amount * 2);
-        println!("Approval result: {:?}", approval_result);
+        // Alice stakes her balance minus fee
+        approve_primary(&mut env, "alice", alice_primary).unwrap();
+        stake_primary(&mut env, "alice", alice_primary.saturating_sub(10_000)).unwrap();
+        println!("Alice staked: {} e8s", alice_primary.saturating_sub(10_000));
         
-        let alice_balance_before = get_primary_balance(&env, "alice");
-        
-        match stake_primary(&mut env, "alice", stake_amount) {
-            Ok(msg) => println!("Stake result: {}", msg),
-            Err(e) => println!("Stake error: {}", e),
-        }
-        
-        let alice_balance_after = get_primary_balance(&env, "alice");
-        println!("Alice primary balance before stake: {} e8s", alice_balance_before);
-        println!("Alice primary balance after stake: {} e8s", alice_balance_after);
-        let balance_change = alice_balance_before.saturating_sub(alice_balance_after);
-        println!("Balance change: {} e8s", balance_change);
-        
+        // Bob stakes his balance minus fee
         approve_primary(&mut env, "bob", bob_primary).unwrap();
-        stake_primary(&mut env, "bob", bob_primary - E8S).unwrap();
+        stake_primary(&mut env, "bob", bob_primary.saturating_sub(10_000)).unwrap();
+        println!("Bob staked: {} e8s", bob_primary.saturating_sub(10_000));
         
+        // Charlie stakes his balance minus fee
         approve_primary(&mut env, "charlie", charlie_primary).unwrap();
-        stake_primary(&mut env, "charlie", charlie_primary - E8S).unwrap();
+        stake_primary(&mut env, "charlie", charlie_primary.saturating_sub(10_000)).unwrap();
+        println!("Charlie staked: {} e8s", charlie_primary.saturating_sub(10_000));
         
         // Check icp_swap primary token balance (should have received staked tokens)
         let icp_swap_primary = get_canister_balance(&env, env.icp_swap, env.primary_token);
@@ -207,15 +198,15 @@ mod comprehensive_distribution_tests {
         let distributed = pool_before.saturating_sub(pool_after);
         println!("Total distributed: {} e8s ({} ICP)", distributed, distributed / E8S);
         
-        // Verify 1% distribution
-        let expected_distribution = pool_before / 100;
-        let tolerance = expected_distribution / 10; // 10% tolerance
+        // Verify distribution - only LBRY fee (1% of 1%) leaves the canister
+        let expected_external_distribution = pool_before / 10000; // 0.01% (LBRY fee)
+        let tolerance = expected_external_distribution / 10; // 10% tolerance
         
         assert!(
-            distributed >= expected_distribution - tolerance && 
-            distributed <= expected_distribution + tolerance,
-            "Distribution should be ~1% of pool. Expected: {}, Got: {}", 
-            expected_distribution, distributed
+            distributed >= expected_external_distribution - tolerance && 
+            distributed <= expected_external_distribution + tolerance,
+            "External distribution should be ~0.01% of pool (LBRY fee). Expected: {}, Got: {}", 
+            expected_external_distribution, distributed
         );
         
         println!("\n=== Phase 4: Check Rewards ===");
@@ -287,9 +278,10 @@ mod comprehensive_distribution_tests {
         swap_icp(&mut env, "alice", 50 * E8S).unwrap();
         
         // Setup single staker
-        mint_primary_tokens(&mut env, "alice", 1000 * E8S).unwrap();
-        approve_primary(&mut env, "alice", 1000 * E8S).unwrap();
-        stake_primary(&mut env, "alice", 900 * E8S).unwrap();
+        setup_user_with_primary(&mut env, "alice", 1000 * E8S).unwrap();
+        let alice_balance = get_primary_balance(&env, "alice");
+        approve_primary(&mut env, "alice", alice_balance).unwrap();
+        stake_primary(&mut env, "alice", alice_balance.saturating_sub(10_000)).unwrap();
         
         let pool_before = get_canister_balance(&env, env.icp_swap, env.icp_ledger);
         

@@ -1,19 +1,8 @@
-import getIcpBal from "@/features/icp-ledger/thunks/getIcpBal";
-import { useAppDispatch } from "@/store/hooks/useAppDispatch";
-import { useAppSelector } from "@/store/hooks/useAppSelector";
-import React, { useEffect } from "react";
-import { RootState } from "@/store";
+import React from "react";
+import { useIcpBalance } from "@/hooks/useIcpBalance";
 
 const UserICPBalance = () => {
-    const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
-    const dispatch = useAppDispatch();
-    const icp = useAppSelector((state: RootState) => state.icpLedger);
-    
-    useEffect(() => {
-      if (isAuthenticated && principal) {
-        dispatch(getIcpBal(principal));
-      }
-    }, [isAuthenticated, principal, dispatch]);
+    const { balance } = useIcpBalance();
 
     return (<>
         <div className="pb-5">
@@ -21,7 +10,7 @@ const UserICPBalance = () => {
                 <div>
                     <h2 className="text-2xl font-bold mb-2 text-foreground">Balance</h2>
                     <p className="text-lg text-black font-semibold text-foreground">
-                        <span className="text-constructive">{icp.accountBalance}</span> ICP
+                        <span className="text-constructive">{balance}</span> ICP
                     </p>
                 </div>
 

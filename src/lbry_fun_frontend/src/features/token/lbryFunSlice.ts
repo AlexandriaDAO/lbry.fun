@@ -54,6 +54,9 @@ const lbryFunSlice = createSlice({
       state.success = false;
       state.error = null;
     },
+    clearPreviewError: (state) => {
+      state.previewError = null;
+    },
   },
   extraReducers: (builder: ActionReducerMapBuilder<LbryFunState>) => {
     builder
@@ -145,7 +148,7 @@ const lbryFunSlice = createSlice({
       })
       .addCase(fetchTokenLogosForPool.rejected, (state, action) => {
         // Optionally handle logo fetching errors, e.g., log them
-        console.warn("Failed to fetch token logos:", action.payload);
+        // Failed to fetch token logos - background task, no user-facing error
         // No user-facing error toast or loading state for now as it's a background task
       })
       .addCase(previewTokenomics.pending, (state) => {
@@ -162,5 +165,5 @@ const lbryFunSlice = createSlice({
       });
   },
 });
-export const { lbryFunFlagHandler } = lbryFunSlice.actions;
+export const { lbryFunFlagHandler, clearPreviewError } = lbryFunSlice.actions;
 export default lbryFunSlice.reducer;

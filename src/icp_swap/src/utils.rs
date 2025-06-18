@@ -9,7 +9,7 @@ use ic_ledger_types::Subaccount;
 use ic_ledger_types::{ AccountBalanceArgs, DEFAULT_SUBACCOUNT };
 use serde::Deserialize;
 
-pub const STAKING_REWARD_PERCENTAGE: u64 = 100; // 1%
+pub const STAKING_REWARD_PERCENTAGE: u64 = 100; // 1% (in basis points, 100 = 1%)
 pub const XRC_CANISTER_ID: &str = "uf6dk-hyaaa-aaaaq-qaaaq-cai";
 pub const ICP_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 

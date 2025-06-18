@@ -23,9 +23,9 @@ const fetchTransactionHistory = createAsyncThunk<
         state.swap.activeSwapPool[1].secondary_token_id
       ];
       
-      // Get token tickers from the active swap pool
-      const primaryTicker = state.swap.activeSwapPool[1].primary_token_ticker;
-      const secondaryTicker = state.swap.activeSwapPool[1].secondary_token_ticker;
+      // Get token symbols from the active swap pool (used as tickers)
+      const primaryTicker = state.swap.activeSwapPool[1].primary_token_symbol;
+      const secondaryTicker = state.swap.activeSwapPool[1].secondary_token_symbol;
 
       // Fetch from both token canisters in parallel
       const [primaryActor, secondaryActor] = await Promise.all([

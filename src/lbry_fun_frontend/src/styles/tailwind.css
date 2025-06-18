@@ -12,24 +12,24 @@
   :root {
     /* Cyberpunk Background System - Enhanced Dark Mode */
     --color-background-primary: 240 8% 3%;              /* Deeper void */
-    --color-background-secondary: 240 10% 5%;           /* Darker cards */
-    --color-background-accent: 240 12% 7%;              /* Darker highlights */
-    --color-background-muted: 240 10% 5%;               /* Darker subtle areas */
+    --color-background-secondary: 240 10% 8%;           /* Slightly lighter cards for hierarchy */
+    --color-background-accent: 240 12% 12%;             /* More contrast for highlights */
+    --color-background-muted: 240 10% 6%;               /* Subtle variation */
     
     /* Cyberpunk Text System - Enhanced for dark mode */
     --color-text-primary: 220 30% 95%;                  /* Brighter text */
-    --color-text-secondary: 220 20% 75%;                /* Brighter muted text */
-    --color-text-accent: 300 100% 80%;                  /* Brighter magenta */
+    --color-text-secondary: 220 20% 65%;                /* Muted text - less bright */
+    --color-text-accent: 120 85% 55%;                   /* Softer green for success */
     --color-text-inverse: 240 8% 3%;                    /* Deeper dark text */
     
     /* Cyberpunk Interactive System - Enhanced */
-    --color-interactive-primary: 180 100% 60%;          /* Brighter cyan */
-    --color-interactive-primary-hover: 120 100% 60%;    /* Brighter green */
+    --color-interactive-primary: 180 40% 35%;           /* Subtle cyan for backgrounds */
+    --color-interactive-primary-hover: 180 50% 40%;    /* Slightly brighter on hover */
     --color-interactive-secondary: 240 12% 7%;          /* Darker secondary */
-    --color-interactive-accent: 300 100% 80%;           /* Brighter magenta */
+    --color-interactive-accent: 300 85% 65%;            /* Strategic magenta for CTAs */
     
     /* Cyberpunk Status System - Enhanced */
-    --color-status-success: 120 100% 60%;               /* Brighter matrix green */
+    --color-status-success: 120 70% 50%;               /* Balanced success green */
     --color-status-success-fg: 240 8% 3%;               /* Dark text on bright green */
     --color-status-warning: 45 100% 70%;                /* Brighter electric amber */
     --color-status-warning-fg: 240 8% 3%;               /* Dark text on bright amber */
@@ -39,19 +39,19 @@
     --color-status-info-fg: 240 8% 3%;                  /* Dark text on bright blue */
     
     /* Cyberpunk Border System - Enhanced */
-    --color-border-primary: 180 60% 40%;                /* Brighter cyan borders */
+    --color-border-primary: 220 20% 20%;                /* Subtle gray borders */
     --color-border-muted: 220 20% 15%;                  /* Darker muted borders */
-    --color-border-accent: 300 100% 80%;                /* Brighter magenta borders */
+    --color-border-accent: 300 85% 65%;                 /* Magenta accent borders */
     
     /* Cyberpunk Effect System - Enhanced */
-    --color-effect-glow: 180 100% 60%;                  /* Brighter glow */
+    --color-effect-glow: 300 85% 65%;                  /* Magenta glow for focus */
     --color-effect-shadow: 0 0% 0%;                     /* True black shadows */
-    --color-effect-neon: 300 100% 80%;                  /* Brighter neon */
+    --color-effect-neon: 180 40% 35%;                   /* Subtle cyan neon */
     
     /* Cyberpunk Chart System - Enhanced */
-    --color-chart-primary: 180 100% 70%;                /* Brighter cyan */
-    --color-chart-secondary: 120 100% 70%;              /* Brighter green */
-    --color-chart-accent: 300 100% 80%;                 /* Brighter magenta */
+    --color-chart-primary: 180 50% 45%;                /* Balanced cyan */
+    --color-chart-secondary: 120 70% 55%;              /* Balanced green */
+    --color-chart-accent: 300 85% 65%;                 /* Magenta accent */
     --color-chart-success: 120 100% 60%;                /* Brighter matrix green */
     --color-chart-warning: 45 100% 70%;                 /* Brighter amber */
     --color-chart-error: 0 100% 70%;                    /* Brighter red */

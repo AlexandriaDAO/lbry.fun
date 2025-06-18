@@ -1,7 +1,7 @@
 // Simple distribution test without burning complexity
 use crate::integrated_token_tests::TokenTestEnvironment;
 use crate::shared_helpers::*;
-use candid::{CandidType, Encode, Principal};
+use candid::{CandidType, Decode, Encode, Principal};
 use std::time::Duration;
 use serde::Deserialize;
 
@@ -40,25 +40,37 @@ mod simple_distribution_tests {
             Encode!().expect("Empty args")
         );
         
-        println!("Distribution result: {:?}", result);
-        
         // Check pool after
         let pool_after = get_canister_balance(&env, env.icp_swap, env.icp_ledger);
         println!("Pool after distribution: {}", pool_after);
         
-        if result.is_ok() {
-            // With no stakers, 1% should still be distributed (to LBRY buyback and liquidity)
-            assert!(pool_after < pool_before, "Pool should decrease even with no stakers");
+        // Decode the result
+        match result {
+            Ok(response) => {
+                let decoded: Result<String, String> = Decode!(&response, Result<String, String>).expect("Failed to decode");
+                println!("Distribution result: {:?}", decoded);
+                
+                // The distribution returns an error when no stakers exist, but still distributes to LBRY and LP
+                if decoded.is_err() {
+            // Even though it returns an error, LBRY fee (1% of 1%) and LP treasury (49.5% of 1%) 
+            // should still be distributed before the error
+            assert!(pool_after < pool_before, "Pool should decrease even with error");
             
             let distributed = pool_before - pool_after;
-            let expected_distribution = pool_before / 100; // 1%
-            println!("Distributed: {}, Expected: ~{}", distributed, expected_distribution);
+            let total_1_percent = pool_before / 100; // 1% of pool
+            let expected_lbry_fee = total_1_percent / 100; // 1% of the 1% goes to LBRY
             
-            // Allow some variance for fees
-            assert!(distributed <= expected_distribution + ICP_TRANSFER_FEE * 2);
-            assert!(distributed >= expected_distribution / 2);
-        } else {
-            println!("Distribution failed - this might be expected if not enough time passed");
+            println!("Distributed: {}, Expected LBRY fee: ~{}", distributed, expected_lbry_fee);
+            
+            // Only the LBRY fee is transferred out; LP treasury is tracked internally
+            // Allow for transfer fees
+            assert!(distributed >= expected_lbry_fee.saturating_sub(ICP_TRANSFER_FEE));
+            assert!(distributed <= expected_lbry_fee + ICP_TRANSFER_FEE);
+                } else {
+                    panic!("Expected distribution to fail when no stakers exist");
+                }
+            }
+            Err(e) => panic!("Failed to call dev_trigger_distribution: {:?}", e),
         }
     }
     

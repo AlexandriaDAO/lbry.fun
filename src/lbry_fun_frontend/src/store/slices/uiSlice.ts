@@ -2,30 +2,30 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '@/store'; // Corrected path
 
 // Define a type for the slice state
-export type TokenPageActiveTab = 'CreateToken' | 'TokenPools';
+export type TokenPageView = 'CreateToken' | 'TokenPools';
 
 interface UiState {
-  activeTokenPageTab: TokenPageActiveTab;
+  activeTokenView: TokenPageView;
 }
 
 // Define the initial state using that type
 const initialState: UiState = {
-  activeTokenPageTab: 'CreateToken', // Default to CreateToken
+  activeTokenView: 'TokenPools', // Default to TokenPools
 };
 
 export const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    setActiveTokenPageTab: (state, action: PayloadAction<TokenPageActiveTab>) => {
-      state.activeTokenPageTab = action.payload;
+    setActiveTokenView: (state, action: PayloadAction<TokenPageView>) => {
+      state.activeTokenView = action.payload;
     },
   },
 });
 
-export const { setActiveTokenPageTab } = uiSlice.actions;
+export const { setActiveTokenView } = uiSlice.actions;
 
-// Selector to get the active tab from the state
-export const selectActiveTokenPageTab = (state: RootState) => state.ui.activeTokenPageTab;
+// Selector to get the active view from the state
+export const selectActiveTokenView = (state: RootState) => state.ui.activeTokenView;
 
 export default uiSlice.reducer; 

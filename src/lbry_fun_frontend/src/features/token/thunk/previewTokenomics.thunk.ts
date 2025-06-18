@@ -3,11 +3,11 @@ import { getLbryFunActor } from "@/features/auth/utils/authUtils";
 import { GraphData } from "../lbryFunSlice";
 
 export interface PreviewArgs {
-    primary_max_supply: bigint;
-    tge_allocation: bigint;
-    initial_secondary_burn: bigint;
-    halving_step: bigint;
-    initial_reward_per_burn_unit: bigint;
+    primary_max_supply: string;
+    tge_allocation: string;
+    initial_secondary_burn: string;
+    halving_step: string;
+    initial_reward_per_burn_unit: string;
 }
 
 const previewTokenomics = createAsyncThunk<GraphData, { args: PreviewArgs }, { rejectValue: { title: string, message: string } }>(
@@ -15,13 +15,20 @@ const previewTokenomics = createAsyncThunk<GraphData, { args: PreviewArgs }, { r
     async ({ args }, { rejectWithValue }) => {
         try {
             const actor = await getLbryFunActor();
-            const result = await actor.preview_tokenomics_graphs({
-                primary_max_supply: args.primary_max_supply,
-                tge_allocation: args.tge_allocation,
-                initial_secondary_burn: args.initial_secondary_burn,
-                halving_step: args.halving_step,
-                initial_reward_per_burn_unit: args.initial_reward_per_burn_unit,
-            });
+            if (!actor) {
+                throw new Error("Failed to initialize Lbry Fun actor");
+            }
+            
+            // Convert string args to BigInt for the actor call
+            const actorArgs = {
+                primary_max_supply: BigInt(args.primary_max_supply),
+                tge_allocation: BigInt(args.tge_allocation),
+                initial_secondary_burn: BigInt(args.initial_secondary_burn),
+                halving_step: BigInt(args.halving_step),
+                initial_reward_per_burn_unit: BigInt(args.initial_reward_per_burn_unit),
+            };
+            
+            const result = await actor.preview_tokenomics_graphs(actorArgs);
 
             const serializablePayload: GraphData = {
                 cumulative_supply_data_x: Array.from(result.cumulative_supply_data_x, (v) => v.toString()),
@@ -35,11 +42,26 @@ const previewTokenomics = createAsyncThunk<GraphData, { args: PreviewArgs }, { r
             };
 
             return serializablePayload;
-        } catch (error) {
-            console.error("Error fetching tokenomics preview:", error);
+        } catch (error: any) {
+            let errorMessage = "Failed to fetch tokenomics preview data from the backend.";
+            
+            // Try to extract more specific error information
+            if (error?.message) {
+                errorMessage = error.message;
+            } else if (error?.toString && typeof error.toString === 'function') {
+                errorMessage = error.toString();
+            }
+            
+            // Check for specific error patterns
+            if (errorMessage.includes('Replica returned an error')) {
+                errorMessage = "Unable to connect to the canister. Please check your network connection and try again.";
+            } else if (errorMessage.includes('Invalid certificate')) {
+                errorMessage = "Authentication error. Please try logging in again.";
+            }
+            
             return rejectWithValue({
                 title: "Preview Error",
-                message: "Failed to fetch tokenomics preview data from the backend.",
+                message: errorMessage,
             });
         }
     }

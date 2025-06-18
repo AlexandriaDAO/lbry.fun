@@ -108,8 +108,14 @@ export const getICRCActor = (canisterId:string) =>
 
 
 export const getLogs = () => getActor(log_canister_id, createActorLogs, logs);
-export const getLbryFunActor = () =>
-  getActor(lbry_fun_canister_id, createActorLbryFun, lbry_fun);
+export const getLbryFunActor = () => {
+  if (!lbry_fun_canister_id) {
+    console.error("CANISTER_ID_LBRY_FUN is not defined in environment variables");
+  } else {
+    console.log("Using LBRY_FUN canister ID:", lbry_fun_canister_id);
+  }
+  return getActor(lbry_fun_canister_id, createActorLbryFun, lbry_fun);
+};
 
 // Helper function to check if user is authenticated
 export const isUserAuthenticated = async (): Promise<boolean> => {

@@ -6,6 +6,13 @@ use std::collections::HashMap;
 
 const E8S: u64 = 100_000_000;
 
+#[derive(CandidType, Deserialize, Debug)]
+struct Stake {
+    amount: u64,
+    time: u64,
+    reward_icp: u64,
+}
+
 // Helper functions used across test modules
 pub fn get_secondary_balance(env: &TokenTestEnvironment, user: &str) -> u64 {
     env.get_balance(user, env.secondary_token)
@@ -57,6 +64,8 @@ pub fn approve_icp(env: &mut TokenTestEnvironment, user: &str, amount: u64) -> R
 pub fn swap_icp(env: &mut TokenTestEnvironment, user: &str, amount: u64) -> Result<String, String> {
     let user_principal = env.test_users.get(user)
         .ok_or_else(|| format!("User {} not found", user))?;
+    
+    println!("DEBUG: Swapping {} e8s ({}  ICP) for user {}", amount, amount / E8S, user);
     
     let from_subaccount: Option<[u8; 32]> = None;
     let result = env.pic.update_call(
@@ -485,9 +494,10 @@ mod test_burn_secondary {
                 secondary_burned, primary_gained, icp_gained);
             
             // Verify secondary tokens were burned (convert natural units to e8s for comparison)
-            let expected_burned_e8s = burn_amount * E8S;
+            // Include ICRC transfer fee of 10,000 e8s
+            let expected_burned_e8s = burn_amount * E8S + 10_000;
             assert_eq!(secondary_burned, expected_burned_e8s,
-                "Expected {} secondary tokens burned ({}e8s), got {}", burn_amount, expected_burned_e8s, secondary_burned);
+                "Expected {} secondary tokens burned ({}e8s including fee), got {}", burn_amount, expected_burned_e8s, secondary_burned);
             
             // Verify primary tokens were minted (should be > 0)
             assert!(primary_gained > 0, "Primary tokens should be minted, got {}", primary_gained);
@@ -790,9 +800,9 @@ mod test_stake_primary {
 
         match result {
             Ok(response) => {
-                // Try to decode as u64 (stake amount)
-                match candid::decode_one::<u64>(&response) {
-                    Ok(stake_amount) => Ok(stake_amount),
+                // Decode as Option<Stake> and extract amount
+                match candid::decode_one::<Option<Stake>>(&response) {
+                    Ok(stake_opt) => Ok(stake_opt.map(|s| s.amount).unwrap_or(0)),
                     Err(_) => {
                         // Maybe it's wrapped in an Option or Result
                         match candid::decode_one::<Option<u64>>(&response) {
@@ -811,7 +821,8 @@ mod test_stake_primary {
         let mut env = TokenTestEnvironment::new();
         
         // Setup: Get alice some primary tokens first
-        let setup_result = setup_user_with_primary(&mut env, "alice", 1000 * E8S);
+        // Use the shared helper function which properly handles the swap
+        let setup_result = crate::shared_helpers::setup_user_with_primary(&mut env, "alice", 1000 * E8S);
         println!("Setup result: {:?}", setup_result);
         assert!(setup_result.is_ok(), "Failed to setup primary tokens");
 

@@ -29,6 +29,7 @@ pub const LOGS_COUNTER_ID: MemoryId = MemoryId::new(9);
 pub const CONFIGS_MEM_ID: MemoryId = MemoryId::new(10);
 pub const LP_TREASURY_MEM_ID: MemoryId = MemoryId::new(11);
 pub const TREASURY_STATE_MEM_ID: MemoryId = MemoryId::new(12);
+pub const ACCUMULATED_PRIMARY_TOKENS_MEM_ID: MemoryId = MemoryId::new(13);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
@@ -94,6 +95,10 @@ thread_local! {
                 next_earliest_provision_timestamp: 0,
             }
         ).unwrap()
+    );
+    
+    pub static ACCUMULATED_PRIMARY_TOKENS: RefCell<StableCell<u64, Memory>> = RefCell::new(
+        StableCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(ACCUMULATED_PRIMARY_TOKENS_MEM_ID)), 0).unwrap()
     );
 }
 
@@ -300,4 +305,38 @@ pub fn update_next_provision_timestamp(new_timestamp: u64) {
         treasury_state.next_earliest_provision_timestamp = new_timestamp;
         let _ = state.borrow_mut().set(treasury_state);
     });
+}
+
+pub fn get_accumulated_primary_tokens() -> u64 {
+    ACCUMULATED_PRIMARY_TOKENS.with(|cell| *cell.borrow().get())
+}
+
+pub fn add_to_accumulated_primary_tokens(amount: u64) -> Result<(), ExecutionError> {
+    ACCUMULATED_PRIMARY_TOKENS.with(|cell| {
+        let current = *cell.borrow().get();
+        let new_total = current.checked_add(amount)
+            .ok_or_else(|| ExecutionError::AdditionOverflow {
+                operation: "add_to_accumulated_primary_tokens".to_string(),
+                details: format!("Current: {}, Adding: {}", current, amount),
+            })?;
+        cell.borrow_mut().set(new_total).map_err(|_| ExecutionError::StateError("Failed to update accumulated primary tokens".to_string()))?;
+        Ok(())
+    })
+}
+
+pub fn withdraw_from_accumulated_primary_tokens(amount: u64) -> Result<(), ExecutionError> {
+    ACCUMULATED_PRIMARY_TOKENS.with(|cell| {
+        let mut current = *cell.borrow().get();
+        if current < amount {
+            return Err(ExecutionError::InsufficientBalance {
+                required: amount,
+                available: current,
+                token: "Primary".to_string(),
+                details: "Accumulated primary tokens insufficient".to_string(),
+            });
+        }
+        current = current.saturating_sub(amount);
+        cell.borrow_mut().set(current).map_err(|_| ExecutionError::StateError("Failed to update accumulated primary tokens".to_string()))?;
+        Ok(())
+    })
 }

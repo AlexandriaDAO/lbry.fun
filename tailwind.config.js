@@ -149,7 +149,8 @@ module.exports = {
 		},
   		backgroundColor: {
 			// Replace hardcoded backgrounds with semantic roles
-			balancebox: 'hsl(var(--color-interactive-primary))',  // Replace #3A3630
+			balancebox: 'hsl(var(--color-background-accent))',  // Use subtle accent instead of bright cyan
+			'primary-action': 'hsl(var(--color-interactive-accent))',  // Magenta for primary CTAs
 			sendbtnbg: 'hsl(var(--color-status-error))',         // Replace #FF3737
 			mintbtnbg: 'hsl(var(--color-status-success))',       // Replace #92FF71
 			receive: 'hsl(var(--color-status-success))'          // Replace #92FF71

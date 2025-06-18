@@ -1,9 +1,9 @@
 use candid::{CandidType, Nat, Principal};
 use serde::{Deserialize, Serialize};
 use crate::constants::{KONG_BACKEND_CANISTER_ID, ICP_LEDGER_CANISTER_ID};
-use crate::utils::{get_primary_canister_id, icrc2_approve};
+use crate::utils::{get_primary_canister_id, icrc2_approve, get_primary_token_symbol};
 use crate::storage::STATE;
-use crate::get_config;
+use crate::{get_config, get_current_secondary_ratio};
 
 // CandidType structs for KongSwap calls
 
@@ -172,6 +172,38 @@ pub async fn get_add_liquidity_amounts(primary_token_symbol: String, icp_amount:
     result.map(|(r,)| r).map_err(|e| format!("Failed to call add_liquidity_amounts: {:?}", e))
 }
 
+pub async fn execute_swap_on_dex_no_slippage(pay_symbol: String, pay_amount: Nat, receive_symbol: String) -> Result<Nat, String> {
+    let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
+    let icp_canister_id = get_config().icp_ledger_id;
+    
+    // Approve the Kong DEX to spend the token on our behalf.
+    icrc2_approve(icp_canister_id, kong_principal, pay_amount.clone()).await?;
+
+    let swap_args = SwapArgs {
+        pay_token: pay_symbol,
+        pay_amount: pay_amount.clone(),
+        pay_tx_id: None,
+        receive_token: receive_symbol,
+        receive_amount: None, // No minimum - accept any price
+        receive_address: None, // Defaults to caller (this canister)
+        max_slippage: Some(100.0), // Accept any price
+        referred_by: None,
+    };
+    
+    let result: Result<(SwapReply,), _> = ic_cdk::call(kong_principal, "swap", (swap_args,)).await;
+
+    match result {
+        Ok((swap_reply,)) => {
+            if swap_reply.status == "Success" {
+                Ok(swap_reply.receive_amount)
+            } else {
+                Err(format!("Swap on DEX failed with status: '{}'", swap_reply.status))
+            }
+        }
+        Err(e) => Err(format!("Failed to call swap on DEX: {:?}", e)),
+    }
+}
+
 pub async fn add_liquidity_to_kong(primary_token_symbol: String, primary_token_amount: Nat, icp_amount: Nat) -> Result<AddLiquidityAmountsReply, String> {
     let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
 
@@ -195,4 +227,93 @@ pub async fn add_liquidity_to_kong(primary_token_symbol: String, primary_token_a
 
     let result: Result<(AddLiquidityAmountsReply,), _> = ic_cdk::call(kong_principal, "add_liquidity", (add_liquidity_args,)).await;
     result.map(|(r,)| r).map_err(|e| format!("Failed to call add_liquidity: {:?}", e))
+}
+
+#[derive(CandidType, Debug, Deserialize, Serialize)]
+pub struct PoolReserves {
+    pub icp_reserve: u64,
+    pub token_reserve: u64,
+}
+
+#[derive(CandidType, Debug, Deserialize, Serialize)]
+pub struct PoolInfo {
+    pub symbol: String,
+    pub chain_0: String,
+    pub symbol_0: String,
+    pub address_0: String,
+    pub reserve_0: Nat,
+    pub chain_1: String,
+    pub symbol_1: String,
+    pub address_1: String,
+    pub reserve_1: Nat,
+    pub lp_token_supply: Nat,
+}
+
+pub async fn get_pool_reserves() -> Result<PoolReserves, String> {
+    let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
+    let primary_token_symbol = get_primary_token_symbol()
+        .await
+        .map_err(|e| format!("Failed to get primary token symbol: {}", e))?;
+    
+    // Create pool symbol (e.g., "ICP_TOKEN")
+    let pool_symbol = format!("ICP_{}", primary_token_symbol);
+    
+    let result: Result<(Option<PoolInfo>,), _> = ic_cdk::call(kong_principal, "pool", (pool_symbol,)).await;
+    
+    match result {
+        Ok((Some(pool_info),)) => {
+            // Determine which reserve is ICP and which is the token
+            let (icp_reserve, token_reserve) = if pool_info.symbol_0 == "ICP" {
+                (pool_info.reserve_0, pool_info.reserve_1)
+            } else {
+                (pool_info.reserve_1, pool_info.reserve_0)
+            };
+            
+            // Convert Nat to u64
+            let icp_reserve_u64: u64 = icp_reserve.0.try_into()
+                .map_err(|_| "Failed to convert ICP reserve to u64".to_string())?;
+            let token_reserve_u64: u64 = token_reserve.0.try_into()
+                .map_err(|_| "Failed to convert token reserve to u64".to_string())?;
+            
+            Ok(PoolReserves {
+                icp_reserve: icp_reserve_u64,
+                token_reserve: token_reserve_u64,
+            })
+        }
+        Ok((None,)) => {
+            // Pool doesn't exist yet
+            Ok(PoolReserves {
+                icp_reserve: 0,
+                token_reserve: 0,
+            })
+        }
+        Err(e) => Err(format!("Failed to query pool: {:?}", e)),
+    }
+}
+
+pub async fn mint_tokens_with_icp(icp_amount: u64) -> Result<Nat, String> {
+    // For the zero liquidity case, we need to get primary tokens to bootstrap the pool
+    // This is a simplified implementation that estimates the amount of primary tokens
+    // based on the current secondary ratio and assumed burn rate
+    
+    // Calculate secondary tokens based on current ratio
+    let icp_rate_in_cents = get_current_secondary_ratio();
+    let secondary_amount = icp_amount.checked_mul(icp_rate_in_cents)
+        .ok_or("Multiplication overflow when calculating secondary amount")?;
+    
+    // Convert secondary e8s to natural units (since burn_secondary expects natural units)
+    let secondary_natural = secondary_amount / 100_000_000u64;
+    
+    // For bootstrapping liquidity, we'll estimate primary tokens
+    // In production, this would involve actual minting/burning through the proper channels
+    // The actual ratio would depend on the tokenomics canister's current state
+    
+    // Return an estimated amount of primary tokens
+    // This is a placeholder - in production you'd need to:
+    // 1. Call swap() to get secondary tokens
+    // 2. Call burn_secondary() to get primary tokens
+    let estimated_primary = secondary_natural.checked_mul(1000)
+        .ok_or("Multiplication overflow when calculating primary amount")?;
+    
+    Ok(Nat::from(estimated_primary))
 } 

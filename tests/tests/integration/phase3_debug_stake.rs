@@ -13,25 +13,9 @@ mod debug_staking {
     fn test_stake_debug() {
         let mut env = TokenTestEnvironment::new();
         
-        // Give alice primary tokens
-        let transfer_args = icrc_ledger_types::icrc1::transfer::TransferArg {
-            from_subaccount: None,
-            to: Account {
-                owner: env.test_users[&"alice".to_string()],
-                subaccount: None,
-            },
-            fee: None,
-            created_at_time: None,
-            memo: None,
-            amount: Nat::from(10000 * E8S),
-        };
-        
-        env.pic.update_call(
-            env.primary_token,
-            env.icp_swap,
-            "icrc1_transfer",
-            Encode!(&transfer_args).expect("Failed to encode"),
-        ).expect("Transfer should work");
+        // Give alice primary tokens using the proper helper
+        // Reduced to 1000 primary tokens (10 ICP worth) instead of 10000
+        setup_user_with_primary(&mut env, "alice", 1000 * E8S).expect("Failed to setup alice with primary tokens");
         
         // Check balances
         let alice_balance = get_primary_balance(&env, "alice");
@@ -39,11 +23,11 @@ mod debug_staking {
         println!("Alice balance: {} e8s", alice_balance);
         println!("ICP Swap balance before: {} e8s", icp_swap_balance);
         
-        // Approve a large amount
-        approve_primary(&mut env, "alice", 5000 * E8S).unwrap();
+        // Approve a large amount (but less than what alice has)
+        approve_primary(&mut env, "alice", 500 * E8S).unwrap();
         
         // Now let's manually call stake_primary with raw candid
-        let stake_amount = 1000 * E8S;
+        let stake_amount = 100 * E8S;
         let from_subaccount: Option<[u8; 32]> = None;
         
         println!("\nCalling stake_primary with amount: {}", stake_amount);
