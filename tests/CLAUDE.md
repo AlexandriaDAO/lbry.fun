@@ -15,3 +15,4 @@ candid-extractor target/wasm32-unknown-unknown/release/icp_swap.wasm > src/icp_s
   - Use proper ICRC2 approve before token operations
 - Operations expect natural units, not e8s (except balance queries)
 - All operations return `Result<String, ExecutionError>` from canisters
+- Never change a test to make it pass unless you're absolutely positive that the test failure is not a reflection of an issue in the core logic.

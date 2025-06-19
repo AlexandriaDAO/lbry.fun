@@ -15,6 +15,7 @@ import { idlFactory as icrc1IdlFactory } from "../../../../../../declarations/ic
 import type { Value as Icrc1Value } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did.d.ts";
 import { setActiveSwapPool } from '@/features/swap/swapSlice';
 import { TokenConversionService } from "@/utils/TokenConversionService";
+import { RootState } from "@/store";
 
 const PoolCard: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -23,6 +24,7 @@ const PoolCard: React.FC = () => {
     const swap = useAppSelector((state) => state.swap);
     const activeSwapPoolFromRedux = useAppSelector((state) => state.swap.activeSwapPool);
     const icpLedger = useAppSelector((state) => state.icpLedger);
+    const tokenomics = useAppSelector((state: RootState) => state.tokenomics);
     const [searchParams] = useSearchParams();
     const idFromUrl = searchParams.get("id");
 
@@ -165,7 +167,7 @@ const PoolCard: React.FC = () => {
         >
             <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6 bg-muted h-8 w-3/4 rounded"></h4>
             <div className="flex flex-col space-y-4">
-                {[...Array(7)].map((_, index) => (
+                {[...Array(9)].map((_, index) => (
                     <div key={index} className="flex justify-between items-center">
                         <span className="font-semibold bg-muted h-5 w-1/3 rounded"></span>
                         <span className="bg-muted/70 h-5 w-1/2 rounded"></span>
@@ -267,6 +269,29 @@ const PoolCard: React.FC = () => {
                                     <span className="font-semibold text-gray-400">Burn Unit:</span>
                                     <span className="text-gray-100">{TokenConversionService.formatE8sDisplay(activeSwapPoolFromRedux[1].initial_secondary_burn, 0)}</span>
                                 </div>
+                                <div className="flex justify-between">
+                                    <span className="font-semibold text-gray-400">Max Supply:</span>
+                                    <span className="text-gray-100">{TokenConversionService.formatE8sDisplay(activeSwapPoolFromRedux[1].primary_token_max_supply, 0)}</span>
+                                </div>
+                                {tokenomics.totalPrimarySupply && (
+                                    <div className="flex justify-between">
+                                        <span className="font-semibold text-gray-400">Current Supply:</span>
+                                        <span className="text-gray-100">
+                                            {TokenConversionService.formatE8sDisplay(tokenomics.totalPrimarySupply, 0)}
+                                            {activeSwapPoolFromRedux[1].primary_token_max_supply && (
+                                                <span className="text-gray-400 ml-2">
+                                                    ({((BigInt(tokenomics.totalPrimarySupply) * BigInt(100)) / BigInt(activeSwapPoolFromRedux[1].primary_token_max_supply)).toString()}%)
+                                                </span>
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
+                                {tokenomics.currentPrimaryRate && (
+                                    <div className="flex justify-between">
+                                        <span className="font-semibold text-gray-400">Current Burn Rate:</span>
+                                        <span className="text-gray-100">{tokenomics.currentPrimaryRate} {activeSwapPoolFromRedux[1].secondary_token_symbol} → 1 {activeSwapPoolFromRedux[1].primary_token_symbol}</span>
+                                    </div>
+                                )}
                                 {activeSwapPoolFromRedux[1].isLive ? (
                                     <div className="flex justify-between">
                                         <span className="font-semibold text-gray-400">Liquidity Provided At:</span>

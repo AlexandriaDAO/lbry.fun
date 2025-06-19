@@ -137,6 +137,48 @@ pub use crate::phase2_token_operations::{
     swap_icp,
 };
 
+// Generic token approval function
+pub fn approve_token(env: &TokenTestEnvironment, user: &str, token: Principal, spender: Principal, amount: u64) -> Result<(), String> {
+    let user_principal = env.test_users.get(user)
+        .copied()
+        .or_else(|| match user {
+            "user1" => Some(env.user1),
+            "user2" => Some(env.user2),
+            "user3" => Some(env.user3),
+            _ => None
+        })
+        .ok_or_else(|| format!("Unknown user: {}", user))?;
+    
+    let approve_args = ApproveArgs {
+        from_subaccount: None,
+        spender: Account {
+            owner: spender,
+            subaccount: None,
+        },
+        amount: Nat::from(amount),
+        expected_allowance: None,
+        expires_at: None,
+        fee: None,
+        memo: None,
+        created_at_time: None,
+    };
+    
+    let result = env.pic.update_call(
+        token,
+        user_principal,
+        "icrc2_approve",
+        candid::encode_one(&approve_args).map_err(|e| format!("Failed to encode approve args: {:?}", e))?,
+    );
+    
+    match result {
+        Ok(_) => {
+            println!("✓ {} approved {} tokens on {} to {}", user, amount, token, spender);
+            Ok(())
+        }
+        Err(e) => Err(format!("Failed to approve tokens: {}", e))
+    }
+}
+
 // Setup helper for getting primary tokens
 pub fn setup_user_with_primary(env: &mut TokenTestEnvironment, user: &str, target_amount: u64) -> Result<(), String> {
     // First get secondary tokens, then burn them for primary tokens

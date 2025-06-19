@@ -19,7 +19,7 @@ const createToken = createAsyncThunk<
       const actor = await getLbryFunActor();
 
       let amountFormatApprove: bigint = BigInt(
-        Number((Number(2) + 0.0001) * 10 ** 8).toFixed(0)
+        Number((Number(5) + 0.0001) * 10 ** 8).toFixed(0)
       );
 
       const lbry_fun_canister_id = process.env.CANISTER_ID_LBRY_FUN!;

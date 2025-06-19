@@ -3,8 +3,8 @@
 
 set -ex 
 
-dfx stop
-dfx start --clean --background
+# dfx stop
+# dfx start --clean --background --host 127.0.0.1:4943
 
 # Step 2: II Canister
 dfx deps pull
@@ -98,7 +98,7 @@ dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argu
       maximum_number_of_accounts = null;
       accounts_overflow_trim_quantity = null;
       archive_options = record {
-        num_blocks_to_archive = 1000;
+        num_blocks_to_archive = 1000; 
         max_transactions_per_response = null;
         trigger_threshold = 2000;
         max_message_size_bytes = null;

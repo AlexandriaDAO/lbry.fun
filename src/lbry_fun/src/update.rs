@@ -45,7 +45,7 @@ async fn create_token(
 ) -> Result<String, String> {
     let user_principal = ic_cdk::api::caller(); // Get the calling user's principal
     // payment
-    deposit_icp_in_canister(200_000_000, None)
+    deposit_icp_in_canister(500_000_000, None)
         .await
         .map_err(|e| format!("Failed to deposit ICP: {:?}", e))?;
 
@@ -555,17 +555,22 @@ async fn deposit_ksicp_in_canister(
 }
 
 pub async fn publish_eligible_tokens_on_kongswap() ->Result<String,String>{
+    ic_cdk::println!("=== STARTING POOL CREATION CHECK ===");
     let time = ic_cdk::api::time(); // current time in nanoseconds
     // let twenty_four_hours_in_nanos: u64 = 24 * 60 * 60 * 1_000_000_000;
     let twenty_four_hours_in_nanos: u64 = 1000; // for testing
 
     let result = TOKENS.with(|tokens| {
-        let mut tokens_map = tokens.borrow_mut();
-        // Step 1: Get a list of token IDs
+        let tokens_map = tokens.borrow();
         let keys: Vec<u64> = tokens_map.iter().map(|(id, _)| id).collect();
-
+        ic_cdk::println!("Found {} total tokens to check", keys.len());
         keys
     });
+    
+    let mut processed_count = 0;
+    let mut success_count = 0;
+    let mut already_live_count = 0;
+    let mut not_ready_count = 0;
     
     for token_id in result {
         let token_opt = TOKENS.with(|tokens| {
@@ -574,10 +579,23 @@ pub async fn publish_eligible_tokens_on_kongswap() ->Result<String,String>{
         });
         
         if let Some(mut token) = token_opt {
-            if token.created_time + twenty_four_hours_in_nanos <= time && !token.is_live {
+            ic_cdk::println!("Checking token {} ({}): created_time={}, is_live={}, age={} nanos", 
+                token.id, token.primary_token_symbol, token.created_time, token.is_live, 
+                time.saturating_sub(token.created_time));
+            
+            if token.is_live {
+                already_live_count += 1;
+                ic_cdk::println!("  -> Token already live, skipping");
+                continue;
+            }
+            
+            if token.created_time + twenty_four_hours_in_nanos <= time {
+                ic_cdk::println!("  -> Token is eligible for pool creation, attempting now...");
+                processed_count += 1;
+                
                 match create_pool_on_kong_swap(token.primary_token_id).await {
-                    Ok(_) => {
-                        ic_cdk::println!("Pool created!");
+                    Ok(reply) => {
+                        success_count += 1;
                         token.is_live = true;
                         token.liquidity_provided_at = time;
                         
@@ -586,20 +604,28 @@ pub async fn publish_eligible_tokens_on_kongswap() ->Result<String,String>{
                             tokens_map.insert(token_id, token.clone());
                         });
                         
-                        ic_cdk::print(format!(
-                            "Token '{}' (ID {}) is now marked as live.",
-                            token.primary_token_name, token.id
-                        ));
+                        ic_cdk::println!("  ✓ SUCCESS: Pool created for '{}' (ID {}). Pool ID: {}", 
+                            token.primary_token_name, token.id, reply.pool_id);
                     },
                     Err(e) => {
-                        ic_cdk::print(format!("Failed to create pool on Kong swap: {}", e));
-                        return Err(format!("Failed to create pool on Kong swap: {}", e));
+                        ic_cdk::println!("  ✗ FAILED: Pool creation failed for '{}' (ID {}): {}", 
+                            token.primary_token_name, token.id, e);
                     }
                 }
+            } else {
+                not_ready_count += 1;
+                let remaining_nanos = (token.created_time + twenty_four_hours_in_nanos).saturating_sub(time);
+                ic_cdk::println!("  -> Token not ready yet, {} nanos remaining", remaining_nanos);
             }
         }
     }
-    Ok("Published eligible tokens on KongSwap successfully.".to_string())
+    
+    let summary = format!(
+        "=== POOL CREATION COMPLETE === Processed: {}, Success: {}, Already Live: {}, Not Ready: {}",
+        processed_count, success_count, already_live_count, not_ready_count
+    );
+    ic_cdk::println!("{}", summary);
+    Ok(summary)
 }
 
 async fn _process_fee_treasury() -> Result<String, String> {
@@ -680,7 +706,11 @@ fn init() {
     // Schedule publishing eligible tokens to run every hour.
     set_timer_interval(hourly, || {
         ic_cdk::spawn(async {
-            let _ = publish_eligible_tokens_on_kongswap().await;
+            ic_cdk::println!("Timer triggered: Running publish_eligible_tokens_on_kongswap");
+            match publish_eligible_tokens_on_kongswap().await {
+                Ok(msg) => ic_cdk::println!("Pool creation result: {}", msg),
+                Err(e) => ic_cdk::println!("Pool creation error: {}", e),
+            }
         });
     });
 }

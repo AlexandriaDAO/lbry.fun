@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import {
 	Copy,
+	Check,
 	LogIn,
 	LogOut,
 } from "lucide-react";
@@ -25,6 +26,7 @@ export default function AuthMenu() {
 		isInitialized: authReduxInitialized 
 	} = useAppSelector(state => state.auth);
 	const { balance } = useIcpBalance();
+	const [copied, setCopied] = useState(false);
 
 	const handleLogin = () => {
 		if (login) {
@@ -37,6 +39,8 @@ export default function AuthMenu() {
 		if (principal) {
 			navigator.clipboard.writeText(principal);
 			toast.success("Principal ID copied!");
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
 		}
 	}
 
@@ -80,7 +84,11 @@ export default function AuthMenu() {
 					<span className="text-xs font-mono text-muted-foreground group-hover:text-foreground transition-colors">
 						{displayPrincipal}
 					</span>
-					<Copy className="h-3 w-3 text-muted-foreground group-hover:text-foreground transition-colors" />
+					{copied ? (
+						<Check className="h-3 w-3 text-green-500 transition-all" />
+					) : (
+						<Copy className="h-3 w-3 text-muted-foreground group-hover:text-foreground transition-colors" />
+					)}
 				</button>
 			</div>
 			<Button

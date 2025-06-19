@@ -17,6 +17,33 @@ mod individual_canister_tests;
 #[path = "tests/unit/test_principals.rs"]
 mod test_principals;
 
+#[path = "tests/unit/test_tokenomics_validation.rs"]
+mod test_tokenomics_validation;
+
+// #[path = "tests/unit/test_tokenomics_realworld_validation_v2.rs"]
+// mod test_tokenomics_realworld_validation_v2;
+
+#[path = "tests/unit/test_tokenomics_edge_cases.rs"]
+mod test_tokenomics_edge_cases;
+
+#[path = "tests/unit/test_tokenomics_adversarial.rs"]
+mod test_tokenomics_adversarial;
+
+#[path = "tests/unit/test_burn_unit_exploit.rs"]
+mod test_burn_unit_exploit;
+
+#[path = "tests/unit/test_tokenomics_configurations.rs"]
+mod test_tokenomics_configurations;
+
+#[path = "tests/unit/test_burn_unit_one_exact.rs"]
+mod test_burn_unit_one_exact;
+
+#[path = "tests/unit/test_burn_cost_analysis.rs"]
+mod test_burn_cost_analysis;
+
+#[path = "tests/unit/test_graph_vs_reality.rs"]
+mod test_graph_vs_reality;
+
 #[path = "tests/integration/integrated_token_tests.rs"]
 mod integrated_token_tests;
 

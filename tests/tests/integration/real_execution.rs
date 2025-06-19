@@ -6,7 +6,7 @@ use std::collections::HashMap;
 // Constants
 // Note: In pocket-ic we can't control canister IDs, they will be dynamically assigned
 const E8S: u64 = 100_000_000;
-const TOKEN_CREATION_FEE: u64 = 200_000_000; // 2 ICP in e8s
+const TOKEN_CREATION_FEE: u64 = 500_000_000; // 5 ICP in e8s
 
 // Include WASM files
 const ICP_LEDGER_WASM: &[u8] = include_bytes!("../../../src/icp_ledger_canister/ledger.wasm");

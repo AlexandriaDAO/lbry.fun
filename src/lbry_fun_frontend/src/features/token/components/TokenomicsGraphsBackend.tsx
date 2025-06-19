@@ -131,11 +131,15 @@ const TokenomicsGraphsBackend: React.FC<TokenomicsGraphsBackendProps> = ({
   }, [primaryMaxSupply, tgeAllocation, initialSecondaryBurn, halvingStep]);
 
   useEffect(() => {
-    const primary_max_supply = BigInt(primaryMaxSupply || '0');
-    const tge_allocation = BigInt(tgeAllocation || '0');
-    const initial_secondary_burn = BigInt(initialSecondaryBurn || '0');
+    // The component receives natural numbers, but the backend expects E8S values
+    const E8S_MULTIPLIER = BigInt(100_000_000);
+    
+    const primary_max_supply = BigInt(primaryMaxSupply || '0') * E8S_MULTIPLIER;
+    const tge_allocation = BigInt(tgeAllocation || '0') * E8S_MULTIPLIER;
+    const initial_secondary_burn = BigInt(initialSecondaryBurn || '0') * E8S_MULTIPLIER;
     const halving_step = BigInt(halvingStep || '0');
-    const initial_reward_per_burn_unit = BigInt(initialRewardPerBurnUnit || '0');
+    // Handle decimal values for initialRewardPerBurnUnit
+    const initial_reward_per_burn_unit = BigInt(Math.floor(parseFloat(initialRewardPerBurnUnit || '0') * Number(E8S_MULTIPLIER)));
 
     if (primary_max_supply > 0 && initial_secondary_burn > 0 && halving_step > 0 && initial_reward_per_burn_unit > 0) {
         dispatch(previewTokenomics({args: {

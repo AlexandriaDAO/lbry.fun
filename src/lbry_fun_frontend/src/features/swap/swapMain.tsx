@@ -16,6 +16,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import Insights from './components/insights/insights';
 import InfoCard from './components/info/InfoCard';
+import TokenomicsTab from './components/tokenomics/TokenomicsTab';
 
 import { SwapDataProvider } from './providers/SwapDataProvider';
 import { SwapErrorBoundary } from './components/SwapErrorBoundary';
@@ -33,16 +34,17 @@ const SwapMain = () => {
     const { poolInitState, isPoolReady, error: poolError } = usePoolInitializer();
 
     const tabs = [
-        { id: 1, path: 'balance', label: 'Balance', hover: null, content: <BalanceContent /> },
-        { id: 2, path: 'swap', label: 'Swap', hover: `Swap ICP for ${swap.activeSwapPool&&swap.activeSwapPool[1].secondary_token_symbol}`, content: <SwapContent /> },
-        { id: 4, path: 'send', label: 'Send', hover: null, content: <SendContent /> },
-        { id: 5, path: 'receive', label: 'Receive', hover: null, content: <ReceiveContent /> },
-        { id: 6, path: 'burn', label: 'Burn', hover: `Burn ${swap.activeSwapPool&&swap.activeSwapPool[1].secondary_token_symbol}, get back ${swap.activeSwapPool&&swap.activeSwapPool[1].primary_token_symbol} and ICP`, content: <BurnContent /> },
-        { id: 7, path: 'stake', label: 'Stake', hover: null, content: <StakeContent /> },
-        { id: 8, path: 'redeem', label: 'Redeem', hover: "Redeem ICP if your swap fails", content: <RedeemContent /> },
-        { id: 9, path: 'history', label: 'Transaction history', hover: null, content: <TransactionHistory /> },
-        { id: 10, path: 'insights', label: 'Insights', hover: null, content: <Insights /> },
-        { id: 11, path: 'info', label: 'Info', hover: null, content: <InfoCard /> }
+        { id: 1, path: 'balance', label: 'Balance', hover: null, Component: BalanceContent },
+        { id: 2, path: 'swap', label: 'Swap', hover: `Swap ICP for ${swap.activeSwapPool&&swap.activeSwapPool[1].secondary_token_symbol}`, Component: SwapContent },
+        { id: 4, path: 'send', label: 'Send', hover: null, Component: SendContent },
+        { id: 5, path: 'receive', label: 'Receive', hover: null, Component: ReceiveContent },
+        { id: 6, path: 'burn', label: 'Burn', hover: `Burn ${swap.activeSwapPool&&swap.activeSwapPool[1].secondary_token_symbol}, get back ${swap.activeSwapPool&&swap.activeSwapPool[1].primary_token_symbol} and ICP`, Component: BurnContent },
+        { id: 7, path: 'stake', label: 'Stake', hover: null, Component: StakeContent },
+        { id: 8, path: 'redeem', label: 'Redeem', hover: "Redeem ICP if your swap fails", Component: RedeemContent },
+        { id: 9, path: 'history', label: 'Transaction history', hover: null, Component: TransactionHistory },
+        { id: 10, path: 'insights', label: 'Insights', hover: null, Component: Insights },
+        { id: 11, path: 'info', label: 'Info', hover: null, Component: InfoCard },
+        { id: 12, path: 'tokenomics', label: 'Tokenomics', hover: "View tokenomics graphs and distribution schedules", Component: TokenomicsTab }
     ];
 
     const currentPath = location.pathname.split('/').pop() || 'balance';
@@ -123,7 +125,14 @@ const SwapMain = () => {
                             <SwapErrorBoundary>
                                 {isPoolReady ? (
                                     <SwapDataProvider>
-                                        {tabs.find(tab => tab.path === currentPath)?.content}
+                                        {(() => {
+                                            const activeTabData = tabs.find(tab => tab.path === currentPath);
+                                            if (activeTabData && activeTabData.Component) {
+                                                const Component = activeTabData.Component;
+                                                return <Component />;
+                                            }
+                                            return null;
+                                        })()}
                                     </SwapDataProvider>
                                 ) : (
                                     <div className="flex flex-col items-center justify-center min-h-[200px]">

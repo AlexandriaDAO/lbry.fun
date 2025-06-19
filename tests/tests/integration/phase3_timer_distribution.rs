@@ -119,15 +119,15 @@ mod timer_distribution_tests {
         println!("Adding ICP to pool via swaps...");
         
         // Alice swaps
-        approve_icp(&mut env, "alice", 20 * E8S).unwrap();
+        approve_icp(&mut env, "alice", 20 * E8S + 100_000).unwrap();
         swap_icp(&mut env, "alice", 20 * E8S).unwrap();
         
         // Bob swaps  
-        approve_icp(&mut env, "bob", 30 * E8S).unwrap();
+        approve_icp(&mut env, "bob", 30 * E8S + 100_000).unwrap();
         swap_icp(&mut env, "bob", 30 * E8S).unwrap();
         
         // Charlie swaps
-        approve_icp(&mut env, "charlie", 50 * E8S).unwrap();
+        approve_icp(&mut env, "charlie", 50 * E8S + 100_000).unwrap();
         swap_icp(&mut env, "charlie", 50 * E8S).unwrap();
         
         // Setup users with primary tokens and stake them for distribution
@@ -213,10 +213,10 @@ mod timer_distribution_tests {
         
         // Add ICP to pool to enable distribution
         println!("\nAdding ICP to pool via swaps...");
-        approve_icp(&mut env, "alice", 20 * E8S).unwrap();
+        approve_icp(&mut env, "alice", 20 * E8S + 100_000).unwrap();
         swap_icp(&mut env, "alice", 20 * E8S).unwrap();
         
-        approve_icp(&mut env, "bob", 30 * E8S).unwrap();
+        approve_icp(&mut env, "bob", 30 * E8S + 100_000).unwrap();
         swap_icp(&mut env, "bob", 30 * E8S).unwrap();
         
         // Need to have stakers for distribution to work

@@ -3,10 +3,9 @@ use crate::{
     utils::{
         principal_to_subaccount, DEFAULT_SECONDARY_RATIO, SCALING_FACTOR, STAKING_REWARD_PERCENTAGE,
     },
-    dex_integration::{get_ranked_pools_by_tvl, PoolReply},
 };
 use candid::{CandidType, Principal};
-use ic_cdk::{api::caller, query, update};
+use ic_cdk::{api::caller, query};
 use ic_ledger_types::AccountIdentifier;
 use serde::Deserialize;
 //swap
@@ -167,9 +166,4 @@ pub fn get_config() -> Configs {
     CONFIGS.with(|c| {
         c.borrow().get().clone()
     })
-}
-
-#[update]
-pub async fn get_pools_ranked_by_tvl() -> Result<Vec<PoolReply>, String> {
-    get_ranked_pools_by_tvl().await
 }

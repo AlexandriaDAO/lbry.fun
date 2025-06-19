@@ -679,9 +679,9 @@ const CreateTokenForm: React.FC = () => {
           <Button
             type="submit"
             disabled={Object.keys(errors).length > 0}
-            variant="default"
-            size="lg"
-            className="min-w-[300px] lg:h-14 md:h-12 sm:h-10 xs:h-10 lg:px-7 md:px-5 sm:px-4 xs:px-2 lg:text-lg md:text-base text-sm"
+            variant="primary"
+            scale="lg"
+            className="min-w-[300px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 font-semibold"
           >
             Create Token
           </Button>

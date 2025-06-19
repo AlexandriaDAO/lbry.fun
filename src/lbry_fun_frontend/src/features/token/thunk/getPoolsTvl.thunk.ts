@@ -1,8 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { Principal } from "@dfinity/principal";
-import { Actor, HttpAgent } from "@dfinity/agent";
-import { idlFactory } from "../../../../declarations/icp_swap";
-import { _SERVICE } from "../../../../declarations/icp_swap/icp_swap.did";
+import { KongswapService } from "@/services/kongswapService";
+import type { TokenRecordStringified } from "../getTokenPools.thunk";
 
 export interface PoolTvlData {
   pool_id: number;
@@ -21,54 +19,51 @@ export interface TokenTvlMap {
 
 const getPoolsTvl = createAsyncThunk<
   TokenTvlMap,
-  string[], // Array of icp_swap canister IDs
+  Array<[string, TokenRecordStringified]>, // Array of token pools with their records
   { rejectValue: { title: string; message: string } }
 >(
   "token/getPoolsTvl",
-  async (icpSwapCanisterIds, { rejectWithValue }) => {
+  async (tokenPools, { rejectWithValue, getState }) => {
     try {
       const tvlMap: TokenTvlMap = {};
       
-      // For each icp_swap canister, query its TVL
-      for (const canisterId of icpSwapCanisterIds) {
+      // Get ICP price from Redux state
+      const state = getState() as any;
+      const icpPrice = Number(state.icpLedger.icpPrice) || 10.0; // Default to $10 if not available
+      
+      // Get all pools from kongswap once
+      const poolsReply = await KongswapService.getAllPools(icpPrice);
+      
+      // For each token, find its corresponding pool
+      for (const [poolId, record] of tokenPools) {
         try {
-          const network = process.env.DFX_NETWORK || process.env.REACT_APP_DFX_NETWORK;
-          const localReplicaHost = network === 'local' ? 'http://localhost:4943' : 'https://ic0.app';
-
-          const agent = new HttpAgent({ host: localReplicaHost });
-
-          if (network === 'local') {
-            await agent.fetchRootKey().catch(err => {
-              console.warn("Unable to fetch root key. Swallowing error.", err);
-            });
-          }
-
-          const icpSwapActor = Actor.createActor<_SERVICE>(idlFactory, {
-            agent,
-            canisterId: Principal.fromText(canisterId),
-          });
-
-          const rankedPools = await icpSwapActor.get_pools_ranked_by_tvl();
+          // Find pool that matches this token's symbol
+          // Pool symbols are typically "ICP_TOKEN" format
+          const tokenSymbol = record.primary_token_symbol;
+          const pool = poolsReply.pools.find(p => 
+            p.symbol === `ICP_${tokenSymbol}` || 
+            p.symbol === `${tokenSymbol}_ICP` ||
+            p.symbol.includes(tokenSymbol)
+          );
           
-          if ('Ok' in rankedPools && rankedPools.Ok.length > 0) {
-            // Find the pool for this token (assuming first pool is the main one)
-            const poolData = rankedPools.Ok[0];
-            tvlMap[canisterId] = {
-              pool_id: poolData.pool_id,
-              symbol: poolData.symbol,
-              balance_0: poolData.balance_0,
-              balance_1: poolData.balance_1,
-              tvl: poolData.tvl,
-              rolling_24h_volume: poolData.rolling_24h_volume,
-              lp_token_supply: poolData.lp_token_supply,
-              price: poolData.price,
+          if (pool) {
+            // Store TVL data by the pool ID (matching the frontend's structure)
+            tvlMap[poolId] = {
+              pool_id: pool.pool_id,
+              symbol: pool.symbol,
+              balance_0: pool.balance_0,
+              balance_1: pool.balance_1,
+              tvl: pool.tvl || BigInt(0), // Use calculated TVL or 0
+              rolling_24h_volume: pool.rolling_24h_volume || BigInt(0),
+              lp_token_supply: pool.lp_token_supply || BigInt(0),
+              price: pool.price,
             };
           } else {
-            tvlMap[canisterId] = null; // No liquidity pool exists yet
+            tvlMap[poolId] = null; // No liquidity pool exists yet
           }
         } catch (error) {
-          console.warn(`Failed to fetch TVL for canister ${canisterId}:`, error);
-          tvlMap[canisterId] = null;
+          console.warn(`Failed to process TVL for token ${record.primary_token_symbol}:`, error);
+          tvlMap[poolId] = null;
         }
       }
       

@@ -51,6 +51,10 @@ pub struct TokenTestEnvironment {
     pub icp_ledger: Principal,
     pub lbry_fun: Principal,
     pub test_users: HashMap<String, Principal>,
+    // Additional user principals for compatibility with existing tests
+    pub user1: Principal,
+    pub user2: Principal,
+    pub user3: Principal,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -120,6 +124,16 @@ impl TokenTestEnvironment {
         test_users.insert("bob".to_string(), Principal::from_slice(&[2; 29]));
         test_users.insert("charlie".to_string(), Principal::from_slice(&[3; 29]));
         
+        // Create additional user principals for backward compatibility
+        let user1 = Principal::from_slice(&[4; 29]);
+        let user2 = Principal::from_slice(&[5; 29]);
+        let user3 = Principal::from_slice(&[6; 29]);
+        
+        // Add them to test_users as well
+        test_users.insert("user1".to_string(), user1);
+        test_users.insert("user2".to_string(), user2);
+        test_users.insert("user3".to_string(), user3);
+        
         let mut env = Self {
             pic,
             primary_token,
@@ -130,6 +144,9 @@ impl TokenTestEnvironment {
             icp_ledger,
             lbry_fun,
             test_users,
+            user1,
+            user2,
+            user3,
         };
         
         // Initialize all canisters
@@ -186,6 +203,27 @@ impl TokenTestEnvironment {
             (
                 Account {
                     owner: self.test_users["charlie"],
+                    subaccount: None,
+                },
+                candid::Nat::from(1000 * E8S),
+            ),
+            (
+                Account {
+                    owner: self.user1,
+                    subaccount: None,
+                },
+                candid::Nat::from(1000 * E8S),
+            ),
+            (
+                Account {
+                    owner: self.user2,
+                    subaccount: None,
+                },
+                candid::Nat::from(1000 * E8S),
+            ),
+            (
+                Account {
+                    owner: self.user3,
                     subaccount: None,
                 },
                 candid::Nat::from(1000 * E8S),
@@ -399,6 +437,104 @@ impl TokenTestEnvironment {
         println!("✓ Mock lbry_fun deployed at: {}", self.lbry_fun);
     }
     
+    // Create a new token set with custom configuration
+    pub fn create_token_with_config(
+        &mut self,
+        name: &str,
+        symbol: &str,
+        initial_secondary_burn: u64,
+        initial_reward_per_burn_unit: u64,
+        max_primary_supply: u64,
+        halving_step: u64,
+    ) -> Result<(Principal, Principal, Principal, Principal, Principal), String> {
+        // Create new canisters for this token set
+        let primary_token = self.pic.create_canister();
+        let secondary_token = self.pic.create_canister();
+        let tokenomics = self.pic.create_canister();
+        let icp_swap = self.pic.create_canister();
+        let logs = self.pic.create_canister();
+        
+        // Add cycles to all new canisters
+        for canister in &[primary_token, secondary_token, tokenomics, icp_swap, logs] {
+            self.pic.add_cycles(*canister, 10_000_000_000_000);
+        }
+        
+        // Deploy Primary Token (with tokenomics as minting account)
+        self.deploy_icrc1_token(primary_token, &format!("{} Primary", name), &format!("{}P", symbol), tokenomics, 8);
+        
+        // Deploy Secondary Token
+        self.deploy_icrc1_token(secondary_token, &format!("{} Secondary", name), &format!("{}S", symbol), icp_swap, 8);
+        
+        // Deploy Tokenomics with custom parameters
+        let tokenomics_init_args = candid::Encode!(&Some(TokenomicsRealInitArgs {
+            primary_token_id: Some(primary_token),
+            secondary_token_id: Some(secondary_token),
+            swap_canister_id: Some(icp_swap),
+            frontend_canister_id: Some(Principal::anonymous()),
+            max_primary_supply,
+            initial_primary_mint: 10_000 * E8S, // Keep default initial mint
+            initial_secondary_burn,
+            halving_step,
+            initial_reward_per_burn_unit,
+        })).map_err(|e| format!("Failed to encode tokenomics args: {:?}", e))?;
+        
+        self.pic.install_canister(
+            tokenomics,
+            TOKENOMICS_WASM.to_vec(),
+            tokenomics_init_args,
+            Some(Principal::anonymous()),
+        );
+        
+        // Deploy ICP Swap
+        let icp_swap_init_args = candid::Encode!(&Some(IcpSwapInitArgs {
+            stakes: None,
+            archived_transaction_log: None,
+            total_unclaimed_icp_reward: None,
+            secondary_ratio: Some(SecondaryRatio {
+                ratio: 400, // Default ICP price of $4.00
+                time: 0,
+            }),
+            total_archived_balance: None,
+            apy: None,
+            distribution_intervals: None,
+            primary_token_id: Some(primary_token),
+            secondary_token_id: Some(secondary_token),
+            tokenomics_canister_id: Some(tokenomics),
+            icp_ledger_id: Some(self.icp_ledger),
+        })).map_err(|e| format!("Failed to encode icp_swap args: {:?}", e))?;
+        
+        self.pic.install_canister(
+            icp_swap,
+            ICP_SWAP_WASM.to_vec(),
+            icp_swap_init_args,
+            Some(Principal::anonymous()),
+        );
+        
+        // Deploy Logs
+        let logs_init_args = candid::Encode!(&LogsInitArgs {
+            primary_token_id: primary_token,
+            secondary_token_id: secondary_token,
+            icp_swap_id: icp_swap,
+            tokenomics_id: tokenomics,
+        }).map_err(|e| format!("Failed to encode logs args: {:?}", e))?;
+        
+        self.pic.install_canister(
+            logs,
+            LOGS_WASM.to_vec(),
+            logs_init_args,
+            Some(Principal::anonymous()),
+        );
+        
+        println!("✓ New token set '{}' deployed:", name);
+        println!("  - Primary: {}", primary_token);
+        println!("  - Secondary: {}", secondary_token);
+        println!("  - Tokenomics: {}", tokenomics);
+        println!("  - ICP Swap: {}", icp_swap);
+        println!("  - Logs: {}", logs);
+        
+        Ok((primary_token, secondary_token, tokenomics, icp_swap, logs))
+    }
+    
     // User operations
     pub fn mint_secondary(&self, user: &str, icp_amount: u64) -> Result<u64, String> {
         let user_principal = self.test_users[user];
@@ -607,6 +743,33 @@ impl TokenTestEnvironment {
     pub fn get_unclaimed_rewards(&self, user: &str) -> u64 {
         // Get unclaimed ICP rewards
         0
+    }
+    
+    // Additional helper methods for test compatibility
+    pub fn get_total_supply(&self, token: Principal) -> u64 {
+        let result = self.pic.query_call(
+            token,
+            Principal::anonymous(),
+            "icrc1_total_supply",
+            candid::encode_one(()).unwrap(),
+        );
+        
+        match result {
+            Ok(reply) => {
+                let supply: candid::Nat = decode_one(&reply)
+                    .expect("Failed to decode total supply");
+                supply.0.to_u64().unwrap_or(0)
+            }
+            Err(_) => 0,
+        }
+    }
+    
+    pub fn get_primary_balance(&self, user: &str) -> u64 {
+        self.get_balance(user, self.primary_token)
+    }
+    
+    pub fn get_secondary_balance(&self, user: &str) -> u64 {
+        self.get_balance(user, self.secondary_token)
     }
     
     // Test helper to verify secondary ratio is set correctly

@@ -167,7 +167,7 @@ mod distribution_tests {
         let mut env = TokenTestEnvironment::new();
         
         // Add ICP to pool via swap without staking
-        approve_icp(&mut env, "alice", 100 * E8S).unwrap();
+        approve_icp(&mut env, "alice", 100 * E8S + 100_000).unwrap();
         swap_icp(&mut env, "alice", 100 * E8S).unwrap();
         
         let pool_before = get_canister_balance(&env, env.icp_swap, env.icp_ledger);
@@ -191,7 +191,7 @@ mod distribution_tests {
         let mut env = TokenTestEnvironment::new();
         
         // Setup stakers - need pool to distribute from
-        approve_icp(&mut env, "alice", 100 * E8S).unwrap();
+        approve_icp(&mut env, "alice", 100 * E8S + 100_000).unwrap();
         swap_icp(&mut env, "alice", 100 * E8S).unwrap();
         
         setup_user_with_primary(&mut env, "alice", 1000 * E8S).unwrap();

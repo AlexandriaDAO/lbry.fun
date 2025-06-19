@@ -3,6 +3,7 @@ import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import getTokenPools from "../thunk/getTokenPools.thunk";
 import getPoolsTvl from "../thunk/getPoolsTvl.thunk";
+import getIcpPrice from "@/features/icp-ledger/thunks/getIcpPrice";
 import { Button } from "@/lib/components/button";
 import { useNavigate } from "react-router-dom";
 import { lbryFunFlagHandler } from '@/features/token/lbryFunSlice'; // If you need to reset flags
@@ -102,6 +103,15 @@ const GetTokenPools = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { tokenPools, loading, error, success, tvlData, tvlLoading } = useAppSelector((state) => state.lbryFun);
+  const { icpPrice, icpPriceTimestamp } = useAppSelector((state) => state.icpLedger);
+
+  // Fetch ICP price if not available or stale (older than 5 minutes)
+  useEffect(() => {
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    if (!icpPrice || !icpPriceTimestamp || icpPriceTimestamp < fiveMinutesAgo) {
+      dispatch(getIcpPrice());
+    }
+  }, [dispatch, icpPrice, icpPriceTimestamp]);
 
   useEffect(() => {
     // Fetch if pools are not loaded, not currently loading, and there was no previous persistent error
@@ -115,13 +125,12 @@ const GetTokenPools = () => {
     // }
   }, [dispatch, tokenPools.length, loading, error, success]);
 
-  // Fetch TVL data when token pools are loaded
+  // Fetch TVL data when token pools are loaded and ICP price is available
   useEffect(() => {
-    if (tokenPools.length > 0 && !tvlLoading && Object.keys(tvlData).length === 0) {
-      const icpSwapCanisterIds = tokenPools.map(([_, record]) => record.icp_swap_id);
-      dispatch(getPoolsTvl(icpSwapCanisterIds));
+    if (tokenPools.length > 0 && !tvlLoading && Object.keys(tvlData).length === 0 && icpPrice) {
+      dispatch(getPoolsTvl(tokenPools));
     }
-  }, [dispatch, tokenPools, tvlLoading, tvlData]);
+  }, [dispatch, tokenPools, tvlLoading, tvlData, icpPrice]);
 
   if (loading) return <p className="text-gray-500">Loading token pools...</p>;
 
@@ -201,11 +210,6 @@ const GetTokenPools = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-xs text-muted-foreground/80">
                       <span>Created {new Date(Number(record.created_time) / 1000000).toLocaleDateString()}</span>
-                      {record.liquidity_provided_at && (
-                        <span className="flex items-center gap-1">
-                          💧 <span>Liquidity Added</span>
-                        </span>
-                      )}
                     </div>
                     
                     {/* TVL Display */}
@@ -214,9 +218,9 @@ const GetTokenPools = () => {
                       <div className="text-right">
                         {tvlLoading ? (
                           <div className="w-16 h-4 bg-muted animate-pulse rounded" />
-                        ) : tvlData[record.icp_swap_id] ? (
+                        ) : tvlData[id] ? (
                           <span className="text-sm font-bold text-primary">
-                            ${TokenConversionService.formatE8sDisplay(tvlData[record.icp_swap_id]!.tvl, 0)}
+                            ${TokenConversionService.formatE8sDisplay(tvlData[id]!.tvl, 0)}
                           </span>
                         ) : (
                           <span className="text-xs text-muted-foreground">No liquidity</span>

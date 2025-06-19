@@ -10,7 +10,7 @@ thread_local! {
 
 // Constants
 const E8S: u64 = 100_000_000;
-const TOKEN_CREATION_FEE: u64 = 200_000_000; // 2 ICP in e8s
+const TOKEN_CREATION_FEE: u64 = 500_000_000; // 5 ICP in e8s
 
 // Include WASM files
 const LBRY_FUN_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/lbry_fun.wasm");
@@ -58,8 +58,8 @@ fn test_token_deployment_flow() {
     
     // Test the create_token flow conceptually
     println!("\n📋 Token Creation Flow:");
-    println!("1. User approves 2 ICP to lbry_fun canister");
-    println!("2. lbry_fun transfers 2 ICP from user");
+    println!("1. User approves 5 ICP to lbry_fun canister");
+    println!("2. lbry_fun transfers 5 ICP from user");
     println!("3. lbry_fun creates 5 new canisters:");
     println!("   - Primary token (ICRC1)");
     println!("   - Secondary token (ICRC1)");

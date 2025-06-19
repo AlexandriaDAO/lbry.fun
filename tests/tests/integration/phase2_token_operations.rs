@@ -81,19 +81,20 @@ pub fn swap_icp(env: &mut TokenTestEnvironment, user: &str, amount: u64) -> Resu
                 // Empty response usually means success in Candid
                 Ok("Success (empty response)".to_string())
             } else {
-                // Try to decode the actual response
-                match candid::decode_one::<Result<String, String>>(&response) {
+                // Try to decode the actual response using ExecutionError from shared_helpers
+                use crate::shared_helpers::ExecutionError;
+                match candid::decode_one::<Result<String, ExecutionError>>(&response) {
                     Ok(swap_result) => {
                         match swap_result {
                             Ok(msg) => Ok(msg),
-                            Err(e) => Err(format!("Swap function error: {}", e)),
+                            Err(e) => Err(format!("Swap function error: {:?}", e)),
                         }
                     },
-                    Err(_) => {
+                    Err(decode_err) => {
                         // If decoding fails, try as plain string
                         match candid::decode_one::<String>(&response) {
                             Ok(msg) => Ok(msg),
-                            Err(_) => Ok(format!("Success (decoded bytes: {} bytes)", response.len())),
+                            Err(_) => Err(format!("Failed to decode swap response ({}  bytes): {:?}", response.len(), decode_err)),
                         }
                     }
                 }

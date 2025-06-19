@@ -2,43 +2,42 @@
 
 ## Executive Summary
 
-This audit examines the kongswap DEX integration within the LBRY Fun token launchpad system. The integration handles automated liquidity provision, token swaps, and treasury management. Several critical vulnerabilities were identified that could lead to fund loss, manipulation, and system disruption.
+This audit examines the kongswap DEX integration within the LBRY Fun token launchpad system. The integration handles automated liquidity provision, token swaps, and treasury management. Several vulnerabilities were identified that could lead to fund loss, manipulation, and operational issues.
 
-## How the Kongswap Integration Works
+## Current Implementation Overview
 
-### 1. Architecture Overview
+### Architecture
+- **Treasury Management**: Collects 49.5% of distributed rewards into `LP_TREASURY`
+- **Automated Liquidity Provision**: Triggered after each reward distribution when treasury >= 0.2 ICP
+- **Dynamic Strategy**: Bootstrap mode for new pools vs normal buyback+pairing mode
 
-The kongswap integration consists of three main components:
-
-- **Treasury Management**: Collects 49.5% of distributed rewards into an `LP_TREASURY`
-- **Automated Liquidity Provision**: Scheduled function that deploys treasury funds to kongswap
-- **Swap Execution**: Performs token buybacks and liquidity additions
-
-### 2. Liquidity Provision Flow
-
+### Liquidity Provision Flow
 ```
-LP_TREASURY (49.5% of rewards) 
+LP_TREASURY (49.5% of rewards)
     ↓
-provide_liquidity_from_treasury() [Every 4 hours]
+Hourly distribution check (>= 0.2 ICP threshold)
     ↓
-Split treasury: 50% for buyback, 50% for pairing
+provide_liquidity_from_treasury() [Triggered after distribution]
     ↓
-execute_swap_on_dex(ICP → Primary Token)
+Use 2% of treasury balance for deployment
     ↓
-add_liquidity_to_kong(Primary Token + ICP)
+Bootstrap: All 2% → mint tokens + add liquidity
+Normal: 1% buyback + 1% LP pairing
+    ↓
+execute_swap_on_dex() / add_liquidity_to_kong()
 ```
 
-**Key Implementation** (`src/icp_swap/src/update.rs:956-1020`):
-1. Uses 50% of treasury balance when above 1 ICP minimum
-2. Splits deployment amount: half for buyback, half for LP pairing
-3. Executes buyback swap on kongswap
-4. Adds liquidity with bought tokens + remaining ICP
-5. Updates treasury balance with actual spent amounts
+**Key Implementation** (`src/icp_swap/src/update.rs:957-1093`):
+1. Uses 2% of treasury balance when above 0.2 ICP minimum
+2. Bootstrap mode: Uses all 2% to mint tokens and add initial liquidity
+3. Normal mode: 1% for buyback, 1% for LP pairing
+4. Dynamic strategy based on pool liquidity status
+5. Handles accumulated tokens from failed attempts
 
-### 3. DEX Integration Points
+### DEX Integration Points
 
 **Swap Execution** (`src/icp_swap/src/dex_integration.rs:126-166`):
-- Gets quote from kongswap
+- Gets quote from kongswap for price baseline
 - Approves tokens via ICRC2
 - Executes swap with 0.5% slippage protection
 - Calculates minimum receive amount as 99.5% of quote
@@ -54,196 +53,182 @@ add_liquidity_to_kong(Primary Token + ICP)
 
 **Location**: `dex_integration.rs:127-140`
 
-**Issue**: The system gets a quote, then executes the swap in a separate transaction. This creates a time window where MEV bots can:
-1. See the incoming large buy order
-2. Front-run with their own buy orders
-3. Sell into the protocol's buy order at inflated prices
-4. Extract value from the treasury
+**Issue**: The system gets a quote, then executes the swap in a separate call. This creates a MEV opportunity where bots can:
+1. Observe the quote call
+2. Front-run with their own trades
+3. Extract value from the treasury's predictable trades
 
 **Attack Scenario**:
 ```
-1. Treasury has 100 ICP to deploy
-2. Protocol calls get_kong_swap_quote(50 ICP → MYTOKEN)
-3. MEV bot sees this pending transaction
-4. MEV bot buys MYTOKEN, pushing price up 3%
-5. Protocol executes swap at inflated price
-6. MEV bot sells back to market, keeping profit
-7. Treasury receives 3% fewer tokens than expected
+1. Treasury triggers with 0.4 ICP to deploy (2% of 20 ICP balance)
+2. System calls get_kong_swap_quote(0.2 ICP → MYTOKEN)
+3. MEV bot sees pending transaction and front-runs
+4. Bot buys MYTOKEN, pushing price up 2%
+5. Treasury executes at inflated price
+6. Bot sells back, keeping profit
 ```
 
-**Real Impact**: This drains treasury funds over time through sandwich attacks.
+**Real Impact**: Reduces treasury efficiency by 2-5% per deployment.
 
-### 2. **Oracle Manipulation via Quote-Execute Gap** ⚠️ HIGH RISK
+### 2. **Predictable Execution Timing** ⚠️ MEDIUM RISK
 
-**Location**: `dex_integration.rs:127-128`
+**Location**: `update.rs:1414-1418`
 
-**Issue**: The quote is fetched separately from execution, allowing attackers to manipulate the price between these calls.
+**Issue**: Liquidity provision is triggered immediately after each hourly distribution, making timing predictable.
 
 **Attack Scenario**:
 ```
-1. Attacker observes scheduled liquidity provision
-2. Right before execution, attacker dumps large amount of primary tokens
-3. Quote shows low price for ICP → Primary Token swap
-4. System executes buyback at artificially low price
-5. Attacker buys back tokens after protocol's purchase
+1. Attacker monitors hourly distribution pattern
+2. Prepares price manipulation right before known LP deployment
+3. Extracts value through front-running each predictable trade
+4. Compounds damage over time across multiple deployments
 ```
 
-### 3. **Insufficient Slippage Protection** ⚠️ MEDIUM RISK
+### 3. **Insufficient Slippage Protection for Small Pools** ⚠️ MEDIUM RISK
 
 **Location**: `dex_integration.rs:138-140`
 
-**Issue**: While there's 0.5% slippage protection, this may be insufficient for:
-- Low liquidity tokens (common in token launches)
+**Issue**: 0.5% slippage protection may be insufficient for:
+- New token launches with minimal liquidity
+- Treasury deployments large relative to pool size
 - High volatility periods
-- Large treasury deployments relative to pool size
 
 **Real Scenario**:
 ```
-1. New token launch with $10k liquidity
-2. Treasury deploys $5k (50% of pool size)
-3. Even with 0.5% slippage, price impact is massive
-4. System gets terrible execution, depleting treasury efficiency
+1. New token with 1 ICP liquidity
+2. Treasury deploys 0.4 ICP (40% of pool size)
+3. Even with 0.5% slippage, massive price impact occurs
+4. Treasury gets poor execution, reducing efficiency
 ```
 
-### 4. **Race Condition in Treasury Updates** ⚠️ MEDIUM RISK
-
-**Location**: `update.rs:1003` and `storage.rs:137-147`
-
-**Issue**: Treasury balance updates happen after DEX operations complete. If multiple operations run simultaneously or if one fails partially, the treasury state can become inconsistent.
-
-**Attack Scenario**:
-```
-1. Distribution function adds 10 ICP to LP_TREASURY
-2. Liquidity provision function reads balance (20 ICP)
-3. Another distribution adds 5 ICP (total should be 25 ICP)  
-4. Liquidity provision spends 10 ICP and sets balance to 10 ICP
-5. Treasury balance is now incorrect (should be 15 ICP)
-```
-
-### 5. **Hardcoded Canister ID Dependency** ⚠️ MEDIUM RISK
+### 4. **Hardcoded Canister Dependencies** ⚠️ MEDIUM RISK
 
 **Location**: `constants.rs:1`
 
-**Issue**: Kong backend canister ID is hardcoded. If kongswap upgrades or changes canisters, the entire system breaks.
+**Issue**: Kong backend canister ID is hardcoded, creating single point of failure.
 
 ```rust
 pub const KONG_BACKEND_CANISTER_ID: &str = "2ipq2-uqaaa-aaaar-qailq-cai";
 ```
 
-**Real Scenario**:
-```
-1. Kongswap upgrades to new canister version
-2. Old canister stops responding or has deprecated API
-3. All liquidity provision fails
-4. Treasury funds get stuck
-5. System requires code update and redeployment
-```
+**Risk**: If kongswap upgrades or changes canisters, the entire system breaks without code update.
 
-### 6. **Approval Front-Running** ⚠️ LOW-MEDIUM RISK
+### 5. **Approval Front-Running** ⚠️ LOW-MEDIUM RISK
 
-**Location**: `dex_integration.rs:133` and `dex_integration.rs:183-184`
+**Location**: `dex_integration.rs:133`
 
-**Issue**: The system approves full amounts before swaps. A malicious kongswap (or compromised kong canister) could drain approved amounts.
+**Issue**: System approves full amounts before swaps. Malicious kong canister could drain approved amounts.
 
 **Attack Scenario**:
 ```
-1. System approves 50 ICP to kong canister
-2. Malicious kong canister (or attacker with kong control) calls transfer_from
-3. Drains the full approved amount instead of just swap amount
-4. System loses treasury funds
+1. System approves 0.2 ICP to kong canister
+2. Compromised kong canister calls transfer_from for full amount
+3. Drains treasury funds beyond intended swap amount
 ```
 
-### 7. **Timing Predictability** ⚠️ LOW RISK
+### 6. **No Emergency Stop Mechanism** ⚠️ MEDIUM RISK
 
-**Location**: `update.rs:1022-1031`
-
-**Issue**: Liquidity provision happens every 4 hours predictably. This allows:
-- MEV bots to prepare for known large transactions
-- Market manipulation around known times
-- Reduced execution efficiency
-
-### 8. **No Emergency Stop Mechanism** ⚠️ MEDIUM RISK
-
-**Issue**: There's no way to halt automated liquidity provision if:
-- Kongswap is experiencing issues
-- Token prices are being manipulated
+**Issue**: No way to halt automated liquidity provision if:
+- Kongswap experiences pricing issues
 - Treasury is being drained by MEV
+- Market conditions are unfavorable
 
 **Real Scenario**:
 ```
-1. Kongswap has a bug causing bad pricing
-2. System continues deploying treasury every 4 hours
+1. Kong DEX has pricing bug affecting quotes
+2. System continues deploying treasury hourly
 3. All deployments get terrible execution
 4. Treasury depletes before issue is noticed
-5. No way to pause the process without full canister upgrade
+5. No pause mechanism without canister upgrade
 ```
+
+### 7. **Bootstrap vs Normal Mode Logic Gap** ⚠️ LOW RISK
+
+**Location**: `update.rs:978-998`
+
+**Issue**: Bootstrap mode uses all 2% for minting + liquidity, but transition to normal mode could cause strategy inconsistency.
 
 ## Economic Attack Vectors
 
 ### Treasury Drain Attack
+**Vulnerability**: MEV + predictable timing
+1. Monitor hourly distribution completion
+2. Front-run liquidity provision with price manipulation  
+3. Extract 2-3% of each deployment via sandwich attacks
+4. Compound damage over months of automated deployments
 
-**Vulnerability**: Combination of MEV + predictable timing
-1. Attacker monitors for scheduled liquidity provisions
-2. Front-runs each provision with price manipulation
-3. Extracts 2-5% of each deployment via sandwich attacks
-4. Over time, significantly reduces treasury efficiency
+**Estimated Impact**: 15-30% reduction in LP effectiveness over 6 months
 
-**Estimated Impact**: 10-25% reduction in LP effectiveness over 6 months
-
-### Governance Attack via Liquidity Manipulation
-
+### Governance Attack via Pool Manipulation
 **Vulnerability**: Large treasury deployments affect token prices
-1. Attacker accumulates large position before deployment
-2. Treasury buyback increases token price
-3. Attacker sells at inflated price
-4. Reduces amount of tokens actually added to liquidity
+1. Accumulate position before known deployment
+2. Treasury buyback pumps token price
+3. Sell at inflated price during LP provision
+4. Reduces actual liquidity added to pool
 
 ## Recommendations
 
 ### Immediate Fixes (High Priority)
 
-1. **Implement TWAP-based Execution**
-   - Use time-weighted average pricing instead of spot quotes
-   - Execute swaps in smaller chunks over time
+1. **Implement Time-Delayed Execution**
+   - Add random delay (1-60 minutes) between distribution and LP provision
+   - Reduces predictability for MEV attacks
 
-2. **Add Circuit Breakers**
-   - Maximum slippage tolerance (e.g., 2%)
-   - Maximum price impact limits
-   - Emergency pause functionality
-
-3. **Improve Slippage Protection**
+2. **Improve Slippage Protection**
    - Dynamic slippage based on trade size vs pool liquidity
-   - Minimum liquidity requirements before deployment
+   - Minimum pool size requirements before deployment
+   - Maximum price impact limits (e.g., 5%)
+
+3. **Add Circuit Breakers**
+   - Maximum treasury deployment per period
+   - Emergency pause functionality via governance
+   - Automatic halt if slippage exceeds thresholds
 
 ### Medium Priority
 
-1. **Add Governance for Critical Parameters**
-   - Kong canister ID should be updateable
-   - Deployment percentages should be adjustable
-   - Timing intervals should be configurable
+1. **TWAP-Based Execution**
+   - Use time-weighted average pricing over quote snapshots
+   - Execute large trades in smaller chunks over time
+   - Reduces impact of single-block manipulation
 
-2. **Implement Randomized Timing**
-   - Random intervals between 3-5 hours instead of fixed 4 hours
-   - Random deployment amounts within ranges
+2. **Governance Controls**
+   - Make kong canister ID updateable
+   - Adjustable deployment percentages and timing
+   - Configurable slippage and impact limits
 
-3. **Add Monitoring and Alerts**
-   - Track execution efficiency vs quotes
-   - Alert on unusual slippage or price impact
-   - Monitor treasury drain rates
+3. **Enhanced Monitoring**
+   - Track execution efficiency vs expected outcomes
+   - Alert on unusual slippage or failed deployments
+   - Monitor treasury drain rates and LP performance
 
 ### Long-term Improvements
 
-1. **Multi-DEX Integration**
-   - Support multiple DEXes to reduce single point of failure
+1. **Multi-DEX Support**
+   - Integrate multiple DEXes to reduce single point of failure
    - Price comparison and best execution routing
+   - Fallback options if primary DEX fails
 
 2. **Advanced Execution Strategies**
-   - VWAP (Volume Weighted Average Price) execution
-   - Iceberg orders for large trades
-   - Time-based distribution of large orders
+   - VWAP execution for large trades
+   - Iceberg orders to hide trade size
+   - Adaptive strategies based on market conditions
+
+## Current Security Assessment
+
+**Positive Aspects**:
+- Dynamic bootstrap vs normal mode strategy
+- Proper error handling and logging
+- Reasonable treasury deployment percentage (2%)
+- Accumulated token management for failed attempts
+
+**Critical Gaps**:
+- Predictable execution timing enables MEV
+- No emergency controls for problematic conditions
+- Limited slippage protection for volatile/small pools
+- Hardcoded dependencies create operational risk
 
 ## Conclusion
 
-The kongswap integration contains several vulnerabilities that could lead to significant fund loss through MEV attacks, oracle manipulation, and system failures. The most critical issues are the MEV vulnerability and lack of emergency controls. Implementing the recommended fixes, particularly TWAP execution and circuit breakers, should be prioritized to protect treasury funds and ensure sustainable liquidity provision.
+The current kongswap integration has improved significantly with the dynamic strategy and proper treasury management, but still contains MEV vulnerabilities and lacks operational safeguards. The most critical issues are predictable timing and insufficient slippage protection for edge cases.
 
-The current implementation prioritizes simplicity over security, which is problematic for a system handling substantial treasury funds. A phased approach to implementing security improvements is recommended, starting with the high-priority fixes that address the most severe fund-loss scenarios.
+Priority should be given to implementing time delays, enhanced slippage protection, and emergency controls to protect treasury funds while maintaining automated liquidity provision functionality.

@@ -9,6 +9,8 @@ import { useIcpBalance } from '@/hooks/useIcpBalance';
 // Import thunks for data fetching
 import getSecondaryratio from '../thunks/getSecondaryratio';
 import getPrimaryMintRate from '../thunks/tokenomics/getPrimaryMintRate';
+import getTotalPrimarySupply from '../thunks/tokenomics/getTotalPrimarySupply';
+import getTokenomicsInfo from '../thunks/tokenomics/getTokenomicsInfo';
 import getSecondaryFee from '../thunks/secondaryIcrc/getSecondaryFee';
 import getPrimaryFee from '../thunks/primaryIcrc/getPrimaryFee';
 import getAccountPrimaryBalance from '../thunks/primaryIcrc/getAccountPrimaryBalance';
@@ -62,6 +64,14 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
         dispatch(getCanisterBal()).unwrap(), // Needed for burn calculations
         dispatch(getCanisterArchivedBal()).unwrap(), // Also needed for burn calculations
       ];
+      
+      // Add tokenomics data fetching if we have the canister IDs
+      if (activeSwapPool[1].primary_token_id) {
+        publicDataPromises.push(dispatch(getTotalPrimarySupply(activeSwapPool[1].primary_token_id)).unwrap());
+      }
+      if (activeSwapPool[1].tokenomics_canister_id) {
+        publicDataPromises.push(dispatch(getTokenomicsInfo(activeSwapPool[1].tokenomics_canister_id)).unwrap());
+      }
 
       // Load public data first - these should work without authentication
       try {

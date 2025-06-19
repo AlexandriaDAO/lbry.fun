@@ -32,7 +32,7 @@ const UserICPBalance = () => {
                     <div>
                         <p className="text-sm text-gray-300 font-semibold">Notice:</p>
                         <p className="text-xs text-gray-400">
-                            <strong>2 ICP</strong> is required to create new tokens.
+                            <strong>5 ICP</strong> is required to create new tokens.
                         </p>
                     </div>
                 </div>

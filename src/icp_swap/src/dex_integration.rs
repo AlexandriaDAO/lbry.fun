@@ -312,22 +312,6 @@ pub async fn get_pool_reserves() -> Result<PoolReserves, String> {
     }
 }
 
-pub async fn get_all_pools() -> Result<PoolsReply, String> {
-    let kong_principal = Principal::from_text(KONG_BACKEND_CANISTER_ID).unwrap();
-    let result: Result<(PoolsReply,), _> = ic_cdk::call(kong_principal, "pools", (None::<String>,)).await;
-    result.map(|(r,)| r).map_err(|e| format!("Failed to call pools: {:?}", e))
-}
-
-pub async fn get_ranked_pools_by_tvl() -> Result<Vec<PoolReply>, String> {
-    let pools_reply = get_all_pools().await?;
-    let mut ranked_pools = pools_reply.pools;
-    
-    // Sort pools by TVL in descending order
-    ranked_pools.sort_by(|a, b| b.tvl.cmp(&a.tvl));
-    
-    Ok(ranked_pools)
-}
-
 pub async fn mint_tokens_with_icp(icp_amount: u64) -> Result<Nat, String> {
     // For the zero liquidity case, we need to get primary tokens to bootstrap the pool
     // This is a simplified implementation that estimates the amount of primary tokens

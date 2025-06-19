@@ -118,10 +118,10 @@ mod comprehensive_distribution_tests {
         
         println!("\n=== Phase 1: Setup ICP Pool ===");
         // Add ICP to the pool via swaps
-        approve_icp(&mut env, "alice", 100 * E8S).unwrap();
+        approve_icp(&mut env, "alice", 100 * E8S + 100_000).unwrap();
         swap_icp(&mut env, "alice", 100 * E8S).unwrap();
         
-        approve_icp(&mut env, "bob", 200 * E8S).unwrap();
+        approve_icp(&mut env, "bob", 200 * E8S + 100_000).unwrap();
         swap_icp(&mut env, "bob", 200 * E8S).unwrap();
         
         let pool_balance = get_canister_balance(&env, env.icp_swap, env.icp_ledger);
@@ -274,7 +274,7 @@ mod comprehensive_distribution_tests {
         println!("\n=== Test: Distribution with Single Staker ===");
         
         // Setup pool
-        approve_icp(&mut env, "alice", 50 * E8S).unwrap();
+        approve_icp(&mut env, "alice", 50 * E8S + 100_000).unwrap();
         swap_icp(&mut env, "alice", 50 * E8S).unwrap();
         
         // Setup single staker

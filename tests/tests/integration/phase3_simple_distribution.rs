@@ -23,7 +23,7 @@ mod simple_distribution_tests {
         let mut env = TokenTestEnvironment::new();
         
         // Add ICP to pool via swap
-        approve_icp(&mut env, "alice", 10 * E8S).unwrap();
+        approve_icp(&mut env, "alice", 10 * E8S + 100_000).unwrap();
         swap_icp(&mut env, "alice", 10 * E8S).unwrap();
         
         let pool_before = get_canister_balance(&env, env.icp_swap, env.icp_ledger);
