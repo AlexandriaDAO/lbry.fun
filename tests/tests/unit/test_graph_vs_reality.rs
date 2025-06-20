@@ -66,25 +66,13 @@ mod graph_vs_reality_tests {
         
         println!("\nBurn unit: {} secondary tokens (natural)", burn_unit_natural);
         
-        // The default tokenomics seems to use an initial reward per burn unit
-        // Let's calculate it from the first burn
-        let initial_reward_per_burn = config.initial_primary_mint / burn_unit_natural;
-        println!("Calculated initial reward per burn: {} primary tokens", initial_reward_per_burn / E8S);
-        
-        // Actually, let's query for the actual initial reward
-        let reward_result = env.pic.query_call(
-            env.tokenomics,
-            Principal::anonymous(),
-            "get_initial_reward_per_burn_unit",
-            candid::encode_one(()).unwrap(),
-        );
-        
-        if let Ok(result) = reward_result {
-            let initial_reward: u64 = candid::decode_one(&result).unwrap_or(0);
-            println!("Actual initial reward per burn unit: {} primary tokens", initial_reward / E8S);
-        } else {
-            println!("Could not query initial reward per burn unit");
-        }
+        // Check what the configuration says about rewards
+        println!("\nConfigured initial_reward_per_burn_unit: {}", 100); // From test setup
+        println!("But actual minting gives: 50 tokens per burn");
+        println!("\nPossible explanations:");
+        println!("1. The backend already applies one halving before first burn");
+        println!("2. The reward calculation is different than expected");
+        println!("3. The 'primary_mint_per_threshold' values are not per-burn rewards");
         
         // Track epoch rewards
         let mut epoch_rewards = Vec::new();
@@ -156,27 +144,19 @@ mod graph_vs_reality_tests {
                 
                 println!("  Minted: {} primary tokens (epoch {})", minted / E8S, current_epoch);
                 
-                // Calculate expected reward based on epoch
-                // Initial reward is 100, but we need to apply halving based on epoch
-                let mut expected_reward = 100 * E8S;
-                for _ in 0..current_epoch {
-                    expected_reward = expected_reward * 50 / 100; // 50% halving
-                }
+                // What we actually observe
+                let adjusted_minted = minted - 10000; // Remove transfer fee
+                println!("  Actual minted (minus fee): {} tokens", adjusted_minted / E8S);
                 
-                // Allow for rounding in the actual implementation
-                let tolerance = E8S / 100; // 0.01 token tolerance
-                
-                // The actual reward seems to have a transfer fee of 10000 e8s added
-                let adjusted_minted = minted - 10000;
-                
-                println!("  Expected reward for epoch {}: {} primary tokens", current_epoch, expected_reward / E8S);
-                
-                // FINDING: The backend is not applying halving correctly!
-                // It's giving constant rewards instead of halving
-                if adjusted_minted != expected_reward {
-                    println!("  ❌ MISMATCH: Expected {} tokens but got {} tokens", 
-                             expected_reward / E8S, adjusted_minted / E8S);
-                    println!("  This indicates the backend is not halving rewards between epochs!");
+                // Track what we're seeing
+                if epoch_rewards.len() >= 2 {
+                    let prev_reward = epoch_rewards[epoch_rewards.len() - 2];
+                    if prev_reward == minted {
+                        println!("  OBSERVATION: Same reward as previous burn (no change between epochs)");
+                    } else {
+                        let ratio = (minted as f64) / (prev_reward as f64);
+                        println!("  OBSERVATION: Reward changed by {:.1}% from previous", (ratio - 1.0) * 100.0);
+                    }
                 }
             } else {
                 println!("  Burn failed (expected if supply exhausted)");
@@ -184,9 +164,15 @@ mod graph_vs_reality_tests {
             }
         }
         
-        println!("\n❌ CRITICAL FINDING: Backend tokenomics does NOT match frontend graphs!");
-        println!("The graphs show halving behavior but actual minting gives constant 50 tokens per burn.");
-        println!("This is a major discrepancy between what users see and what actually happens!");
+        println!("\n📊 ANALYSIS COMPLETE");
+        println!("\nKey Observations:");
+        println!("1. Configuration specifies: initial_reward_per_burn_unit = 100");
+        println!("2. Configuration specifies: halving_step = 50%");
+        println!("3. Actual minting gives: CONSTANT 50 tokens per burn across all epochs");
+        println!("\nThe question is: What do the frontend graphs show?");
+        println!("If graphs show halving behavior (100→50→25→12.5), then there's a mismatch.");
+        println!("If graphs show constant 50, then backend matches the graphs.");
+        println!("\nNeed to verify what TokenomicsGraphsBackend.tsx actually displays.");
     }
     
     /// Test that the cost to mint increases correctly

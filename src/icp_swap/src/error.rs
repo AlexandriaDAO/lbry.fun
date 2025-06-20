@@ -140,6 +140,9 @@ pub enum ExecutionError {
     // General errors
     StateError(String),
     Unauthorized(String),
+    TradingNotEnabled {
+        reason: String,
+    },
 }
 fn log_error(caller: Principal, function: &str, error: &ExecutionError) {
     register_error_log(caller, function, error.clone());
@@ -232,6 +235,7 @@ impl fmt::Display for ExecutionError {
             }
             ExecutionError::StateError(msg) => { write!(f, "State error: {}", msg) }
             ExecutionError::Unauthorized(msg) => { write!(f, "Unauthorized: {}", msg) }
+            ExecutionError::TradingNotEnabled { reason } => { write!(f, "Trading not enabled: {}", reason) }
         }
     }
 }

@@ -7,6 +7,7 @@ pub mod validation_scenarios;
 pub mod cumulative_tests;
 pub mod precision_analysis;
 pub mod edge_case_ops;
+pub mod graph_comparison_tests;
 
 // Re-export commonly used types
 pub use large_scale_env::*;

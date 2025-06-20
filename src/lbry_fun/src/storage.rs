@@ -42,8 +42,8 @@ pub struct TokenRecord {
     pub halving_step: u64,
     pub caller: Principal,
     pub created_time: u64,
-    pub liquidity_provided_at: u64,
-    pub is_live: bool,
+    pub pool_creation_failed: bool,
+    pub pool_created_at: u64,
 }
 
 impl Storable for TokenRecord {

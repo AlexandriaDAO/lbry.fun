@@ -574,3 +574,48 @@ pub(crate) async fn get_primary_token_symbol() -> Result<String, String> {
         .map(|(symbol,)| symbol)
         .map_err(|(code, msg)| format!("Failed to get symbol: {} {:?}", msg, code))
 }
+
+// Token status structure for querying parent canister
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct TokenStatus {
+    pub created_time: u64,
+    pub pool_creation_failed: bool,
+    pub pool_created_at: u64,
+}
+
+pub async fn is_live() -> Result<bool, String> {
+    // The parent canister (lbry_fun) is the one that created this canister
+    // We need to hardcode this for now since it's not stored in config
+    // In production, this should be passed during initialization
+    let parent_canister = Principal::from_text("be2us-64aaa-aaaaa-qaabq-cai")
+        .unwrap_or_else(|_| ic_cdk::api::caller()); // Fallback to caller if parsing fails
+    
+    // Call the parent canister to get token status
+    let result: Result<(Option<TokenStatus>,), _> = ic_cdk::call(
+        parent_canister,
+        "get_token_status_by_swap_canister",
+        (ic_cdk::api::id(),)
+    ).await;
+    
+    match result {
+        Ok((Some(status),)) => {
+            // Check if pool creation failed
+            if status.pool_creation_failed {
+                return Ok(false);
+            }
+            
+            // Check if pool was created
+            if status.pool_created_at == 0 {
+                return Ok(false);
+            }
+            
+            // Check if 24 hours have passed since creation
+            let current_time = ic_cdk::api::time();
+            let twenty_four_hours_nanos = 24 * 60 * 60 * 1_000_000_000u64;
+            
+            Ok(current_time >= status.created_time + twenty_four_hours_nanos)
+        },
+        Ok((None,)) => Err("Token not found in parent canister".to_string()),
+        Err((code, msg)) => Err(format!("Failed to get token status: {:?} - {}", code, msg)),
+    }
+}

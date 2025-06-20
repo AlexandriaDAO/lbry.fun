@@ -118,6 +118,22 @@ pub async fn swap(
     let caller = ic_cdk::caller();
     let _guard =
         CallerGuard::new(caller).map_err(|e| ExecutionError::Unauthorized(e.to_string()))?;
+    
+    // Check if trading is enabled
+    match crate::utils::is_live().await {
+        Ok(true) => {
+            // Trading is enabled, continue
+        },
+        Ok(false) => {
+            return Err(ExecutionError::TradingNotEnabled {
+                reason: "Token is not live yet. Minting/burning enabled 24 hours after pool creation.".to_string()
+            });
+        },
+        Err(e) => {
+            return Err(ExecutionError::StateError(format!("Failed to check trading status: {}", e)));
+        }
+    }
+    
     register_info_log(
         caller,
         "swap",
@@ -242,6 +258,22 @@ pub async fn burn_secondary(
     let caller = ic_cdk::caller();
     let _guard =
         CallerGuard::new(caller).map_err(|e| ExecutionError::Unauthorized(e.to_string()))?;
+    
+    // Check if trading is enabled
+    match crate::utils::is_live().await {
+        Ok(true) => {
+            // Trading is enabled, continue
+        },
+        Ok(false) => {
+            return Err(ExecutionError::TradingNotEnabled {
+                reason: "Token is not live yet. Minting/burning enabled 24 hours after pool creation.".to_string()
+            });
+        },
+        Err(e) => {
+            return Err(ExecutionError::StateError(format!("Failed to check trading status: {}", e)));
+        }
+    }
+    
     register_info_log(
         caller,
         "burn_secondary",

@@ -44,6 +44,66 @@ mod test_burn_cost_analysis;
 #[path = "tests/unit/test_graph_vs_reality.rs"]
 mod test_graph_vs_reality;
 
+#[path = "tests/unit/test_graph_data_interpretation.rs"]
+mod test_graph_data_interpretation;
+
+#[path = "tests/unit/test_simulation_calculation.rs"]
+mod test_simulation_calculation;
+
+#[path = "tests/unit/test_simple_fix_verification.rs"]
+mod test_simple_fix_verification;
+
+#[path = "tests/unit/test_backend_fix_validation.rs"]
+mod test_backend_fix_validation;
+
+#[path = "tests/unit/test_backend_table_data.rs"]
+mod test_backend_table_data;
+
+#[path = "tests/unit/test_backend_raw_data.rs"]
+mod test_backend_raw_data;
+
+#[path = "tests/unit/test_actual_backend_response.rs"]
+mod test_actual_backend_response;
+
+#[path = "tests/unit/test_debug_calculation.rs"]
+mod test_debug_calculation;
+
+#[path = "tests/unit/test_original_formula_analysis.rs"]
+mod test_original_formula_analysis;
+
+#[path = "tests/unit/test_verify_correct_fix.rs"]
+mod test_verify_correct_fix;
+
+#[path = "tests/unit/test_exact_backend_output.rs"]
+mod test_exact_backend_output;
+
+#[path = "tests/unit/test_trace_calculation.rs"]
+mod test_trace_calculation;
+
+#[path = "tests/unit/test_unit_analysis.rs"]
+mod test_unit_analysis;
+
+#[path = "tests/unit/test_fixed_simulation.rs"]
+mod test_fixed_simulation;
+
+#[path = "tests/unit/test_final_verification.rs"]
+mod test_final_verification;
+
+#[path = "tests/unit/test_tokenomics_bug_demonstration.rs"]
+mod test_tokenomics_bug_demonstration;
+
+#[path = "tests/unit/test_simulation_e8s_bug.rs"]
+mod test_simulation_e8s_bug;
+
+#[path = "tests/unit/test_tokenomics_schedule_generation.rs"]
+mod test_tokenomics_schedule_generation;
+
+// #[path = "tests/unit/test_simulation_fix_validation.rs"]
+// mod test_simulation_fix_validation;
+
+#[path = "tests/unit/test_tokenomics_bug_simple_demo.rs"]
+mod test_tokenomics_bug_simple_demo;
+
 #[path = "tests/integration/integrated_token_tests.rs"]
 mod integrated_token_tests;
 
@@ -52,6 +112,9 @@ mod phase1_environment_tests;
 
 #[path = "tests/integration/phase2_token_operations.rs"]
 mod phase2_token_operations;
+
+#[path = "tests/integration/test_kong_pool_creation.rs"]
+mod test_kong_pool_creation;
 
 #[path = "tests/integration/phase3_distribution.rs"]
 mod phase3_distribution;

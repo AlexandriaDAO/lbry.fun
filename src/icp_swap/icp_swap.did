@@ -8,6 +8,7 @@ type Configs = record {
 type DailyValues = record { values : vec record { nat32; nat } };
 type ExecutionError = variant {
   InvalidAmount : record { details : text; amount : nat64; reason : text };
+  TradingNotEnabled : record { reason : text };
   Underflow : record { operation : text; details : text };
   DivisionFailed : record { operation : text; details : text };
   MultiplicationOverflow : record { operation : text; details : text };

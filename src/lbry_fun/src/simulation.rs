@@ -178,8 +178,11 @@ fn generate_tokenomics_schedule(
 
     while total_minted < max_primary_supply as u128 {
         let in_slot_burn = burn_for_epoch;
-        let reward_e8s = primary_per_threshold * in_slot_burn * 10000;
-        let reward = reward_e8s / E8S;
+        // Both primary_per_threshold and in_slot_burn are in E8S
+        // We want: (tokens_per_burn * burn_amount) / 10000
+        // Since both are E8S: (E8S * E8S) / (E8S * 10000) = E8S / 10000
+        let reward_e8s = (primary_per_threshold * in_slot_burn) / (E8S * 10000);
+        let reward = reward_e8s;
 
         if one_reward_mode {
             let remaining_mint = max_primary_supply as u128 - total_minted;
@@ -192,6 +195,25 @@ fn generate_tokenomics_schedule(
         }
 
         if reward == 0 {
+            break;
+        }
+
+        // Check if this epoch would exceed max supply
+        if total_minted + reward > max_primary_supply as u128 {
+            // Calculate partial epoch to exactly hit max supply
+            let remaining_mint = max_primary_supply as u128 - total_minted;
+            if remaining_mint > 0 && primary_per_threshold > 0 {
+                // Calculate how much secondary burn is needed for remaining primary
+                // remaining_mint = (primary_per_threshold * partial_burn) / (E8S * 10000)
+                // So: partial_burn = (remaining_mint * E8S * 10000) / primary_per_threshold
+                let partial_burn = (remaining_mint * 10000) / primary_per_threshold;
+                if partial_burn > 0 {
+                    cumulative_burn += partial_burn;
+                    secondary_thresholds.push(cumulative_burn as u64);
+                    primary_rewards.push(primary_per_threshold as u64);
+                    total_minted = max_primary_supply as u128;
+                }
+            }
             break;
         }
 

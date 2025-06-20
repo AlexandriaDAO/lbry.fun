@@ -4,7 +4,7 @@ use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 pub const KONG_BACKEND_CANISTER: &str = "2ipq2-uqaaa-aaaar-qailq-cai";
 pub const ICP_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
-pub const INTITAL_PRIMARY_MINT: u64 = 100_010_000; // 1 token (100,000,000) + transfer fee (10,000)
+pub const INTITAL_PRIMARY_MINT: u64 = 100_020_000; // 1 token (100,000,000) + 2x transfer fee (20,000) for buffer
 pub const ICP_TRANSFER_FEE: u64 = 10_000;
 
 pub const E8S:u64=100_000_000;

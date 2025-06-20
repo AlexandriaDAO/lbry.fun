@@ -122,13 +122,25 @@ const CreateTokenForm: React.FC = () => {
       newErrors.initial_secondary_burn = `Initial valuation must be at least $1,000 to prevent bot attacks. Current: $${(initialBurn * secondaryTokenPrice).toLocaleString()}`;
     }
 
-    // Validate maximum 30% first epoch capture
+    // Calculate theoretical first epoch
     const remainingSupply = hardCap - parseInt(form.tge_allocation || '1');
     const initialReward = parseInt(form.initial_reward_per_burn_unit);
+    const initialBurnAmount = parseInt(form.initial_secondary_burn);
+    
     if (!newErrors.initial_reward_per_burn_unit && remainingSupply > 0 && initialReward > 0) {
-      const firstEpochPercent = (initialReward / remainingSupply) * 100;
+      // Calculate first epoch mint
+      const firstEpochMint = initialReward * initialBurnAmount / 10000;
+      const firstEpochPercent = (firstEpochMint / remainingSupply) * 100;
+      
       if (firstEpochPercent > 30) {
-        newErrors.initial_reward_per_burn_unit = `First epoch would capture ${firstEpochPercent.toFixed(1)}% of supply - reduce initial reward to max 30% for fair distribution`;
+        newErrors.initial_reward_per_burn_unit = 
+          `First epoch would capture ${firstEpochPercent.toFixed(1)}% of supply - reduce initial reward to max 30% for fair distribution`;
+      }
+      
+      // NEW: Check if parameters could cause overminting
+      if (firstEpochPercent > 90) {
+        newErrors.initial_reward_per_burn_unit = 
+          `CRITICAL: These parameters would attempt to mint ${firstEpochPercent.toFixed(1)}% in first epoch alone! Max supply would be exceeded.`;
       }
     }
 
@@ -445,14 +457,19 @@ const CreateTokenForm: React.FC = () => {
                   ...prev,
                   initial_secondary_burn: '200000',
                   initial_reward_per_burn_unit: '100',
-                  halving_step: '35'
+                  halving_step: '90'  // Changed from 35 to 90 for true extended distribution
                 }));
               }}
               className="p-4 border-2 border-border rounded-lg hover:border-primary transition-colors"
             >
               <h3 className="font-semibold text-foreground mb-2">Extended Distribution</h3>
-              <p className="text-sm text-muted-foreground">15+ epochs</p>
+              <p className="text-sm text-muted-foreground">
+                {previewGraphData?.minted_per_epoch_data_y?.length || '15+'} epochs
+              </p>
               <p className="text-xs text-muted-foreground/70 mt-1">Initial valuation: $1,000</p>
+              {previewGraphData?.minted_per_epoch_data_y?.length < 15 && (
+                <p className="text-xs text-yellow-600 mt-1">⚠️ Supply constraints limit epochs</p>
+              )}
             </button>
             
             <button

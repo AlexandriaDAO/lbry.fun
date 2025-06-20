@@ -44,15 +44,32 @@ async fn create_token(
     initial_reward_per_burn_unit: u64,
 ) -> Result<String, String> {
     let user_principal = ic_cdk::api::caller(); // Get the calling user's principal
+    ic_cdk::println!("[CREATE_TOKEN] Starting token creation for user: {}", user_principal);
+    ic_cdk::println!("[CREATE_TOKEN] Primary: {} ({}), Secondary: {} ({})", 
+        primary_token_name, primary_token_symbol, secondary_token_name, secondary_token_symbol);
+    
     // payment
+    ic_cdk::println!("[CREATE_TOKEN] Depositing 5 ICP from user...");
     deposit_icp_in_canister(500_000_000, None)
         .await
-        .map_err(|e| format!("Failed to deposit ICP: {:?}", e))?;
+        .map_err(|e| {
+            ic_cdk::println!("[CREATE_TOKEN] ERROR: ICP deposit failed: {:?}", e);
+            format!("Failed to deposit ICP: {:?}", e)
+        })?;
+    ic_cdk::println!("[CREATE_TOKEN] ICP deposit successful");
 
+    ic_cdk::println!("[CREATE_TOKEN] Creating canisters...");
     let swap_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
+    ic_cdk::println!("[CREATE_TOKEN] Swap canister created: {}", swap_canister_id);
+    
     let tokenomics_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
+    ic_cdk::println!("[CREATE_TOKEN] Tokenomics canister created: {}", tokenomics_canister_id);
+    
     let frontend_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
+    ic_cdk::println!("[CREATE_TOKEN] Frontend canister created: {}", frontend_canister_id);
+    
     let logs_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
+    ic_cdk::println!("[CREATE_TOKEN] Logs canister created: {}", logs_canister_id);
 
     // Create primary token
     // ALEX
@@ -134,53 +151,97 @@ async fn create_token(
     )
     .await?;
 
+    ic_cdk::println!("[CREATE_TOKEN] Adding primary token to KongSwap...");
     match add_token_to_kong_swap(get_principal(&primary_token_id)).await {
-        AddTokenResponse::Ok(_) => (),
-        AddTokenResponse::Err(e) => return Err(format!("Failed to add token to swap: {}", e)),
+        AddTokenResponse::Ok(token_detail) => {
+            ic_cdk::println!("[CREATE_TOKEN] Primary token added to KongSwap successfully: {:?}", token_detail);
+        },
+        AddTokenResponse::Err(e) => {
+            ic_cdk::println!("[CREATE_TOKEN] ERROR: Failed to add token to KongSwap: {}", e);
+            return Err(format!("Failed to add token to swap: {}", e));
+        }
     };
 
+    // First, ensure the lbry_fun canister has ICP balance by approving itself to spend from its own balance
+    ic_cdk::println!("[CREATE_TOKEN] Preparing token approvals for pool...");
+    
+    // Approve the pool amount plus the transfer fee (ICRC tokens have a 10k fee)
+    let primary_token_fee = 10_000u64;
     approve_tokens_to_spender(
         get_principal(&primary_token_id),
         get_principal(KONG_BACKEND_CANISTER),
-        INTITAL_PRIMARY_MINT.into(),
+        (E8S + primary_token_fee).into(), // Approve pool amount + fee
     )
     .await?;
 
+    // The lbry_fun canister needs to approve Kong to use its ICP
+    // ICP also has a 10k fee
+    let icp_fee = 10_000u64;
     approve_tokens_to_spender(
         get_principal(ICP_CANISTER_ID),
         get_principal(KONG_BACKEND_CANISTER),
-        INTITAL_PRIMARY_MINT.into(),
+        (10_000_000 + icp_fee).into(), // Approve 0.1 ICP + fee
     )
     .await?;
-    ic_cdk::println!("Tokens approved!");
+    ic_cdk::println!("[CREATE_TOKEN] Token approvals completed successfully");
 
-    TOKENS.with(|tokens| {
+    let mut token_record = TokenRecord {
+        id: 0, // Will be set when inserting
+        primary_token_id: get_principal(&primary_token_id),
+        primary_token_name: primary_token_name.clone(),
+        primary_token_symbol: primary_token_symbol.clone(),
+        primary_token_max_supply: primary_max_supply,
+        secondary_token_id: get_principal(&secondary_token_id),
+        secondary_token_name: secondary_token_name.clone(),
+        secondary_token_symbol: secondary_token_symbol.clone(),
+        icp_swap_canister_id: swap_canister_id,
+        tokenomics_canister_id,
+        logs_canister_id,
+        initial_primary_mint,
+        initial_secondary_burn,
+        halving_step,
+        caller: user_principal,
+        created_time: ic_cdk::api::time(),
+        pool_creation_failed: false,
+        pool_created_at: 0,
+    };
+
+    // Attempt to create pool on KongSwap
+    ic_cdk::println!("[CREATE_TOKEN] Attempting to create liquidity pool on KongSwap...");
+    match create_pool_on_kong_swap(get_principal(&primary_token_id)).await {
+        Ok(reply) => {
+            ic_cdk::println!("[CREATE_TOKEN] POOL CREATION SUCCESS: Pool ID: {}", reply.pool_id);
+            token_record.pool_created_at = ic_cdk::api::time();
+            token_record.pool_creation_failed = false;
+        },
+        Err(e) => {
+            ic_cdk::println!("[CREATE_TOKEN] POOL CREATION FAILED: {}", e);
+            token_record.pool_creation_failed = true;
+            // Continue with token creation even if pool fails
+        }
+    }
+
+    // Save the token record
+    let final_token_id = TOKENS.with(|tokens| {
         let mut tokens = tokens.borrow_mut();
-        let token_id = tokens.len() as u64 + 1; // Generate a new token ID
-        let token_record = TokenRecord {
-            id: token_id,
-            primary_token_id: get_principal(&primary_token_id),
-            primary_token_name: primary_token_name.clone(),
-            primary_token_symbol: primary_token_symbol.clone(),
-            primary_token_max_supply: primary_max_supply,
-            secondary_token_id: get_principal(&secondary_token_id),
-            secondary_token_name: secondary_token_name.clone(),
-            secondary_token_symbol: secondary_token_symbol.clone(),
-            icp_swap_canister_id: swap_canister_id,
-            tokenomics_canister_id,
-            logs_canister_id,
-            initial_primary_mint,
-            initial_secondary_burn,
-            halving_step,
-            caller: user_principal,
-            created_time: ic_cdk::api::time(),
-            liquidity_provided_at: 0,
-            is_live: false,
-        };
-        tokens.insert(token_id, token_record);
+        let token_id = tokens.len() as u64 + 1;
+        token_record.id = token_id;
+        tokens.insert(token_id, token_record.clone());
+        token_id
     });
 
-    Ok("Tokens created and stored!".to_string())
+    // Return appropriate message based on pool creation result
+    if token_record.pool_creation_failed {
+        Ok(format!(
+            "Token created (ID: {}) but pool creation failed. Use retry_pool_creation({}) to try again. Token will not go live until pool is created.",
+            final_token_id, final_token_id
+        ))
+    } else {
+        Ok(format!(
+            "Token created successfully (ID: {}) with liquidity pool. Minting/burning will be enabled in 24 hours.",
+            final_token_id
+        ))
+    }
 }
 
 async fn create_icrc1_canister(
@@ -384,13 +445,18 @@ async fn add_token_to_kong_swap(token_id: Principal) -> AddTokenResponse {
     let args: AddTokenArgs = AddTokenArgs {
         token: format!("IC.{}", token_id),
     };
+    
+    ic_cdk::println!("[ADD_TOKEN_TO_KONG] Calling KongSwap to add token: {}", args.token);
+    ic_cdk::println!("[ADD_TOKEN_TO_KONG] Kong backend canister: {}", KONG_BACKEND_CANISTER);
 
     let result: Result<(AddTokenResult,), _> =
         ic_cdk::call(get_principal(KONG_BACKEND_CANISTER), "add_token", (args,)).await;
 
     match result {
         Ok((AddTokenResult::Ok(AddTokenReply::IC(token_info)),)) => {
-            ic_cdk::println!("Token added: {:?}", token_info);
+            ic_cdk::println!("[ADD_TOKEN_TO_KONG] SUCCESS: Token added to KongSwap");
+            ic_cdk::println!("[ADD_TOKEN_TO_KONG] Token details: ID={}, Symbol={}, Name={}, Decimals={}", 
+                token_info.token_id, token_info.symbol, token_info.name, token_info.decimals);
             AddTokenResponse::Ok(TokenDetail::IC(TokenInfo {
                 token_id: token_info.token_id,
                 chain: token_info.chain,
@@ -406,32 +472,105 @@ async fn add_token_to_kong_swap(token_id: Principal) -> AddTokenResponse {
             }))
         }
         Ok((AddTokenResult::Err(err_msg),)) => {
+            ic_cdk::println!("[ADD_TOKEN_TO_KONG] ERROR: KongSwap rejected token: {}", err_msg);
             AddTokenResponse::Err(format!("Add token failed: {}", err_msg))
         }
         Err(e) => {
-            ic_cdk::println!("Error calling backend: {:?}", e);
+            ic_cdk::println!("[ADD_TOKEN_TO_KONG] ERROR: Inter-canister call failed: {:?}", e);
             AddTokenResponse::Err("Call failed".to_string())
         }
     }
 }
 
 pub async fn create_pool_on_kong_swap(primary_token_id: Principal) -> Result<AddPoolReply, String> {
+    // Kong requires token_1 to be ICP or ksUSDT
     let args = AddPoolArgs {
-        token_0: format!("{}.{}", CHAIN_ID, primary_token_id),
-        amount_0: (E8S).into(),
-        token_1: format!("{}.{}", CHAIN_ID, ICP_CANISTER_ID), //ICP PAIR
-        amount_1: (10_000_000 as u64).into(),
+        token_0: format!("{}.{}", CHAIN_ID, primary_token_id), // Custom token as token_0
+        amount_0: E8S.into(), // 1 token
+        token_1: "ICP".to_string(), // ICP as token_1
+        amount_1: (10_000_000 as u64).into(), // 0.1 ICP
         on_kong: true,
     };
+    
+    ic_cdk::println!("[CREATE_POOL] Calling KongSwap to create pool");
+    ic_cdk::println!("[CREATE_POOL] Pool parameters: token_0={} ({}), token_1={} ({})", 
+        args.token_0, args.amount_0, args.token_1, args.amount_1);
+    ic_cdk::println!("[CREATE_POOL] Kong backend canister: {}", KONG_BACKEND_CANISTER);
 
     let (result,): (AddPoolResult,) =
         ic_cdk::call(get_principal(KONG_BACKEND_CANISTER), "add_pool", (args,))
             .await
-            .map_err(|e| format!("Call failed: {:?}", e))?;
+            .map_err(|e| {
+                ic_cdk::println!("[CREATE_POOL] ERROR: Inter-canister call failed: {:?}", e);
+                format!("Call failed: {:?}", e)
+            })?;
 
     match result {
-        AddPoolResult::Ok(reply) => Ok(reply),
-        AddPoolResult::Err(e) => Err(format!("Pool creation failed: {}", e)),
+        AddPoolResult::Ok(reply) => {
+            ic_cdk::println!("[CREATE_POOL] SUCCESS: Pool created successfully");
+            ic_cdk::println!("[CREATE_POOL] Pool details: ID={}, Symbol={}, Name={}", 
+                reply.pool_id, reply.symbol, reply.name);
+            Ok(reply)
+        },
+        AddPoolResult::Err(e) => {
+            ic_cdk::println!("[CREATE_POOL] ERROR: KongSwap rejected pool creation: {}", e);
+            Err(format!("Pool creation failed: {}", e))
+        },
+    }
+}
+
+#[update]
+async fn retry_pool_creation(token_id: u64) -> Result<String, String> {
+    let caller = ic_cdk::caller();
+    
+    // Get the token record
+    let token_record = TOKENS.with(|tokens| {
+        tokens.borrow().get(&token_id)
+    }).ok_or_else(|| format!("Token with ID {} not found", token_id))?;
+    
+    // Verify caller is the token creator
+    if token_record.caller != caller {
+        return Err("Only the token creator can retry pool creation".to_string());
+    }
+    
+    // Check if pool creation already succeeded
+    if !token_record.pool_creation_failed {
+        return Err("Pool has already been created successfully".to_string());
+    }
+    
+    // Attempt to create the pool again
+    match create_pool_on_kong_swap(token_record.primary_token_id).await {
+        Ok(reply) => {
+            // Update the token record
+            TOKENS.with(|tokens| {
+                let mut tokens_map = tokens.borrow_mut();
+                if let Some(mut token) = tokens_map.get(&token_id) {
+                    token.pool_creation_failed = false;
+                    token.pool_created_at = ic_cdk::api::time();
+                    tokens_map.insert(token_id, token);
+                }
+            });
+            
+            // Check if token should be live immediately (24 hours have passed)
+            let current_time = ic_cdk::api::time();
+            let twenty_four_hours_nanos = 24 * 60 * 60 * 1_000_000_000u64;
+            
+            if current_time >= token_record.created_time + twenty_four_hours_nanos {
+                Ok(format!(
+                    "Pool created successfully (ID: {}). Token is now live for minting/burning!",
+                    reply.pool_id
+                ))
+            } else {
+                let hours_remaining = ((token_record.created_time + twenty_four_hours_nanos - current_time) / 1_000_000_000) / 3600;
+                Ok(format!(
+                    "Pool created successfully (ID: {}). Token will go live in approximately {} hours.",
+                    reply.pool_id, hours_remaining
+                ))
+            }
+        },
+        Err(e) => {
+            Err(format!("Pool creation failed again: {}. Please try again later.", e))
+        }
     }
 }
 
@@ -440,11 +579,14 @@ pub async fn approve_tokens_to_spender(
     spender: Principal,
     amount: Nat,
 ) -> Result<Nat, String> {
+    ic_cdk::println!("[APPROVE] Approving {} to spend {} from ledger {}", 
+        spender, amount, ledger_canister_id);
+        
     let args: ApproveArgs = ApproveArgs {
         fee: None,
         memo: None,
         from_subaccount: None,
-        amount,
+        amount: amount.clone(),
         spender: Account {
             owner: spender,
             subaccount: None,
@@ -453,11 +595,20 @@ pub async fn approve_tokens_to_spender(
 
     let (result,): (ApproveResult,) = ic_cdk::call(ledger_canister_id, "icrc2_approve", (args,))
         .await
-        .map_err(|e| format!("Call to icrc2_approve failed: {:?}", e))?;
+        .map_err(|e| {
+            ic_cdk::println!("[APPROVE] ERROR: Call to icrc2_approve failed: {:?}", e);
+            format!("Call to icrc2_approve failed: {:?}", e)
+        })?;
 
     match result {
-        ApproveResult::Ok(block_index) => Ok(block_index),
-        ApproveResult::Err(e) => Err(format!("Approval failed: {:?}", e)),
+        ApproveResult::Ok(block_index) => {
+            ic_cdk::println!("[APPROVE] SUCCESS: Approval granted, block index: {}", block_index);
+            Ok(block_index)
+        },
+        ApproveResult::Err(e) => {
+            ic_cdk::println!("[APPROVE] ERROR: Approval failed: {:?}", e);
+            Err(format!("Approval failed: {:?}", e))
+        },
     }
 }
 
@@ -554,79 +705,6 @@ async fn deposit_ksicp_in_canister(
     result // Return the inner Result<BlockIndex, TransferFromError>
 }
 
-pub async fn publish_eligible_tokens_on_kongswap() ->Result<String,String>{
-    ic_cdk::println!("=== STARTING POOL CREATION CHECK ===");
-    let time = ic_cdk::api::time(); // current time in nanoseconds
-    // let twenty_four_hours_in_nanos: u64 = 24 * 60 * 60 * 1_000_000_000;
-    let twenty_four_hours_in_nanos: u64 = 1000; // for testing
-
-    let result = TOKENS.with(|tokens| {
-        let tokens_map = tokens.borrow();
-        let keys: Vec<u64> = tokens_map.iter().map(|(id, _)| id).collect();
-        ic_cdk::println!("Found {} total tokens to check", keys.len());
-        keys
-    });
-    
-    let mut processed_count = 0;
-    let mut success_count = 0;
-    let mut already_live_count = 0;
-    let mut not_ready_count = 0;
-    
-    for token_id in result {
-        let token_opt = TOKENS.with(|tokens| {
-            let tokens_map = tokens.borrow();
-            tokens_map.get(&token_id)
-        });
-        
-        if let Some(mut token) = token_opt {
-            ic_cdk::println!("Checking token {} ({}): created_time={}, is_live={}, age={} nanos", 
-                token.id, token.primary_token_symbol, token.created_time, token.is_live, 
-                time.saturating_sub(token.created_time));
-            
-            if token.is_live {
-                already_live_count += 1;
-                ic_cdk::println!("  -> Token already live, skipping");
-                continue;
-            }
-            
-            if token.created_time + twenty_four_hours_in_nanos <= time {
-                ic_cdk::println!("  -> Token is eligible for pool creation, attempting now...");
-                processed_count += 1;
-                
-                match create_pool_on_kong_swap(token.primary_token_id).await {
-                    Ok(reply) => {
-                        success_count += 1;
-                        token.is_live = true;
-                        token.liquidity_provided_at = time;
-                        
-                        TOKENS.with(|tokens| {
-                            let mut tokens_map = tokens.borrow_mut();
-                            tokens_map.insert(token_id, token.clone());
-                        });
-                        
-                        ic_cdk::println!("  ✓ SUCCESS: Pool created for '{}' (ID {}). Pool ID: {}", 
-                            token.primary_token_name, token.id, reply.pool_id);
-                    },
-                    Err(e) => {
-                        ic_cdk::println!("  ✗ FAILED: Pool creation failed for '{}' (ID {}): {}", 
-                            token.primary_token_name, token.id, e);
-                    }
-                }
-            } else {
-                not_ready_count += 1;
-                let remaining_nanos = (token.created_time + twenty_four_hours_in_nanos).saturating_sub(time);
-                ic_cdk::println!("  -> Token not ready yet, {} nanos remaining", remaining_nanos);
-            }
-        }
-    }
-    
-    let summary = format!(
-        "=== POOL CREATION COMPLETE === Processed: {}, Success: {}, Already Live: {}, Not Ready: {}",
-        processed_count, success_count, already_live_count, not_ready_count
-    );
-    ic_cdk::println!("{}", summary);
-    Ok(summary)
-}
 
 async fn _process_fee_treasury() -> Result<String, String> {
     let canister_principal = ic_cdk::api::id();
@@ -703,14 +781,4 @@ fn init() {
         });
     });
 
-    // Schedule publishing eligible tokens to run every hour.
-    set_timer_interval(hourly, || {
-        ic_cdk::spawn(async {
-            ic_cdk::println!("Timer triggered: Running publish_eligible_tokens_on_kongswap");
-            match publish_eligible_tokens_on_kongswap().await {
-                Ok(msg) => ic_cdk::println!("Pool creation result: {}", msg),
-                Err(e) => ic_cdk::println!("Pool creation error: {}", e),
-            }
-        });
-    });
 }

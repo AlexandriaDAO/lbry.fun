@@ -6,9 +6,7 @@ use icrc_ledger_types::icrc1::account::Account;
 use icrc_ledger_types::icrc2::approve::{ApproveArgs, ApproveError};
 use std::time::Instant;
 
-const E8S: u64 = 100_000_000;
-
-// Re-export GraphData and PreviewArgs from simulation module for testing
+// Import types needed for real tokenomics predictions
 #[derive(CandidType, Deserialize, Clone)]
 pub struct PreviewArgs {
     pub primary_max_supply: u64,
@@ -29,6 +27,10 @@ pub struct GraphData {
     pub cumulative_usd_cost_data_x: Vec<u64>,
     pub cumulative_usd_cost_data_y: Vec<f64>,
 }
+
+const E8S: u64 = 100_000_000;
+
+// Re-export GraphData and PreviewArgs from simulation module for testing
 
 pub struct LargeScaleValidationEnv {
     pub token_env: TokenTestEnvironment,
@@ -91,12 +93,33 @@ impl LargeScaleValidationEnv {
         }
     }
     
-    fn get_tokenomics_predictions(_env: &TokenTestEnvironment) -> GraphData {
-        // For testing purposes, create mock predictions
-        // In a real deployment, this would call the actual lbry_fun canister method
-        // but the mock canister doesn't have the preview_tokenomics_graphs method
+    fn get_tokenomics_predictions(env: &TokenTestEnvironment) -> GraphData {
+        // Try to get real predictions from the lbry_fun canister if available
+        if env.lbry_fun != Principal::anonymous() {
+            // Use the same parameters as the actual tokenomics deployment
+            let args = PreviewArgs {
+                primary_max_supply: 21_000_000,  // 21M tokens (in natural units, not e8s)
+                tge_allocation: 0,  // No TGE allocation in test environment
+                initial_secondary_burn: 5_000,  // 5,000 secondary tokens per epoch
+                halving_step: 50,  // Halve every 50 epochs
+                initial_reward_per_burn_unit: 100,  // Initial reward rate
+            };
+            
+            let result = env.pic.query_call(
+                env.lbry_fun,
+                Principal::anonymous(),
+                "preview_tokenomics_graphs",
+                Encode!(&args).unwrap(),
+            );
+            
+            if let Ok(bytes) = result {
+                if let Ok(graph_data) = decode_one::<GraphData>(&bytes) {
+                    return graph_data;
+                }
+            }
+        }
         
-        // Create basic prediction data for validation testing
+        // Fallback to mock data if real predictions unavailable
         let mut graph_data = GraphData::default();
         
         // Mock data points for validation - simplified linear interpolation
