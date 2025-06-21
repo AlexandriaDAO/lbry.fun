@@ -2,7 +2,7 @@ use ic_cdk::query;
 use candid::{CandidType, Principal};
 use serde::Deserialize;
 use crate::{TokenRecord, TOKENS, get_self_icp_balance};
-use crate::simulation::{preview_tokenomics, GraphData, PreviewArgs};
+use crate::simulation_new::{preview_tokenomics, GraphData, PreviewArgs};
 
 #[query]
 pub fn get_all_token_record() -> Vec<(u64, TokenRecord)> {

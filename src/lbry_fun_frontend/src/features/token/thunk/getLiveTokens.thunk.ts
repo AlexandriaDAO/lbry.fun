@@ -33,8 +33,9 @@ const getLiveTokens = createAsyncThunk<
         initial_primary_mint: record.initial_primary_mint.toString(),
         initial_secondary_burn: record.initial_secondary_burn.toString(),
         created_time: record.created_time.toString(),
-        liquidity_provided_at: record.liquidity_provided_at.toString(),
-        isLive: record.is_live,
+        pool_created_at: record.pool_created_at.toString(),
+        pool_creation_failed: record.pool_creation_failed,
+        isLive: true, // Since get_live() already filters for live tokens
       },
     ]);
 

@@ -19,7 +19,7 @@ use crate::{
     get_principal, get_self_icp_balance, AddPoolArgs, AddPoolReply, AddPoolResult, AddTokenArgs,
     AddTokenReply, AddTokenResponse, AddTokenResult, ApproveArgs, ApproveResult, ArchiveOptions,
     FeatureFlags, IcpSwapInitArgs, InitArgs, LedgerArg, LogsInitArgs, MetadataValue, TokenDetail,
-    TokenInfo, TokenRecord, TokenomicsInitArgs, CHAIN_ID, E8S, ICP_CANISTER_ID, ICP_TRANSFER_FEE,
+    TokenInfo, TokenRecord, TokenomicsInitArgs, TxId, CHAIN_ID, E8S, ICP_CANISTER_ID, ICP_TRANSFER_FEE,
     INTITAL_PRIMARY_MINT, KONG_BACKEND_CANISTER, TOKENS,
 };
 
@@ -162,28 +162,24 @@ async fn create_token(
         }
     };
 
-    // First, ensure the lbry_fun canister has ICP balance by approving itself to spend from its own balance
-    ic_cdk::println!("[CREATE_TOKEN] Preparing token approvals for pool...");
+    // Instead of approving, we'll transfer tokens directly to Kong
+    ic_cdk::println!("[CREATE_TOKEN] Transferring tokens to Kong for pool creation...");
     
-    // Approve the pool amount plus the transfer fee (ICRC tokens have a 10k fee)
-    let primary_token_fee = 10_000u64;
-    approve_tokens_to_spender(
+    // Transfer primary token to Kong
+    let primary_transfer_result = transfer_tokens_to_kong(
         get_principal(&primary_token_id),
-        get_principal(KONG_BACKEND_CANISTER),
-        (E8S + primary_token_fee).into(), // Approve pool amount + fee
+        E8S.into(), // 1 token for pool
     )
     .await?;
+    ic_cdk::println!("[CREATE_TOKEN] Primary token transferred to Kong, block index: {}", primary_transfer_result);
 
-    // The lbry_fun canister needs to approve Kong to use its ICP
-    // ICP also has a 10k fee
-    let icp_fee = 10_000u64;
-    approve_tokens_to_spender(
+    // Transfer ICP to Kong
+    let icp_transfer_result = transfer_tokens_to_kong(
         get_principal(ICP_CANISTER_ID),
-        get_principal(KONG_BACKEND_CANISTER),
-        (10_000_000 + icp_fee).into(), // Approve 0.1 ICP + fee
+        (10_000_000 as u64).into(), // 0.1 ICP for pool
     )
     .await?;
-    ic_cdk::println!("[CREATE_TOKEN] Token approvals completed successfully");
+    ic_cdk::println!("[CREATE_TOKEN] ICP transferred to Kong, block index: {}", icp_transfer_result);
 
     let mut token_record = TokenRecord {
         id: 0, // Will be set when inserting
@@ -208,7 +204,11 @@ async fn create_token(
 
     // Attempt to create pool on KongSwap
     ic_cdk::println!("[CREATE_TOKEN] Attempting to create liquidity pool on KongSwap...");
-    match create_pool_on_kong_swap(get_principal(&primary_token_id)).await {
+    match create_pool_on_kong_swap(
+        get_principal(&primary_token_id), 
+        primary_transfer_result,
+        icp_transfer_result
+    ).await {
         Ok(reply) => {
             ic_cdk::println!("[CREATE_TOKEN] POOL CREATION SUCCESS: Pool ID: {}", reply.pool_id);
             token_record.pool_created_at = ic_cdk::api::time();
@@ -482,19 +482,27 @@ async fn add_token_to_kong_swap(token_id: Principal) -> AddTokenResponse {
     }
 }
 
-pub async fn create_pool_on_kong_swap(primary_token_id: Principal) -> Result<AddPoolReply, String> {
+pub async fn create_pool_on_kong_swap(
+    primary_token_id: Principal, 
+    primary_tx_id: Nat,
+    icp_tx_id: Nat
+) -> Result<AddPoolReply, String> {
     // Kong requires token_1 to be ICP or ksUSDT
     let args = AddPoolArgs {
         token_0: format!("{}.{}", CHAIN_ID, primary_token_id), // Custom token as token_0
         amount_0: E8S.into(), // 1 token
+        tx_id_0: Some(TxId::BlockIndex(primary_tx_id)), // Provide the transfer tx id
         token_1: "ICP".to_string(), // ICP as token_1
         amount_1: (10_000_000 as u64).into(), // 0.1 ICP
-        on_kong: true,
+        tx_id_1: Some(TxId::BlockIndex(icp_tx_id)), // Provide the transfer tx id
+        lp_fee_bps: Some(100), // 1% LP fee (100 basis points)
     };
     
     ic_cdk::println!("[CREATE_POOL] Calling KongSwap to create pool");
     ic_cdk::println!("[CREATE_POOL] Pool parameters: token_0={} ({}), token_1={} ({})", 
         args.token_0, args.amount_0, args.token_1, args.amount_1);
+    ic_cdk::println!("[CREATE_POOL] Transaction IDs: tx_id_0={:?}, tx_id_1={:?}", 
+        args.tx_id_0, args.tx_id_1);
     ic_cdk::println!("[CREATE_POOL] Kong backend canister: {}", KONG_BACKEND_CANISTER);
 
     let (result,): (AddPoolResult,) =
@@ -538,8 +546,27 @@ async fn retry_pool_creation(token_id: u64) -> Result<String, String> {
         return Err("Pool has already been created successfully".to_string());
     }
     
+    // Transfer tokens to Kong first
+    let primary_transfer_result = transfer_tokens_to_kong(
+        token_record.primary_token_id,
+        E8S.into(),
+    )
+    .await
+    .map_err(|e| format!("Failed to transfer primary token: {}", e))?;
+    
+    let icp_transfer_result = transfer_tokens_to_kong(
+        get_principal(ICP_CANISTER_ID),
+        (10_000_000 as u64).into(),
+    )
+    .await
+    .map_err(|e| format!("Failed to transfer ICP: {}", e))?;
+    
     // Attempt to create the pool again
-    match create_pool_on_kong_swap(token_record.primary_token_id).await {
+    match create_pool_on_kong_swap(
+        token_record.primary_token_id,
+        primary_transfer_result,
+        icp_transfer_result
+    ).await {
         Ok(reply) => {
             // Update the token record
             TOKENS.with(|tokens| {
@@ -571,6 +598,47 @@ async fn retry_pool_creation(token_id: u64) -> Result<String, String> {
         Err(e) => {
             Err(format!("Pool creation failed again: {}. Please try again later.", e))
         }
+    }
+}
+
+async fn transfer_tokens_to_kong(
+    ledger_canister_id: Principal,
+    amount: Nat,
+) -> Result<Nat, String> {
+    let kong_account = Account {
+        owner: get_principal(KONG_BACKEND_CANISTER),
+        subaccount: None,
+    };
+    
+    ic_cdk::println!("[TRANSFER] Transferring {} from ledger {} to Kong", 
+        amount, ledger_canister_id);
+        
+    let args = icrc_ledger_types::icrc1::transfer::TransferArg {
+        to: kong_account,
+        amount: amount.clone(),
+        fee: None,
+        memo: None,
+        from_subaccount: None,
+        created_at_time: None,
+    };
+
+    let (result,): (Result<BlockIndex, icrc_ledger_types::icrc1::transfer::TransferError>,) = 
+        ic_cdk::call(ledger_canister_id, "icrc1_transfer", (args,))
+        .await
+        .map_err(|e| {
+            ic_cdk::println!("[TRANSFER] ERROR: Call to icrc1_transfer failed: {:?}", e);
+            format!("Call to icrc1_transfer failed: {:?}", e)
+        })?;
+
+    match result {
+        Ok(block_index) => {
+            ic_cdk::println!("[TRANSFER] SUCCESS: Transfer completed, block index: {}", block_index);
+            Ok(block_index)
+        },
+        Err(e) => {
+            ic_cdk::println!("[TRANSFER] ERROR: Transfer failed: {:?}", e);
+            Err(format!("Transfer failed: {:?}", e))
+        },
     }
 }
 

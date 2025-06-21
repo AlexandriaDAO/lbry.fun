@@ -34,13 +34,13 @@ Create_token() call is failing now: Token creation failedFailed to add token to 
 dfx ledger transfer --icp 99 --memo 0 $(dfx ledger account-id --of-principal 3p5as-qtth3-qww4q-qhc55-unoun-3zyiy-d2rk7-537id-3bhfi-2rb5o-cqe)
 
 // Test deploymenbt of ksICP.
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner = principal "qj4uc-ad3js-h4dku-jjwi7-jsq4m-ckng7-2jktl-lcx5v-efmwn-jyzuu-xae" })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner = principal "q5tir-zikyg-44in4-6txuu-vuya3-pmuy6-5kjev-fgvua-4njnq-qmtph-pqe" })'
 
 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "myahq-drqde-g4mak-ygjz2-25sae-d4t3h-xkigy-irfa6-3kots-iwzzo-3qe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "q5tir-zikyg-44in4-6txuu-vuya3-pmuy6-5kjev-fgvua-4njnq-qmtph-pqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
 
 dfx identity use default
 
@@ -60,8 +60,14 @@ dfx identity use default
 
 
 
+# Prompts
 
 
+### Migrate to new conversation:
+That's a good plan but this conversation is running long and I'll like a new agent to start fresh from the document instructions. Please consolidate all our related markdown files into one accordingly, deleting old ones after absorbing them into one single master plan for this so the next agent can pick up where you left off..
+
+
+### Checklist
 Before we start building this out though, I want to do some planning with you. Ultrathink through this. I first want you to make a project plan for this. Inside the appropriate markdown file please build an in depth plan for the task. Have high level checkpoints for each major step and feature, then in each checkpoint have a broken down list of small tasks you'll need to do to complete that checkpoint. We will then review this plan together.
 
 

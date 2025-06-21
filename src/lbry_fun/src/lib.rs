@@ -2,6 +2,8 @@ mod storage;
 pub use storage::*;
 mod simulation;
 pub use simulation::*;
+mod tokenomics_simple;
+mod simulation_new;
 mod queries;
 pub use queries::*;
 mod update;

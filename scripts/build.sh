@@ -42,6 +42,7 @@ candid-extractor target/wasm32-unknown-unknown/release/logs.wasm > src/logs/logs
 # For lbry_fun 
 cargo build --release --target wasm32-unknown-unknown --package lbry_fun
 candid-extractor target/wasm32-unknown-unknown/release/lbry_fun.wasm > src/lbry_fun/lbry_fun.did
+dfx generate lbry_fun
 dfx deploy lbry_fun
 
 export LBRY_FUN_PRINCIPAL=$(dfx canister id lbry_fun)
@@ -85,7 +86,7 @@ dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argu
       transfer_fee = 10_000 : nat;
       decimals = opt 8;
       max_memo_length = opt 80;
-      token_symbol = \"LICP\";
+      token_symbol = \"ICP\";
       token_name = \"Local ICP\";
       metadata = vec {};
       initial_balances = vec { 

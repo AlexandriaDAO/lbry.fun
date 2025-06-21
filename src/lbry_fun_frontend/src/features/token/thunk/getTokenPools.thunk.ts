@@ -14,29 +14,40 @@ const getTokenPools = createAsyncThunk<
     const result = await actor.get_all_token_record(); // returns [bigint, TokenRecord][]
 
     // Convert every BigInt to string
-   const safeResult: [string, TokenRecordStringified][] = result.map(([poolId, record]) => [
-        poolId.toString(),
-        {
-          primary_token_name: record.primary_token_name,
-          primary_token_symbol: record.primary_token_symbol,
-          secondary_token_name: record.secondary_token_name,
-          secondary_token_symbol: record.secondary_token_symbol,
-          id: record.id.toString(),
-          icp_swap_canister_id: record.icp_swap_canister_id.toString(),
-          caller: record.caller.toString(),
-          primary_token_id: record.primary_token_id.toString(),
-          secondary_token_id: record.secondary_token_id.toString(),
-          tokenomics_canister_id: record.tokenomics_canister_id.toString(),
-          logs_canister_id: record.logs_canister_id.toString(),
-          halving_step: record.halving_step.toString(),
-          primary_token_max_supply: record.primary_token_max_supply.toString(),
-          initial_primary_mint: record.initial_primary_mint.toString(),
-          initial_secondary_burn: record.initial_secondary_burn.toString(),
-          liquidity_provided_at: record.liquidity_provided_at.toString(),
-          isLive: record.is_live,
-          created_time: record.created_time.toString(),
-        },
-      ]);
+   const safeResult: [string, TokenRecordStringified][] = result.map(([poolId, record]) => {
+        const currentTime = Date.now() * 1000000; // Convert to nanoseconds
+        const twentyFourHoursNanos = 24 * 60 * 60 * 1_000_000_000;
+        
+        // Calculate isLive status based on backend logic
+        const isLive = !record.pool_creation_failed && 
+                      record.pool_created_at > 0n && 
+                      currentTime >= Number(record.created_time) + twentyFourHoursNanos;
+        
+        return [
+          poolId.toString(),
+          {
+            primary_token_name: record.primary_token_name,
+            primary_token_symbol: record.primary_token_symbol,
+            secondary_token_name: record.secondary_token_name,
+            secondary_token_symbol: record.secondary_token_symbol,
+            id: record.id.toString(),
+            icp_swap_canister_id: record.icp_swap_canister_id.toString(),
+            caller: record.caller.toString(),
+            primary_token_id: record.primary_token_id.toString(),
+            secondary_token_id: record.secondary_token_id.toString(),
+            tokenomics_canister_id: record.tokenomics_canister_id.toString(),
+            logs_canister_id: record.logs_canister_id.toString(),
+            halving_step: record.halving_step.toString(),
+            primary_token_max_supply: record.primary_token_max_supply.toString(),
+            initial_primary_mint: record.initial_primary_mint.toString(),
+            initial_secondary_burn: record.initial_secondary_burn.toString(),
+            created_time: record.created_time.toString(),
+            pool_created_at: record.pool_created_at.toString(),
+            pool_creation_failed: record.pool_creation_failed,
+            isLive: isLive,
+          },
+        ];
+      });
 
     // After fetching pools, dispatch actions to fetch logos for each pool
     safeResult.forEach(pool => {
@@ -85,9 +96,10 @@ export type TokenRecordStringified = {
   primary_token_id: string;
   caller: string;
   initial_secondary_burn: string;
-  liquidity_provided_at: string;
-  isLive: boolean;
   created_time: string;
+  pool_created_at: string;
+  pool_creation_failed: boolean;
+  isLive: boolean;
   primary_token_logo_base64?: string;
   secondary_token_logo_base64?: string;
 };

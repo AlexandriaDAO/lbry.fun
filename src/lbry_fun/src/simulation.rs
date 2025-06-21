@@ -85,18 +85,24 @@ pub fn preview_tokenomics(args: PreviewArgs) -> GraphData {
             continue;
         }
 
+        // Apply the same fix as in generate_tokenomics_schedule
+        // Both reward_rate and epoch_secondary_burn_capacity are in E8S
         let potential_primary_mint_e8s = epoch_secondary_burn_capacity
             .saturating_mul(reward_rate)
-            .saturating_mul(10000);
+            .saturating_div(E8S)
+            .saturating_div(10000);
         let remaining_to_mint_e8s =
             max_primary_supply_e8s.saturating_sub(total_primary_minted_e8s);
 
         let (actual_primary_mint_e8s, actual_secondary_burned) =
             if potential_primary_mint_e8s > remaining_to_mint_e8s {
                 let secondary_needed_to_cap = if reward_rate > 0 {
+                    // Reverse the formula: primary = (secondary * reward_rate) / (E8S * 10000)
+                    // So: secondary = (primary * E8S * 10000) / reward_rate
                     remaining_to_mint_e8s
+                        .saturating_mul(E8S)
+                        .saturating_mul(10000)
                         .saturating_div(reward_rate)
-                        .saturating_div(10000)
                 } else {
                     0
                 };
@@ -225,8 +231,11 @@ fn generate_tokenomics_schedule(
         burn_for_epoch *= 2;
 
         if primary_per_threshold > 1 {
+            // halving_step comes in E8S (e.g., 70000 * E8S for 70%)
+            // Convert to percentage: halving_step / (E8S * 1000) = 70
+            let halving_percentage = halving_step as u128 / (E8S * 1000);
             primary_per_threshold =
-                std::cmp::max(1, (primary_per_threshold * halving_step as u128) / 100);
+                std::cmp::max(1, (primary_per_threshold * halving_percentage) / 100);
         }
 
         if primary_per_threshold == 1 {

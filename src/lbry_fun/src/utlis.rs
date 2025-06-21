@@ -73,12 +73,20 @@ pub struct TokenInfo {
 //Add Pool
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
+pub enum TxId {
+    BlockIndex(Nat),
+    TransactionId(String),
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct AddPoolArgs {
     pub token_0: String,
     pub amount_0: Nat,
+    pub tx_id_0: Option<TxId>,
     pub token_1: String,
     pub amount_1: Nat,
-    pub on_kong: bool,
+    pub tx_id_1: Option<TxId>,
+    pub lp_fee_bps: Option<u8>,
 }
 
 #[derive(CandidType, Deserialize, Debug)]
