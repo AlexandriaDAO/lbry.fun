@@ -29,6 +29,7 @@ const router = createBrowserRouter(
 					<Route path="balance" element={<Suspense key="swap-balance" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="swap" element={<Suspense key="swap-swap" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="topup" element={<Suspense key="swap-topup" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
+					<Route path="transfer" element={<Suspense key="swap-transfer" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="send" element={<Suspense key="swap-send" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="receive" element={<Suspense key="swap-receive" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="burn" element={<Suspense key="swap-burn" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />

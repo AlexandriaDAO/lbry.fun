@@ -4,17 +4,15 @@ import "./style.css"
 
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import AccountCards from './components/balance/accountCards';
-import BalanceContent from './components/balance/balanceContent';
 import SwapContent from './components/swap/swapContent';
-import SendContent from './components/send/sendContent';
+import TransferContent from './components/transfer/TransferContent';
 import BurnContent from './components/burn/burnContent';
 import StakeContent from './components/stake/stakeContent';
-import ReceiveContent from './components/receive/receiveContent';
-import RedeemContent from './components/redeem/redeemContent';
 import TransactionHistory from './components/transactionHistory/transactionHistory';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import Insights from './components/insights/insights';
+import SwapPageWrapper from './components/SwapPageWrapper';
 import InfoCard from './components/info/InfoCard';
 import TokenomicsTab from './components/tokenomics/TokenomicsTab';
 
@@ -34,21 +32,18 @@ const SwapMain = () => {
     const { poolInitState, isPoolReady, error: poolError } = usePoolInitializer();
 
     const tabs = [
-        { id: 1, path: 'balance', label: 'Balance', hover: null, Component: BalanceContent },
         { id: 2, path: 'swap', label: 'Swap', hover: `Swap ICP for ${swap.activeSwapPool&&swap.activeSwapPool[1].secondary_token_symbol}`, Component: SwapContent },
-        { id: 4, path: 'send', label: 'Send', hover: null, Component: SendContent },
-        { id: 5, path: 'receive', label: 'Receive', hover: null, Component: ReceiveContent },
+        { id: 3, path: 'transfer', label: 'Transfer', hover: 'Send or receive tokens', Component: TransferContent },
         { id: 6, path: 'burn', label: 'Burn', hover: `Burn ${swap.activeSwapPool&&swap.activeSwapPool[1].secondary_token_symbol}, get back ${swap.activeSwapPool&&swap.activeSwapPool[1].primary_token_symbol} and ICP`, Component: BurnContent },
         { id: 7, path: 'stake', label: 'Stake', hover: null, Component: StakeContent },
-        { id: 8, path: 'redeem', label: 'Redeem', hover: "Redeem ICP if your swap fails", Component: RedeemContent },
         { id: 9, path: 'history', label: 'Transaction history', hover: null, Component: TransactionHistory },
         { id: 10, path: 'insights', label: 'Insights', hover: null, Component: Insights },
         { id: 11, path: 'info', label: 'Info', hover: null, Component: InfoCard },
         { id: 12, path: 'tokenomics', label: 'Tokenomics', hover: "View tokenomics graphs and distribution schedules", Component: TokenomicsTab }
     ];
 
-    const currentPath = location.pathname.split('/').pop() || 'balance';
-    const activeTab = tabs.find(tab => tab.path === currentPath)?.id || 1;
+    const currentPath = location.pathname.split('/').pop() || 'swap';
+    const activeTab = tabs.find(tab => tab.path === currentPath)?.id || 2;
 
     useEffect(() => {
         if (localStorage.getItem("tab")) {
@@ -56,6 +51,17 @@ const SwapMain = () => {
             localStorage.removeItem("tab");
         }
     }, []);
+
+    // Redirect old routes to their new locations
+    useEffect(() => {
+        if (currentPath === 'send' || currentPath === 'receive') {
+            navigate(`/swap/transfer?id=${idFromUrl}`, { replace: true });
+        }
+        // Redirect old redeem and balance routes to swap route
+        if (currentPath === 'redeem' || currentPath === 'balance') {
+            navigate(`/swap/swap?id=${idFromUrl}`, { replace: true });
+        }
+    }, [currentPath, idFromUrl, navigate]);
 
     // Show loading state while pool is initializing
     if (poolInitState === PoolInitState.LOADING_POOLS || poolInitState === PoolInitState.SETTING_POOL) {
@@ -125,14 +131,16 @@ const SwapMain = () => {
                             <SwapErrorBoundary>
                                 {isPoolReady ? (
                                     <SwapDataProvider>
-                                        {(() => {
-                                            const activeTabData = tabs.find(tab => tab.path === currentPath);
-                                            if (activeTabData && activeTabData.Component) {
-                                                const Component = activeTabData.Component;
-                                                return <Component />;
-                                            }
-                                            return null;
-                                        })()}
+                                        <SwapPageWrapper>
+                                            {(() => {
+                                                const activeTabData = tabs.find(tab => tab.path === currentPath);
+                                                if (activeTabData && activeTabData.Component) {
+                                                    const Component = activeTabData.Component;
+                                                    return <Component />;
+                                                }
+                                                return null;
+                                            })()}
+                                        </SwapPageWrapper>
                                     </SwapDataProvider>
                                 ) : (
                                     <div className="flex flex-col items-center justify-center min-h-[200px]">

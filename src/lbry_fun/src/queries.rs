@@ -21,7 +21,7 @@ pub fn get_all_token_record() -> Vec<(u64, TokenRecord)> {
 #[query]
 pub fn get_upcomming() -> Vec<(u64, TokenRecord)> {
     let current_time = ic_cdk::api::time();
-    let twenty_four_hours_nanos = 24 * 60 * 60 * 1_000_000_000u64;
+    let twenty_four_hours_nanos = crate::constants::LAUNCH_PERIOD_NANOS;
     
     TOKENS.with(|tokens| {
         let tokens_map = tokens.borrow();
@@ -42,7 +42,7 @@ pub fn get_upcomming() -> Vec<(u64, TokenRecord)> {
 #[query]
 pub fn get_live() -> Vec<(u64, TokenRecord)> {
     let current_time = ic_cdk::api::time();
-    let twenty_four_hours_nanos = 24 * 60 * 60 * 1_000_000_000u64;
+    let twenty_four_hours_nanos = crate::constants::LAUNCH_PERIOD_NANOS;
     
     TOKENS.with(|tokens| {
         let tokens_map = tokens.borrow();
@@ -107,7 +107,7 @@ pub fn get_token_status(token_id: u64) -> Option<TokenStatusDetail> {
         let tokens_map = tokens.borrow();
         tokens_map.get(&token_id).map(|token| {
             let current_time = ic_cdk::api::time();
-            let twenty_four_hours_nanos = 24 * 60 * 60 * 1_000_000_000u64;
+            let twenty_four_hours_nanos = crate::constants::LAUNCH_PERIOD_NANOS;
             let time_until_live = if token.pool_creation_failed || token.pool_created_at == 0 {
                 0 // Not applicable if pool creation failed or hasn't been created
             } else if current_time >= token.created_time + twenty_four_hours_nanos {

@@ -32,8 +32,9 @@ export const SWAP_ROUTES = {
   BALANCE: '/swap/balance',
   SWAP: '/swap/swap',
   TOPUP: '/swap/topup',
-  SEND: '/swap/send',
-  RECEIVE: '/swap/receive',
+  TRANSFER: '/swap/transfer',
+  SEND: '/swap/send', // Deprecated - redirects to TRANSFER
+  RECEIVE: '/swap/receive', // Deprecated - redirects to TRANSFER
   BURN: '/swap/burn',
   STAKE: '/swap/stake',
   REDEEM: '/swap/redeem',
@@ -90,6 +91,7 @@ export const buildRoutes = {
   swapBalance: () => SWAP_ROUTES.BALANCE,
   swapSwap: () => SWAP_ROUTES.SWAP,
   swapTopup: () => SWAP_ROUTES.TOPUP,
+  swapTransfer: () => SWAP_ROUTES.TRANSFER,
   swapSend: () => SWAP_ROUTES.SEND,
   swapReceive: () => SWAP_ROUTES.RECEIVE,
   swapBurn: () => SWAP_ROUTES.BURN,

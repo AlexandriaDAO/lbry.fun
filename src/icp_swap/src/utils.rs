@@ -611,9 +611,9 @@ pub async fn is_live() -> Result<bool, String> {
             
             // Check if 24 hours have passed since creation
             let current_time = ic_cdk::api::time();
-            let twenty_four_hours_nanos = 24 * 60 * 60 * 1_000_000_000u64;
-            
-            Ok(current_time >= status.created_time + twenty_four_hours_nanos)
+            use crate::constants::LAUNCH_PERIOD_NANOS;
+   
+            Ok(current_time >= status.created_time + LAUNCH_PERIOD_NANOS)
         },
         Ok((None,)) => Err("Token not found in parent canister".to_string()),
         Err((code, msg)) => Err(format!("Failed to get token status: {:?} - {}", code, msg)),

@@ -16,6 +16,7 @@ import type { Value as Icrc1Value } from "../../../../../../declarations/icp_led
 import { setActiveSwapPool } from '@/features/swap/swapSlice';
 import { TokenConversionService } from "@/utils/TokenConversionService";
 import { RootState } from "@/store";
+import { LAUNCH_PERIOD_NANOS } from "@/constants/launchPeriod";
 
 const PoolCard: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -127,7 +128,7 @@ const PoolCard: React.FC = () => {
         if (activeSwapPoolFromRedux && activeSwapPoolFromRedux[1] && !activeSwapPoolFromRedux[1].isLive && activeSwapPoolFromRedux[1].created_time) {
             // created_time from the backend is in nanoseconds (as a BigInt or can be converted to one).
             const createdTimeNs = BigInt(activeSwapPoolFromRedux[1].created_time);
-            const launchTimeNs = createdTimeNs + BigInt(24 * 60 * 60 * 1000 * 1000 * 1000);
+            const launchTimeNs = createdTimeNs + LAUNCH_PERIOD_NANOS;
 
             const intervalId = setInterval(() => {
                 // Current time in milliseconds from local clock, convert to nanoseconds BigInt.
@@ -296,8 +297,8 @@ const PoolCard: React.FC = () => {
                                     <div className="flex justify-between">
                                         <span className="font-semibold text-gray-400">Liquidity Provided At:</span>
                                         <span className="text-gray-100">
-                                            {activeSwapPoolFromRedux[1].liquidity_provided_at
-                                                ? new Date(Number(activeSwapPoolFromRedux[1].liquidity_provided_at) / 1_000_000).toLocaleString()
+                                            {activeSwapPoolFromRedux[1].pool_created_at
+                                                ? new Date(Number(activeSwapPoolFromRedux[1].pool_created_at) / 1_000_000).toLocaleString()
                                                 : "Not Provided"}
                                         </span>
                                     </div>

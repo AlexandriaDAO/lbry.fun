@@ -2,7 +2,12 @@ pub const KONG_BACKEND_CANISTER_ID: &str = "2ipq2-uqaaa-aaaar-qailq-cai";
 pub const LBRY_FUN_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai"; // Root icp_swap canister from parent project
 pub const ICP_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 pub const LIQUIDITY_DEPLOYMENT_CAP_E8S: u64 = 10 * 100_000_000; // 10 ICP
-pub const LIQUIDITY_FEE_PERCENT: u64 = 1; 
+pub const LIQUIDITY_FEE_PERCENT: u64 = 1;
+
+// Launch Period Constants
+// Time before trading is enabled after token creation
+pub const LAUNCH_PERIOD_NANOS: u64 = 1000; // Testing: 1 microsecond
+// pub const LAUNCH_PERIOD_NANOS: u64 = 24 * 60 * 60 * 1_000_000_000; // Production: 24 hours 
 
 // Distribution Constants
 pub const MIN_DISTRIBUTION_AMOUNT: u64 = 10 * 10_000; // 100,000 e8s (0.001 ICP) - minimum for viable distributions

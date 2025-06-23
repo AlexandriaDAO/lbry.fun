@@ -25,6 +25,12 @@ struct GraphData {
     cumulative_usd_cost_data_y: Vec<f64>,
 }
 
+#[derive(Debug, candid::CandidType, candid::Deserialize)]
+struct TokenomicsSchedule {
+    secondary_burn_thresholds: Vec<u64>,
+    primary_mint_per_threshold: Vec<u64>,
+}
+
 #[test]
 fn test_backend_fix_no_overminting() {
     println!("\n=== Testing Backend Fix for Overminting ===");
@@ -63,16 +69,17 @@ fn test_backend_fix_no_overminting() {
         // Get graph data from the backend
         let graph_response: Result<GraphData, String> = env
             .pic
-            .query_call(
+            .update_call(
                 env.lbry_fun,
                 Principal::anonymous(),
-                "preview_tokenomics",
+                "preview_tokenomics_graphs",
                 candid::encode_one(&args).unwrap(),
             )
             .map(|res| {
                 let bytes = res.as_slice();
                 candid::decode_one(bytes).unwrap()
-            });
+            })
+            .map_err(|e| format!("Call failed: {:?}", e));
             
         let graph_data = graph_response.expect("Should get graph data");
         
@@ -110,35 +117,36 @@ fn test_backend_fix_no_overminting() {
 fn test_tokenomics_schedule_generation() {
     println!("\n=== Testing Tokenomics Schedule Generation ===");
     
-    let env = TokenTestEnvironment::new();
+    let mut env = TokenTestEnvironment::new();
     
     // Create a token with Quick Launch preset
     let (primary, secondary, tokenomics, icp_swap, _) = env.create_token_with_config(
         "TEST",
         "Test Token",
-        100,
-        "https://test.com",
-        1_000_000,
-        1_000_000,
-        2000,
-        70,
-    );
+        100 * 100_000_000, // initial_secondary_burn in e8s
+        1_000_000,          // initial_reward_per_burn_unit
+        1_000_000 * 100_000_000, // max_primary_supply in e8s
+        70,                 // halving_step percentage
+    ).unwrap();
     
     // Get the tokenomics schedule
-    let response: Result<(Vec<u64>, Vec<u64>), String> = env
+    let response: Result<TokenomicsSchedule, String> = env
         .pic
         .query_call(
             tokenomics,
             Principal::anonymous(),
             "get_tokenomics_schedule", 
-            candid::encode_one(()).unwrap(),
+            candid::encode_one(&()).unwrap(),
         )
         .map(|res| {
             let bytes = res.as_slice();
             candid::decode_one(bytes).unwrap()
-        });
+        })
+        .map_err(|e| format!("Call failed: {:?}", e));
         
-    let (thresholds, rewards) = response.expect("Should get tokenomics schedule");
+    let schedule = response.expect("Should get tokenomics schedule");
+    let thresholds = &schedule.secondary_burn_thresholds;
+    let rewards = &schedule.primary_mint_per_threshold;
     
     println!("Tokenomics schedule:");
     let mut total_minted = 0u64;

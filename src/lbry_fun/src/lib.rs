@@ -12,6 +12,8 @@ mod update;
 pub use update::*;
 mod utlis;
 pub use utlis::*;
+mod constants;
+pub use constants::*;
 use icrc_ledger_types::icrc1::transfer::BlockIndex;
 use icrc_ledger_types::icrc2::transfer_from::TransferFromError;
 use candid::{CandidType, Deserialize, Nat, Principal};

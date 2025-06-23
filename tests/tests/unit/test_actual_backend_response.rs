@@ -71,16 +71,17 @@ fn test_actual_backend_response() {
         // Call the backend exactly like the frontend does
         let response: Result<GraphData, String> = env
             .pic
-            .query_call(
+            .update_call(
                 env.lbry_fun,
                 Principal::anonymous(),
-                "preview_tokenomics",
+                "preview_tokenomics_graphs",
                 candid::encode_one(&args).unwrap(),
             )
             .map(|res| {
                 let bytes = res.as_slice();
                 candid::decode_one(bytes).unwrap()
-            });
+            })
+            .map_err(|e| format!("Call failed: {:?}", e));
             
         match response {
             Ok(graph_data) => {

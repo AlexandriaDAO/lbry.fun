@@ -1,6 +1,4 @@
 import { performanceMonitor } from '../../lbry_fun_frontend/src/features/swap/utils/performanceMonitor';
-// Removed cacheManager import as module doesn't exist
-// import { shouldFetchData, recordCacheHit, recordCacheMiss, getCacheMetrics, updateCacheEntry, CacheableData } from '../lbry_fun_frontend/src/utils/cacheManager';
 
 describe('Swap Page Performance Benchmarks', () => {
   const originalNodeEnv = process.env.NODE_ENV;
@@ -134,6 +132,6 @@ describe('Swap Page Performance Benchmarks', () => {
     });
   });
 
-  // Note: Cache-related tests removed because cacheManager module doesn't exist
-  // When cacheManager is implemented, these tests can be restored
+  // Note: This file previously contained cache-related tests, but cacheManager 
+  // functionality was removed from the codebase
 });

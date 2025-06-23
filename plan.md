@@ -1,19 +1,4 @@
-     │ 2. Fix Security Vulnerability (1 day)                                                      │
-     │   - Implement master_test_plan security fixes                                              │
-     │   - Add validation for minimum burn units                                                  │
-     │   - Test exploit prevention                                                                │
-     │ 3. Fix Kongswap Integration (1-2 days)                                                     │
-     │   - Resolve pools() method calling issue                                                   │
-     │   - Enable proper pool data display                                                        │
-     │ 4. Complete Feature List (2-3 days)                                                        │
-     │   - Fix create_token() failures                                                            │
-     │   - Add "We are here" markers                                                              │
-     │   - Fix logs canister data collection                                                      │
-     │ 5. Clean Up Documentation (Few hours)                                                      │
-     │   - Archive completed plan files                                                           │
-     │   - Consolidate similar documentation                                                      │
-     │   - Update main README with current status 
-
+- Either I edited the wrong spot, or the AI is false and the frontend is actually not mediated by the backend 24 hour timer.
 
 
 
@@ -69,7 +54,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "7rm3f-g6ikx-tf6ik-5jhkp-vquti-ekkl7-ynfa5-ujdhm-bvuv2-4uuby-3qe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "t677x-quppn-fa3t4-j7rwi-fejlc-jz4pv-5dxi7-baawk-pfk6a-va7x3-uae"; subaccount = null }; amount = (9_900_000_000 : nat) })'
 
 dfx identity use default
 
@@ -82,7 +67,15 @@ dfx identity use default
 - Slash commands: ./claude/commands/command1.md
 - claude --continue/resume // for old chats
 
-# Tile assistant settings: 
+# Change Launch Times: 
+  For local testing with different countdowns:
+  // In frontend constants:
+  export const LAUNCH_PERIOD_NANOS = BigInt(60 * 1_000_000_000); // 1 minute for quick testing
+
+  // In backend constants:
+  pub const LAUNCH_PERIOD_NANOS: u64 = 60 * 1_000_000_000; // 1 minute
+
+
 
 
 

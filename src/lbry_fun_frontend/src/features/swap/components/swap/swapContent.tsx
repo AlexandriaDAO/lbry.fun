@@ -4,11 +4,13 @@ import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import { _SERVICE as _SERVICESWAP } from "../../../../../../declarations/icp_swap/icp_swap.did";
 import { _SERVICE as _SERVICEICPLEDGER } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
+import AccessGuard from "../AccessGuard";
+import { useAccessState } from "../../hooks/useAccessState";
 
 import { Link } from "react-router";
 import swapSecondary from "../../thunks/swapSecondary";
 import { flagHandler } from "../../swapSlice";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { icp_fee, minimum_icp } from "@/utils/utils";
 import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance";
 import SuccessModal from "../successModal";
@@ -18,6 +20,8 @@ import { Entry } from "@/layouts/parts/Header";
 import { RootState } from "@/store";
 import SwapContentSkeleton from "./swapContentSkeleton";
 import fetchTransactionHistory from "../../thunks/fetchTransactionHistory.thunk";
+import getArchivedBal from "../../thunks/getArchivedBal";
+import redeemArchivedBalance from "../../thunks/redeemArchivedBalance";
 
 
 const SwapContent: React.FC = () => {
@@ -25,6 +29,7 @@ const SwapContent: React.FC = () => {
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
   const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
   const swap = useAppSelector((state: RootState) => state.swap);
+  const { accessState, countdown, launchTime } = useAccessState();
   const [amount, setAmount] = useState("");
   const [secondaryRatio, setSecondaryRatio] = useState(0.0);
   const [tentativeSecondary, setTentativeSecondary] = useState(Number);
@@ -33,6 +38,8 @@ const SwapContent: React.FC = () => {
   const [errorModalV, setErrorModalV] = useState({ flag: false, title: "", message: "" });
 
   const [inputState, setInputState] = useState<'default' | 'error' | 'focus'>('default');
+  const [showRedeemSection, setShowRedeemSection] = useState(false);
+  const [redeemLoading, setRedeemLoading] = useState(false);
 
   const handleSubmit = () => {
     if (!isAuthenticated || !principal || !swap.activeSwapPool?.[1].icp_swap_canister_id) return;
@@ -96,13 +103,35 @@ const SwapContent: React.FC = () => {
     }
   }, [amount])
 
+  // Fetch archived balance when authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !principal) return;
+    dispatch(getArchivedBal(principal));
+  }, [isAuthenticated, principal, dispatch]);
+
+  // Handle redeem functionality
+  const handleRedeem = () => {
+    setRedeemLoading(true);
+    dispatch(redeemArchivedBalance());
+  };
+
+  useEffect(() => {
+    if (swap.redeeemSuccess === true) {
+      if (isAuthenticated && principal) dispatch(getArchivedBal(principal));
+      dispatch(flagHandler());
+      setRedeemLoading(false);
+      setSucessModalV(true);
+    }
+  }, [swap.redeeemSuccess, isAuthenticated, principal, dispatch]);
+
   // Show skeleton while critical data is loading
   if (!swap.secondaryRatio || swap.secondaryRatio === "0" || !swap.activeSwapPool) {
     return <SwapContentSkeleton />;
   }
 
   return (
-    <div>
+    <AccessGuard accessState={accessState} countdown={countdown} launchTime={launchTime}>
+      <div>
       <div className="mb-5 2xl:mb-10 xl:mb-7 lg:mb-7 md:mb-6 sm:mb-5">
         <h3 className="text-tabsheading 2xl:text-xxltabsheading xl:text-xltabsheading lg:text-lgtabsheading md:text-mdtabsheading sm:text-smtabsheading font-bold text-foreground">
           Swap
@@ -186,7 +215,7 @@ const SwapContent: React.FC = () => {
             )}
             <div className="terms-condition-wrapper flex tems-baseline">
               <span className="text-[#FF37374D] mr-2 text-xl font-semibold">*</span>
-              <p className="text-lg font-semibold pr-5 text-muted-foreground w-9/12">If the transaction doesn't complete as expected, please check the redeem page to locate your tokens.</p>
+              <p className="text-lg font-semibold pr-5 text-muted-foreground w-9/12">If the transaction doesn't complete as expected, you can recover your tokens using the redeem section below.</p>
             </div>
           </div>
         </div>
@@ -230,11 +259,54 @@ const SwapContent: React.FC = () => {
         </div>
       </div>
 
+      {/* Redeem Section - Only show if user has archived balance */}
+      {isAuthenticated && swap.archivedBalance && Number(swap.archivedBalance) > 0 && (
+        <div className="mt-8">
+          <button
+            onClick={() => setShowRedeemSection(!showRedeemSection)}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+          >
+            <AlertCircle size={16} />
+            <span>Have tokens from failed transactions? ({swap.archivedBalance} ICP available to redeem)</span>
+            {showRedeemSection ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
 
-      <LoadingModal show={loadingModalV} message1={"Swap in Progress"} message2={`Your transaction from ICP to  ${swap.activeSwapPool?.[1].secondary_token_symbol}  is being processed. This may take a few moments`} setShow={setLoadingModalV} />
-      <SuccessModal show={successModalV} setShow={setSucessModalV} />
-      <ErrorModal show={errorModalV.flag} setShow={setErrorModalV} title={errorModalV.title} message={errorModalV.message} />
-    </div>
+          {showRedeemSection && (
+            <div className="mt-4 p-4 bg-card border border-border rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="text-yellow-500 mt-1" size={20} />
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold mb-2">Redeem Failed Transaction Tokens</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    You have {swap.archivedBalance} ICP from incomplete transactions that can be redeemed.
+                  </p>
+                  <button
+                    onClick={handleRedeem}
+                    disabled={redeemLoading || swap.loading}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                      redeemLoading || swap.loading
+                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                        : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    }`}
+                  >
+                    {redeemLoading ? (
+                      <LoaderCircle size={16} className="animate-spin mx-auto" />
+                    ) : (
+                      'Redeem Archived Balance'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+        <LoadingModal show={loadingModalV} message1={"Swap in Progress"} message2={`Your transaction from ICP to  ${swap.activeSwapPool?.[1].secondary_token_symbol}  is being processed. This may take a few moments`} setShow={setLoadingModalV} />
+        <SuccessModal show={successModalV} setShow={setSucessModalV} />
+        <ErrorModal show={errorModalV.flag} setShow={setErrorModalV} title={errorModalV.title} message={errorModalV.message} />
+      </div>
+    </AccessGuard>
   );
 };
 export default SwapContent;
