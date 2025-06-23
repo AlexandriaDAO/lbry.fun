@@ -1,5 +1,5 @@
 use candid::{CandidType, Deserialize};
-use crate::tokenomics_simple::{preview_tokenomics_from_frontend, EpochData};
+use crate::tokenomics_simple::{preview_tokenomics_from_frontend};
 
 #[derive(CandidType, Deserialize, Clone, Default)]
 pub struct TokenomicsSchedule {

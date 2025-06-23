@@ -1,8 +1,8 @@
-use ic_cdk::query;
+use ic_cdk::{query, update};
 use candid::{CandidType, Principal};
 use serde::Deserialize;
 use crate::{TokenRecord, TOKENS, get_self_icp_balance};
-use crate::simulation_new::{preview_tokenomics, GraphData, PreviewArgs};
+use crate::simulation_new::{GraphData, PreviewArgs};
 
 #[query]
 pub fn get_all_token_record() -> Vec<(u64, TokenRecord)> {
@@ -66,8 +66,10 @@ async fn get_treasury_balance() -> Result<u64, String> {
     get_self_icp_balance(canister_principal).await
 }
 
-#[query]
-fn preview_tokenomics_graphs(args: PreviewArgs) -> GraphData {
+#[update]
+async fn preview_tokenomics_graphs(args: PreviewArgs) -> GraphData {
+    // Use the fixed simulation that matches the actual tokenomics formula
+    use crate::simulation_new::preview_tokenomics;
     preview_tokenomics(args)
 }
 

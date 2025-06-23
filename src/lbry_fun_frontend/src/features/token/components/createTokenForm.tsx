@@ -446,74 +446,9 @@ const CreateTokenForm: React.FC = () => {
           </div>
         </div>
 
-        {/* Parameter Presets */}
+        {/* Token Parameters */}
         <div className="py-6 border-t-2 border-t-border md:border-t-0">
-          <h2 className="text-2xl font-bold mb-4 text-foreground">Parameter Presets</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <button
-              type="button"
-              onClick={() => {
-                setForm(prev => ({
-                  ...prev,
-                  initial_secondary_burn: '200000',
-                  initial_reward_per_burn_unit: '100',
-                  halving_step: '90'  // Changed from 35 to 90 for true extended distribution
-                }));
-              }}
-              className="p-4 border-2 border-border rounded-lg hover:border-primary transition-colors"
-            >
-              <h3 className="font-semibold text-foreground mb-2">Extended Distribution</h3>
-              <p className="text-sm text-muted-foreground">
-                {previewGraphData?.minted_per_epoch_data_y?.length || '15+'} epochs
-              </p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Initial valuation: $1,000</p>
-              {previewGraphData?.minted_per_epoch_data_y?.length < 15 && (
-                <p className="text-xs text-yellow-600 mt-1">⚠️ Supply constraints limit epochs</p>
-              )}
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => {
-                setForm(prev => ({
-                  ...prev,
-                  initial_secondary_burn: '500000',
-                  initial_reward_per_burn_unit: '500',
-                  halving_step: '45'
-                }));
-              }}
-              className="p-4 border-2 border-border rounded-lg hover:border-primary transition-colors"
-            >
-              <h3 className="font-semibold text-foreground mb-2">Balanced</h3>
-              <p className="text-sm text-muted-foreground">8-12 epochs</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Initial valuation: $2,500</p>
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => {
-                setForm(prev => ({
-                  ...prev,
-                  initial_secondary_burn: '1000000',
-                  initial_reward_per_burn_unit: '2000',
-                  halving_step: '70'
-                }));
-              }}
-              className="p-4 border-2 border-border rounded-lg hover:border-primary transition-colors"
-            >
-              <h3 className="font-semibold text-foreground mb-2">Quick Launch</h3>
-              <p className="text-sm text-muted-foreground">3-5 epochs</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Initial valuation: $5,000</p>
-            </button>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Select a preset above or customize parameters below
-          </p>
-        </div>
-
-        {/* Supply Settings Inputs first */}
-        <div className="py-6 border-t-2 border-t-border md:border-t-0">
-          <h2 className="text-2xl font-bold mb-4 text-foreground">Supply Settings</h2>
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Token Parameters</h2>
           {/* This div becomes the grid container for supply parameters */}
           <div className="md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-6">
             {/* primary_max_supply input and slider - Grid Item 1 */}

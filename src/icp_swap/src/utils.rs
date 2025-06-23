@@ -587,7 +587,7 @@ pub async fn is_live() -> Result<bool, String> {
     // The parent canister (lbry_fun) is the one that created this canister
     // We need to hardcode this for now since it's not stored in config
     // In production, this should be passed during initialization
-    let parent_canister = Principal::from_text("be2us-64aaa-aaaaa-qaabq-cai")
+    let parent_canister = Principal::from_text("oni4e-oyaaa-aaaap-qp2pq-cai")
         .unwrap_or_else(|_| ic_cdk::api::caller()); // Fallback to caller if parsing fails
     
     // Call the parent canister to get token status

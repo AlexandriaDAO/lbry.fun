@@ -4,7 +4,17 @@
     "lbry_fun": {
       "candid": "src/lbry_fun/lbry_fun.did",
       "package": "lbry_fun",
-      "type": "rust"
+      "type": "rust",
+      "specified_id": "oni4e-oyaaa-aaaap-qp2pq-cai"
+    },
+
+    "lbry_fun_frontend": {
+      "frontend": {
+        "entrypoint": "src/lbry_fun_frontend/public/index.html"
+      },
+      "source": ["dist/lbry_fun_frontend/"],
+      "type": "assets",
+      "specified_id": "lrtgb-fqaaa-aaaap-qp2qa-cai"
     },
 
     "internet_identity": {
@@ -22,15 +32,6 @@
       "type": "rust"
     },
  
-    "lbry_fun_frontend": {
-      "frontend": {
-        "entrypoint": "src/lbry_fun_frontend/public/index.html"
-      },
-      "source": ["dist/lbry_fun_frontend/"],
-      "type": "assets",
-      "specified_id": "yn33w-uaaaa-aaaap-qpk5q-cai"
-    },
-
     "icp_ledger_canister": {
       "type": "custom",
       "candid": "src/icp_ledger_canister/ledger.did",
@@ -44,8 +45,6 @@
       "wasm": "src/icp_ledger_canister/ledger.wasm"
     },
 
-
- 
     "xrc": {
       "candid": "src/xrc/xrc.did",
       "package": "xrc",
@@ -55,8 +54,7 @@
     "icp_swap": {
       "type": "rust",
       "package": "icp_swap",
-      "candid": "src/icp_swap/icp_swap.did",
-      "specified_id": "ggzvv-5qaaa-aaaag-qck7a-cai"
+      "candid": "src/icp_swap/icp_swap.did"
     }
     
   },

@@ -306,55 +306,23 @@ describe('Request Deduplication Middleware', () => {
   });
 
   describe('Console logging', () => {
-    let consoleLogSpy: jest.SpyInstance;
-
-    beforeEach(() => {
-      consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-    });
-
-    afterEach(() => {
+    test('logs are disabled in production-like environment', () => {
+      // The current middleware implementation has console logging disabled
+      // This test verifies that no unexpected console output occurs
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      
+      const action = {
+        type: 'swap/getBalance/pending',
+        meta: { arg: 'principal1' }
+      };
+      
+      middleware(action);
+      middleware(action); // This should be deduplicated
+      
+      // Since logging is disabled, console.log should not be called
+      expect(consoleLogSpy).not.toHaveBeenCalled();
+      
       consoleLogSpy.mockRestore();
-    });
-
-    test('logs when skipping duplicate requests', () => {
-      const action = {
-        type: 'swap/getBalance/pending',
-        meta: { arg: 'principal1' }
-      };
-      
-      middleware(action);
-      middleware(action);
-      
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[Deduplication] 🚫 Skipping duplicate request')
-      );
-    });
-
-    test('logs when processing new requests', () => {
-      const action = {
-        type: 'swap/getBalance/pending',
-        meta: { arg: 'principal1' }
-      };
-      
-      middleware(action);
-      
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[Deduplication] ✅ Processing request')
-      );
-    });
-
-    test('logs cache statistics', () => {
-      const action = {
-        type: 'swap/getBalance/pending',
-        meta: { arg: 'principal1' }
-      };
-      
-      middleware(action);
-      middleware(action);
-      
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[Deduplication] 📊 Stats:')
-      );
     });
   });
 

@@ -14,9 +14,9 @@ fn test_show_raw_simulation_data() {
     ];
     
     for (name, max_supply, initial_burn, initial_reward, halving) in presets {
-        println!("\n\n{'='*60}");
+        println!("\n\n{}", "=".repeat(60));
         println!("PRESET: {}", name);
-        println!("{'='*60}");
+        println!("{}", "=".repeat(60));
         println!("Parameters:");
         println!("- Max supply: {} tokens", max_supply);
         println!("- Initial burn unit: {} tokens", initial_burn);

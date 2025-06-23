@@ -56,9 +56,9 @@ fn test_backend_table_data_for_presets() {
     ];
     
     for (name, args) in presets {
-        println!("\n\n{'='*60}");
+        println!("\n\n{}", "=".repeat(60));
         println!("PRESET: {}", name);
-        println!("{'='*60}");
+        println!("{}", "=".repeat(60));
         
         // Call preview_tokenomics
         let graph_response: Result<GraphData, String> = env

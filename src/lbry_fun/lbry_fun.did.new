@@ -89,6 +89,6 @@ service : () -> {
   get_token_status_by_swap_canister : (principal) -> (opt TokenStatus) query;
   get_treasury_balance : () -> (Result_3) query;
   get_upcomming : () -> (vec record { nat64; TokenRecord }) query;
-  preview_tokenomics_graphs : (PreviewArgs) -> (GraphData);
+  preview_tokenomics_graphs : (PreviewArgs) -> (GraphData) query;
   retry_pool_creation : (nat64) -> (Result);
 }

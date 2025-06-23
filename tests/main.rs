@@ -140,14 +140,22 @@ mod real_execution;
 #[path = "tests/integration/real_execution_v2.rs"]
 mod real_execution_v2;
 
+// Helpers - first declare individual modules 
 #[path = "tests/helpers/shared_helpers.rs"]
-mod shared_helpers;
+pub mod shared_helpers;
 
 #[path = "tests/helpers/token_testing/mod.rs"]
-mod token_testing;
+pub mod token_testing;
 
 #[path = "tests/helpers/mock_root_icp_swap.rs"]
-mod mock_root_icp_swap;
+pub mod mock_root_icp_swap;
+
+// Now create helpers module that re-exports them
+mod helpers {
+    pub use crate::shared_helpers;
+    pub use crate::token_testing;
+    pub use crate::mock_root_icp_swap;
+}
 
 // Operational validation tests - large-scale real operations
 mod operational_validation;

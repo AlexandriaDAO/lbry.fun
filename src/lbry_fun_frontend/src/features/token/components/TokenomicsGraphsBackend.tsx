@@ -133,29 +133,6 @@ const TokenomicsGraphsBackend: React.FC<TokenomicsGraphsBackendProps> = ({
       }
     }
     
-    // Add epoch count validation
-    const epochs = previewGraphData?.minted_per_epoch_data_y?.length || 0;
-    const isExtendedPreset = initialSecondaryBurn === '200000' && 
-                            initialRewardPerBurnUnit === '100' && 
-                            halvingStep === '90';
-    const isQuickLaunchPreset = initialSecondaryBurn === '1000000' && 
-                               initialRewardPerBurnUnit === '2000' && 
-                               halvingStep === '70';
-    
-    if (isExtendedPreset && epochs < 15) {
-      newWarnings.push(
-        `Extended distribution preset typically provides 15+ epochs but your max supply limits it to ${epochs} epochs. ` +
-        `Consider increasing max supply or adjusting parameters for more gradual distribution.`
-      );
-    }
-    
-    if (isQuickLaunchPreset && epochs > 7) {
-      newWarnings.push(
-        `Quick launch preset typically provides 3-5 epochs but your parameters create ${epochs} epochs. ` +
-        `This may not achieve the intended quick distribution.`
-      );
-    }
-    
     setWarnings(newWarnings);
   }, [primaryMaxSupply, tgeAllocation, initialSecondaryBurn, halvingStep, initialRewardPerBurnUnit, previewGraphData]);
 

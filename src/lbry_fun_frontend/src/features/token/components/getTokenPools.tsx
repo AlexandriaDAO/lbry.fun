@@ -220,7 +220,7 @@ const GetTokenPools = () => {
                           <div className="w-16 h-4 bg-muted animate-pulse rounded" />
                         ) : tvlData[id] ? (
                           <span className="text-sm font-bold text-primary">
-                            ${TokenConversionService.formatE8sDisplay(tvlData[id]!.tvl, 0)}
+                            ${TokenConversionService.formatE8sDisplay(BigInt(tvlData[id]!.tvl), 0)}
                           </span>
                         ) : (
                           <span className="text-xs text-muted-foreground">No liquidity</span>

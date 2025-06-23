@@ -184,11 +184,13 @@ fn generate_tokenomics_schedule(
 
     while total_minted < max_primary_supply as u128 {
         let in_slot_burn = burn_for_epoch;
-        // Both primary_per_threshold and in_slot_burn are in E8S
-        // We want: (tokens_per_burn * burn_amount) / 10000
-        // Since both are E8S: (E8S * E8S) / (E8S * 10000) = E8S / 10000
-        let reward_e8s = (primary_per_threshold * in_slot_burn) / (E8S * 10000);
-        let reward = reward_e8s;
+        // primary_per_threshold is in E8S (e.g., 2000 * E8S for 2000 tokens per unit)
+        // in_slot_burn is in E8S (e.g., 1M * E8S for 1M secondary tokens)
+        // We want: tokens_per_unit * (burn_amount / 10000)
+        // = primary_per_threshold * (in_slot_burn / 10000)
+        // Since in_slot_burn is in E8S, we divide by (10000 * E8S) to get natural units
+        let burn_units = in_slot_burn / (10000 * E8S);
+        let reward = primary_per_threshold * burn_units;
 
         if one_reward_mode {
             let remaining_mint = max_primary_supply as u128 - total_minted;
@@ -212,11 +214,11 @@ fn generate_tokenomics_schedule(
                 // Calculate how much secondary burn is needed for remaining primary
                 // remaining_mint = (primary_per_threshold * partial_burn) / (E8S * 10000)
                 // So: partial_burn = (remaining_mint * E8S * 10000) / primary_per_threshold
-                let partial_burn = (remaining_mint * 10000) / primary_per_threshold;
+                let partial_burn = (remaining_mint * E8S * 10000) / primary_per_threshold;
                 if partial_burn > 0 {
                     cumulative_burn += partial_burn;
                     secondary_thresholds.push(cumulative_burn as u64);
-                    primary_rewards.push(primary_per_threshold as u64);
+                    primary_rewards.push(remaining_mint as u64);
                     total_minted = max_primary_supply as u128;
                 }
             }
@@ -225,17 +227,16 @@ fn generate_tokenomics_schedule(
 
         cumulative_burn += burn_for_epoch;
         secondary_thresholds.push(cumulative_burn as u64);
-        primary_rewards.push(primary_per_threshold as u64);
+        primary_rewards.push(reward as u64);
 
         total_minted += reward;
         burn_for_epoch *= 2;
 
         if primary_per_threshold > 1 {
-            // halving_step comes in E8S (e.g., 70000 * E8S for 70%)
-            // Convert to percentage: halving_step / (E8S * 1000) = 70
-            let halving_percentage = halving_step as u128 / (E8S * 1000);
+            // halving_step is a percentage (e.g., 70 for 70%)
+            // This represents what percentage of the reward to keep
             primary_per_threshold =
-                std::cmp::max(1, (primary_per_threshold * halving_percentage) / 100);
+                std::cmp::max(1, (primary_per_threshold * halving_step as u128) / 100);
         }
 
         if primary_per_threshold == 1 {

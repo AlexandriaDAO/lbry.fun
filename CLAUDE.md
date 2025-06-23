@@ -108,6 +108,18 @@ const formatted = TokenConversionService.formatE8sDisplay(backendValue, 4);
 - `burn_secondary` expects natural units (e.g., `BigInt(amount)`)
 - All other methods expect e8s units
 
+### E8S Multiplication Warning ⚠️
+
+**CRITICAL**: When multiplying two E8S values, you must divide by E8S twice.
+
+```rust
+// WRONG
+let result = value1_e8s * value2_e8s / E8S;
+
+// CORRECT  
+let result = (value1_e8s * value2_e8s) / E8S / E8S;
+```
+
 - Kongswap is deployed here for full liquidity functionality, but the repo is not in this codebase.
 - Uses WASM compilation with `ic-wasm` for size optimization
 

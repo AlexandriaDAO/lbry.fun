@@ -3,6 +3,12 @@ import '@testing-library/jest-dom';
 // Mock global fetch
 global.fetch = jest.fn();
 
+// Polyfill TextEncoder and TextDecoder for Jest environment
+// Required for @dfinity packages
+import { TextEncoder, TextDecoder } from 'util';
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
 // Mock console methods to reduce noise in tests
 global.console = {
   ...console,

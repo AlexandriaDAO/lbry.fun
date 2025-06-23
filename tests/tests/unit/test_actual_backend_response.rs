@@ -57,9 +57,9 @@ fn test_actual_backend_response() {
     ];
     
     for (name, args) in presets {
-        println!("\n\n{'='*60}");
+        println!("\n\n{}", "=".repeat(60));
         println!("Testing: {} Preset", name);
-        println!("{'='*60}");
+        println!("{}", "=".repeat(60));
         
         println!("\nParameters sent to backend:");
         println!("  primary_max_supply: {}", args.primary_max_supply);

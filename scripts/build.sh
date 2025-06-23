@@ -43,7 +43,7 @@ candid-extractor target/wasm32-unknown-unknown/release/logs.wasm > src/logs/logs
 cargo build --release --target wasm32-unknown-unknown --package lbry_fun
 candid-extractor target/wasm32-unknown-unknown/release/lbry_fun.wasm > src/lbry_fun/lbry_fun.did
 dfx generate lbry_fun
-dfx deploy lbry_fun
+dfx deploy lbry_fun --specified-id oni4e-oyaaa-aaaap-qp2pq-cai
 
 export LBRY_FUN_PRINCIPAL=$(dfx canister id lbry_fun)
 dfx ledger fabricate-cycles --canister "$LBRY_FUN_PRINCIPAL" --cycles 10000000000000000
@@ -119,7 +119,7 @@ dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argu
 
 
 npm i
-dfx deploy lbry_fun_frontend --specified-id yn33w-uaaaa-aaaap-qpk5q-cai
+dfx deploy lbry_fun_frontend --specified-id lrtgb-fqaaa-aaaap-qp2qa-cai
 
 
 

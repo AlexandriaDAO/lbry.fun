@@ -4,6 +4,8 @@ mod simulation;
 pub use simulation::*;
 mod tokenomics_simple;
 mod simulation_new;
+mod preview_canister;
+pub use preview_canister::{preview_tokenomics_with_real_canister};
 mod queries;
 pub use queries::*;
 mod update;

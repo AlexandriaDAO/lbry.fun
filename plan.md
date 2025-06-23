@@ -1,7 +1,3 @@
-     │ 1. Fix Critical Tokenomics Bug (1-2 days)                                                  │
-     │   - Focus on TOKENOMICS_BUG_CONSOLIDATED_GUIDE                                             │
-     │   - Deploy and validate the fix                                                            │
-     │   - Ensure graphs show correct epochs                                                      │
      │ 2. Fix Security Vulnerability (1 day)                                                      │
      │   - Implement master_test_plan security fixes                                              │
      │   - Add validation for minimum burn units                                                  │
@@ -73,7 +69,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "q5tir-zikyg-44in4-6txuu-vuya3-pmuy6-5kjev-fgvua-4njnq-qmtph-pqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "7rm3f-g6ikx-tf6ik-5jhkp-vquti-ekkl7-ynfa5-ujdhm-bvuv2-4uuby-3qe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
 
 dfx identity use default
 

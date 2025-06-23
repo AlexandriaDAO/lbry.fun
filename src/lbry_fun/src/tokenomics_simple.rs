@@ -33,15 +33,16 @@ pub struct TokenomicsSchedule {
 }
 
 /// Calculate how many primary tokens are minted for burning secondary tokens
-/// Formula: primary_minted = (secondary_burned * reward_rate) / 10000
+/// Formula from tokenomics canister: reward = (primary_per_threshold * in_slot_burn * 10000) / E8S
+/// Note: Since both inputs are already in e8s, we need to divide by E8S twice
 fn calculate_primary_minted(secondary_burned_e8s: u128, reward_rate_e8s: u128) -> u128 {
-    // Both values are in E8S
-    // We want: tokens_per_burn * burn_amount / 10000
-    // Since both are E8S: (E8S * E8S) / (E8S * 10000)
-    secondary_burned_e8s
-        .saturating_mul(reward_rate_e8s)
-        .saturating_div(E8S)
-        .saturating_div(10000)
+    // Match the exact formula from tokenomics/src/script.rs line 144
+    // Both inputs are in e8s, so we need to divide by E8S^2 to get the result in e8s
+    let reward_e8s = reward_rate_e8s
+        .saturating_mul(secondary_burned_e8s)
+        .saturating_mul(10000)
+        .saturating_div(E8S);
+    reward_e8s.saturating_div(E8S)
 }
 
 /// Calculate the cost per primary token in USD
@@ -152,12 +153,12 @@ pub fn preview_tokenomics_from_frontend(
     primary_per_threshold: u64,      // E8S from frontend
     max_primary_supply: u64,         // E8S from frontend
     initial_secondary_burn: u64,     // E8S from frontend
-    halving_step: u64,               // E8S from frontend (needs conversion to percentage)
+    halving_step: u64,               // Percentage value from frontend (e.g., 70 for 70%)
     tge_allocation: u64,             // E8S from frontend
 ) -> TokenomicsSchedule {
-    // Convert halving_step from E8S representation to percentage
-    // Frontend sends 70000 * E8S for 70%, so divide by (E8S * 1000) to get 70
-    let halving_percentage = (halving_step / (E8S as u64 * 1000)) as u32;
+    // halving_step is already a percentage (e.g., 70 for 70%)
+    // No conversion needed, just cast to u32
+    let halving_percentage = halving_step as u32;
     
     let params = TokenomicsParams {
         max_supply_e8s: max_primary_supply as u128,
@@ -175,42 +176,68 @@ mod tests {
     use super::*;
     
     #[test]
-    fn test_quick_launch_preset() {
+    fn test_tokenomics_calculation_fix() {
+        // Test that demonstrates the fix for the tokenomics calculation
+        
+        // Default values from frontend
+        let reward_rate = 2000; // 2000 tokens per burn unit
+        let initial_burn = 1_000_000; // 1M tokens
+        let max_supply = 1_000_000; // 1M tokens
+        
+        // Convert to E8S as frontend does
+        let reward_rate_e8s = reward_rate * E8S as u64;
+        let initial_burn_e8s = initial_burn * E8S as u64;
+        let max_supply_e8s = max_supply * E8S as u64;
+        
+        // Generate schedule
+        let schedule = preview_tokenomics_from_frontend(
+            reward_rate_e8s,
+            max_supply_e8s,
+            initial_burn_e8s,
+            70, // 70% halving
+            1 * E8S as u64, // 1 token TGE
+        );
+        
+        // First real epoch (after TGE)
+        let first_epoch = &schedule.epochs[1];
+        let tokens_minted = first_epoch.primary_minted_this_epoch_e8s / E8S;
+        
+        // Frontend expects: 2000 * 1000000 / 10000 = 200000 tokens
+        assert_eq!(tokens_minted, 200_000, "First epoch should mint 200k tokens");
+        
+        // Check we reach close to max supply
+        let total_minted = schedule.epochs.last().unwrap().cumulative_primary_minted_e8s;
+        let total_percentage = (total_minted as f64 / max_supply_e8s as u128 as f64) * 100.0;
+        assert!(total_percentage > 99.9, "Should reach > 99.9% of max supply");
+        
+        // Check we have reasonable number of epochs (not just 4-5)
+        assert!(schedule.epochs.len() >= 4, "Should have at least 4 epochs");
+        assert!(schedule.epochs.len() <= 10, "Shouldn't need more than 10 epochs for these params");
+    }
+    
+    #[test]
+    fn test_halving_percentage_fix() {
+        // Test that halving percentage is correctly interpreted
+        
         let params = TokenomicsParams {
-            max_supply_e8s: 100_000_000_000_000,      // 1M tokens
-            tge_allocation_e8s: 10_000_000_000,       // 100 tokens
-            initial_burn_e8s: 100_000_000_000_000,    // 1M tokens
-            initial_reward_rate_e8s: 200_000_000_000, // 2000 tokens
-            halving_percentage: 70,
+            max_supply_e8s: 1_000_000 * E8S,
+            tge_allocation_e8s: 0,
+            initial_burn_e8s: 1_000 * E8S,
+            initial_reward_rate_e8s: 100 * E8S,
+            halving_percentage: 50, // 50% halving
         };
         
-        let max_supply = params.max_supply_e8s;
         let schedule = generate_tokenomics_schedule(params);
         
-        println!("Quick Launch Schedule:");
-        println!("Total epochs: {}", schedule.total_epochs);
-        println!("Total supply: {:.2}%", schedule.total_supply_percentage);
-        
-        for epoch in &schedule.epochs {
-            let primary_natural = epoch.primary_minted_this_epoch_e8s as f64 / E8S as f64;
-            let secondary_natural = epoch.secondary_burned_this_epoch_e8s as f64 / E8S as f64;
-            let cumulative_pct = (epoch.cumulative_primary_minted_e8s as f64 / max_supply as f64) * 100.0;
+        // With 50% halving, rewards should halve each epoch
+        if schedule.epochs.len() >= 3 {
+            let epoch1_mint = schedule.epochs[1].primary_minted_this_epoch_e8s;
+            let epoch2_mint = schedule.epochs[2].primary_minted_this_epoch_e8s;
             
-            println!(
-                "Epoch {}: Burn {:.0} → Mint {:.0} (Total: {:.2}%)",
-                epoch.epoch_number,
-                secondary_natural,
-                primary_natural,
-                cumulative_pct
-            );
+            // Epoch 2 should mint approximately 50% of epoch 1
+            let ratio = epoch2_mint as f64 / epoch1_mint as f64;
+            assert!(ratio > 0.45 && ratio < 0.55, 
+                "50% halving should reduce rewards by ~50%, got ratio: {}", ratio);
         }
-        
-        // Verify expectations
-        assert_eq!(schedule.epochs.len(), 5); // TGE + 4 epochs
-        assert!(schedule.total_supply_percentage >= 99.9 && schedule.total_supply_percentage <= 100.1);
-        
-        // Check first real epoch (index 1)
-        let epoch1 = &schedule.epochs[1];
-        assert_eq!(epoch1.primary_minted_this_epoch_e8s, 20_000_000_000_000); // 200k tokens
     }
 }

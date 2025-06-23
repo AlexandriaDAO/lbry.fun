@@ -24,7 +24,7 @@ struct GraphData {
 }
 
 fn call_backend_and_format_table(env: &TokenTestEnvironment, name: &str, args: PreviewArgs) -> (usize, f64) {
-    let response: Result<GraphData, String> = env
+    let response = env
         .pic
         .query_call(
             env.lbry_fun,
@@ -34,7 +34,8 @@ fn call_backend_and_format_table(env: &TokenTestEnvironment, name: &str, args: P
         )
         .map(|res| {
             let bytes = res.as_slice();
-            candid::decode_one(bytes).unwrap()
+            let data: GraphData = candid::decode_one(bytes).unwrap();
+            data
         });
     
     let graph_data = response.expect("Should get graph data");
