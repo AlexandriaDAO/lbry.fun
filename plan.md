@@ -1,4 +1,37 @@
-Create_token() call is failing now: Token creation failedFailed to add token to swap: Call failed. Failed to add token to swap: Call failed
+     │ 1. Fix Critical Tokenomics Bug (1-2 days)                                                  │
+     │   - Focus on TOKENOMICS_BUG_CONSOLIDATED_GUIDE                                             │
+     │   - Deploy and validate the fix                                                            │
+     │   - Ensure graphs show correct epochs                                                      │
+     │ 2. Fix Security Vulnerability (1 day)                                                      │
+     │   - Implement master_test_plan security fixes                                              │
+     │   - Add validation for minimum burn units                                                  │
+     │   - Test exploit prevention                                                                │
+     │ 3. Fix Kongswap Integration (1-2 days)                                                     │
+     │   - Resolve pools() method calling issue                                                   │
+     │   - Enable proper pool data display                                                        │
+     │ 4. Complete Feature List (2-3 days)                                                        │
+     │   - Fix create_token() failures                                                            │
+     │   - Add "We are here" markers                                                              │
+     │   - Fix logs canister data collection                                                      │
+     │ 5. Clean Up Documentation (Few hours)                                                      │
+     │   - Archive completed plan files                                                           │
+     │   - Consolidate similar documentation                                                      │
+     │   - Update main README with current status 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 - Add the expected graphs as a tab.
 
@@ -53,7 +86,7 @@ dfx identity use default
 - Slash commands: ./claude/commands/command1.md
 - claude --continue/resume // for old chats
 
-
+# Tile assistant settings: 
 
 
 
