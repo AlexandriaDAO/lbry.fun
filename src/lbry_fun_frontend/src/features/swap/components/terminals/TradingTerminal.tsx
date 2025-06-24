@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useUnifiedSwapData } from '../../providers/UnifiedSwapDataProvider';
+import React, { useState } from 'react';
 import SwapContent from '../swap/swapContent';
 import TransferContent from '../transfer/TransferContent';
 import BurnContent from '../burn/burnContent';
@@ -11,16 +10,18 @@ type OperationMode = 'swap' | 'transfer' | 'burn';
 export const TradingTerminal: React.FC = React.memo(() => {
   const [activeOperation, setActiveOperation] = useState<OperationMode>('swap');
   const [showTransactions, setShowTransactions] = useState(false);
-  const { balances, poolData, transactions, loadTransactions, isLoading } = useUnifiedSwapData();
-  const { auth } = useAppSelector(state => state);
+  
+  // Get data directly from Redux - no provider needed
+  const { auth, swap, icpLedger, primary } = useAppSelector(state => state);
   const isAuthenticated = auth.isAuthenticated;
-
-  // Load transactions when expanded
-  useEffect(() => {
-    if (showTransactions && isAuthenticated) {
-      loadTransactions();
-    }
-  }, [showTransactions, isAuthenticated, loadTransactions]);
+  const poolData = swap.activeSwapPool;
+  
+  // Simple balance data
+  const balances = {
+    icp: icpLedger.accountBalance || '0',
+    primary: primary.primaryBal || '0',
+    secondary: swap.secondaryBalance || '0'
+  };
 
   const renderActiveOperation = () => {
     switch (activeOperation) {
@@ -137,33 +138,7 @@ export const TradingTerminal: React.FC = React.memo(() => {
           
           {showTransactions && (
             <div className="mt-2">
-              {isLoading.transactions ? (
-                <div className="text-gray-400 text-xs">Loading transactions...</div>
-              ) : transactions.length > 0 ? (
-                <>
-                  {/* Show last 5 transactions */}
-                  <div className="space-y-2 mb-2">
-                    {transactions.slice(0, 5).map((tx, index) => (
-                      <div key={index} className="text-xs">
-                        <div className="terminal-row">
-                          <span className="terminal-label">{tx.timestamp}:</span>
-                          <span className="terminal-value">{tx.type} - {tx.amount}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {transactions.length > 5 && (
-                    <button 
-                      className="terminal-accent text-xs hover:text-white transition-colors"
-                      onClick={() => {/* Navigate to full history */}}
-                    >
-                      [VIEW_ALL] {transactions.length} transactions
-                    </button>
-                  )}
-                </>
-              ) : (
-                <div className="text-gray-400 text-xs">No transactions found</div>
-              )}
+              <TransactionHistory />
             </div>
           )}
         </div>

@@ -4,7 +4,7 @@ import "./style.css"
 
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import ConsolidatedTerminal from './components/balance/ConsolidatedTerminal';
-import { UnifiedSwapDataProvider } from './providers/UnifiedSwapDataProvider';
+// Removed UnifiedSwapDataProvider - each terminal fetches its own data
 import { SwapErrorBoundary } from './components/SwapErrorBoundary';
 import { usePoolInitializer, PoolInitState } from './hooks/usePoolInitializer';
 import { LoaderCircle } from 'lucide-react';
@@ -94,7 +94,7 @@ const SwapMainConsolidated = () => {
         <div className='tabs py-2 sm:py-3 md:py-4'>
             <div className='container px-2 sm:px-3 md:px-4'>
                 {isPoolReady ? (
-                    <UnifiedSwapDataProvider>
+                    <>
                         <ConsolidatedTerminal />
                         <div className='tabs-content'>
                             <div className='tabs-content'>
@@ -129,7 +129,7 @@ const SwapMainConsolidated = () => {
                                 </div>
                             </div>
                         </div>
-                    </UnifiedSwapDataProvider>
+                    </>
                 ) : (
                     <>
                         <ConsolidatedTerminal />

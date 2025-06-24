@@ -5,6 +5,8 @@ import "./styles/tailwind.css";
 // import SessionProvider from "./providers/SessionProvider";
 
 import "./styles/style.css";
+import "./styles/terminal-forms.css";
+import "./styles/terminal.css";
 
 import "nprogress/nprogress.css";
 

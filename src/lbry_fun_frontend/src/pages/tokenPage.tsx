@@ -1,5 +1,5 @@
 import React from "react";
-import CreateTokenForm from "@/features/token/components/createTokenForm";
+import TerminalCreateToken from "@/features/token/components/terminal/TerminalCreateToken";
 import GetTokenPools from "@/features/token/components/getTokenPools";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
@@ -19,12 +19,12 @@ const TokenPage = () => {
         <Button 
           variant="outline" 
           scale="sm"
-          className="mb-6"
+          className="mb-6 bg-black text-lime-500 border-white/30 hover:bg-white/10 font-mono"
           onClick={() => dispatch(setActiveTokenView('TokenPools'))}
         >
-          <span className="mr-2">←</span> Back to Pools
+          <span className="mr-2">&lt;</span> back_to_pools
         </Button>
-        <CreateTokenForm />
+        <TerminalCreateToken />
       </>
     );
     contentClassName = "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8";

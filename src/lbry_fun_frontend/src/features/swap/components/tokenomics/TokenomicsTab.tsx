@@ -1,29 +1,20 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import UnifiedTokenomicsGraphs from '@/features/token/components/UnifiedTokenomicsGraphs';
 import { LoaderCircle } from 'lucide-react';
-import { useUnifiedSwapData } from '../../providers/UnifiedSwapDataProvider';
+import { useAppSelector } from '@/store/hooks/useAppSelector';
 
 const TokenomicsTab: React.FC = () => {
-    const { poolData, tokenomics, loadTokenomics, isLoading, errors } = useUnifiedSwapData();
+    const { swap } = useAppSelector(state => state);
+    const poolData = swap.activeSwapPool;
 
-    useEffect(() => {
-        loadTokenomics();
-    }, [loadTokenomics]);
-
-    // Calculate tokenomics values using useMemo to avoid recalculation and ensure hooks are always called
+    // Calculate tokenomics values using useMemo to avoid recalculation
     const tokenomicsValues = useMemo(() => {
-        if (!tokenomics) {
-            return null;
-        }
-
-        const E8S = 100_000_000n;
-        
-        // Get values from poolData's tokenomics info
         const poolTokenomics = poolData?.[1];
         if (!poolTokenomics) {
             return null;
         }
 
+        const E8S = 100_000_000n;
         const primaryMaxSupply = (BigInt(poolTokenomics.primary_max_supply || 0) / E8S).toString();
         const tgeAllocation = (BigInt(poolTokenomics.initial_primary_supply || 0) / E8S).toString();
         const initialSecondaryBurn = (BigInt(poolTokenomics.initial_secondary_burn || 0) / E8S).toString();
@@ -43,7 +34,7 @@ const TokenomicsTab: React.FC = () => {
             halvingStep,
             initialRewardPerBurnUnit
         };
-    }, [tokenomics, poolData]);
+    }, [poolData]);
 
     // Render states
     if (!poolData) {
@@ -60,32 +51,6 @@ const TokenomicsTab: React.FC = () => {
         );
     }
 
-    if (isLoading.tokenomics) {
-        return (
-            <div className="terminal-pure">
-                <div className="terminal-header">
-                    <span className="terminal-prompt">&gt;&gt;</span> loading_tokenomics
-                </div>
-                <div className="flex justify-center items-center h-32">
-                    <LoaderCircle size={20} className="animate animate-spin text-white" />
-                </div>
-            </div>
-        );
-    }
-
-    if (errors.tokenomics) {
-        return (
-            <div className="terminal-pure">
-                <div className="terminal-header">
-                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics_error
-                </div>
-                <div className="terminal-row">
-                    <span className="terminal-status">[ERROR]</span>
-                    <span className="terminal-accent">{errors.tokenomics}</span>
-                </div>
-            </div>
-        );
-    }
 
     if (!tokenomicsValues) {
         return (

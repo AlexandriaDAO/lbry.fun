@@ -1,20 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { useUnifiedSwapData } from '../../providers/UnifiedSwapDataProvider';
+import React, { useState } from 'react';
 import StakeContent from '../stake/stakeContent';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 
 export const StakingTerminal: React.FC = React.memo(() => {
-  const { balances, poolData, insights, loadInsights, isLoading } = useUnifiedSwapData();
+  // Get data directly from Redux
   const { auth, swap } = useAppSelector(state => state);
   const isAuthenticated = auth.isAuthenticated;
+  const poolData = swap.activeSwapPool;
+  const stakeInfo = swap.stakeInfo;
   const [showCharts, setShowCharts] = useState(false);
-
-  // Load insights when charts are shown
-  useEffect(() => {
-    if (showCharts && poolData) {
-      loadInsights();
-    }
-  }, [showCharts, poolData, loadInsights]);
+  
+  // Simple balance data
+  const balances = {
+    staked: stakeInfo?.stakedPrimary || '0',
+    claimable: stakeInfo?.rewardIcp || '0'
+  };
 
   // Calculate APY (placeholder - replace with actual calculation)
   const calculateAPY = () => {
@@ -118,35 +118,29 @@ export const StakingTerminal: React.FC = React.memo(() => {
         
         {showCharts && (
           <div className="mt-2 space-y-3">
-            {isLoading.insights ? (
-              <div className="text-gray-400 text-xs">Loading performance data...</div>
-            ) : (
-              <>
-                {/* APY Trend */}
-                <div>
-                  <div className="terminal-label mb-1">APY trend (last 7 days)</div>
-                  <div className="h-20 bg-black/50 border border-white/10 p-2 flex items-center justify-center">
-                    <span className="text-gray-400 text-xs">{chartPlaceholder}</span>
-                  </div>
-                </div>
+            {/* APY Trend */}
+            <div>
+              <div className="terminal-label mb-1">APY trend (last 7 days)</div>
+              <div className="h-20 bg-black/50 border border-white/10 p-2 flex items-center justify-center">
+                <span className="text-gray-400 text-xs">{chartPlaceholder}</span>
+              </div>
+            </div>
 
-                {/* Total Staked Trend */}
-                <div>
-                  <div className="terminal-label mb-1">Total staked trend</div>
-                  <div className="h-20 bg-black/50 border border-white/10 p-2 flex items-center justify-center">
-                    <span className="text-gray-400 text-xs">{chartPlaceholder}</span>
-                  </div>
-                </div>
+            {/* Total Staked Trend */}
+            <div>
+              <div className="terminal-label mb-1">Total staked trend</div>
+              <div className="h-20 bg-black/50 border border-white/10 p-2 flex items-center justify-center">
+                <span className="text-gray-400 text-xs">{chartPlaceholder}</span>
+              </div>
+            </div>
 
-                {/* Rewards Accumulation */}
-                <div>
-                  <div className="terminal-label mb-1">Your rewards accumulation</div>
-                  <div className="h-20 bg-black/50 border border-white/10 p-2 flex items-center justify-center">
-                    <span className="text-gray-400 text-xs">{chartPlaceholder}</span>
-                  </div>
-                </div>
-              </>
-            )}
+            {/* Rewards Accumulation */}
+            <div>
+              <div className="terminal-label mb-1">Your rewards accumulation</div>
+              <div className="h-20 bg-black/50 border border-white/10 p-2 flex items-center justify-center">
+                <span className="text-gray-400 text-xs">{chartPlaceholder}</span>
+              </div>
+            </div>
           </div>
         )}
       </div>

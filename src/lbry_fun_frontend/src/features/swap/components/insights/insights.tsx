@@ -2,7 +2,9 @@ import React, { useEffect, useMemo } from 'react';
 import { LoaderCircle } from 'lucide-react';
 import LineChart from './chart';
 import TooltipIcon from '@/features/token/components/TooltipIcon';
-import { useUnifiedSwapData } from '../../providers/UnifiedSwapDataProvider';
+import { useAppSelector } from '@/store/hooks/useAppSelector';
+import { useAppDispatch } from '@/store/hooks/useAppDispatch';
+import getAllLogs from '../../thunks/insights/getAllLogs.thunk';
 
 const formatTime = (timestamps: number[]) => {
     return timestamps.map(ts => new Date(ts).toLocaleDateString());
@@ -15,11 +17,16 @@ const formatNumber = (num: number) => {
 };
 
 const Insights: React.FC = () => {
-    const { insights, loadInsights, isLoading, errors } = useUnifiedSwapData();
-
+    const dispatch = useAppDispatch();
+    const { swap } = useAppSelector(state => state);
+    const { logsData: insights, logsLoading: isLoading, logsError: error } = swap;
+    const poolData = swap.activeSwapPool;
+    
     useEffect(() => {
-        loadInsights();
-    }, [loadInsights]);
+        if (poolData?.[1]?.logs_canister_id) {
+            dispatch(getAllLogs(poolData[1].logs_canister_id));
+        }
+    }, [dispatch, poolData]);
 
     const summaryData = useMemo(() => {
         if (!insights || insights.time.length === 0) {
@@ -37,7 +44,7 @@ const Insights: React.FC = () => {
         };
     }, [insights]);
     
-    if (isLoading.insights) {
+    if (isLoading) {
         return (
             <div className="terminal-pure">
                 <div className="terminal-header">
@@ -50,7 +57,7 @@ const Insights: React.FC = () => {
         );
     }
 
-    if (errors.insights) {
+    if (error) {
         return (
             <div className="terminal-pure">
                 <div className="terminal-header">
@@ -58,7 +65,7 @@ const Insights: React.FC = () => {
                 </div>
                 <div className="terminal-row">
                     <span className="terminal-status">[ERROR]</span>
-                    <span className="terminal-accent">{errors.insights}</span>
+                    <span className="terminal-accent">{error}</span>
                 </div>
             </div>
         );

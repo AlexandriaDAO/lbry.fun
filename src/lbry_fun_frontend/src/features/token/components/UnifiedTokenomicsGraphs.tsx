@@ -245,80 +245,84 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
     return <div className="text-center p-4 text-gray-500">Enter tokenomic parameters above to see the projected graphs.</div>;
   }
   
-  const graphTitleBaseClass = "text-xl font-medium w-full";
-  const isDarkMode = false;
 
   return (
     <>
       {warnings.length > 0 && (
-        <div className="my-4 p-4 border border-yellow-400 bg-yellow-50 rounded-lg bg-yellow-900/20 border-yellow-600">
-          <h3 className="font-bold text-yellow-800 text-yellow-300">Parameter Warnings</h3>
-          <ul className="list-disc list-inside text-yellow-700 text-yellow-400 mt-2 space-y-1">
+        <div className="terminal-section bg-black border border-yellow-500/30 p-3 font-mono mb-4">
+          <div className="terminal-warning mb-2">[PARAMETER_WARNINGS]</div>
+          <div className="space-y-1">
             {warnings.map((warning, index) => (
-              <li key={index}>{warning}</li>
+              <div key={index} className="text-yellow-500 text-xs pl-4">
+                <span className="terminal-prompt">&gt;</span> {warning}
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
       {summaryData?.supplyCapped && (
-        <div className="my-4 p-4 border border-blue-400 bg-blue-50 rounded-lg">
-          <h3 className="font-bold text-blue-800">Supply Cap Reached</h3>
-          <p className="text-blue-700 mt-2">
-            The maximum supply of {Number(primaryMaxSupply).toLocaleString()} tokens will be reached.
+        <div className="terminal-section bg-black border border-cyan-400/30 p-3 font-mono mb-4">
+          <div className="terminal-status text-cyan-400">[SUPPLY_CAP_REACHED]</div>
+          <div className="text-cyan-400 text-xs mt-2">
+            The maximum supply of <span className="terminal-value">{Number(primaryMaxSupply).toLocaleString()}</span> tokens will be reached.
             The final epoch may be partial to exactly hit this cap.
-          </p>
+          </div>
         </div>
       )}
-      <div className="text-center my-4">
-        <h2 className="text-2xl font-bold text-gray-800 text-white">Tokenomics Simulation</h2>
-        <p className="text-sm text-gray-500 text-gray-400">These graphs show how your token distribution will work over time.</p>
-      </div>
-      <div className="mb-8 p-4 border rounded-lg bg-gray-50 bg-gray-800">
-        <h3 className="text-xl font-semibold mb-4 text-center text-gray-900 text-white">Key Metrics Summary</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
-          <div className="p-2 bg-gray-100 bg-gray-700 rounded-md">
-            <p className="text-sm text-gray-500 text-gray-400">Minting Epochs</p>
-            <p className="text-lg font-bold text-gray-900 text-white">{summaryData?.epochs}</p>
-          </div>
-          <div className="p-2 bg-gray-100 bg-gray-700 rounded-md">
-            <p className="text-sm text-gray-500 text-gray-400">TGE Allocation</p>
-            <p className="text-lg font-bold text-gray-900 text-white">{summaryData?.tgePercentage}%</p>
-          </div>
-          <div className="p-2 bg-gray-100 bg-gray-700 rounded-md">
-            <p className="text-sm text-gray-500 text-gray-400">Initial Mint Cost</p>
-            <p className="text-lg font-bold text-gray-900 text-white">${summaryData?.initialMintCost?.toFixed(4)}</p>
-          </div>
-          <div className="p-2 bg-gray-100 bg-gray-700 rounded-md">
-            <p className="text-sm text-gray-500 text-gray-400">Final Mint Cost</p>
-            <p className="text-lg font-bold text-gray-900 text-white">${summaryData?.finalMintCost?.toFixed(4)}</p>
-          </div>
-          <div className="p-2 bg-gray-100 bg-gray-700 rounded-md col-span-2 md:col-span-1 lg:col-span-1">
-            <p className="text-sm text-gray-500 text-gray-400">Total Minting Valuation</p>
-            <p className="text-lg font-bold text-gray-900 text-white">${summaryData?.totalMintingValuation?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-          </div>
+      <div className="terminal-section text-center my-4">
+        <div className="terminal-header font-mono">
+          <span className="terminal-prompt">&gt;&gt;</span> tokenomics_simulation
+          <div className="text-xs text-gray-600 mt-1">These graphs show how your token distribution will work over time.</div>
         </div>
-        <div className="mt-4 p-2 bg-gray-100 bg-gray-700 rounded-md">
-          <p className="text-sm text-gray-500 text-gray-400">Distribution Type</p>
-          <p className="text-lg font-bold text-gray-900 text-white">
-            {summaryData?.epochs <= 5 ? 'Quick' : 
-             summaryData?.epochs <= 12 ? 'Balanced' : 
-             'Extended'}
-          </p>
+      </div>
+      <div className="terminal-section bg-black border border-white/30 p-4 font-mono mb-8">
+        <div className="terminal-section-header mb-4">
+          <span className="terminal-prompt">&gt;</span> key_metrics_summary
+        </div>
+        <div className="space-y-1">
+          <div className="terminal-row">
+            <span className="terminal-label">minting_epochs:</span>
+            <span className="terminal-value">{summaryData?.epochs}</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">tge_allocation:</span>
+            <span className="terminal-value">{summaryData?.tgePercentage}%</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">initial_mint_cost:</span>
+            <span className="terminal-primary">${summaryData?.initialMintCost?.toFixed(4)}</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">final_mint_cost:</span>
+            <span className="terminal-primary">${summaryData?.finalMintCost?.toFixed(4)}</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">total_minting_valuation:</span>
+            <span className="terminal-primary">${summaryData?.totalMintingValuation?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">distribution_type:</span>
+            <span className="terminal-value">
+              {summaryData?.epochs <= 5 ? 'quick' : 
+               summaryData?.epochs <= 12 ? 'balanced' : 
+               'extended'}
+            </span>
+          </div>
         </div>
         {summaryData?.supplyCapped && (
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              ℹ️ Distribution capped at max supply. Last epoch will mint only 
-              {' '}{(summaryData.actualTotalMinted % summaryData.epochs).toLocaleString()} tokens
-              {' '}to exactly reach the {Number(primaryMaxSupply).toLocaleString()} token cap.
-            </p>
+          <div className="mt-3 pt-3 border-t border-white/30">
+            <div className="text-cyan-400 text-xs">
+              <span className="terminal-status">[INFO]</span> Distribution capped at max supply. Last epoch will mint only 
+              <span className="terminal-value ml-1">{(summaryData.actualTotalMinted % summaryData.epochs).toLocaleString()}</span> tokens
+              to exactly reach the <span className="terminal-value">{Number(primaryMaxSupply).toLocaleString()}</span> token cap.
+            </div>
           </div>
         )}
       </div>
       <div className="space-y-8 mt-10 md:grid md:grid-cols-2 md:gap-x-8 md:space-y-0">
-        <div className="md:mb-8">
-          <div className="flex items-center mb-2">
-            <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cumulative Primary Supply vs. Burn</h3>
+        <div className="terminal-section bg-black border border-white/30 p-4 font-mono">
+          <div className="terminal-section-header mb-4">
+            <span className="terminal-prompt">&gt;</span> cumulative_primary_supply_vs_burn
             <TooltipIcon text="This graph shows the total amount of Primary Token that will be minted as more Secondary Tokens are burned. Look for how quickly the supply hard cap is reached. A steeper curve means faster minting in early stages. The line flattens when the supply Hard Cap is hit." />
           </div>
           <LineChart
@@ -330,9 +334,9 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
             gardientColor="hsl(var(--color-chart-primary) / 0.3)"
           />
         </div>
-        <div className="md:mb-8">
-          <div className="flex items-center mb-2">
-              <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Primary Tokens Minted per Epoch</h3>
+        <div className="terminal-section bg-black border border-white/30 p-4 font-mono">
+          <div className="terminal-section-header mb-4">
+              <span className="terminal-prompt">&gt;</span> primary_tokens_minted_per_epoch
               <TooltipIcon text="This chart displays how many new Primary Tokens are created at each burn epoch. Typically, earlier epochs (left) will mint more tokens than later epochs (right), showing that early burners are rewarded more. A rapid decrease indicates a faster reduction in minting rewards per epoch." />
           </div>
           <LineChart
@@ -344,9 +348,9 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
             gardientColor="hsl(var(--color-chart-secondary) / 0.3)"
           />
         </div>
-        <div>
-          <div className="flex items-center mb-2">
-              <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cost to Mint One Primary Token vs. Total Supply Minted</h3>
+        <div className="terminal-section bg-black border border-white/30 p-4 font-mono">
+          <div className="terminal-section-header mb-4">
+              <span className="terminal-prompt">&gt;</span> cost_to_mint_vs_supply
               <TooltipIcon text="This graph shows the 'price' to create one new Primary Token by burning Secondary Tokens. Notice how the cost jumps up at each stage (or 'epoch'). This increasing cost is what makes it more rewarding for early participants to mint tokens." />
           </div>
           <LineChart
@@ -358,9 +362,9 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
             gardientColor="hsl(var(--color-chart-success) / 0.3)"
           />
         </div>
-        <div>
-          <div className="flex items-center mb-2">
-              <h3 className={`${graphTitleBaseClass} ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Minting Valuation vs. Primary Minted</h3>
+        <div className="terminal-section bg-black border border-white/30 p-4 font-mono">
+          <div className="terminal-section-header mb-4">
+              <span className="terminal-prompt">&gt;</span> minting_valuation_vs_primary
               <TooltipIcon text="Assuming each Secondary Token burned costs $0.005 (half a cent), this graph projects the total USD expenditure needed to mint a certain amount of Primary Tokens through the burning schedule. The cost of initially allocated Primary Tokens is considered $0 in this projection." />
           </div>
           <LineChart
@@ -377,14 +381,14 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
           />
         </div>
       </div>
-      <div className="text-center mt-8">
+      <div className="terminal-section bg-black border border-white/30 p-4 font-mono text-center mt-8">
         <button 
           onClick={handleCopyData}
-          className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 bg-gray-700 text-gray-200 hover:bg-gray-600 transition"
+          className="terminal-command"
         >
-          Copy Table Data
+          &gt; copy_table_data
         </button>
-        {copySuccess && <span className="ml-4 text-green-500 text-green-400">Copied!</span>}
+        {copySuccess && <span className="ml-4 terminal-success">[COPIED]</span>}
       </div>
     </>
   );

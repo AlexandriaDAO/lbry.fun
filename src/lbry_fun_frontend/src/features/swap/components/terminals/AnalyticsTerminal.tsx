@@ -1,44 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { useUnifiedSwapData } from '../../providers/UnifiedSwapDataProvider';
+import React, { useState } from 'react';
 import Insights from '../insights/insights';
 import InfoCard from '../info/InfoCard';
 import TokenomicsTab from '../tokenomics/TokenomicsTab';
+import { useAppSelector } from '@/store/hooks/useAppSelector';
 
 type AnalyticsView = 'insights' | 'tokenomics' | 'technical';
 
 export const AnalyticsTerminal: React.FC = React.memo(() => {
   const [activeView, setActiveView] = useState<AnalyticsView>('insights');
-  const { poolData, insights, tokenomics, loadInsights, loadTokenomics, isLoading } = useUnifiedSwapData();
-
-  // Load data based on active view
-  useEffect(() => {
-    if (activeView === 'insights') {
-      loadInsights();
-    } else if (activeView === 'tokenomics') {
-      loadTokenomics();
-    }
-  }, [activeView, loadInsights, loadTokenomics]);
+  const { swap } = useAppSelector(state => state);
+  const poolData = swap.activeSwapPool;
 
   const renderActiveView = () => {
     switch (activeView) {
       case 'insights':
         return (
           <div className="mt-3">
-            {isLoading.insights ? (
-              <div className="text-gray-400 text-xs">Loading insights data...</div>
-            ) : (
-              <Insights />
-            )}
+            <Insights />
           </div>
         );
       case 'tokenomics':
         return (
           <div className="mt-3">
-            {isLoading.tokenomics ? (
-              <div className="text-gray-400 text-xs">Loading tokenomics data...</div>
-            ) : (
-              <TokenomicsTab />
-            )}
+            <TokenomicsTab />
           </div>
         );
       case 'technical':
