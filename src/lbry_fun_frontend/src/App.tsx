@@ -9,7 +9,7 @@ import "./styles/style.css";
 import "nprogress/nprogress.css";
 
 import InternetIdentityProvider from "./providers/AuthProvider/IIProvider";
-// import ActorProvider from "./providers/ActorProvider";
+import ActorProvider from "./providers/ActorProvider";
 // import UserProvider from "./providers/UserProvider";
 import { AppRoutes } from "./routes";
 
@@ -30,8 +30,10 @@ export default function App() {
     return (
         <ReduxProvider>
             <InternetIdentityProvider>
-                {/* <UserProvider> Removed </UserProvider> */}
-                {isReady ? <AppRoutes /> : null}
+                <ActorProvider>
+                    {/* <UserProvider> Removed </UserProvider> */}
+                    {isReady ? <AppRoutes /> : null}
+                </ActorProvider>
             </InternetIdentityProvider>
         </ReduxProvider>
     )

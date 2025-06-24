@@ -29,7 +29,7 @@ const SwapContent: React.FC = () => {
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
   const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
   const swap = useAppSelector((state: RootState) => state.swap);
-  const { accessState, countdown, launchTime } = useAccessState();
+  const { accessState, countdown, launchTime, isTokenLive } = useAccessState();
   const [amount, setAmount] = useState("");
   const [secondaryRatio, setSecondaryRatio] = useState(0.0);
   const [tentativeSecondary, setTentativeSecondary] = useState(Number);
@@ -43,6 +43,17 @@ const SwapContent: React.FC = () => {
 
   const handleSubmit = () => {
     if (!isAuthenticated || !principal || !swap.activeSwapPool?.[1].icp_swap_canister_id) return;
+    
+    // Check if token is live
+    if (!isTokenLive) {
+      setErrorModalV({ 
+        flag: true, 
+        title: "Trading Not Yet Available", 
+        message: "This token is still in its launch period. Trading will be enabled after the 24-hour launch window." 
+      });
+      return;
+    }
+    
     let amountAfterFees = (Number(amount)).toFixed(4);
     dispatch(swapSecondary({ amount: amountAfterFees, userPrincipal: principal, canisterId: swap.activeSwapPool?.[1].icp_swap_canister_id }));
     setLoadingModalV(true);
@@ -125,7 +136,7 @@ const SwapContent: React.FC = () => {
   }, [swap.redeeemSuccess, isAuthenticated, principal, dispatch]);
 
   // Show skeleton while critical data is loading
-  if (!swap.secondaryRatio || swap.secondaryRatio === "0" || !swap.activeSwapPool) {
+  if (!swap.activeSwapPool || swap.secondaryRatio === null || swap.secondaryRatio === undefined) {
     return <SwapContentSkeleton />;
   }
 
@@ -196,12 +207,15 @@ const SwapContent: React.FC = () => {
               <button
                 type="button"
                 className={`w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 
-      ${parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-primary-action text-white cursor-pointer hover:opacity-90'}`}
-                disabled={parseFloat(amount) === 0 || swap.loading || parseFloat(amount) < minimum_icp || amount === ""}
+      ${parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading || !isTokenLive ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-primary-action text-white cursor-pointer hover:opacity-90'}`}
+                disabled={parseFloat(amount) === 0 || swap.loading || parseFloat(amount) < minimum_icp || amount === "" || !isTokenLive}
                 onClick={handleSubmit}
+                title={!isTokenLive ? "Trading will be enabled after the launch period" : ""}
               >
                 {swap.loading ? (
                   <LoaderCircle size={18} className="animate-spin mx-auto" />
+                ) : !isTokenLive ? (
+                  <>Trading Starts Soon</>
                 ) : (
                   <>Swap</>
                 )}

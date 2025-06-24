@@ -94,17 +94,117 @@ const getActor = async <T>(
 
 
 
-export const getActorSwap = (canisterId:string) =>
-  getActor(canisterId, createActorSwap, icp_swap);
+export const getActorSwap = async (canisterId:string) => {
+  // For dynamically spawned canisters, always create a new actor
+  // Don't fall back to the template actor which may be undefined
+  const client = await getAuthClient();
+  if (await client.isAuthenticated()) {
+    const identity = client.getIdentity();
+    const agent = await HttpAgent.create({
+      identity,
+      host: isLocalDevelopment
+        ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
+        : "https://identity.ic0.app",
+    });
+    
+    if (isLocalDevelopment) {
+      await agent.fetchRootKey().catch((err) => {
+        console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
+        console.error(err);
+      });
+    }
+    
+    return createActorSwap(canisterId, { agent });
+  }
+  
+  // For unauthenticated access, create actor with anonymous identity
+  const agent = await HttpAgent.create({
+    host: isLocalDevelopment
+      ? `http://localhost:4943`
+      : "https://ic0.app",
+  });
+  
+  if (isLocalDevelopment) {
+    await agent.fetchRootKey().catch(() => {});
+  }
+  
+  return createActorSwap(canisterId, { agent });
+};
 
 export const getIcpLedgerActor = () =>
   getActor(icp_ledger_canister_id, createActorIcpLedger, icp_ledger_canister);
 
-export const getTokenomicsActor = (canisterId:string) =>
-  getActor(canisterId, createActorTokenomics, tokenomics);
+export const getTokenomicsActor = async (canisterId:string) => {
+  // For dynamically spawned canisters, always create a new actor
+  const client = await getAuthClient();
+  if (await client.isAuthenticated()) {
+    const identity = client.getIdentity();
+    const agent = await HttpAgent.create({
+      identity,
+      host: isLocalDevelopment
+        ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
+        : "https://identity.ic0.app",
+    });
+    
+    if (isLocalDevelopment) {
+      await agent.fetchRootKey().catch((err) => {
+        console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
+        console.error(err);
+      });
+    }
+    
+    return createActorTokenomics(canisterId, { agent });
+  }
+  
+  // For unauthenticated access, create actor with anonymous identity
+  const agent = await HttpAgent.create({
+    host: isLocalDevelopment
+      ? `http://localhost:4943`
+      : "https://ic0.app",
+  });
+  
+  if (isLocalDevelopment) {
+    await agent.fetchRootKey().catch(() => {});
+  }
+  
+  return createActorTokenomics(canisterId, { agent });
+};
 
-export const getICRCActor = (canisterId:string) =>
-  getActor(canisterId, createActorICRC, ICRC);
+export const getICRCActor = async (canisterId:string) => {
+  // For dynamically spawned canisters, always create a new actor
+  const client = await getAuthClient();
+  if (await client.isAuthenticated()) {
+    const identity = client.getIdentity();
+    const agent = await HttpAgent.create({
+      identity,
+      host: isLocalDevelopment
+        ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
+        : "https://identity.ic0.app",
+    });
+    
+    if (isLocalDevelopment) {
+      await agent.fetchRootKey().catch((err) => {
+        console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
+        console.error(err);
+      });
+    }
+    
+    return createActorICRC(canisterId, { agent });
+  }
+  
+  // For unauthenticated access, create actor with anonymous identity
+  const agent = await HttpAgent.create({
+    host: isLocalDevelopment
+      ? `http://localhost:4943`
+      : "https://ic0.app",
+  });
+  
+  if (isLocalDevelopment) {
+    await agent.fetchRootKey().catch(() => {});
+  }
+  
+  return createActorICRC(canisterId, { agent });
+};
 
 
 export const getLogs = () => getActor(log_canister_id, createActorLogs, logs);

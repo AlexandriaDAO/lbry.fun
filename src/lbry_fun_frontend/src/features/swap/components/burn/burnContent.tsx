@@ -3,6 +3,8 @@ import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swap/icp_swap.did'
 import { _SERVICE as _SERVICESECONDARY } from '../../../../../../ICRC/ICRC.did'
+import AccessGuard from "../AccessGuard";
+import { useAccessState } from "../../hooks/useAccessState";
 
 import { Link } from "react-router-dom";
 import { flagHandler } from "../../swapSlice";
@@ -26,6 +28,7 @@ const BurnContent = () => {
     const swap = useAppSelector((state: RootState) => state.swap);
     const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
     const tokenomics = useAppSelector((state: RootState) => state.tokenomics);
+    const { accessState, countdown, launchTime, isTokenLive } = useAccessState();
 
     const [amountSecondary, setAmountSecondary] = useState(0);
     const [tentativeICP, setTentativeICP] = useState(0);
@@ -39,6 +42,15 @@ const BurnContent = () => {
         event.preventDefault();
         if (!isAuthenticated || !principal) return;
         
+        // Check if token is live
+        if (!isTokenLive) {
+            setErrorModalV({
+                flag: true,
+                title: "Trading Not Yet Available",
+                message: "This token is still in its launch period. Burning will be enabled after the 24-hour launch window."
+            });
+            return;
+        }
         
         // Add frontend validation to prevent burns exceeding max allowed
         if (maxBurnAllowed === 0) {
@@ -219,9 +231,12 @@ const BurnContent = () => {
                             onClick={(e) => {
                                 handleSubmit(e);
                             }}
+                            title={!isTokenLive ? "Trading will be enabled after the launch period" : ""}
                         >
                             {swap.loading ? (<>
-                                <LoaderCircle size={18} className="animate animate-spin mx-auto" /> </>) : (
+                                <LoaderCircle size={18} className="animate animate-spin mx-auto" /> </>) : !isTokenLive ? (
+                                <>Trading Starts Soon</>
+                            ) : (
                                 <>Burn</>
                             )}
                         </button> : <div

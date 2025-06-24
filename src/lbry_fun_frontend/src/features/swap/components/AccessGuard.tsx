@@ -54,77 +54,58 @@ const AccessGuard: React.FC<AccessGuardProps> = ({
       .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Render restricted access overlay
-  return (
-    <div className="relative">
-      {/* Blurred background content */}
-      <div className="opacity-30 blur-sm pointer-events-none select-none">
+  // For non-authenticated users, show a banner instead of blocking the UI
+  if (accessState === AccessState.UNAUTHENTICATED) {
+    return (
+      <div>
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <Lock className="w-5 h-5 text-blue-500 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-foreground mb-2">
+              Connect your wallet to enable trading
+            </p>
+            <p className="text-sm text-muted-foreground mb-3">
+              You're viewing live rates and stats. Connect to swap, burn, or stake tokens.
+            </p>
+            <Entry />
+          </div>
+        </div>
         {children}
       </div>
+    );
+  }
 
-      {/* Access restriction overlay */}
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="bg-card border border-border rounded-lg p-8 max-w-md w-full shadow-xl">
-          {accessState === AccessState.UNAUTHENTICATED ? (
-            <>
-              <div className="flex flex-col items-center text-center">
-                <div className="bg-primary/10 p-4 rounded-full mb-4">
-                  <Lock className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Connect to Trade</h3>
-                <p className="text-muted-foreground mb-6">
-                  View live rates and stats while exploring this token. Connect your wallet to enable trading.
-                </p>
-                <div className="w-full">
-                  <Entry />
-                </div>
-              </div>
-            </>
-          ) : accessState === AccessState.AWAITING_LAUNCH ? (
-            <>
-              <div className="flex flex-col items-center text-center">
-                <div className="bg-yellow-500/10 p-4 rounded-full mb-4">
-                  <Clock className="w-8 h-8 text-yellow-500" />
-                </div>
-                <h3 className="text-xl font-semibold mb-4">Launching Soon!</h3>
-                
-                {timeRemaining > 0 && (
-                  <div className="text-3xl font-mono font-bold text-primary mb-4">
-                    {formatCountdown(timeRemaining)}
-                  </div>
-                )}
-                
-                {launchTime && (
-                  <p className="text-muted-foreground mb-6">
-                    Trading starts at<br />
-                    <span className="text-foreground font-medium">
-                      {launchTime.toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        timeZoneName: 'short'
-                      })}
-                    </span>
-                  </p>
-                )}
-                
-                <div className="flex gap-3 w-full">
-                  <button className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-                    Set Reminder
-                  </button>
-                  <button className="flex-1 px-4 py-2 border border-border rounded-md hover:bg-muted transition-colors">
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : null}
+  // For awaiting launch, show a countdown banner
+  if (accessState === AccessState.AWAITING_LAUNCH) {
+    return (
+      <div>
+        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <Clock className="w-5 h-5 text-yellow-500 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-foreground mb-2">
+              Trading starts in {formatCountdown(timeRemaining)}
+            </p>
+            {launchTime && (
+              <p className="text-sm text-muted-foreground">
+                This token will be available for trading on{' '}
+                {launchTime.toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  timeZoneName: 'short'
+                })}
+              </p>
+            )}
+          </div>
         </div>
+        {children}
       </div>
-    </div>
-  );
+    );
+  }
+
+  // For other states, just render children
+  return <>{children}</>;
 };
 
 export default AccessGuard;

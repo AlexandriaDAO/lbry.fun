@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import "./style.css"
 
 import { useAppSelector } from '@/store/hooks/useAppSelector';
-import AccountCards from './components/balance/accountCards';
+import ConsolidatedTerminal from './components/balance/ConsolidatedTerminal';
 import SwapContent from './components/swap/swapContent';
 import TransferContent from './components/transfer/TransferContent';
 import BurnContent from './components/burn/burnContent';
@@ -31,6 +31,9 @@ const SwapMain = () => {
     // Use the pool initializer hook
     const { poolInitState, isPoolReady, error: poolError } = usePoolInitializer();
 
+    // Use activeSwapPool ID as fallback when URL param is missing
+    const poolId = idFromUrl || swap.activeSwapPool?.[0];
+    
     const tabs = [
         { id: 2, path: 'swap', label: 'Swap', hover: `Swap ICP for ${swap.activeSwapPool&&swap.activeSwapPool[1].secondary_token_symbol}`, Component: SwapContent },
         { id: 3, path: 'transfer', label: 'Transfer', hover: 'Send or receive tokens', Component: TransferContent },
@@ -43,7 +46,9 @@ const SwapMain = () => {
     ];
 
     const currentPath = location.pathname.split('/').pop() || 'swap';
-    const activeTab = tabs.find(tab => tab.path === currentPath)?.id || 2;
+    // Handle index route (/swap) by defaulting to swap tab
+    const effectivePath = currentPath === 'swap' && location.pathname === '/swap' ? 'swap' : currentPath;
+    const activeTab = tabs.find(tab => tab.path === effectivePath)?.id || 2;
 
     useEffect(() => {
         if (localStorage.getItem("tab")) {
@@ -55,13 +60,17 @@ const SwapMain = () => {
     // Redirect old routes to their new locations
     useEffect(() => {
         if (currentPath === 'send' || currentPath === 'receive') {
-            navigate(`/swap/transfer?id=${idFromUrl}`, { replace: true });
+            navigate(`/swap/transfer?id=${poolId}`, { replace: true });
         }
         // Redirect old redeem and balance routes to swap route
         if (currentPath === 'redeem' || currentPath === 'balance') {
-            navigate(`/swap/swap?id=${idFromUrl}`, { replace: true });
+            navigate(`/swap/swap?id=${poolId}`, { replace: true });
         }
-    }, [currentPath, idFromUrl, navigate]);
+        // Redirect index route to swap tab
+        if (location.pathname === '/swap' && poolId) {
+            navigate(`/swap/swap?id=${poolId}`, { replace: true });
+        }
+    }, [currentPath, poolId, navigate, location.pathname]);
 
     // Show loading state while pool is initializing
     if (poolInitState === PoolInitState.LOADING_POOLS || poolInitState === PoolInitState.SETTING_POOL) {
@@ -106,14 +115,14 @@ const SwapMain = () => {
     return (
         <div className='tabs py-10 2xl:py-20 xl:py-16 lg:py-14 md:py-12 sm:py-10'>
             <div className='container px-5'>
-                <AccountCards />
+                <ConsolidatedTerminal />
                 <div className='tabs-content'>
                     <div className='tabs-content'>
                         <div className="flex mb-5 flex-wrap">
                             {tabs.map(tab => (
                                 <button
                                     key={tab.id}
-                                    onClick={() => navigate(`/swap/${tab.path}?id=${idFromUrl}`)}
+                                    onClick={() => navigate(`/swap/${tab.path}?id=${poolId}`)}
                                     className={`px-2 py-2 flex items-center ${activeTab === tab.id
                                         ? 'text-base 2xl:text-xl bg-interactive-primary text-primary-foreground px-5'
                                         : 'bg-background text-foreground'} transition-colors duration-300 text-base font-semibold leading-6 min-w-24 h-11 border border-border rounded-2xl mr-3 hover:bg-interactive-primary hover:text-primary-foreground px-5 mb-4 z-20`}
@@ -133,7 +142,7 @@ const SwapMain = () => {
                                     <SwapDataProvider>
                                         <SwapPageWrapper>
                                             {(() => {
-                                                const activeTabData = tabs.find(tab => tab.path === currentPath);
+                                                const activeTabData = tabs.find(tab => tab.path === effectivePath);
                                                 if (activeTabData && activeTabData.Component) {
                                                     const Component = activeTabData.Component;
                                                     return <Component />;

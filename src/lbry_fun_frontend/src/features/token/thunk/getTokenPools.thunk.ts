@@ -3,6 +3,7 @@ import { getLbryFunActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage } from "@/features/swap/utlis/erorrs";
 import { TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
 import fetchTokenLogosForPool from "./fetchTokenLogosForPoolThunk";
+import { LAUNCH_PERIOD_NANOS } from "@/constants/launchPeriod";
 
 const getTokenPools = createAsyncThunk<
   [string, TokenRecordStringified][],
@@ -16,12 +17,11 @@ const getTokenPools = createAsyncThunk<
     // Convert every BigInt to string
    const safeResult: [string, TokenRecordStringified][] = result.map(([poolId, record]) => {
         const currentTime = Date.now() * 1000000; // Convert to nanoseconds
-        const twentyFourHoursNanos = 24 * 60 * 60 * 1_000_000_000;
         
         // Calculate isLive status based on backend logic
         const isLive = !record.pool_creation_failed && 
                       record.pool_created_at > 0n && 
-                      currentTime >= Number(record.created_time) + twentyFourHoursNanos;
+                      currentTime >= Number(record.created_time) + Number(LAUNCH_PERIOD_NANOS);
         
         return [
           poolId.toString(),

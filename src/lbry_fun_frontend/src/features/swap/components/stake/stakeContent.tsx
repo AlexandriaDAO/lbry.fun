@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
+import AccessGuard from "../AccessGuard";
+import { useAccessState } from "../../hooks/useAccessState";
 
 import getAccountPrimaryBalance from "../../thunks/primaryIcrc/getAccountPrimaryBalance";
 import { flagHandler } from "../../swapSlice";
@@ -23,6 +25,7 @@ const StakeContent = () => {
     const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
     const primary = useAppSelector((state: RootState) => state.primary);
     const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
+    const { accessState, countdown, launchTime, isTokenLive } = useAccessState();
 
     const [amount, setAmount] = useState("0");
     const [loadingModalV, setLoadingModalV] = useState(false);
@@ -37,6 +40,17 @@ const StakeContent = () => {
     const handleSubmit = (event: any) => {
         event.preventDefault();
         if (!isAuthenticated || !principal) return;
+        
+        // Check if token is live
+        if (!isTokenLive) {
+            setErrorModalV({
+                flag: true,
+                title: "Staking Not Yet Available",
+                message: "This token is still in its launch period. Staking will be enabled after the 24-hour launch window."
+            });
+            return;
+        }
+        
         dispatch(stakePrimary({ amount, userPrincipal: principal }));
         setActionType("Stake");
         setLoadingModalV(true);
@@ -103,12 +117,12 @@ const StakeContent = () => {
     const primaryTokenLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
 
     // Show skeleton while critical data is loading
-    if (!swap.activeSwapPool || swap.totalStaked === undefined || primary.primaryBal === undefined) {
+    if (!swap.activeSwapPool || swap.totalStaked === undefined) {
         return <StakeContentSkeleton />;
     }
 
     return (
-        <>
+        <AccessGuard accessState={accessState} countdown={countdown} launchTime={launchTime}>
             <style>
                 {`
                 /* Hide number input spinners for Chrome, Safari, Edge, Opera */
@@ -192,7 +206,7 @@ const StakeContent = () => {
                                 </div>
                                 <div className='flex justify-between'>
                                     <div className='flex items-center'>
-                                        <strong className='text-base text-gray-400 font-medium me-2'>Available Balance:<span className='text-base text-white ms-2'>{primary.primaryBal}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span></strong>
+                                        <strong className='text-base text-gray-400 font-medium me-2'>Available Balance:<span className='text-base text-white ms-2'>{primary.primaryBal || '0'}  {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span></strong>
                                         {primaryTokenLogoFromState ? (
                                             <img className='w-5 h-5' src={primaryTokenLogoFromState} alt={swap.activeSwapPool?.[1]?.primary_token_name || "Primary token logo"} />
                                         ) : (
@@ -206,17 +220,20 @@ const StakeContent = () => {
                         <div>
                             {isAuthenticated ? <button
                                 type="button"
-                                className={`bg-primary-action text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 ${parseFloat(amount) === 0 || swap.loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-90'}`}
+                                className={`bg-primary-action text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 ${parseFloat(amount) === 0 || swap.loading || !isTokenLive ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-90'}`}
                                 style={{
-                                    opacity: parseFloat(amount) === 0 || swap.loading ? 0.5 : 1, // when disabled
+                                    opacity: parseFloat(amount) === 0 || swap.loading || !isTokenLive ? 0.5 : 1, // when disabled
                                 }}
-                                disabled={parseFloat(amount) === 0 || swap.loading === true}
+                                disabled={parseFloat(amount) === 0 || swap.loading === true || !isTokenLive}
                                 onClick={(e) => {
                                     handleSubmit(e);
                                 }}
+                                title={!isTokenLive ? "Staking will be enabled after the launch period" : ""}
                             >
                                 {swap.loading ? (<>
-                                    <LoaderCircle size={18} className="animate animate-spin mx-auto" /> </>) : (
+                                    <LoaderCircle size={18} className="animate animate-spin mx-auto" /> </>) : !isTokenLive ? (
+                                    <>Staking Starts Soon</>
+                                ) : (
                                     <>Stake</>
                                 )}
                             </button> : <div
@@ -239,7 +256,7 @@ const StakeContent = () => {
                 <ErrorModal show={errorModalV.flag} setShow={setErrorModalV} title={errorModalV.title} message={errorModalV.message} />
 
             </div>
-        </>
+        </AccessGuard>
     );
 };
 export default StakeContent;

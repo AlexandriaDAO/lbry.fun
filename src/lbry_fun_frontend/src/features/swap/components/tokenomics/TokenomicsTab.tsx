@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
-import TokenomicsGraphsBackend from '@/features/token/components/TokenomicsGraphsBackend';
+import UnifiedTokenomicsGraphs from '@/features/token/components/UnifiedTokenomicsGraphs';
 import { LoaderCircle } from 'lucide-react';
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { idlFactory } from '../../../../../../declarations/tokenomics';
@@ -88,20 +88,12 @@ const TokenomicsTab: React.FC = () => {
         const initialSecondaryBurn = (BigInt(configs.initial_secondary_burn) / E8S).toString();
         const halvingStep = configs.halving_step.toString();
         
-        // Calculate initial reward per burn unit
+        // Get initial reward per burn unit from the tokenomics schedule
+        // The first element in primary_mint_per_threshold is the initial reward rate
         let initialRewardPerBurnUnit = "1";
-        
         if (tokenomicsSchedule.primary_mint_per_threshold && tokenomicsSchedule.primary_mint_per_threshold.length > 0) {
-            const firstMintRewardE8s = BigInt(tokenomicsSchedule.primary_mint_per_threshold[0]);
-            const initialBurnE8s = BigInt(configs.initial_secondary_burn);
-            
-            if (firstMintRewardE8s > 0n && initialBurnE8s > 0n) {
-                // Convert to float for accurate division
-                const firstMintNatural = Number(firstMintRewardE8s) / Number(E8S);
-                const initialBurnNatural = Number(initialBurnE8s) / Number(E8S);
-                const ratio = firstMintNatural / initialBurnNatural;
-                initialRewardPerBurnUnit = ratio.toString();
-            }
+            const firstRewardE8s = BigInt(tokenomicsSchedule.primary_mint_per_threshold[0]);
+            initialRewardPerBurnUnit = (firstRewardE8s / E8S).toString();
         }
 
         return {
@@ -157,12 +149,13 @@ const TokenomicsTab: React.FC = () => {
 
     return (
         <div className="w-full">
-            <TokenomicsGraphsBackend
+            <UnifiedTokenomicsGraphs
                 primaryMaxSupply={tokenomicsValues.primaryMaxSupply}
                 tgeAllocation={tokenomicsValues.tgeAllocation}
                 initialSecondaryBurn={tokenomicsValues.initialSecondaryBurn}
                 halvingStep={tokenomicsValues.halvingStep}
                 initialRewardPerBurnUnit={tokenomicsValues.initialRewardPerBurnUnit}
+                deployedSchedule={tokenomicsSchedule}
             />
         </div>
     );

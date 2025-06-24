@@ -33,6 +33,7 @@ const PoolCard: React.FC = () => {
     const [secondaryLogo, setSecondaryLogo] = useState<string | undefined>();
     const [countdown, setCountdown] = useState<string>("");
 
+
     // icp ledger
     useEffect(() => {
         if (isAuthenticated && principal) {
@@ -136,7 +137,8 @@ const PoolCard: React.FC = () => {
                 const distanceNs = launchTimeNs - nowNs;
 
                 if (distanceNs <= 0) {
-                    setCountdown("Launching soon!");
+                    // Time has passed, clear the countdown
+                    setCountdown("");
                     clearInterval(intervalId);
                     return;
                 }
@@ -157,21 +159,21 @@ const PoolCard: React.FC = () => {
             }, 1000);
 
             return () => clearInterval(intervalId);
+        } else {
+            // Clear countdown if token is live or no data
+            setCountdown("");
         }
     }, [activeSwapPoolFromRedux]);
 
     // Skeleton Loader Component
     const PoolCardSkeleton: React.FC = () => (
-        <div
-            style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-            className="bg-gray-800 text-gray-200 py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3 animate-pulse"
-        >
-            <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6 bg-muted h-8 w-3/4 rounded"></h4>
-            <div className="flex flex-col space-y-4">
-                {[...Array(9)].map((_, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                        <span className="font-semibold bg-muted h-5 w-1/3 rounded"></span>
-                        <span className="bg-muted/70 h-5 w-1/2 rounded"></span>
+        <div className="terminal-card text-gray-200 animate-pulse">
+            <div className="terminal-header bg-muted h-8 w-3/4 rounded mb-6"></div>
+            <div className="space-y-4">
+                {[...Array(4)].map((_, index) => (
+                    <div key={index} className="data-row">
+                        <div className="bg-muted h-5 w-1/3 rounded"></div>
+                        <div className="bg-muted/70 h-5 w-1/2 rounded"></div>
                     </div>
                 ))}
             </div>
@@ -190,14 +192,9 @@ const PoolCard: React.FC = () => {
         if (!lbryFunLoading && lbryFunError) {
             return (
                 <div className="">
-                    <div
-                        style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-                        className="bg-gray-800 text-gray-200 py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3"
-                    >
-                        <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6">
-                            Active Swap Pool
-                        </h4>
-                        <p className="text-red-300">Error loading pool information: {typeof lbryFunError === 'string' ? lbryFunError : JSON.stringify(lbryFunError)}</p>
+                    <div className="terminal-card text-gray-200">
+                        <h4 className="terminal-header">ACTIVE_SWAP_POOL</h4>
+                        <p className="text-pink-400 font-mono">ERROR: {typeof lbryFunError === 'string' ? lbryFunError : JSON.stringify(lbryFunError)}</p>
                     </div>
                 </div>
             );
@@ -205,14 +202,9 @@ const PoolCard: React.FC = () => {
         if (!lbryFunLoading && !lbryFunError && !activeSwapPoolFromRedux) {
             return (
                 <div className="">
-                    <div
-                        style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-                        className="bg-gray-800 text-gray-200 py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3"
-                    >
-                        <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6">
-                            Active Swap Pool
-                        </h4>
-                        <p>Pool with ID '{idFromUrl}' not found.</p>
+                    <div className="terminal-card text-gray-200">
+                        <h4 className="terminal-header">ACTIVE_SWAP_POOL</h4>
+                        <p className="font-mono text-pink-500">POOL_NOT_FOUND: {idFromUrl}</p>
                     </div>
                 </div>
             );
@@ -221,98 +213,97 @@ const PoolCard: React.FC = () => {
 
     return (
         <>
-            {/* <div className="grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 mb-3 2xl:mb-12 xl:mb-10 lg:mb-7 md:mb-6 sm:mb-5"> */}
             <div className="">
-                <div
-                    style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-                    className="bg-gray-800 text-gray-200 py-10 xxl:px-14 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3 ">
-                    <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6">
-                        Active Swap Pool
+                <div className="terminal-card text-gray-200">
+                    <h4 className="terminal-header">
+                        <span className="terminal-prompt">&gt;</span> ACTIVE_SWAP_POOL
                     </h4>
 
                     {/* Active Swap Pool Card */}
                     {activeSwapPoolFromRedux && (
-                        <div
-                            className=""
-                        >
-                            <div className="flex flex-col space-y-4">
-                                <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-400">Pool ID:</span>
-                                    <span className="text-gray-100">{activeSwapPoolFromRedux[0]}</span>
+                        <>
+                            <div className="md:mb-20 sm:mb-16 xs:mb-10 ">
+                                <div className="data-row mb-4 pb-4 border-b border-pink-900/20">
+                                    <span className="data-label">pool_id:</span>
+                                    <span className="font-mono text-sm text-gray-400">{activeSwapPoolFromRedux[0]}</span>
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="font-semibold text-gray-400">Primary Token:</span>
-                                    <div className="flex items-center">
-                                        {primaryLogo && <img src={primaryLogo} alt="Primary token logo" className="w-6 h-6 mr-2" />}
-                                        <span className="text-gray-100">
-                                            {activeSwapPoolFromRedux[1].primary_token_name} ({activeSwapPoolFromRedux[1].primary_token_symbol})
+                                
+                                <div className="data-row mb-4">
+                                    <div>
+                                        <span className="text-xl font-bold text-lime-400 cyber-glow">
+                                            {activeSwapPoolFromRedux[1].primary_token_symbol}
+                                        </span>
+                                        <span className="cyber-status text-gray-500 ml-2">
+                                            [PRIMARY]
                                         </span>
                                     </div>
+                                    {primaryLogo && (
+                                        <img src={primaryLogo} alt="Primary token" className="w-8 h-8 opacity-80 hover:opacity-100 transition-opacity" />
+                                    )}
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-400">Secondary Token:</span>
-                                    <div className="flex items-center">
-                                        {secondaryLogo && <img src={secondaryLogo} alt="Secondary token logo" className="w-6 h-6 mr-2" />}
-                                        <span className="text-gray-100">
-                                            {activeSwapPoolFromRedux[1].secondary_token_name} ({activeSwapPoolFromRedux[1].secondary_token_symbol})
+                                
+                                <div className="data-row">
+                                    <div>
+                                        <span className="text-xl font-medium text-gray-300">
+                                            {activeSwapPoolFromRedux[1].secondary_token_symbol}
+                                        </span>
+                                        <span className="cyber-status text-gray-600 ml-2">
+                                            [SECONDARY]
                                         </span>
                                     </div>
+                                    {secondaryLogo && (
+                                        <img src={secondaryLogo} alt="Secondary token" className="w-8 h-8 opacity-60 hover:opacity-80 transition-opacity" />
+                                    )}
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-400">Is Live:</span>
-                                    <span className="text-gray-100">{activeSwapPoolFromRedux[1].isLive ? "Yes" : "No"}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-400">Initial Supply:</span>
-                                    <span className="text-gray-100">{TokenConversionService.formatE8sDisplay(activeSwapPoolFromRedux[1].initial_primary_mint, 0)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-400">Burn Unit:</span>
-                                    <span className="text-gray-100">{TokenConversionService.formatE8sDisplay(activeSwapPoolFromRedux[1].initial_secondary_burn, 0)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="font-semibold text-gray-400">Max Supply:</span>
-                                    <span className="text-gray-100">{TokenConversionService.formatE8sDisplay(activeSwapPoolFromRedux[1].primary_token_max_supply, 0)}</span>
-                                </div>
-                                {tokenomics.totalPrimarySupply && (
-                                    <div className="flex justify-between">
-                                        <span className="font-semibold text-gray-400">Current Supply:</span>
-                                        <span className="text-gray-100">
-                                            {TokenConversionService.formatE8sDisplay(tokenomics.totalPrimarySupply, 0)}
-                                            {activeSwapPoolFromRedux[1].primary_token_max_supply && (
-                                                <span className="text-gray-400 ml-2">
-                                                    ({((BigInt(tokenomics.totalPrimarySupply) * BigInt(100)) / BigInt(activeSwapPoolFromRedux[1].primary_token_max_supply)).toString()}%)
-                                                </span>
-                                            )}
-                                        </span>
-                                    </div>
-                                )}
-                                {tokenomics.currentPrimaryRate && (
-                                    <div className="flex justify-between">
-                                        <span className="font-semibold text-gray-400">Current Burn Rate:</span>
-                                        <span className="text-gray-100">{tokenomics.currentPrimaryRate} {activeSwapPoolFromRedux[1].secondary_token_symbol} → 1 {activeSwapPoolFromRedux[1].primary_token_symbol}</span>
-                                    </div>
-                                )}
-                                {activeSwapPoolFromRedux[1].isLive ? (
-                                    <div className="flex justify-between">
-                                        <span className="font-semibold text-gray-400">Liquidity Provided At:</span>
-                                        <span className="text-gray-100">
-                                            {activeSwapPoolFromRedux[1].pool_created_at
-                                                ? new Date(Number(activeSwapPoolFromRedux[1].pool_created_at) / 1_000_000).toLocaleString()
-                                                : "Not Provided"}
-                                        </span>
-                                    </div>
-                                ) : (
-                                    <div className="flex justify-between">
-                                        <span className="font-semibold text-gray-400">Countdown to Launch:</span>
-                                        <span className="text-gray-100">{countdown || "Calculating..."}</span>
-                                    </div>
-                                )}
                             </div>
-                        </div>
-
+                            
+                            <div className="terminal-divider pt-4">
+                                <h4 className="section-header">
+                                    <span className="terminal-prompt">&gt;&gt;</span> POOL_METRICS
+                                </h4>
+                                <div className="space-y-3">
+                                    <div className="data-row">
+                                        <span className="data-label">max_supply:</span>
+                                        <span className="data-primary">
+                                            {Number(TokenConversionService.formatE8sDisplay(activeSwapPoolFromRedux[1].primary_token_max_supply, 0)).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    
+                                    {tokenomics.totalPrimarySupply && (
+                                        <div className="data-row">
+                                            <span className="data-label">current_supply:</span>
+                                            <div className="text-right">
+                                                <span className="data-value">
+                                                    {Number(TokenConversionService.formatE8sDisplay(tokenomics.totalPrimarySupply, 0)).toLocaleString()}
+                                                </span>
+                                                <span className="data-accent ml-2">
+                                                    [{((BigInt(tokenomics.totalPrimarySupply) * BigInt(100)) / BigInt(activeSwapPoolFromRedux[1].primary_token_max_supply)).toString()}%]
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {!activeSwapPoolFromRedux[1].isLive && countdown && (
+                                        <div className="data-row pt-2 border-t border-pink-900/20">
+                                            <span className="data-label">launch_in:</span>
+                                            <span className="cyber-status text-pink-400">
+                                                {countdown}
+                                            </span>
+                                        </div>
+                                    )}
+                                    
+                                    {activeSwapPoolFromRedux[1].isLive && (
+                                        <div className="data-row pt-2 border-t border-pink-900/20">
+                                            <span className="data-label">status:</span>
+                                            <span className="cyber-status text-green-400">
+                                                [LIVE]
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </>
                     )}
-
                 </div>
             </div>
         </>

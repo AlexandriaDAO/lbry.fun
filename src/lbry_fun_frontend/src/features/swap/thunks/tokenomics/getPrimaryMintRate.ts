@@ -17,12 +17,11 @@ const getPrimaryMintRate = createAsyncThunk<
       state.swap.activeSwapPool?.[1].tokenomics_canister_id
     );
     const result = await actor.get_current_primary_rate();
-    // The result is a rate multiplier, not in e8s format
-    // When multiplied by burn amount and 10000, it gives e8s units
-    // So we need to convert the final result from e8s to natural units
-    // rate * burn_amount * 10000 / E8S = primary tokens
-    // For display, we show: rate * 10000 / E8S per secondary token
-    const ratePerToken = (Number(result) * 10000) / TokenConversionService.getE8S();
+    // The backend returns a rate that when multiplied by secondary tokens gives primary tokens in e8s
+    // rate * secondary_tokens = primary_tokens_in_e8s
+    // To get the rate per secondary token in natural units:
+    // rate_per_token = rate / E8S
+    const ratePerToken = Number(result) / TokenConversionService.getE8S();
     return ratePerToken.toString();
   } catch (error) {
     if (error instanceof Error) {

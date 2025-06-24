@@ -126,16 +126,8 @@ pub async fn mint_primary(
                 )
             )?;
 
-            slot_mint = slot_mint.checked_mul(10000).ok_or_else(|| {
-                ExecutionError::new_with_log(
-                    actual_caller,
-                    "mint_primary",
-                    ExecutionError::MultiplicationOverflow {
-                        operation: DEFAULT_MULTIPLICATION_OVERFLOW_ERROR.to_string(),
-                        details: format!("slot_mint: {} with {}", slot_mint, 10000),
-                    }
-                )
-            })?;
+            // Fixed: Removed erroneous multiplication by 10000
+            // slot_mint is already in the correct units (e8s)
 
             phase_mint_primary = phase_mint_primary.checked_add(slot_mint).ok_or_else(|| {
                 ExecutionError::new_with_log(
@@ -223,16 +215,8 @@ pub async fn mint_primary(
                     }
                 )
             )?;
-            slot_mint = slot_mint.checked_mul(10000).ok_or_else(|| {
-                ExecutionError::new_with_log(
-                    actual_caller,
-                    "mint_primary",
-                    ExecutionError::MultiplicationOverflow {
-                        operation: DEFAULT_MULTIPLICATION_OVERFLOW_ERROR.to_string(),
-                        details: format!("slot_mint: {} with {}", slot_mint, 10000),
-                    }
-                )
-            })?;
+            // Fixed: Removed erroneous multiplication by 10000
+            // slot_mint is already in the correct units (e8s)
 
             phase_mint_primary = phase_mint_primary.checked_add(slot_mint).ok_or_else(|| {
                 ExecutionError::new_with_log(
@@ -281,16 +265,8 @@ pub async fn mint_primary(
                 }
             )
         })?;
-        phase_mint_primary = phase_mint_primary.checked_mul(10000).ok_or_else(|| {
-            ExecutionError::new_with_log(
-                actual_caller,
-                "mint_primary",
-                ExecutionError::MultiplicationOverflow {
-                    operation: DEFAULT_MULTIPLICATION_OVERFLOW_ERROR.to_string(),
-                    details: format!("phase_mint_primary: {} with {}", phase_mint_primary, 10000),
-                }
-            )
-        })?;
+        // Fixed: Removed erroneous multiplication by 10000
+        // phase_mint_primary is already in the correct units (e8s)
     }
 
     // Check for maximum primary per transaction - hardcoded to 0.1% of max supply
@@ -304,7 +280,7 @@ pub async fn mint_primary(
                 ExecutionError::MaxPrimaryPerTrnxReached {
                     reason: format!(
                         "This would mint {} primary which exceeds the maximum of {} primary per transaction (0.1% of supply)",
-                        (phase_mint_primary as f64) / 10000.0,
+                        (phase_mint_primary as f64) / 100_000_000.0,
                         (max_primary_phase as f64) / 100_000_000.0
                     ),
                 }

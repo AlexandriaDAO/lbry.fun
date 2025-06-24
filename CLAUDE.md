@@ -120,8 +120,45 @@ let result = value1_e8s * value2_e8s / E8S;
 let result = (value1_e8s * value2_e8s) / E8S / E8S;
 ```
 
+### Backend Rate Values ⚠️
+
+**IMPORTANT**: Backend rate values (like `get_current_primary_rate()`) are designed so that:
+- `rate * amount_in_natural_units = result_in_e8s`
+
+To convert rates for display:
+```typescript
+// WRONG - Do NOT multiply by 10000
+const displayRate = (backendRate * 10000) / E8S;
+
+// CORRECT - Just divide by E8S
+const displayRate = backendRate / E8S;
+```
+
+Common mistakes to avoid:
+1. **Never multiply backend rates by 10000** - This was an old pattern that has been removed
+2. **Always check if values are already in E8S** - Backend often returns E8S values that need conversion for display
+3. **burn_secondary is special** - It expects natural units, unlike most other backend methods
+
 - Kongswap is deployed here for full liquidity functionality, but the repo is not in this codebase.
 - Uses WASM compilation with `ic-wasm` for size optimization
+
+## Tokenomics Graph Consolidation (2025-06-23)
+
+### Problem Solved
+The tokenomics graphs displayed differently between pool creation and the swap tab due to:
+1. Different calculation methods for `initialRewardPerBurnUnit`
+2. The swap tab trying to derive values that should come directly from the backend
+
+### Solution
+Created `UnifiedTokenomicsGraphs` component that:
+- Uses consistent E8S conversions
+- Gets `initialRewardPerBurnUnit` from the tokenomics schedule (first element of `primary_mint_per_threshold`)
+- Works for both creation preview and deployed token display
+
+### Key Changes
+- `TokenomicsGraphsBackend` is now deprecated (re-exports UnifiedTokenomicsGraphs)
+- Both views use the same component with the same calculations
+- See `TOKENOMICS_GRAPH_CONSOLIDATION.md` for full details
 
 ## Responses
 - When providing technical advice, ultra deep think about specific actionable steps rather than abstract concepts.

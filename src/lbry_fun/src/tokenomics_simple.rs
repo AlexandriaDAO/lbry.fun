@@ -33,16 +33,14 @@ pub struct TokenomicsSchedule {
 }
 
 /// Calculate how many primary tokens are minted for burning secondary tokens
-/// Formula from tokenomics canister: reward = (primary_per_threshold * in_slot_burn * 10000) / E8S
-/// Note: Since both inputs are already in e8s, we need to divide by E8S twice
+/// Corrected formula: reward = burn_amount × reward_rate
+/// Both inputs are in e8s, so we divide by E8S once to get result in e8s
 fn calculate_primary_minted(secondary_burned_e8s: u128, reward_rate_e8s: u128) -> u128 {
-    // Match the exact formula from tokenomics/src/script.rs line 144
-    // Both inputs are in e8s, so we need to divide by E8S^2 to get the result in e8s
-    let reward_e8s = reward_rate_e8s
+    // Fixed: Removed the erroneous 10000 multiplication
+    // When multiplying two e8s values, we get e16s, so divide by E8S once
+    reward_rate_e8s
         .saturating_mul(secondary_burned_e8s)
-        .saturating_mul(10000)
-        .saturating_div(E8S);
-    reward_e8s.saturating_div(E8S)
+        .saturating_div(E8S)
 }
 
 /// Calculate the cost per primary token in USD

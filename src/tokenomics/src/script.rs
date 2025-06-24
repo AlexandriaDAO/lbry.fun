@@ -141,8 +141,10 @@ fn generate_tokenomics_schedule(
     while total_minted < max_primary_supply as u128 {
         let in_slot_burn = current_burn - last_burn;
 
-        let reward_e8s = (primary_per_threshold * in_slot_burn * 10000);
-        let reward = reward_e8s / E8S;
+        // Fixed: Removed erroneous multiplication by 10000
+        // When multiplying two e8s values, we get e16s, so divide by E8S once
+        let reward_e8s = (primary_per_threshold * in_slot_burn) / E8S;
+        let reward = reward_e8s;
 
         // This block handles the "One Reward Mode", a special final phase of minting.
         // It is triggered when the decaying reward per unit has reached its absolute minimum

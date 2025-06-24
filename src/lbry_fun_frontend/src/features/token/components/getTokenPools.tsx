@@ -236,7 +236,7 @@ const GetTokenPools = () => {
                   variant="primary" 
                   scale="sm" 
                   className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold"
-                  onClick={() => navigate("/swap?id=" + id)}
+                  onClick={() => navigate("/swap/swap?id=" + id)}
                 >
                   🔄 Trade
                 </Button>

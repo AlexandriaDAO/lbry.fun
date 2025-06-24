@@ -30,7 +30,7 @@
 - The logs canister isn't getting real lp data from kongswap (and maybe fake data in other graphs)
 - Since pool creation happens on a timer we need a safer way to make it closer to atomic and with no silent failures.
 - How do we get ksICP pool to be ICP pool on mainnet.
-
+- The backend currently accepts any initial parameters without validation.
 
 
 

@@ -96,3 +96,106 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+@layer utilities {
+  /* Minimal Terminal Effects */
+  .terminal-scanlines::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(transparent 50%, rgba(57, 255, 20, 0.02) 50%);
+    background-size: 100% 2px;
+    pointer-events: none;
+  }
+  
+  .cyber-glow {
+    text-shadow: 0 0 8px currentColor;
+  }
+  
+  .terminal-card {
+    @apply bg-black/90 backdrop-blur border border-zinc-800 hover:border-pink-600/60 
+           transition-colors duration-200 shadow-lg shadow-pink-500/5 rounded-2xl p-6 
+           relative terminal-scanlines;
+  }
+  
+  .terminal-header {
+    @apply text-2xl font-mono font-bold text-gray-300 mb-6;
+  }
+  
+  .terminal-prompt {
+    @apply text-pink-500;
+  }
+  
+  .cyber-status {
+    @apply font-mono text-sm animate-pulse cyber-glow;
+  }
+  
+  .data-row {
+    @apply flex justify-between items-center mb-2;
+  }
+  
+  .data-label {
+    @apply font-mono text-sm text-gray-500;
+  }
+  
+  .data-value {
+    @apply font-mono text-gray-300;
+  }
+  
+  .data-primary {
+    @apply font-mono text-green-400 font-bold cyber-glow;
+  }
+  
+  .data-accent {
+    @apply font-mono text-xs text-pink-400;
+  }
+  
+  /* Pure terminal interface - dense and compact */
+  .terminal-pure {
+    @apply bg-black border border-white/30 font-mono text-sm p-3 leading-tight;
+  }
+  
+  .terminal-row {
+    @apply flex justify-between items-center py-0.5;
+  }
+  
+  .terminal-section {
+    @apply border-t border-white/30 mt-2 pt-1;
+  }
+  
+  .terminal-header {
+    @apply font-mono font-bold text-white mb-1 text-sm uppercase;
+  }
+  
+  .terminal-prompt {
+    @apply text-pink-500;
+  }
+  
+  .terminal-label {
+    @apply text-gray-400 text-xs;
+  }
+  
+  .terminal-value {
+    @apply text-white text-sm;
+  }
+  
+  .terminal-primary {
+    @apply text-lime-500 font-bold text-sm;
+  }
+  
+  .terminal-accent {
+    @apply text-gray-600 text-xs;
+  }
+  
+  .terminal-status {
+    @apply text-pink-500 text-xs uppercase;
+  }
+  
+  .hex-address {
+    @apply font-mono text-cyan-400 text-xs;
+  }
+  
+  .section-divider {
+    @apply flex justify-between items-center mb-1;
+  }
+}

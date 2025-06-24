@@ -15,6 +15,8 @@ import { Entry } from "@/layouts/parts/Header";
 import { toast } from "sonner";
 import PoolCard from "./poolCard";
 import { RootState } from "@/store";
+import getAccountPrimaryBalance from "../../thunks/primaryIcrc/getAccountPrimaryBalance";
+import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance";
 
 const ICP_PRICE_STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes (should match thunk)
 
@@ -22,6 +24,7 @@ const AccountCards: React.FC = () => {
     const dispatch = useAppDispatch();
     const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
     const swap = useAppSelector((state: RootState) => state.swap);
+    const primary = useAppSelector((state: RootState) => state.primary);
     const { 
         icpPrice, 
         icpPriceTimestamp, 
@@ -36,9 +39,12 @@ const AccountCards: React.FC = () => {
     const handleRefresh = () => {
         if (!isAuthenticated || !principal) return;
         dispatch(getIcpBal(principal));
+        dispatch(getAccountPrimaryBalance(principal));
+        dispatch(getSecondaryBalance(principal));
         // ICP price will be refreshed if stale through the thunk's internal caching
-        toast.info("Refreshing balance!")
+        toast.info("Refreshing balances!")
     }
+
     // icp ledger
     useEffect(() => {
         if (isAuthenticated && principal) {
@@ -94,56 +100,88 @@ const AccountCards: React.FC = () => {
     return (
         <>
             <div className="grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 mb-3 2xl:mb-12 xl:mb-10 lg:mb-7 md:mb-6 sm:mb-5">
-                <div
-                    style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-                    className="bg-interactive-primary text-primary-foreground py-10 xxl:px-14 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3 ">
-                    <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-3  2xl:mb-3  xl:mb-3">
-                        Principal Account
+                <div className="terminal-card text-green-50 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3">
+                    <h4 className="terminal-header text-lime-400">
+                        <span className="terminal-prompt">&gt;</span> PRINCIPAL_ACCOUNT
                     </h4>
 
                     {isAuthenticated && principal ? (
                         <>
                             <div className="md:mb-20 sm:mb-16 xs:mb-10">
-                                <div className="flex justify-between mb-3 xxl:mb-3">
+                                <div className="flex justify-between mb-6 pb-4 border-b border-pink-900/30">
                                     <div>
-                                        <strong className="text-xl font-medium me-3 xxl:text-xl xxl:me-3">
-                                            {formattedPrincipal}
-                                        </strong>
-                                        <span className="text-base text-multycolor font-medium xxl:text-base">
-                                            (Connected)
+                                        <span className="hex-address text-lg">
+                                            0x{formattedPrincipal}
+                                        </span>
+                                        <span className="cyber-status text-pink-400 ml-2">
+                                            [CONNECTED]
                                         </span>
                                     </div>
                                     {principal && <CopyHelper account={principal} />}
                                 </div>
-                                <h4 className="text-2xl xl:text-xl font-medium mb-3  2xl:mb-3  xl:mb-3">
-                                    Account Id:
-                                </h4>
-                                <div className="flex justify-between mb-3 xxl:mb-3">
-                                    <div className="break-all ">
-                                        <strong className="text-xl font-medium me-3 xxl:text-xl xxl:me-3">
-                                            {formattedAccountId}
-                                        </strong>
-                                        <span className="text-base text-multycolor font-medium xxl:text-base">
-                                            (Connected)
+                                <div className="data-row mb-6">
+                                    <span className="data-label">account_id:</span>
+                                    <div className="flex items-center">
+                                        <span className="hex-address text-sm mr-2">
+                                            0x{formattedAccountId}
                                         </span>
+                                        {icpLedgerAccountId && <CopyHelper account={icpLedgerAccountId} />}
                                     </div>
-                                    {icpLedgerAccountId && <CopyHelper account={icpLedgerAccountId} />}
                                 </div>
                             </div>
-                            <h4 className="text-2xl 2xl:text-2xl font-medium mb-3 flex text-center justify-between">
-                                Estimated Balance <FontAwesomeIcon role="button" icon={faRotate} onClick={() => { handleRefresh() }} />
-                            </h4>
-                            <div className="flex text-center justify-between">
-                                <div>
-                                    <h4 className="text-2xl 2xl:text-2xl font-medium mb-3 ">
-                                        ≈ ICP {icpLedgerAccountBalance}
-                                    </h4>
+                            <div className="terminal-divider pt-4">
+                                <h4 className="section-header text-lime-400">
+                                    <span><span className="terminal-prompt">&gt;&gt;</span> BALANCES</span>
+                                    <FontAwesomeIcon 
+                                        role="button" 
+                                        icon={faRotate} 
+                                        onClick={handleRefresh} 
+                                        className="text-pink-600 hover:text-pink-400 transition-colors cursor-pointer"
+                                    />
+                                </h4>
+                            <div className="space-y-2">
+                                <div className="data-row">
+                                    <span className="font-mono text-lime-300">ICP:</span>
+                                    <div className="text-right">
+                                        <span className="data-primary">
+                                            {icpLedgerAccountBalance}
+                                        </span>
+                                        <span className="data-accent ml-2">
+                                            [${icpLedgerAccountBalanceUSD}]
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="mb-3 xxl:mb-3">
-                                    <h4 className="text-2xl 2xl:text-2xl font-medium mb-3 text-primary">
-                                        ≈ $ {icpLedgerAccountBalanceUSD}
-                                    </h4>
-                                </div>
+                                {swap.activeSwapPool && (
+                                    <>
+                                        <div className="data-row">
+                                            <span className="data-label">
+                                                {swap.activeSwapPool[1].primary_token_symbol}:
+                                            </span>
+                                            <div className="text-right">
+                                                <span className="data-value">
+                                                    {primary.primaryBal}
+                                                </span>
+                                                <span className="data-accent ml-2">
+                                                    [${(parseFloat(primary.primaryBal) * parseFloat(primary.primaryPriceUsd)).toFixed(4)}]
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="data-row">
+                                            <span className="data-label">
+                                                {swap.activeSwapPool[1].secondary_token_symbol}:
+                                            </span>
+                                            <div className="text-right">
+                                                <span className="data-value">
+                                                    {swap.secondaryBalance || "0"}
+                                                </span>
+                                                <span className="data-accent ml-2">
+                                                    [${(parseFloat(swap.secondaryBalance || "0") * 0.01).toFixed(4)}]
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                             </div>
                         </>
                     ) : (

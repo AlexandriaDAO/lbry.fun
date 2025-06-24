@@ -85,12 +85,11 @@ pub fn preview_tokenomics(args: PreviewArgs) -> GraphData {
             continue;
         }
 
-        // Apply the same fix as in generate_tokenomics_schedule
+        // Fixed: Removed erroneous division by 10000
         // Both reward_rate and epoch_secondary_burn_capacity are in E8S
         let potential_primary_mint_e8s = epoch_secondary_burn_capacity
             .saturating_mul(reward_rate)
-            .saturating_div(E8S)
-            .saturating_div(10000);
+            .saturating_div(E8S);
         let remaining_to_mint_e8s =
             max_primary_supply_e8s.saturating_sub(total_primary_minted_e8s);
 

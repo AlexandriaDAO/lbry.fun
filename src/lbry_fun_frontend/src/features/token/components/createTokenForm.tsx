@@ -16,7 +16,7 @@ import SuccessModal from '@/features/swap/components/successModal';
 import ErrorModal from '@/features/swap/components/errorModal';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from "@/store";
-import TokenomicsGraphsBackend from './TokenomicsGraphsBackend';
+import UnifiedTokenomicsGraphs from './UnifiedTokenomicsGraphs';
 import TooltipIcon from './TooltipIcon';
 import { TokenConversionService } from '@/utils/TokenConversionService';
 
@@ -53,6 +53,14 @@ const CreateTokenForm: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [halvingStepWarning, setHalvingStepWarning] = useState<string>('');
 
+  // LBRY/ALEX Reference Parameters
+  // These defaults match the parent project's tokenomics
+  // Expected outputs:
+  // - 18 epochs total
+  // - First epoch: 21,000 LBRY burn → 105,000 ALEX mint
+  // - No overminting (stays at 21M max)
+  // - Final valuation: $1B
+  // See LBRY_ALEX_TOKENOMICS_VALIDATION_PLAN.md for full validation
   const [form, setForm] = useState<TokenFormValues>({
     primary_token_symbol: '',
     primary_token_name: '',
@@ -61,12 +69,12 @@ const CreateTokenForm: React.FC = () => {
     secondary_token_name: '',
     secondary_token_description: '',
     secondary_token_logo_base64: '',
-    primary_max_supply: '1000000',
-    tge_allocation: '1',
-    initial_secondary_burn: '1000000',
+    primary_max_supply: '21000000',  // 21M ALEX tokens
+    tge_allocation: '315000',         // 315k ALEX initial mint
+    initial_secondary_burn: '21000',  // First LBRY threshold
     primary_token_logo_base64: '',
-    halving_step: '70',
-    initial_reward_per_burn_unit: '2000',
+    halving_step: '50',               // 50% halving (5.0 → 2.5 → 1.25)
+    initial_reward_per_burn_unit: '5', // 5 ALEX per LBRY burned
   });
 
   useEffect(() => {
@@ -118,8 +126,8 @@ const CreateTokenForm: React.FC = () => {
 
     const initialBurn = parseFloat(form.initial_secondary_burn);
     const secondaryTokenPrice = 0.005;
-    if (!newErrors.initial_secondary_burn && initialBurn > 0 && (initialBurn * secondaryTokenPrice) < 1000) {
-      newErrors.initial_secondary_burn = `Initial valuation must be at least $1,000 to prevent bot attacks. Current: $${(initialBurn * secondaryTokenPrice).toLocaleString()}`;
+    if (!newErrors.initial_secondary_burn && initialBurn > 0 && (initialBurn * secondaryTokenPrice) < 100) {
+      newErrors.initial_secondary_burn = `Initial valuation must be at least $100 to prevent bot attacks. Current: $${(initialBurn * secondaryTokenPrice).toLocaleString()}`;
     }
 
     // Calculate theoretical first epoch
@@ -128,8 +136,8 @@ const CreateTokenForm: React.FC = () => {
     const initialBurnAmount = parseInt(form.initial_secondary_burn);
     
     if (!newErrors.initial_reward_per_burn_unit && remainingSupply > 0 && initialReward > 0) {
-      // Calculate first epoch mint
-      const firstEpochMint = initialReward * initialBurnAmount / 10000;
+      // Calculate first epoch mint (no division by 10000 - that was the bug!)
+      const firstEpochMint = initialReward * initialBurnAmount;
       const firstEpochPercent = (firstEpochMint / remainingSupply) * 100;
       
       if (firstEpochPercent > 30) {
@@ -532,7 +540,7 @@ const CreateTokenForm: React.FC = () => {
               />
               {renderError('initial_secondary_burn')}
               <Slider
-                min={200000}
+                min={20000}
                 max={10000000}
                 step={10000}
                 value={[parseInt(form.initial_secondary_burn) || 0]}
@@ -544,9 +552,9 @@ const CreateTokenForm: React.FC = () => {
                   <p className="text-xs text-gray-500 text-gray-400 mt-1">
                     Initial Valuation: ${(parseInt(form.initial_secondary_burn) * 0.005).toLocaleString()} USD
                   </p>
-                  {parseInt(form.initial_secondary_burn) * 0.005 < 1000 && (
+                  {parseInt(form.initial_secondary_burn) * 0.005 < 100 && (
                     <p className="text-xs text-yellow-600 text-yellow-400 mt-1">
-                      ⚠️ Initial valuation below $1,000 threshold - vulnerable to bot attacks
+                      ⚠️ Initial valuation below $100 threshold - vulnerable to bot attacks
                     </p>
                   )}
                 </>
@@ -618,7 +626,7 @@ const CreateTokenForm: React.FC = () => {
 
           <div className='my-8 border-t-4 border-dashed border-border'></div>
 
-          <TokenomicsGraphsBackend
+          <UnifiedTokenomicsGraphs
               primaryMaxSupply={form.primary_max_supply}
               tgeAllocation={form.tge_allocation}
               initialSecondaryBurn={form.initial_secondary_burn}

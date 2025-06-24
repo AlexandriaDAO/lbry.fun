@@ -18,11 +18,7 @@ const getSecondaryratio = createAsyncThunk<
 
     const actor = await getActorSwap(state.swap.activeSwapPool[1].icp_swap_canister_id);
     
-    // Validate actor before using it
-    if (!validateActor(actor, "ICP Swap")) {
-      return rejectWithValue("Unable to connect to swap canister. Please ensure you are authenticated.");
-    }
-
+    // Secondary ratio is public data and should work with default actor
     const result = await actor.get_current_secondary_ratio();
     return result.toString();
   } catch (error) {
