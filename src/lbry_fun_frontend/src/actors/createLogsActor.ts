@@ -2,16 +2,18 @@ import { Actor, HttpAgent, ActorSubclass } from '@dfinity/agent';
 import { idlFactory as logsIdlFactory } from '../../../declarations/logs/logs.did.js';
 import { _SERVICE as LogsService } from '../../../declarations/logs/logs.did';
 
-export const createLogsActor = (canisterId: string): ActorSubclass<LogsService> => {
+export const createLogsActor = async (canisterId: string): Promise<ActorSubclass<LogsService>> => {
   const agent = new HttpAgent({
-    host:
-      process.env.NODE_ENV === 'development'
-        ? 'http://localhost:4943'
-        : 'https://icp-api.io',
+    host: process.env.DFX_NETWORK === "ic" ? "https://ic0.app" : "http://localhost:4943"
   });
 
-  if (process.env.NODE_ENV === 'development') {
-    agent.fetchRootKey();
+  // Critical for local development - must await and handle errors
+  if (process.env.DFX_NETWORK !== "ic") {
+    try {
+      await agent.fetchRootKey();
+    } catch (err) {
+      console.warn("Unable to fetch root key. This is expected in production.", err);
+    }
   }
 
   return Actor.createActor<LogsService>(logsIdlFactory, {

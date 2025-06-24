@@ -31,10 +31,10 @@ const Unstake: React.FC<UnstakeProps> = ({ setLoadingModalV, setActionType}) => 
 
     return (
         <button
-            className="lg:text-xl md:text-lg sm:text-base xs:text-xs font-semibold text-warning-foreground border-2 border-warning py-2 px-5 me-3 rounded-full hover:bg-warning/10"
+            className="terminal-button text-xs"
             onClick={(e) => handleUnstake(e)}
         >
-            Unstake
+            [UNSTAKE]
         </button>
     );
 };

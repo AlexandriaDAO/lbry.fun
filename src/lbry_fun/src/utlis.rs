@@ -170,6 +170,7 @@ pub struct IcpSwapInitArgs {
     pub secondary_token_id: Option<Principal>,
     pub tokenomics_canister_id: Option<Principal>,
     pub icp_ledger_id: Option<Principal>,
+    pub distribution_interval_seconds: u64,
 }
 
 

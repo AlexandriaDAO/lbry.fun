@@ -5,58 +5,93 @@ import CanisterCycles from "./CanisterCycles";
 const InfoCard: React.FC = () => {
     const { activeSwapPool: activeSwapPoolFromRedux } = useAppSelector((state) => state.swap);
 
+    const shortenCanisterId = (id: string) => {
+        return `${id.slice(0, 6)}...${id.slice(-6)}`;
+    };
+
     return (
-        <div
-            style={{ backgroundImage: 'url("images/gradient-bg.png")' }}
-            className="bg-interactive-primary text-primary-foreground py-10 xxl:px-14 xl:px-12 px-5 me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 rounded-3xl xxl:py-5 xxl:px-5 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3"
-        >
-            <h4 className="account-box-bg text-2xl xl:text-xl font-medium mb-6">
-                Developer Info
-            </h4>
+        <div className="terminal-pure">
+            <div className="terminal-header mb-2">
+                <span className="terminal-prompt">&gt;&gt;</span> developer_info
+            </div>
 
             {activeSwapPoolFromRedux ? (
-                <div className="flex flex-col space-y-2">
-                    <div className="p-2 rounded-lg bg-black bg-opacity-20">
-                        <div className="flex justify-between">
-                            <span className="font-semibold text-gray-300">ICP Swap Canister:</span>
-                            <span className="text-white break-all">{activeSwapPoolFromRedux[1].icp_swap_canister_id}</span>
+                <>
+                    <div className="terminal-section-minimal">
+                        <div className="terminal-header mb-2">
+                            <span className="terminal-prompt">&gt;</span> canister_registry
                         </div>
-                        <CanisterCycles canisterId={activeSwapPoolFromRedux[1].icp_swap_canister_id} />
-                    </div>
-                    <div className="p-2 rounded-lg bg-black bg-opacity-20">
-                        <div className="flex justify-between">
-                            <span className="font-semibold text-gray-300">Tokenomics Canister:</span>
-                            <span className="text-white break-all">{activeSwapPoolFromRedux[1].tokenomics_canister_id}</span>
+                        
+                        <div className="terminal-info mb-2">
+                            <div className="terminal-row">
+                                <span className="terminal-label">icp_swap:</span>
+                                <span className="hex-address" title={activeSwapPoolFromRedux[1].icp_swap_canister_id}>
+                                    {shortenCanisterId(activeSwapPoolFromRedux[1].icp_swap_canister_id)}
+                                </span>
+                            </div>
+                            <CanisterCycles canisterId={activeSwapPoolFromRedux[1].icp_swap_canister_id} />
                         </div>
-                        <CanisterCycles canisterId={activeSwapPoolFromRedux[1].tokenomics_canister_id} />
-                    </div>
-                     <div className="p-2 rounded-lg bg-black bg-opacity-20">
-                        <div className="flex justify-between">
-                            <span className="font-semibold text-gray-300">Logs Canister:</span>
-                            <span className="text-white break-all">{activeSwapPoolFromRedux[1].logs_canister_id}</span>
+
+                        <div className="terminal-info mb-2">
+                            <div className="terminal-row">
+                                <span className="terminal-label">tokenomics:</span>
+                                <span className="hex-address" title={activeSwapPoolFromRedux[1].tokenomics_canister_id}>
+                                    {shortenCanisterId(activeSwapPoolFromRedux[1].tokenomics_canister_id)}
+                                </span>
+                            </div>
+                            <CanisterCycles canisterId={activeSwapPoolFromRedux[1].tokenomics_canister_id} />
                         </div>
-                        <CanisterCycles canisterId={activeSwapPoolFromRedux[1].logs_canister_id} />
-                    </div>
-                    <div className="p-2 rounded-lg bg-black bg-opacity-20">
-                        <div className="flex justify-between">
-                            <span className="font-semibold text-gray-300">Primary Token Canister:</span>
-                            <span className="text-white break-all">{activeSwapPoolFromRedux[1].primary_token_id}</span>
+
+                        <div className="terminal-info mb-2">
+                            <div className="terminal-row">
+                                <span className="terminal-label">logs:</span>
+                                <span className="hex-address" title={activeSwapPoolFromRedux[1].logs_canister_id}>
+                                    {shortenCanisterId(activeSwapPoolFromRedux[1].logs_canister_id)}
+                                </span>
+                            </div>
+                            <CanisterCycles canisterId={activeSwapPoolFromRedux[1].logs_canister_id} />
                         </div>
-                        <CanisterCycles canisterId={activeSwapPoolFromRedux[1].primary_token_id} />
-                    </div>
-                    <div className="p-2 rounded-lg bg-black bg-opacity-20">
-                        <div className="flex justify-between">
-                            <span className="font-semibold text-gray-300">Secondary Token Canister:</span>
-                            <span className="text-white break-all">{activeSwapPoolFromRedux[1].secondary_token_id}</span>
+
+                        <div className="terminal-info mb-2">
+                            <div className="terminal-row">
+                                <span className="terminal-label">primary_token:</span>
+                                <span className="hex-address" title={activeSwapPoolFromRedux[1].primary_token_id}>
+                                    {shortenCanisterId(activeSwapPoolFromRedux[1].primary_token_id)}
+                                </span>
+                            </div>
+                            <CanisterCycles canisterId={activeSwapPoolFromRedux[1].primary_token_id} />
                         </div>
-                        <CanisterCycles canisterId={activeSwapPoolFromRedux[1].secondary_token_id} />
+
+                        <div className="terminal-info">
+                            <div className="terminal-row">
+                                <span className="terminal-label">secondary_token:</span>
+                                <span className="hex-address" title={activeSwapPoolFromRedux[1].secondary_token_id}>
+                                    {shortenCanisterId(activeSwapPoolFromRedux[1].secondary_token_id)}
+                                </span>
+                            </div>
+                            <CanisterCycles canisterId={activeSwapPoolFromRedux[1].secondary_token_id} />
+                        </div>
                     </div>
-                </div>
+
+                    <div className="terminal-section mt-4">
+                        <div className="terminal-row">
+                            <span className="terminal-label">status:</span>
+                            <span className="terminal-primary">[ACTIVE]</span>
+                        </div>
+                        <div className="terminal-row">
+                            <span className="terminal-label">network:</span>
+                            <span className="terminal-value">internet_computer</span>
+                        </div>
+                    </div>
+                </>
             ) : (
-                <p>No active swap pool selected.</p>
+                <div className="terminal-row">
+                    <span className="terminal-label">status:</span>
+                    <span className="terminal-accent">no_active_pool_selected</span>
+                </div>
             )}
         </div>
     );
 };
 
-export default InfoCard; 
+export default InfoCard;

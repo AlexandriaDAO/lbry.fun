@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAccessState } from '../hooks/useAccessState';
 import { AccessState } from '../types/accessControl.types';
-import { AlertCircle, Info } from 'lucide-react';
 
 interface SwapPageWrapperProps {
   children: React.ReactNode;
@@ -14,12 +13,17 @@ const SwapPageWrapper: React.FC<SwapPageWrapperProps> = ({ children }) => {
   const renderInfoBanner = () => {
     if (accessState === AccessState.UNAUTHENTICATED) {
       return (
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6 flex items-start gap-3">
-          <Info className="w-5 h-5 text-blue-500 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm text-foreground">
-              You're viewing this token in read-only mode. Connect your wallet to enable trading features.
-            </p>
+        <div className="terminal-info mb-4">
+          <div className="terminal-header mb-2">
+            <span className="terminal-prompt">&gt;</span> <span className="terminal-status">[info]</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">mode:</span>
+            <span className="terminal-value">read_only</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">note:</span>
+            <span className="terminal-value">connect_wallet_to_enable_trading</span>
           </div>
         </div>
       );
@@ -29,24 +33,29 @@ const SwapPageWrapper: React.FC<SwapPageWrapperProps> = ({ children }) => {
       const formatCountdown = (seconds: number) => {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
-        return `${hours} hours and ${minutes} minutes`;
+        return `${hours}h ${minutes}m`;
       };
 
       return (
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm text-foreground">
-              This token is in its launch period. Trading will be enabled in{' '}
-              <span className="font-semibold">{formatCountdown(countdown || 0)}</span> at{' '}
+        <div className="terminal-warning mb-4">
+          <div className="terminal-header mb-2">
+            <span className="terminal-prompt">&gt;</span> <span className="terminal-status">[launch_pending]</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">time_remaining:</span>
+            <span className="terminal-primary">{formatCountdown(countdown || 0)}</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">launch_date:</span>
+            <span className="terminal-value">
               {launchTime.toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
                 timeZoneName: 'short'
-              })}.
-            </p>
+              })}
+            </span>
           </div>
         </div>
       );

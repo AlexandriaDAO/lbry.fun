@@ -2,6 +2,8 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities'; */
 
+/* Import terminal design system */
+@import './terminal.css';
 
 @tailwind base;
 @tailwind components;
@@ -150,50 +152,7 @@
     @apply font-mono text-xs text-pink-400;
   }
   
-  /* Pure terminal interface - dense and compact */
-  .terminal-pure {
-    @apply bg-black border border-white/30 font-mono text-sm p-3 leading-tight;
-  }
-  
-  .terminal-row {
-    @apply flex justify-between items-center py-0.5;
-  }
-  
-  .terminal-section {
-    @apply border-t border-white/30 mt-2 pt-1;
-  }
-  
-  .terminal-header {
-    @apply font-mono font-bold text-white mb-1 text-sm uppercase;
-  }
-  
-  .terminal-prompt {
-    @apply text-pink-500;
-  }
-  
-  .terminal-label {
-    @apply text-gray-400 text-xs;
-  }
-  
-  .terminal-value {
-    @apply text-white text-sm;
-  }
-  
-  .terminal-primary {
-    @apply text-lime-500 font-bold text-sm;
-  }
-  
-  .terminal-accent {
-    @apply text-gray-600 text-xs;
-  }
-  
-  .terminal-status {
-    @apply text-pink-500 text-xs uppercase;
-  }
-  
-  .hex-address {
-    @apply font-mono text-cyan-400 text-xs;
-  }
+  /* Terminal utilities moved to terminal.css for better organization */
   
   .section-divider {
     @apply flex justify-between items-center mb-1;

@@ -142,179 +142,168 @@ const SwapContent: React.FC = () => {
 
   return (
     <AccessGuard accessState={accessState} countdown={countdown} launchTime={launchTime}>
-      <div>
-      <div className="mb-5 2xl:mb-10 xl:mb-7 lg:mb-7 md:mb-6 sm:mb-5">
-        <h3 className="text-tabsheading 2xl:text-xxltabsheading xl:text-xltabsheading lg:text-lgtabsheading md:text-mdtabsheading sm:text-smtabsheading font-bold text-foreground">
-          Swap
-        </h3>
-      </div>
-      <div className="grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-1 sm:grid-cols-1">
-        <div className="me-0 2xl:me-2 xl:me-2 lg:me-2 md:me-0 sm:me-0 mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-3 sm:mb-3">
-          <div className="block 2xl:flex xl:flex lg:flex md:flex sm:block justify-between mb-5 w-full">
-            <div className={`bg-card border ${inputState === 'error' ? 'border-destructive ring-2 ring-destructive/20' : inputState === 'focus' ? 'border-primary ring-2 ring-primary/20' : 'border-border'} py-5 px-7 rounded-borderbox me-0 2xl:me-2 xl:me-2 lg:me-2 md:me-2 sm:me-0 w-full 2xl:w-6/12 xl:w-6/12 lg:w-6/12 md:w-6/12 sm:w-full mb-3 2xl:mb-0 xl:mb-0 lg:mb-0 md:mb-0 sm:mb-3`}>
-              <div className="flex justify-between mb-5">
-                <h2 className="text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-foreground me-2">
-                  ICP
-                </h2>
-                <div>
+      <div className="terminal-pure">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Left Column - Swap Form */}
+          <div>
+            {/* Input Section */}
+            <div className="mb-3">
+              
+              <div className={`bg-black border ${inputState === 'error' ? 'border-red-500' : inputState === 'focus' ? 'border-lime-500' : 'border-white/30'} p-3 mb-2`}>
+                <div className="flex justify-between items-center">
+                  <span className="terminal-label">icp_amount:</span>
                   <input
-                    className="text-foreground text-right text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading bg-transparent placeholder-muted-foreground focus:outline-none focus:border-transparent w-full caret-primary"
+                    className="bg-transparent text-white font-mono text-sm text-right focus:outline-none w-full ml-4 caret-lime-500"
                     type="text"
-                    value={amount + ""}
+                    value={amount}
                     min="0"
-                    onChange={(e) => {
-                      handleAmountChange(e);
-                    }}
+                    onChange={handleAmountChange}
+                    placeholder="0.0000"
                   />
                 </div>
               </div>
-              <div className="flex justify-between">
-                <strong className="text-base text-foreground font-medium me-1">
-                  Balance:{icpLedger.accountBalance}
-                </strong>
-
-                <Link
-                  role="button"
-                  className="text-base font-blod text-primary underline"
-                  to={""}
-                  onClick={() => handleMaxIcp()}
-                >
-                  Max
-                </Link>
+              
+              <div className="flex justify-between items-center mb-2">
+                <span className="terminal-label">balance:</span>
+                <span className="terminal-value">{icpLedger.accountBalance} icp</span>
               </div>
-            </div>
-            <div className="bg-card border border-border py-5 px-7 rounded-borderbox me-0 2xl:ms-2 xl:ms-2 lg:ms-2 md:ms-2 sm:me-0 w-full 2xl:w-6/12 xl:w-6/12 lg:w-6/12 md:w-6/12 sm:w-full">
-              <div className="flex justify-between mb-5 flex-wrap break-all">
-                <h2 className="text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-foreground">
-                  {swap.activeSwapPool?.[1].secondary_token_symbol}
-                </h2>
-                <h3 className="text-swapvalue text-right text-swapheading 2xl:text-xxlswapheading xl:text-xlswapheading lg:text-lgswapheading md:text-mdswapheading ms:text-smswapheading font-medium text-foreground">
-                  {tentativeSecondary.toFixed(4)}
-                </h3>
-              </div>
-              <div className="flex justify-between">
-                <strong className="text-base text-muted-foreground font-medium me-1">
-                  Balance: {swap.secondaryBalance} {swap.activeSwapPool?.[1].secondary_token_symbol}
-                </strong>
-              </div>
-            </div>
-          </div>
-          <div className="terms-condition-wrapper flex tems-baseline mb-4">
-            <p className="text-lg font-semibold pr-5 text-muted-foreground w-9/12">{parseFloat(amount) < minimum_icp ? <>Please enter at least the minimum amount to proceed</> : <></>}</p>
-          </div>
-          <div>
-            {isAuthenticated ? (
+              
               <button
-                type="button"
-                className={`w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-6 
-      ${parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading || !isTokenLive ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-primary-action text-white cursor-pointer hover:opacity-90'}`}
-                disabled={parseFloat(amount) === 0 || swap.loading || parseFloat(amount) < minimum_icp || amount === "" || !isTokenLive}
-                onClick={handleSubmit}
-                title={!isTokenLive ? "Trading will be enabled after the launch period" : ""}
+                className="bg-black border border-white/30 text-white font-mono text-xs px-3 py-1 hover:bg-white/10 transition-colors"
+                onClick={handleMaxIcp}
               >
-                {swap.loading ? (
-                  <LoaderCircle size={18} className="animate-spin mx-auto" />
-                ) : !isTokenLive ? (
-                  <>Trading Starts Soon</>
-                ) : (
-                  <>Swap</>
-                )}
+                [max]
               </button>
-            ) : (
-              <div
-                className="bg-balancebox text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 flex items-center justify-center white-auth-btn"
-              >
-                <Entry />
-              </div>
-            )}
-            <div className="terms-condition-wrapper flex tems-baseline">
-              <span className="text-[#FF37374D] mr-2 text-xl font-semibold">*</span>
-              <p className="text-lg font-semibold pr-5 text-muted-foreground w-9/12">If the transaction doesn't complete as expected, you can recover your tokens using the redeem section below.</p>
             </div>
-          </div>
-        </div>
-        <div className="border border-gray-600 bg-gray-800 py-5 px-5 rounded-2xl ms-3">
-          <ul className="ps-0">
-            <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-gray-200">
-                Network Fees
-              </strong>
-              <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor text-gray-200">
-                {icp_fee} ICP
-              </span>
-            </li>
-            <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-gray-200">
-                Send
-              </strong>
-              <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor text-gray-200 break-all">
-                {amount} ICP
-              </span>
-            </li>
-            <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-gray-200">
-                Receive
-              </strong>
-              <span className="lg:text-lg md:text-base sm:text-sm font-semibold text-radiocolor text-gray-200 break-all">
-                {tentativeSecondary.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}
-              </span>
-            </li>
-            <li className="flex justify-between mb-5">
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-gray-200">
-                For each ICP you swap, you'll receive <span className="text-[#FF9900] text-yellow-400">{tentativeSecondary}</span> {swap.activeSwapPool?.[1].secondary_token_symbol} tokens.
-              </strong>
-            </li>
-            <li>
-              <strong className="lg:text-lg md:text-base sm:text-sm font-semibold me-1 text-gray-200">
-                Please review the details carefully, as swaps are irreversible and cannot be undone once confirmed.
-              </strong>
-            </li>
-          </ul>
-        </div>
-      </div>
 
-      {/* Redeem Section - Only show if user has archived balance */}
-      {isAuthenticated && swap.archivedBalance && Number(swap.archivedBalance) > 0 && (
-        <div className="mt-8">
-          <button
-            onClick={() => setShowRedeemSection(!showRedeemSection)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
-          >
-            <AlertCircle size={16} />
-            <span>Have tokens from failed transactions? ({swap.archivedBalance} ICP available to redeem)</span>
-            {showRedeemSection ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
-
-          {showRedeemSection && (
-            <div className="mt-4 p-4 bg-card border border-border rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="text-yellow-500 mt-1" size={20} />
-                <div className="flex-1">
-                  <h4 className="text-sm font-semibold mb-2">Redeem Failed Transaction Tokens</h4>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    You have {swap.archivedBalance} ICP from incomplete transactions that can be redeemed.
-                  </p>
-                  <button
-                    onClick={handleRedeem}
-                    disabled={redeemLoading || swap.loading}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                      redeemLoading || swap.loading
-                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                        : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    }`}
-                  >
-                    {redeemLoading ? (
-                      <LoaderCircle size={16} className="animate-spin mx-auto" />
-                    ) : (
-                      'Redeem Archived Balance'
-                    )}
-                  </button>
+            {/* Output Section */}
+            <div className="mb-4">
+              <div className="bg-black border border-white/30 p-3">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="terminal-label">receive:</span>
+                  <span className="terminal-primary">{tentativeSecondary.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="terminal-label">balance:</span>
+                  <span className="terminal-value">{swap.secondaryBalance} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
                 </div>
               </div>
             </div>
-          )}
+
+            {/* Status Messages */}
+            {parseFloat(amount) < minimum_icp && amount !== "" && (
+              <div className="mb-4">
+                <div className="bg-black border border-pink-500/50 p-3">
+                  <span className="terminal-status">[error]</span> minimum_amount: {minimum_icp} icp
+                </div>
+              </div>
+            )}
+
+            {/* Action Section */}
+            <div>
+              {isAuthenticated ? (
+                <button
+                  type="button"
+                  className={`w-full font-mono text-sm px-4 py-3 transition-colors ${
+                    parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading || !isTokenLive 
+                      ? 'bg-black border border-white/30 text-white opacity-50 cursor-not-allowed' 
+                      : 'bg-lime-500 text-black font-bold hover:bg-lime-400 cursor-pointer'
+                  }`}
+                  disabled={parseFloat(amount) === 0 || swap.loading || parseFloat(amount) < minimum_icp || amount === "" || !isTokenLive}
+                  onClick={handleSubmit}
+                  title={!isTokenLive ? "Trading will be enabled after the launch period" : ""}
+                >
+                  {swap.loading ? (
+                    <LoaderCircle size={14} className="animate-spin mx-auto" />
+                  ) : !isTokenLive ? (
+                    <span className="terminal-status">[awaiting_launch]</span>
+                  ) : (
+                    <span>execute_swap</span>
+                  )}
+                </button>
+              ) : (
+                <div className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-3 flex items-center justify-center">
+                  <Entry />
+                </div>
+              )}
+              
+              <div className="mt-3">
+                <span className="terminal-label">* failed transactions can be redeemed below</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Transaction Details */}
+          <div>
+            <div className="bg-black border border-white/30 p-3">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="terminal-label">network_fee:</span>
+                  <span className="terminal-value">{icp_fee} icp</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="terminal-label">send:</span>
+                  <span className="terminal-value">{amount || "0"} icp</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="terminal-label">receive:</span>
+                  <span className="terminal-primary">{tentativeSecondary.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                </div>
+                
+                <div className="border-t border-white/30 mt-3 pt-3">
+                  <div className="flex justify-between items-center">
+                    <span className="terminal-label">exchange_rate:</span>
+                    <span className="terminal-value">1 icp = {secondaryRatio} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                  </div>
+                </div>
+                
+                <div className="border-t border-white/30 mt-3 pt-3">
+                  <span className="terminal-label">* swaps are irreversible</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Redeem Section */}
+        {isAuthenticated && swap.archivedBalance && Number(swap.archivedBalance) > 0 && (
+          <div className="border-t border-white/30 mt-6 pt-4">
+            <button
+              onClick={() => setShowRedeemSection(!showRedeemSection)}
+              className="bg-black border border-white/30 text-white font-mono text-xs px-3 py-2 hover:bg-white/10 transition-colors mb-3"
+            >
+              <span className="terminal-prompt">▶</span> archived_balance: {swap.archivedBalance} icp {showRedeemSection ? '[-]' : '[+]'}
+            </button>
+
+            {showRedeemSection && (
+              <div className="bg-black border border-white/30 p-3 mt-2">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="terminal-label">recoverable:</span>
+                  <span className="terminal-primary">{swap.archivedBalance} icp</span>
+                </div>
+                
+                <button
+                  onClick={handleRedeem}
+                  disabled={redeemLoading || swap.loading}
+                  className={`w-full font-mono text-sm px-4 py-2 transition-colors ${
+                    redeemLoading || swap.loading 
+                      ? 'bg-black border border-white/30 text-white opacity-50 cursor-not-allowed' 
+                      : 'bg-lime-500 text-black font-bold hover:bg-lime-400 cursor-pointer'
+                  }`}
+                >
+                  {redeemLoading ? (
+                    <LoaderCircle size={14} className="animate-spin mx-auto" />
+                  ) : (
+                    'execute_redeem'
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <LoadingModal show={loadingModalV} message1={"Swap in Progress"} message2={`Your transaction from ICP to  ${swap.activeSwapPool?.[1].secondary_token_symbol}  is being processed. This may take a few moments`} setShow={setLoadingModalV} />
         <SuccessModal show={successModalV} setShow={setSucessModalV} />

@@ -30,6 +30,7 @@ pub const CONFIGS_MEM_ID: MemoryId = MemoryId::new(10);
 pub const LP_TREASURY_MEM_ID: MemoryId = MemoryId::new(11);
 pub const TREASURY_STATE_MEM_ID: MemoryId = MemoryId::new(12);
 pub const ACCUMULATED_PRIMARY_TOKENS_MEM_ID: MemoryId = MemoryId::new(13);
+pub const DISTRIBUTION_INTERVAL_SECONDS_MEM_ID: MemoryId = MemoryId::new(14);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
@@ -99,6 +100,10 @@ thread_local! {
     
     pub static ACCUMULATED_PRIMARY_TOKENS: RefCell<StableCell<u64, Memory>> = RefCell::new(
         StableCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(ACCUMULATED_PRIMARY_TOKENS_MEM_ID)), 0).unwrap()
+    );
+    
+    pub static DISTRIBUTION_INTERVAL_SECONDS: RefCell<StableCell<u64, Memory>> = RefCell::new(
+        StableCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(DISTRIBUTION_INTERVAL_SECONDS_MEM_ID)), 3600).unwrap()
     );
 }
 

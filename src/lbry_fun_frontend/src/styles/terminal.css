@@ -1,0 +1,106 @@
+/* Cypherpunk Terminal Design System Utilities */
+
+/* Core terminal container */
+.terminal-pure {
+  @apply bg-black border border-white/30 font-mono text-sm p-3 leading-tight;
+}
+
+/* Terminal sections and structure */
+.terminal-row {
+  @apply flex justify-between items-center py-0.5;
+}
+
+.terminal-section {
+  @apply border-t border-white/30 mt-2 pt-1;
+}
+
+/* Minimal section separator */
+.terminal-separator {
+  @apply w-full h-px bg-white/10 my-2;
+}
+
+/* Subtle section indicator */
+.terminal-section-minimal {
+  @apply mt-3 relative;
+}
+
+.terminal-section-minimal::before {
+  content: '';
+  @apply absolute -left-2 top-0 bottom-0 w-px bg-white/10;
+}
+
+.terminal-header {
+  @apply font-mono font-bold text-white mb-1 text-sm uppercase;
+}
+
+/* Terminal prompt and labels */
+.terminal-prompt {
+  @apply text-pink-500;
+}
+
+.terminal-label {
+  @apply text-gray-400 text-xs;
+}
+
+.terminal-value {
+  @apply text-white text-sm;
+}
+
+/* Terminal color accents - use sparingly */
+.terminal-primary {
+  @apply text-lime-500 font-bold text-sm;
+}
+
+.terminal-accent {
+  @apply text-gray-600 text-xs;
+}
+
+.terminal-status {
+  @apply text-pink-500 text-xs uppercase;
+}
+
+.hex-address {
+  @apply font-mono text-cyan-400 text-xs;
+}
+
+/* Terminal input styling */
+.terminal-input {
+  @apply bg-transparent text-white font-mono text-sm placeholder-gray-600 focus:outline-none focus:border-transparent w-full caret-lime-500;
+}
+
+.terminal-input-container {
+  @apply bg-black border border-white/30 px-3 py-2;
+}
+
+/* Terminal button */
+.terminal-button {
+  @apply bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors;
+}
+
+.terminal-button-primary {
+  @apply bg-lime-500 text-black border-0 font-bold hover:bg-lime-400;
+}
+
+/* Terminal info box */
+.terminal-info {
+  @apply bg-black border border-white/30 p-3 font-mono text-sm;
+}
+
+/* Terminal alert/warning */
+.terminal-alert {
+  @apply bg-black border border-pink-500/50 p-3 font-mono text-sm;
+}
+
+.terminal-warning {
+  @apply bg-black border border-yellow-500/50 p-3 font-mono text-sm;
+}
+
+/* Remove all rounded corners for pure terminal aesthetic */
+.terminal-pure,
+.terminal-input-container,
+.terminal-button,
+.terminal-info,
+.terminal-alert,
+.terminal-warning {
+  border-radius: 0 !important;
+}

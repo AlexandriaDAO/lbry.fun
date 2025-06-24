@@ -54,19 +54,23 @@ const AccessGuard: React.FC<AccessGuardProps> = ({
       .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // For non-authenticated users, show a banner instead of blocking the UI
+  // For non-authenticated users, show a terminal-style banner
   if (accessState === AccessState.UNAUTHENTICATED) {
     return (
       <div>
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6 flex items-start gap-3">
-          <Lock className="w-5 h-5 text-blue-500 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground mb-2">
-              Connect your wallet to enable trading
-            </p>
-            <p className="text-sm text-muted-foreground mb-3">
-              You're viewing live rates and stats. Connect to swap, burn, or stake tokens.
-            </p>
+        <div className="terminal-warning mb-4">
+          <div className="terminal-header mb-2">
+            <span className="terminal-prompt">&gt;</span> <span className="terminal-status">[auth_required]</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">status:</span>
+            <span className="terminal-value">read_only_mode</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">action:</span>
+            <span className="terminal-value">connect_wallet_to_enable_trading</span>
+          </div>
+          <div className="mt-2">
             <Entry />
           </div>
         </div>
@@ -79,15 +83,18 @@ const AccessGuard: React.FC<AccessGuardProps> = ({
   if (accessState === AccessState.AWAITING_LAUNCH) {
     return (
       <div>
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6 flex items-start gap-3">
-          <Clock className="w-5 h-5 text-yellow-500 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground mb-2">
-              Trading starts in {formatCountdown(timeRemaining)}
-            </p>
-            {launchTime && (
-              <p className="text-sm text-muted-foreground">
-                This token will be available for trading on{' '}
+        <div className="terminal-warning mb-4">
+          <div className="terminal-header mb-2">
+            <span className="terminal-prompt">&gt;</span> <span className="terminal-status">[launch_pending]</span>
+          </div>
+          <div className="terminal-row">
+            <span className="terminal-label">countdown:</span>
+            <span className="terminal-primary">{formatCountdown(timeRemaining)}</span>
+          </div>
+          {launchTime && (
+            <div className="terminal-row">
+              <span className="terminal-label">launch_time:</span>
+              <span className="terminal-value">
                 {launchTime.toLocaleString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -95,9 +102,9 @@ const AccessGuard: React.FC<AccessGuardProps> = ({
                   minute: '2-digit',
                   timeZoneName: 'short'
                 })}
-              </p>
-            )}
-          </div>
+              </span>
+            </div>
+          )}
         </div>
         {children}
       </div>

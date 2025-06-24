@@ -42,6 +42,7 @@ async fn create_token(
     initial_secondary_burn: u64,
     halving_step: u64,
     initial_reward_per_burn_unit: u64,
+    distribution_interval_seconds: u64,
 ) -> Result<String, String> {
     let user_principal = ic_cdk::api::caller(); // Get the calling user's principal
     ic_cdk::println!("[CREATE_TOKEN] Starting token creation for user: {}", user_principal);
@@ -139,6 +140,7 @@ async fn create_token(
         Some(get_principal(&primary_token_id)),
         Some(get_principal(&secondary_token_id)),
         Some(tokenomics_canister_id),
+        distribution_interval_seconds,
     )
     .await?;
 
@@ -196,6 +198,7 @@ async fn create_token(
         initial_primary_mint,
         initial_secondary_burn,
         halving_step,
+        distribution_interval_seconds,
         caller: user_principal,
         created_time: ic_cdk::api::time(),
         pool_creation_failed: false,
@@ -382,12 +385,14 @@ async fn install_icp_swap_wasm_on_existing_canister(
     primary_token_id: Option<Principal>,
     secondary_token_id: Option<Principal>,
     tokenomics_canister_id: Option<Principal>,
+    distribution_interval_seconds: u64,
 ) -> Result<(), String> {
     let args = IcpSwapInitArgs {
         primary_token_id,
         secondary_token_id,
         tokenomics_canister_id,
         icp_ledger_id: None, // None means use default (our standard ICP ledger)
+        distribution_interval_seconds,
     };
 
     let encoded_args =

@@ -76,13 +76,10 @@ const ConsolidatedTerminal: React.FC = () => {
 
     if (!isAuthenticated || !principal) {
         return (
-            <div className="terminal-pure max-w-4xl mb-3">
-                <div className="terminal-header">
-                    <span className="terminal-prompt">&gt;</span> authentication_required
-                </div>
-                <div className="text-center py-1">
+            <div className="terminal-pure mb-2">
+                <div className="text-center py-2">
                     <span className="terminal-label">connect wallet to continue</span>
-                    <div className="mt-1">
+                    <div className="mt-2">
                         <Entry />
                     </div>
                 </div>
@@ -91,14 +88,9 @@ const ConsolidatedTerminal: React.FC = () => {
     }
 
     return (
-        <div className="terminal-pure max-w-4xl mb-3">
-            {/* Header */}
-            <div className="terminal-header">
-                <span className="terminal-prompt">&gt;</span> principal_account
-            </div>
-            
+        <div className="terminal-pure mb-2">
             {/* Principal & Account */}
-            <div className="terminal-row">
+            <div className="terminal-row mt-1">
                 <span className="terminal-label">principal:</span>
                 <div className="flex items-center gap-2">
                     <span className="hex-address">{formattedPrincipal}</span>
@@ -117,11 +109,9 @@ const ConsolidatedTerminal: React.FC = () => {
 
             {/* Active Pool Section */}
             {swap.activeSwapPool && (
-                <div className="terminal-section">
-                    <div className="section-divider">
-                        <span className="terminal-header">
-                            <span className="terminal-prompt">&gt;&gt;</span> active_swap_pool
-                        </span>
+                <div className="border-t border-white/30 mt-2 pt-2">
+                    <div className="terminal-row">
+                        <span className="terminal-label">status:</span>
                         <span className="terminal-status">
                             {swap.activeSwapPool[1].isLive ? "[live]" : "[launching]"}
                         </span>
@@ -145,11 +135,9 @@ const ConsolidatedTerminal: React.FC = () => {
             )}
 
             {/* Balances Section */}
-            <div className="terminal-section">
-                <div className="section-divider">
-                    <span className="terminal-header">
-                        <span className="terminal-prompt">&gt;&gt;</span> balances
-                    </span>
+            <div className="border-t border-white/30 mt-2 pt-2">
+                <div className="flex justify-between items-center mb-1">
+                    <span className="terminal-accent text-xs">balances</span>
                     <FontAwesomeIcon 
                         role="button" 
                         icon={faRotate} 
@@ -193,12 +181,7 @@ const ConsolidatedTerminal: React.FC = () => {
 
             {/* Pool Metrics */}
             {swap.activeSwapPool && (
-                <div className="terminal-section">
-                    <div className="section-divider">
-                        <span className="terminal-header">
-                            <span className="terminal-prompt">&gt;&gt;</span> pool_metrics
-                        </span>
-                    </div>
+                <div className="border-t border-white/30 mt-2 pt-2">
                     
                     <div className="terminal-row">
                         <span className="terminal-label">max_supply:</span>

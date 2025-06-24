@@ -5,6 +5,13 @@ import { Textarea } from '@/lib/components/textarea';
 import { Label } from '@/lib/components/label';
 import { Card } from '@/lib/components/card';
 import { Slider } from '@/lib/components/slider';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/lib/components/select';
 import createToken from '../thunk/createToken.thunk';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
@@ -34,6 +41,7 @@ export interface TokenFormValues {
   initial_secondary_burn: string;
   halving_step: string;
   initial_reward_per_burn_unit: string;
+  distribution_interval_seconds: string;
 }
 
 interface FormErrors {
@@ -75,6 +83,7 @@ const CreateTokenForm: React.FC = () => {
     primary_token_logo_base64: '',
     halving_step: '50',               // 50% halving (5.0 → 2.5 → 1.25)
     initial_reward_per_burn_unit: '5', // 5 ALEX per LBRY burned
+    distribution_interval_seconds: '3600', // 1 hour default
   });
 
   useEffect(() => {
@@ -206,6 +215,7 @@ const CreateTokenForm: React.FC = () => {
       initial_secondary_burn: (BigInt(form.initial_secondary_burn) * BigInt(TokenConversionService.getE8S())).toString(),
       initial_reward_per_burn_unit: (BigInt(form.initial_reward_per_burn_unit) * BigInt(TokenConversionService.getE8S())).toString(),
       halving_step: form.halving_step,
+      distribution_interval_seconds: form.distribution_interval_seconds,
     };
 
     dispatch(createToken({ formData: formDataForBackend, userPrincipal: principal }));
@@ -290,9 +300,10 @@ const CreateTokenForm: React.FC = () => {
               <div>
                 <h4 className="font-semibold text-gray-800 text-gray-200 mb-1">ICP Revenue Flow (from Secondary Token minting):</h4>
                 <ul className="list-disc list-inside pl-4 space-y-1">
-                  <li>1% fee to ALEX stakers.</li>
-                  <li>49.5% to Primary Token buybacks & locked liquidity.</li>
-                  <li>49.5% to Primary Token staking rewards.</li>
+                  <li>Every distribution interval, 1% of total ICP pool is distributed:</li>
+                  <li className="ml-4">• 1% to LBRY token buyback</li>
+                  <li className="ml-4">• 49.5% to Primary Token staking rewards</li>
+                  <li className="ml-4">• 49.5% to Primary Token buybacks & locked liquidity</li>
                 </ul>
               </div>
             </div>
@@ -589,6 +600,41 @@ const CreateTokenForm: React.FC = () => {
                 disabled={!form.halving_step}
               />
             </div>
+          </div>
+          
+          {/* Distribution Interval - Full width row */}
+          <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex items-center mb-1">
+              <Label className="block text-lg font-medium text-foreground me-2">
+                Distribution Interval <span className="text-yellow-600">⚠️</span>
+              </Label>
+              <TooltipIcon
+                text="Controls how often rewards are distributed. Every interval, exactly 1% of the total ICP pool is split: 1% to LBRY buyback, 49.5% to stakers, and 49.5% to liquidity. DEFAULT: 1 hour. WARNING: Only change if you understand the implications. Shorter = more frequent rewards but higher transaction costs. Longer = less frequent but more efficient."
+              />
+            </div>
+            <Select
+              value={form.distribution_interval_seconds}
+              onValueChange={(value) => setForm(prev => ({ ...prev, distribution_interval_seconds: value }))}
+            >
+              <SelectTrigger className="w-full md:w-1/2 border rounded-2xl px-3 py-2 h-[60px] text-muted-foreground bg-input text-foreground">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="60">1 minute</SelectItem>
+                <SelectItem value="300">5 minutes</SelectItem>
+                <SelectItem value="900">15 minutes</SelectItem>
+                <SelectItem value="1800">30 minutes</SelectItem>
+                <SelectItem value="3600">1 hour (Default)</SelectItem>
+                <SelectItem value="7200">2 hours</SelectItem>
+                <SelectItem value="14400">4 hours</SelectItem>
+                <SelectItem value="28800">8 hours</SelectItem>
+                <SelectItem value="43200">12 hours</SelectItem>
+                <SelectItem value="86400">24 hours</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500 text-gray-400 mt-2">
+              ⚠️ Advanced setting - Default (1 hour) is recommended for most tokens. Cannot be changed after creation.
+            </p>
           </div>
         </div>
 

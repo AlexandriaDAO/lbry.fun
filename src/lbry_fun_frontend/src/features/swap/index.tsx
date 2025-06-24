@@ -1,11 +1,10 @@
 import React from 'react';
-import SwapMain from './swapMain';
+import SwapMainConsolidated from './swapMainConsolidated';
 
 const Swap = () => {
-
 	return (
 		<>
-			<SwapMain/>
+			<SwapMainConsolidated />
 		</>
 	);
 }

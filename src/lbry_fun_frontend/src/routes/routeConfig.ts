@@ -26,22 +26,12 @@ export const APP_ROUTES = {
   // Include Perpetua routes
 };
 
-// Swap routes
+// Swap routes - Consolidated 3-tab architecture
 export const SWAP_ROUTES = {
   BASE: '/swap',
-  BALANCE: '/swap/balance',
-  SWAP: '/swap/swap',
-  TOPUP: '/swap/topup',
-  TRANSFER: '/swap/transfer',
-  SEND: '/swap/send', // Deprecated - redirects to TRANSFER
-  RECEIVE: '/swap/receive', // Deprecated - redirects to TRANSFER
-  BURN: '/swap/burn',
-  STAKE: '/swap/stake',
-  REDEEM: '/swap/redeem',
-  HISTORY: '/swap/history',
-  INSIGHTS: '/swap/insights',
-  INFO: '/swap/info',
-  TRANSACTION: '/swap/transaction',
+  TRADE: '/swap/trade',      // Trading Terminal (combines Swap, Transfer, Burn, History)
+  STAKE: '/swap/stake',      // Staking Terminal (Stake + Rewards)
+  ANALYTICS: '/swap/analytics', // Analytics Terminal (Insights, Info, Tokenomics)
 };
 
 // Dashboard routes
@@ -88,19 +78,9 @@ export const buildRoutes = {
   
   // Swap routes
   swap: () => SWAP_ROUTES.BASE,
-  swapBalance: () => SWAP_ROUTES.BALANCE,
-  swapSwap: () => SWAP_ROUTES.SWAP,
-  swapTopup: () => SWAP_ROUTES.TOPUP,
-  swapTransfer: () => SWAP_ROUTES.TRANSFER,
-  swapSend: () => SWAP_ROUTES.SEND,
-  swapReceive: () => SWAP_ROUTES.RECEIVE,
-  swapBurn: () => SWAP_ROUTES.BURN,
+  swapTrade: () => SWAP_ROUTES.TRADE,
   swapStake: () => SWAP_ROUTES.STAKE,
-  swapRedeem: () => SWAP_ROUTES.REDEEM,
-  swapHistory: () => SWAP_ROUTES.HISTORY,
-  swapInsights: () => SWAP_ROUTES.INSIGHTS,
-  swapInfo: () => SWAP_ROUTES.INFO,
-  swapTransaction: () => SWAP_ROUTES.TRANSACTION,
+  swapAnalytics: () => SWAP_ROUTES.ANALYTICS,
   
   // Dashboard routes
   dashboard: () => DASHBOARD_ROUTES.BASE,

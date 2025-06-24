@@ -10,7 +10,7 @@ use crate::{
 pub const REWARD_DISTRIBUTION_INTERVAL: Duration = Duration::from_secs(60 * 60); // 1 hour.
 pub const PRICE_FETCH_INTERVAL: Duration = Duration::from_secs(1 * 24 * 60 * 60); // 1 days in seconds
 
-#[derive(CandidType, Deserialize, Clone, Default)]
+#[derive(CandidType, Deserialize, Clone)]
 pub struct InitArgs {
     pub stakes: Option<Vec<(Principal, Stake)>>,
     pub archived_transaction_log: Option<Vec<(Principal, ArchiveBalance)>>,
@@ -23,6 +23,26 @@ pub struct InitArgs {
     pub secondary_token_id: Option<Principal>,
     pub tokenomics_canister_id: Option<Principal>,
     pub icp_ledger_id: Option<Principal>,
+    pub distribution_interval_seconds: u64,
+}
+
+impl Default for InitArgs {
+    fn default() -> Self {
+        Self {
+            stakes: None,
+            archived_transaction_log: None,
+            total_unclaimed_icp_reward: None,
+            secondary_ratio: None,
+            total_archived_balance: None,
+            apy: None,
+            distribution_intervals: None,
+            primary_token_id: None,
+            secondary_token_id: None,
+            tokenomics_canister_id: None,
+            icp_ledger_id: None,
+            distribution_interval_seconds: 3600, // 1 hour default
+        }
+    }
 }
 
 // Function to initialize global states from InitArgs.
@@ -90,7 +110,12 @@ fn initialize_globals(args: InitArgs) {
             tokenomics_cansiter_id: args.tokenomics_canister_id.unwrap_or(Principal::anonymous()),
             icp_ledger_id,
         }).unwrap();
-    })
+    });
+    
+    // Set distribution interval seconds
+    crate::storage::DISTRIBUTION_INTERVAL_SECONDS.with(|cell| {
+        cell.borrow_mut().set(args.distribution_interval_seconds).unwrap();
+    });
 }
 
 #[init]
@@ -182,9 +207,14 @@ fn setup_timers() {
         ic_cdk::spawn(get_icp_rate_cents_wrapper());
     });
 
-    // Periodic reward distribution
+    // Get the distribution interval from storage
+    let distribution_interval_seconds = crate::storage::DISTRIBUTION_INTERVAL_SECONDS.with(|cell| {
+        *cell.borrow().get()
+    });
+
+    // Periodic reward distribution with configurable interval
     let _reward_timer_id: ic_cdk_timers::TimerId =
-        ic_cdk_timers::set_timer_interval(REWARD_DISTRIBUTION_INTERVAL, || {
+        ic_cdk_timers::set_timer_interval(Duration::from_secs(distribution_interval_seconds), || {
             ic_cdk::spawn(distribute_reward_wrapper())
         });
 

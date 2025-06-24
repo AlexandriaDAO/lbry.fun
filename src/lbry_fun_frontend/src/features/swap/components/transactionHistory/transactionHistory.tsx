@@ -1,7 +1,6 @@
 import React from "react";
 import { useTransactionHistory } from "../../hooks/useTransactionHistory";
-import { Button } from "@/lib/components/button";
-import RefreshButton from "../../shared/RefreshButton";
+import { LoaderCircle } from "lucide-react";
 import TransactionItem from "./TransactionItem";
 
 const TransactionHistory = () => {
@@ -17,52 +16,79 @@ const TransactionHistory = () => {
 
     if (error) {
         return (
-            <div className="p-4 text-center">
-                <p className="text-red-500 mb-4">Error loading transactions: {error}</p>
-                <Button onClick={refreshTransactions}>Retry</Button>
+            <div className="terminal-pure">
+                <div className="terminal-header">
+                    <span className="terminal-prompt">&gt;&gt;</span> transaction_error
+                </div>
+                <div className="terminal-row">
+                    <span className="terminal-status">[ERROR]</span>
+                    <span className="terminal-accent">{error}</span>
+                </div>
+                <button 
+                    className="terminal-button mt-2" 
+                    onClick={refreshTransactions}
+                >
+                    [RETRY]
+                </button>
             </div>
         );
     }
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-medium text-foreground">Recent Transactions</h3>
-                    <RefreshButton 
-                        onRefresh={refreshTransactions}
-                        loading={loading}
-                        toastMessage="Refreshing transactions..."
-                    />
-                </div>
+        <div className="terminal-pure">
+            <div className="terminal-header mb-2">
+                <span className="terminal-prompt">&gt;&gt;</span> transaction_history
+                <button 
+                    className="terminal-button text-xs ml-4"
+                    onClick={refreshTransactions}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <LoaderCircle size={10} className="animate animate-spin inline" />
+                    ) : (
+                        "[REFRESH]"
+                    )}
+                </button>
             </div>
 
             {isEmpty && !loading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                    <p>No transactions found</p>
-                    <p className="text-sm">Your transaction history will appear here once you start trading</p>
+                <div className="terminal-section-minimal">
+                    <div className="terminal-row">
+                        <span className="terminal-label">status:</span>
+                        <span className="terminal-accent">no_transactions_found</span>
+                    </div>
+                    <div className="terminal-row">
+                        <span className="terminal-label">info:</span>
+                        <span className="terminal-accent text-xs">transaction history will appear here</span>
+                    </div>
                 </div>
             ) : (
-                <div className="space-y-2">
-                    {transactions.map((transaction) => (
-                        <TransactionItem
-                            key={transaction.id}
-                            transaction={transaction}
-                        />
-                    ))}
+                <>
+                    <div className="space-y-1">
+                        {transactions.map((transaction) => (
+                            <TransactionItem
+                                key={transaction.id}
+                                transaction={transaction}
+                            />
+                        ))}
+                    </div>
                     
                     {hasMore && (
-                        <div className="text-center pt-4">
-                            <Button 
+                        <div className="terminal-section mt-2">
+                            <button 
                                 onClick={loadMoreTransactions}
                                 disabled={loading}
-                                variant="outline"
+                                className="terminal-button w-full"
                             >
-                                {loading ? "Loading..." : "Load More"}
-                            </Button>
+                                {loading ? (
+                                    <LoaderCircle size={12} className="animate animate-spin mx-auto" />
+                                ) : (
+                                    "[LOAD_MORE]"
+                                )}
+                            </button>
                         </div>
                     )}
-                </div>
+                </>
             )}
         </div>
     );

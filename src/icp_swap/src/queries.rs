@@ -96,6 +96,13 @@ pub fn get_distribution_interval() -> u32 {
 }
 
 #[query]
+pub fn get_distribution_interval_seconds() -> u64 {
+    crate::storage::DISTRIBUTION_INTERVAL_SECONDS.with(|cell| {
+        *cell.borrow().get()
+    })
+}
+
+#[query]
 pub fn get_all_apy_values() -> Vec<(u32, u128)> {
     APY.with(|apy| {
         let mut values: Vec<(u32, u128)> = apy

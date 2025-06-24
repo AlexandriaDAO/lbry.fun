@@ -142,120 +142,133 @@ const BurnContent = () => {
     const primaryLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
     const secondaryLogoFromState = swap.activeSwapPool?.[1]?.secondary_token_logo_base64;
 
+    const secondarySymbol = swap.activeSwapPool?.[1]?.secondary_token_symbol || "SECONDARY";
+    const primarySymbol = swap.activeSwapPool?.[1]?.primary_token_symbol || "PRIMARY";
+
     return (
         <AccessGuard accessState={accessState} countdown={countdown} launchTime={launchTime}>
-            <div>
-                <div className='mb-5 2xl:mb-10 xl:mb-7 lg:mb-7 md:mb-6 sm:mb-5'>
-                    <h3 className="text-tabsheading 2xl:text-xxltabsheading xl:text-xltabsheading lg:text-lgtabsheading md:text-mdtabsheading sm:text-smtabsheading font-bold">Burn</h3>
+            <div className="terminal-pure">
+                {/* Input Section */}
+                <div className="mb-4">
+                    
+                    <div className={`terminal-input-container mb-3 ${amountSecondary > maxBurnAllowed ? 'border-red-500' : ''}`}>
+                        <div className="terminal-row">
+                            <span className="terminal-label">{secondarySymbol.toLowerCase()}_amount:</span>
+                            <input 
+                                className="terminal-input text-right" 
+                                type="number" 
+                                value={amountSecondary} 
+                                min={0} 
+                                onChange={handleAmountSecondaryChange}
+                                placeholder="0"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div className="terminal-row mb-2">
+                        <span className="terminal-label">balance:</span>
+                        <span className="terminal-value">{swap.secondaryBalance} {secondarySymbol}</span>
+                    </div>
+                    
+                    <button
+                        className="terminal-button text-xs"
+                        onClick={handleMaxLbry}
+                    >
+                        [max]
+                    </button>
                 </div>
-                <div className='grid grid-cols-1 2xl:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 mb-12'>
-                    <div className='me-0 2xl:me-3 xl:me-3 lg:me-3 md:me-3 sm:me-0 mb-3 2xl:mb-0 xl:mb-0 lg:mb-3 md:mb-3 sm:mb-3'>
-                        <div className='bg-gray-800 border border-gray-700 py-5 px-5 rounded-borderbox mb-7'>
-                            <div className='flex justify-between mb-3'>
-                                <h4 className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-gray-300'>Amount</h4>
-                                <input className='lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium text-gray-200 text-right bg-transparent w-full placeholder-gray-400 focus:outline-none focus:border-transparent' type='integer' value={amountSecondary + ""} min={0} onChange={(e) => {
-                                    handleAmountSecondaryChange(e)
-                                }} />
-                            </div>
-                            <div className='flex justify-between'>
-                                <div className='flex items-center'>
-                                    <strong className='text-base text-gray-300 font-medium me-1'>Balance:<span className='text-gray-200 ms-2'>{swap.secondaryBalance} {swap?.activeSwapPool&&swap?.activeSwapPool[1]?.secondary_token_symbol}</span></strong>
-                                    {secondaryLogoFromState ? (
-                                        <img className='w-4 h-4' src={secondaryLogoFromState} alt={swap.activeSwapPool?.[1]?.secondary_token_symbol || "Secondary token logo"} />
-                                    ) : (
-                                        <div className="w-4 h-4 bg-gray-200 rounded-full flex items-center justify-center">
-                                            {/* Optional: Add a placeholder or text if needed */}
-                                        </div>
-                                    )}
-                                </div>
-                                <Link to="" role="button" className='text-[#A7B1D7] text-blue-400 underline text-base font-bold' onClick={() => handleMaxLbry()} >Max</Link>
-                            </div>
+
+                {/* Output Section */}
+                <div className="mb-4">
+                    <div className="terminal-info">
+                        <div className="terminal-row mb-2">
+                            <span className="terminal-label">receive:</span>
+                            <span className={`terminal-primary ${amountSecondary > maxBurnAllowed ? 'text-red-500' : ''}`}>
+                                {tentativeICP.toFixed(4)} ICP
+                            </span>
                         </div>
-                        <h5 className='text-xl font-medium mb-4 text-gray-200'>you get</h5>
-                        <div className='border border-gray-700 bg-gray-800 py-4 px-5 rounded-full mb-4'>
-                            <div className='flex justify-between'>
-                                <div className='flex items-center'>
-                                    <div className='me-3'>
-                                        <img className='w-6 h-6' src="images/8-logo.png" alt="icp" />
-                                    </div>
-                                    <div>
-                                        <h4 className=' lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium'>ICP</h4>
-                                    </div>
-                                </div>
-                                <h3 className={`text-right  lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium ${amountSecondary > maxBurnAllowed ? 'text-red-500' : ''}`}>
-                                    {tentativeICP.toFixed(4)}
-                                </h3>
-                            </div>
+                        
+                        <div className="terminal-row">
+                            <span className="terminal-label">receive:</span>
+                            <span className="terminal-primary">
+                                {tentativePrimary.toFixed(4)} {primarySymbol}
+                            </span>
                         </div>
-                        <div className='border border-gray-700 bg-gray-800 py-4 px-5 rounded-full mb-4'>
-                            <div className='flex justify-between'>
-                                <div className='flex items-center'>
-                                    <div className='me-3'>
-                                        {primaryLogoFromState ? (
-                                            <img className='w-6 h-6' src={primaryLogoFromState} alt={swap.activeSwapPool?.[1]?.primary_token_symbol || "Primary token logo"} />
-                                        ) : (
-                                            <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                                                {/* Optional: Add a placeholder or text if needed */}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <h4 className=' lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium'>{swap.activeSwapPool&&swap.activeSwapPool[1].primary_token_symbol}</h4>
-                                    </div>
-                                </div>
-                                <h3 className={`text-right  lg:text-2xl md:text-xl sm:text-lg xs:text-base font-medium`}>
-                                    {tentativePrimary.toFixed(4)}
-                                </h3>
-                            </div>
-                        </div>
-                        {isAuthenticated ? <button
+                    </div>
+
+                    {/* Execute Button */}
+                    {isAuthenticated ? (
+                        <button
                             type="button"
-                            className={`bg-primary-action text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 mb-4 ${parseInt(amountSecondary.toString()) === 0 ||
-                                    swap.loading ||
-                                    amountSecondary > maxBurnAllowed
-                                    ? 'opacity-50 cursor-not-allowed'
-                                    : 'cursor-pointer hover:opacity-90'
-                                }`}
-                            style={{
-                                opacity: parseInt(amountSecondary.toString()) === 0 ||
-                                    swap.loading ||
-                                    amountSecondary > maxBurnAllowed
-                                    ? 0.5
-                                    : 1, // when disabled
-                            }}
+                            className={`terminal-button w-full ${
+                                amountSecondary === 0 || swap.loading || amountSecondary > maxBurnAllowed || !isTokenLive
+                                    ? ''
+                                    : 'terminal-button-primary'
+                            }`}
                             disabled={
                                 amountSecondary === 0 ||
                                 swap.loading === true ||
-                                amountSecondary > maxBurnAllowed
+                                amountSecondary > maxBurnAllowed ||
+                                !isTokenLive
                             }
-                            onClick={(e) => {
-                                handleSubmit(e);
-                            }}
+                            onClick={handleSubmit}
                             title={!isTokenLive ? "Trading will be enabled after the launch period" : ""}
                         >
-                            {swap.loading ? (<>
-                                <LoaderCircle size={18} className="animate animate-spin mx-auto" /> </>) : !isTokenLive ? (
-                                <>Trading Starts Soon</>
+                            {swap.loading ? (
+                                <LoaderCircle size={14} className="animate-spin mx-auto" />
+                            ) : !isTokenLive ? (
+                                <span className="terminal-status">[awaiting_launch]</span>
                             ) : (
-                                <>Burn</>
+                                <span>execute_burn</span>
                             )}
-                        </button> : <div
-                            className="bg-balancebox text-white w-full rounded-full text-base 2xl:text-2xl xl:text-xl lg:text-xl md:text-lg sm:text-base font-semibold py-2 2xl:py-4 xl:py-4 lg:py-3 md:py-3 sm:py-2 px-2 2xl:px-4 xl:px-4 lg:px-3 md:px-3 sm:px-2 flex items-center justify-center white-auth-btn mb-4"
-                        >
+                        </button>
+                    ) : (
+                        <div className="terminal-button w-full flex items-center justify-center">
                             <Entry />
-                        </div>}
-                        <div className="terms-condition-wrapper flex tems-baseline">
-                            <span className="text-[#FF37374D] mr-2 text-xl font-semibold">*</span>
-                            <p className="lg:text-lg md:text-base sm:text-sm font-semibold md:pr-5 xs:pr-0 text-muted-foreground md:w-9/12 xs:w-full">If the transaction doesn't complete as expected, please check the redeem page to locate your tokens.</p>
                         </div>
-                    </div>
-                    <BurnInfo maxBurnAllowed={maxBurnAllowed} />
-
+                    )}
                 </div>
+
+                {/* Transaction Details Section */}
+                <div className="border-t border-white/30 mt-4 pt-3">
+                    
+                    <div className="terminal-row">
+                        <span className="terminal-label">network_fee:</span>
+                        <span className="terminal-value">{swap.secondaryFee} {secondarySymbol}</span>
+                    </div>
+                    
+                    <div className="terminal-row">
+                        <span className="terminal-label">max_burn:</span>
+                        <span className="terminal-primary">{maxBurnAllowed.toFixed(4)} {secondarySymbol}</span>
+                    </div>
+                    
+                    <div className="terminal-row">
+                        <span className="terminal-label">exchange_rate:</span>
+                        <span className="terminal-value">1 {secondarySymbol} = {Number(tokenomics.primaryMintRate).toFixed(4)} {primarySymbol}</span>
+                    </div>
+
+                    <div className="terminal-row">
+                        <span className="terminal-label">icp_rate:</span>
+                        <span className="terminal-value">{Number(swap.secondaryRatio).toFixed(4)} {secondarySymbol} = 0.5 ICP</span>
+                    </div>
+                </div>
+
+                {/* Status Messages */}
+                {amountSecondary > maxBurnAllowed && (
+                    <div className="terminal-alert mt-3">
+                        <span className="terminal-status">[error]</span> max_allowed: {maxBurnAllowed.toFixed(4)}
+                    </div>
+                )}
+
+                <div className="mt-3 space-y-1">
+                    <span className="terminal-label">* burns are irreversible</span>
+                    <br />
+                    <span className="terminal-label">* failed transactions can be redeemed below</span>
+                </div>
+
                 <LoadingModal show={loadingModalV} message1={"Burn in Progress"} message2={"Burn transaction is being processed. This may take a few moments."} setShow={setLoadingModalV} />
                 <SuccessModal show={successModalV} setShow={setSucessModalV} />
                 <ErrorModal show={errorModalV.flag} setShow={setErrorModalV} title={errorModalV.title} message={errorModalV.message} />
-
             </div>
         </AccessGuard>
     );

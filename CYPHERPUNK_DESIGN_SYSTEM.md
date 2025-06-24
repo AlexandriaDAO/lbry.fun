@@ -1,296 +1,322 @@
-# Cypherpunk Design System for LBRY.fun
+# Cypherpunk Terminal Design System
 
 ## Overview
-This design system embodies the cypherpunk ethos for LBRY.fun's token launchpad, targeting hackers, developers, and technical crypto enthusiasts who appreciate terminal aesthetics and functional minimalism.
+This design system embodies pure terminal aesthetics for crypto applications targeting developers who value functional minimalism over visual polish. Every design decision prioritizes code quality, maintainability, and authentic terminal experience.
 
 ## Design Philosophy
 
 ### Core Principles
-1. **Terminal-First**: Every element references command-line interfaces
-2. **Function Over Form**: Clean, readable, purposeful design
-3. **Technical Language**: Speak directly to developers using their conventions
-4. **Subtle Rebellion**: Electric colors against pure black - sharp but not flashy
-5. **Genius Minimalism**: Maximum impact with minimum code - every line serves a purpose
-6. **Cryptographic Aesthetic**: Hex addresses, terminal symbols, and clean data streams
+1. **Pure Terminal**: Raw, authentic command-line interface aesthetics
+2. **Code Quality First**: Clean architecture drives visual decisions
+3. **Minimal Code**: Maximum functionality with minimum lines
+4. **High Contrast**: Bold colors used sparingly for maximum impact
+5. **Dense Information**: Pack data efficiently like real terminals
+6. **Zero Decoration**: Function over form, always
 
 ### Target User
-- Developers who live in terminals
-- Crypto natives who understand technical details
-- Tinkerers who appreciate seeing "under the hood"
-- Users who value transparency and technical accuracy
+- Backend developers and DevOps engineers
+- Crypto natives who live in terminals
+- Users who prefer authentic tools over flashy interfaces
+- Technical audiences who value substance over style
 
-## Visual Language
+## Code-First Design Architecture
 
-### Typography
+### Utility Class Strategy
+Build consolidated utility classes that eliminate repetitive CSS:
+
 ```css
-/* Primary Font Family */
-font-family: 'Courier New', Courier, monospace; /* via Tailwind's font-mono */
-
-/* Text Hierarchy */
-.header-primary { @apply text-2xl font-mono font-bold; }
-.header-secondary { @apply text-lg font-mono; }
-.data-value { @apply font-mono; }
-.label { @apply font-mono text-sm; }
+/* Single-purpose, highly reusable utilities */
+.terminal-pure    /* Complete terminal container */
+.terminal-row     /* Dense key-value row */
+.terminal-section /* Section with minimal border */
+.terminal-header  /* Consistent header styling */
+.terminal-prompt  /* Pink > indicators */
+.terminal-label   /* Gray labels */
+.terminal-value   /* White text values */
+.terminal-primary /* Lime green for important values */
+.terminal-accent  /* Gray for USD/percentages */
+.terminal-status  /* Pink status indicators */
+.hex-address      /* Cyan technical identifiers */
 ```
 
-### Color Palette
+### Component Consolidation Pattern
+Replace multiple similar components with single, configurable ones:
 
+**❌ Avoid: Multiple card components**
+```tsx
+<AccountCard />
+<PoolCard />
+<BalanceCard />
+```
+
+**✅ Prefer: Single consolidated component**
+```tsx
+<TerminalInterface />
+```
+
+## Pure Terminal Visual Language
+
+### Color Palette (Minimal Usage)
 ```css
-/* Enhanced Core Colors */
---electric-green: #39ff14;  /* Primary values, success states - more electric */
---cyber-lime: #84cc16;      /* Secondary success states */
---toxic-pink: #ff0080;      /* Primary accents, live states - sharper */
---cyber-pink: #ec4899;      /* Secondary accents */
---terminal-gray: #0a0a0a;   /* Deeper background - more noir */
---data-gray: #888888;       /* Secondary information - more neutral */
---label-gray: #555555;      /* Subtle labels - sharper contrast */
---code-blue: #00d4ff;       /* Code highlights, status indicators */
+/* Use sparingly - high impact colors */
+--lime-primary: #32cd32;    /* Only for most important values */
+--pink-prompt: #ff1493;     /* Only for prompts and status */
+--cyan-tech: #00ffff;       /* Only for hex addresses */
+--white: #ffffff;           /* Standard text */
+--gray-label: #9ca3af;      /* Labels only */
+--gray-accent: #6b7280;     /* USD values only */
+--black: #000000;           /* Background only */
+--white-border: #ffffff4d;  /* Borders only */
+```
 
-/* Functional Colors */
---error: #ff2020;           /* Error states - more electric */
---warning: #ffaa00;         /* Warning states */
---success: var(--electric-green);
---connected: var(--toxic-pink);
---live: var(--electric-green);
+### Typography Rules
+```css
+/* Monospace everywhere - no exceptions */
+font-family: monospace;
+
+/* Size hierarchy - minimal */
+.terminal-header { font-size: 0.875rem; }  /* 14px */
+.terminal-value  { font-size: 0.875rem; }  /* 14px */
+.terminal-label  { font-size: 0.75rem; }   /* 12px */
+.terminal-accent { font-size: 0.75rem; }   /* 12px */
 ```
 
 ### Naming Conventions
-
-All UI labels follow terminal/programming conventions:
-
 ```
-SECTION_HEADERS        // All caps with underscores
-subsection_names       // Lowercase with underscores
-[STATUS_INDICATORS]    // Bracketed states
-> terminal_prompts     // Angle bracket prefixes
-key_name:             // Colon-suffixed labels
-```
+// Lowercase with underscores - terminal style
+> principal_account
+>> active_swap_pool 
+>> balances
+>> pool_metrics
 
-## Component Patterns
+// Labels - lowercase with colons
+principal:
+account_id:
+icp:
+max_supply:
 
-### Minimal Terminal Effects
-```css
-/* Subtle scan lines for CRT effect */
-.terminal-scanlines::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(transparent 50%, rgba(57, 255, 20, 0.02) 50%);
-  background-size: 100% 2px;
-  pointer-events: none;
-}
-
-/* Sharp electric glow for key data */
-.cyber-glow {
-  text-shadow: 0 0 8px currentColor;
-}
+// Status - uppercase in brackets
+[CONNECTED]
+[LIVE]
+[LAUNCHING]
 ```
 
-### Card Containers - Simplified
+## Core Component Patterns
+
+### Terminal Container
 ```tsx
-className="bg-black/90 backdrop-blur border border-zinc-800 
-           hover:border-pink-600/60 transition-colors duration-200 
-           shadow-lg shadow-pink-500/5 rounded-2xl p-6 
-           relative terminal-scanlines"
-```
-
-### Status Indicators - Electric & Minimal
-```tsx
-// Connected State - Sharp pink
-<span className="font-mono text-pink-400 animate-pulse cyber-glow">[CONNECTED]</span>
-
-// Live State - Electric green
-<span className="font-mono text-green-400 animate-pulse cyber-glow">[LIVE]</span>
-
-// Percentage - Code blue
-<span className="font-mono text-xs text-cyan-400">[42%]</span>
-```
-
-### Data Display - Enhanced Contrast
-```tsx
-// Primary Value - Electric green with glow
-<span className="font-mono text-green-400 font-bold cyber-glow">24.7505</span>
-
-// USD Conversion - Sharp pink
-<span className="font-mono text-xs text-pink-400">[$247.51]</span>
-
-// Secondary Value - Clean gray
-<span className="font-mono text-gray-300">442,516</span>
-
-// Hex displays for addresses
-<span className="font-mono text-cyan-300">0xd4f2...563a</span>
-```
-
-### Interactive Elements
-```tsx
-// Hover States
-className="text-pink-600 hover:text-pink-400 transition-colors cursor-pointer"
-
-// Clickable Elements  
-className="opacity-60 hover:opacity-100 transition-opacity"
-```
-
-## Layout Guidelines
-
-### Information Hierarchy
-1. **Section Headers**: Terminal prompts with descriptive names
-2. **Primary Data**: Large, green, prominent positioning
-3. **Secondary Data**: Smaller, gray, supporting information
-4. **Metadata**: Subtle labels with colons
-
-### Spacing System
-- Use consistent padding based on terminal character grid
-- Maintain visual rhythm with monospace alignment
-- Border separators for logical groupings
-
-## Implementation Examples
-
-### Account Display Pattern
-```tsx
-<div className="border-b border-pink-900/30 pb-3">
-  <span className="font-mono text-green-300 text-lg">
-    t677x...uae
-  </span>
-  <span className="font-mono text-pink-500 text-sm ml-2 animate-pulse">
-    [CONNECTED]
-  </span>
-</div>
-```
-
-### Balance Display Pattern
-```tsx
-<div className="flex justify-between items-center">
-  <span className="font-mono text-green-300">ICP:</span>
-  <div className="text-right">
-    <span className="font-mono text-green-400 font-bold">49.5015</span>
-    <span className="font-mono text-xs text-pink-500 ml-2">[$495.02]</span>
-  </div>
-</div>
-```
-
-### Metrics Display Pattern
-```tsx
-<div className="space-y-3">
-  <div className="flex justify-between">
-    <span className="font-mono text-sm text-gray-500">max_supply:</span>
-    <span className="font-mono text-green-400">21,000,000</span>
-  </div>
-</div>
-```
-
-## Extending the System
-
-### New Component Checklist
-1. Use monospace fonts throughout
-2. Follow terminal naming conventions
-3. Apply consistent color hierarchy
-4. Include hover/active states
-5. Add subtle animations for live data
-6. Maintain technical accuracy in labels
-
-### Animation Guidelines
-- Pulse effects for live/connected states
-- Smooth transitions (300ms) for hover states
-- No excessive motion - keep it subtle
-- Performance over polish
-
-### Responsive Considerations
-- Preserve monospace grid alignment
-- Maintain readability on small screens
-- Keep terminal aesthetic across all breakpoints
-- Prioritize data density for power users
-
-## Color Usage Matrix
-
-| Element Type | Primary Color | Accent Color | Text Color |
-|-------------|--------------|--------------|------------|
-| User Assets | cyber-lime | - | green-400 |
-| System Status | - | cyber-pink | pink-500 |
-| Headers | data-gray | cyber-pink (prompt) | gray-300 |
-| Labels | - | - | gray-500 |
-| Values | cyber-lime/data-gray | - | green-400/gray-300 |
-| Borders | - | cyber-pink | pink-900/30 |
-| Shadows | - | cyber-pink | rgba(236,72,153,0.15) |
-
-## Code Examples
-
-### Complete Card Component
-```tsx
-<div className="bg-gray-900/95 backdrop-blur-sm rounded-3xl 
-                border border-pink-900/30 hover:border-pink-600/40 
-                transition-all duration-300 p-10"
-     style={{ 
-       backgroundImage: 'url("images/gradient-bg.png")', 
-       backgroundBlendMode: 'multiply', 
-       backgroundColor: 'rgba(131,24,67,0.05)' 
-     }}>
-  <h4 className="text-2xl font-mono font-bold mb-6 text-gray-300">
-    <span className="text-pink-500">&gt;</span> SECTION_NAME
-  </h4>
+// Pure black background, minimal border, dense padding
+<div className="terminal-pure">
   {/* Content */}
 </div>
+
+// CSS Implementation
+.terminal-pure {
+  @apply bg-black border border-white/30 font-mono text-sm p-3 leading-tight;
+}
 ```
 
-### Data Row Component
+### Information Row
 ```tsx
-<div className="flex justify-between items-center mb-2">
-  <span className="font-mono text-sm text-gray-500">metric_name:</span>
-  <div className="text-right">
-    <span className="font-mono text-green-400">1,234,567</span>
-    <span className="font-mono text-xs text-pink-500 ml-2">[56%]</span>
+// Consistent key-value pattern
+<div className="terminal-row">
+  <span className="terminal-label">key:</span>
+  <span className="terminal-value">value</span>
+</div>
+
+// CSS Implementation
+.terminal-row {
+  @apply flex justify-between items-center py-0.5;
+}
+```
+
+### Section Divider
+```tsx
+// Minimal section separation
+<div className="terminal-section">
+  <div className="section-divider">
+    <span className="terminal-header">
+      <span className="terminal-prompt">&gt;&gt;</span> section_name
+    </span>
   </div>
 </div>
 ```
 
-## Updated Utility Classes (2025-06-24)
+## Code Quality Standards
 
-### Genius-Level Minimalism Implementation
+### Component Structure
+```tsx
+// ✅ Clean, minimal component structure
+const TerminalInterface: React.FC = () => {
+  // Minimal state - consolidate related data
+  const [accountData, setAccountData] = useState(null);
+  
+  // Single effect for all data loading
+  useEffect(() => {
+    loadAllData();
+  }, [principal]);
 
-The design system now includes streamlined utility classes that reduce code verbosity by ~70%:
+  return (
+    <div className="terminal-pure">
+      <Header />
+      <AccountSection />
+      <PoolSection />
+      <BalancesSection />
+      <MetricsSection />
+    </div>
+  );
+};
+```
 
+### Avoid Code Duplication
+```tsx
+// ❌ Repetitive styling
+<div className="flex justify-between items-center py-1">
+<div className="flex justify-between items-center py-1">
+<div className="flex justify-between items-center py-1">
+
+// ✅ Utility class
+<div className="terminal-row">
+<div className="terminal-row">
+<div className="terminal-row">
+```
+
+### Data Display Patterns
+```tsx
+// Standard value display
+<div className="terminal-row">
+  <span className="terminal-label">icp:</span>
+  <div className="text-right">
+    <span className="terminal-primary">24.7505</span>
+    <span className="terminal-accent ml-2">[$247.50]</span>
+  </div>
+</div>
+
+// Status indicator
+<span className="terminal-status">[live]</span>
+
+// Technical identifier
+<span className="hex-address">t677x...uae</span>
+```
+
+## Implementation Guidelines
+
+### CSS Architecture
 ```css
-/* Core Components */
-.terminal-card        /* Clean card container with scan lines */
-.terminal-header      /* Consistent header styling */
-.terminal-prompt      /* Pink > prompts */
-.terminal-divider     /* ASCII-style section separators */
+/* Pure terminal interface - dense and compact */
+.terminal-pure {
+  @apply bg-black border border-white/30 font-mono text-sm p-3 leading-tight;
+}
 
-/* Data Display */
-.data-row            /* Flex row for key-value pairs */
-.data-label          /* Gray labels with colons */
-.data-value          /* Standard data values */
-.data-primary        /* Green primary values with glow */
-.data-accent         /* Pink accent text (USD, percentages) */
+.terminal-row {
+  @apply flex justify-between items-center py-0.5;
+}
 
-/* Status & Effects */
-.cyber-status        /* Animated status indicators */
-.cyber-glow          /* Subtle text glow effect */
-.hex-address         /* Cyan hex addresses */
-.section-header      /* Consistent section headers */
+.terminal-section {
+  @apply border-t border-white/30 mt-2 pt-1;
+}
+
+.terminal-header {
+  @apply font-mono font-bold text-white mb-1 text-sm uppercase;
+}
+
+.terminal-prompt {
+  @apply text-pink-500;
+}
+
+.terminal-label {
+  @apply text-gray-400 text-xs;
+}
+
+.terminal-value {
+  @apply text-white text-sm;
+}
+
+.terminal-primary {
+  @apply text-lime-500 font-bold text-sm;
+}
+
+.terminal-accent {
+  @apply text-gray-600 text-xs;
+}
+
+.terminal-status {
+  @apply text-pink-500 text-xs uppercase;
+}
+
+.hex-address {
+  @apply font-mono text-cyan-400 text-xs;
+}
 ```
 
-### Code Reduction Example
+### React Component Standards
+- Single responsibility principle
+- Minimal props interface
+- Consolidated state management
+- No unnecessary re-renders
+- Clean, readable JSX structure
 
-**Before (verbose):**
+### File Organization
+```
+components/
+├── terminal/
+│   ├── TerminalInterface.tsx    // Main consolidated component
+│   ├── TerminalRow.tsx          // Reusable row component
+│   └── TerminalSection.tsx      // Reusable section component
+```
+
+## Quality Checklist
+
+### Before Adding New Components
+1. ✅ Can this be consolidated with existing components?
+2. ✅ Are utility classes being reused?
+3. ✅ Is the color usage minimal and purposeful?
+4. ✅ Does it follow terminal naming conventions?
+5. ✅ Is the code as minimal as possible?
+6. ✅ Does it maintain pure black background?
+7. ✅ Are spacing values consistent?
+
+### Code Review Standards
+- No decorative elements
+- Minimal CSS classes per element
+- Consistent monospace typography
+- Strategic color usage only
+- Dense information layout
+- Clean component structure
+
+## Anti-Patterns to Avoid
+
 ```tsx
-<div className="bg-gray-900/95 backdrop-blur-sm rounded-3xl border border-pink-900/30 hover:border-pink-600/40 transition-all duration-300 shadow-lg p-6">
+// ❌ Avoid: Complex styling
+className="bg-gray-900/95 backdrop-blur-sm rounded-3xl border border-pink-900/30 hover:border-pink-600/40 transition-all duration-300 shadow-lg shadow-pink-500/5"
+
+// ✅ Use: Simple utility
+className="terminal-pure"
+
+// ❌ Avoid: Excessive colors
+<span className="text-green-400 bg-green-900/20 border border-green-500/30 px-2 py-1 rounded">
+
+// ✅ Use: Minimal styling
+<span className="terminal-primary">
+
+// ❌ Avoid: Multiple similar components
+<PrimaryBalanceCard />
+<SecondaryBalanceCard />
+
+// ✅ Use: Consolidated component
+<BalanceSection />
 ```
 
-**After (minimal):**
-```tsx
-<div className="terminal-card">
-```
+## Maintenance Philosophy
 
-This approach achieves maximum visual impact with minimum code complexity - the hallmark of genius-level engineering.
+This design system prioritizes long-term maintainability through:
 
-## Maintenance Notes
-
-1. **Consistency**: Always reference this guide when adding new components
-2. **Evolution**: Update this document when introducing new patterns
-3. **Testing**: Verify all colors meet WCAG AA contrast requirements
-4. **Performance**: Minimize animation impact on lower-end devices
-5. **Accessibility**: Ensure monospace fonts don't harm readability
+1. **Minimal CSS**: Fewer classes to maintain
+2. **Consolidated Components**: Less duplication
+3. **Clear Patterns**: Consistent implementation
+4. **Pure Functions**: Predictable behavior
+5. **Strategic Colors**: Easy to update
 
 ---
 
-*"In cryptography we trust, in terminals we build."*
+*"Clean code is not written by following a set of rules. Clean code is written by programmers who think about what they're doing."*

@@ -44,15 +44,15 @@ const CanisterCycles: React.FC<CanisterCyclesProps> = ({ canisterId }) => {
     }, [canisterId]);
 
     return (
-        <div className="flex justify-between items-center text-sm pl-4">
-            <span className="font-semibold text-gray-400">Cycles Balance:</span>
-            <span className="text-white">
-                {loading && "Loading..."}
-                {error && <span className="text-red-400">Error</span>}
+        <div className="terminal-row pl-4">
+            <span className="terminal-label text-xs">cycles:</span>
+            <span className="terminal-accent text-xs">
+                {loading && "loading..."}
+                {error && <span className="terminal-status">[ERROR]</span>}
                 {cycles !== null && !loading && !error && `${cycles} T`}
             </span>
         </div>
     );
 };
 
-export default CanisterCycles; 
+export default CanisterCycles;

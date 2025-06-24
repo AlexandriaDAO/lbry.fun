@@ -26,20 +26,9 @@ const router = createBrowserRouter(
 				</Route>
 				<Route path="swap">
 					<Route index element={<Suspense key="swap" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="balance" element={<Suspense key="swap-balance" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="swap" element={<Suspense key="swap-swap" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="topup" element={<Suspense key="swap-topup" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="transfer" element={<Suspense key="swap-transfer" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="send" element={<Suspense key="swap-send" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="receive" element={<Suspense key="swap-receive" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="burn" element={<Suspense key="swap-burn" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
+					<Route path="trade" element={<Suspense key="swap-trade" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 					<Route path="stake" element={<Suspense key="swap-stake" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="redeem" element={<Suspense key="swap-redeem" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="history" element={<Suspense key="swap-history" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="insights" element={<Suspense key="swap-insights" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="info" element={<Suspense key="swap-info" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="tokenomics" element={<Suspense key="swap-tokenomics" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					{/* <Route path="transaction" element={<Suspense key="transaction" fallback={<TopProgressBar />}><DetailTransaction /></Suspense>} /> */}
+					<Route path="analytics" element={<Suspense key="swap-analytics" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 				</Route>
 
 				<Route path={ROUTES.UNAUTHORIZED} element={<Suspense key="401" fallback={<TopProgressBar />}><UnauthorizedPage /></Suspense>} />

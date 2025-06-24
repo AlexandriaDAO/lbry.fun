@@ -1,98 +1,38 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { useAppSelector } from '@/store/hooks/useAppSelector';
+import React, { useEffect, useMemo } from 'react';
 import UnifiedTokenomicsGraphs from '@/features/token/components/UnifiedTokenomicsGraphs';
 import { LoaderCircle } from 'lucide-react';
-import { Actor, HttpAgent } from '@dfinity/agent';
-import { idlFactory } from '../../../../../../declarations/tokenomics';
-import { _SERVICE } from '../../../../../../declarations/tokenomics/tokenomics.did';
-import { useIdentity } from '@/hooks/useIdentity';
-import { Principal } from '@dfinity/principal';
+import { useUnifiedSwapData } from '../../providers/UnifiedSwapDataProvider';
 
 const TokenomicsTab: React.FC = () => {
-    const { activeSwapPool } = useAppSelector((state) => state.swap);
-    const { identity } = useIdentity();
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [configs, setConfigs] = useState<any>(null);
-    const [tokenomicsSchedule, setTokenomicsSchedule] = useState<any>(null);
-    const [tokenomicsActor, setTokenomicsActor] = useState<_SERVICE | null>(null);
+    const { poolData, tokenomics, loadTokenomics, isLoading, errors } = useUnifiedSwapData();
 
     useEffect(() => {
-        if (!activeSwapPool || !activeSwapPool[1]?.tokenomics_canister_id) {
-            return;
-        }
-
-        const createTokenomicsActor = async () => {
-            try {
-                const agent = new HttpAgent({
-                    identity: identity || undefined,
-                    host: process.env.DFX_NETWORK === "ic" ? "https://ic0.app" : "http://localhost:4943"
-                });
-
-                // Only fetch root key in local development
-                if (process.env.DFX_NETWORK !== "ic") {
-                    await agent.fetchRootKey();
-                }
-
-                const actor = Actor.createActor<_SERVICE>(idlFactory, {
-                    agent,
-                    canisterId: Principal.fromText(activeSwapPool[1].tokenomics_canister_id)
-                });
-
-                setTokenomicsActor(actor);
-            } catch (err) {
-                console.error('Failed to create tokenomics actor:', err);
-                setError('Failed to connect to tokenomics canister');
-            }
-        };
-
-        createTokenomicsActor();
-    }, [activeSwapPool, identity]);
-
-    useEffect(() => {
-        if (!tokenomicsActor) {
-            return;
-        }
-
-        const fetchTokenomicsData = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                
-                const [config, schedule] = await Promise.all([
-                    tokenomicsActor.get_config(),
-                    tokenomicsActor.get_tokenomics_schedule()
-                ]);
-                setConfigs(config);
-                setTokenomicsSchedule(schedule);
-            } catch (err) {
-                console.error('Failed to fetch tokenomics config:', err);
-                setError('Failed to load tokenomics data');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchTokenomicsData();
-    }, [tokenomicsActor]);
+        loadTokenomics();
+    }, [loadTokenomics]);
 
     // Calculate tokenomics values using useMemo to avoid recalculation and ensure hooks are always called
     const tokenomicsValues = useMemo(() => {
-        if (!configs || !tokenomicsSchedule) {
+        if (!tokenomics) {
             return null;
         }
 
         const E8S = 100_000_000n;
-        const primaryMaxSupply = (BigInt(configs.max_primary_supply) / E8S).toString();
-        const tgeAllocation = (BigInt(configs.initial_primary_mint) / E8S).toString();
-        const initialSecondaryBurn = (BigInt(configs.initial_secondary_burn) / E8S).toString();
-        const halvingStep = configs.halving_step.toString();
         
-        // Get initial reward per burn unit from the tokenomics schedule
-        // The first element in primary_mint_per_threshold is the initial reward rate
+        // Get values from poolData's tokenomics info
+        const poolTokenomics = poolData?.[1];
+        if (!poolTokenomics) {
+            return null;
+        }
+
+        const primaryMaxSupply = (BigInt(poolTokenomics.primary_max_supply || 0) / E8S).toString();
+        const tgeAllocation = (BigInt(poolTokenomics.initial_primary_supply || 0) / E8S).toString();
+        const initialSecondaryBurn = (BigInt(poolTokenomics.initial_secondary_burn || 0) / E8S).toString();
+        const halvingStep = (poolTokenomics.halving_step || 0).toString();
+        
+        // Get initial reward per burn unit from the first threshold
         let initialRewardPerBurnUnit = "1";
-        if (tokenomicsSchedule.primary_mint_per_threshold && tokenomicsSchedule.primary_mint_per_threshold.length > 0) {
-            const firstRewardE8s = BigInt(tokenomicsSchedule.primary_mint_per_threshold[0]);
+        if (poolTokenomics.primary_mint_per_threshold && poolTokenomics.primary_mint_per_threshold.length > 0) {
+            const firstRewardE8s = BigInt(poolTokenomics.primary_mint_per_threshold[0]);
             initialRewardPerBurnUnit = (firstRewardE8s / E8S).toString();
         }
 
@@ -103,59 +43,83 @@ const TokenomicsTab: React.FC = () => {
             halvingStep,
             initialRewardPerBurnUnit
         };
-    }, [configs, tokenomicsSchedule]);
+    }, [tokenomics, poolData]);
 
     // Render states
-    if (!activeSwapPool) {
+    if (!poolData) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-                <p className="text-lg font-medium text-foreground">
-                    No active token pool selected
-                </p>
+            <div className="terminal-pure">
+                <div className="terminal-header">
+                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics
+                </div>
+                <div className="terminal-row">
+                    <span className="terminal-label">status:</span>
+                    <span className="terminal-accent">no_active_pool_selected</span>
+                </div>
             </div>
         );
     }
 
-    if (loading) {
+    if (isLoading.tokenomics) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-                <LoaderCircle size={48} className="animate-spin text-primary" />
-                <p className="text-lg font-medium text-foreground">
-                    Loading tokenomics data...
-                </p>
+            <div className="terminal-pure">
+                <div className="terminal-header">
+                    <span className="terminal-prompt">&gt;&gt;</span> loading_tokenomics
+                </div>
+                <div className="flex justify-center items-center h-32">
+                    <LoaderCircle size={20} className="animate animate-spin text-white" />
+                </div>
             </div>
         );
     }
 
-    if (error) {
+    if (errors.tokenomics) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-                <p className="text-lg font-medium text-destructive">
-                    {error}
-                </p>
+            <div className="terminal-pure">
+                <div className="terminal-header">
+                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics_error
+                </div>
+                <div className="terminal-row">
+                    <span className="terminal-status">[ERROR]</span>
+                    <span className="terminal-accent">{errors.tokenomics}</span>
+                </div>
             </div>
         );
     }
 
     if (!tokenomicsValues) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-                <p className="text-lg font-medium text-foreground">
-                    No tokenomics data available
-                </p>
+            <div className="terminal-pure">
+                <div className="terminal-header">
+                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics
+                </div>
+                <div className="terminal-row">
+                    <span className="terminal-label">status:</span>
+                    <span className="terminal-accent">no_data_available</span>
+                </div>
             </div>
         );
     }
 
     return (
         <div className="w-full">
+            <div className="terminal-pure mb-4">
+                <div className="terminal-header mb-2">
+                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics_visualization
+                </div>
+                <div className="terminal-row">
+                    <span className="terminal-label">status:</span>
+                    <span className="terminal-primary">[LOADED]</span>
+                </div>
+            </div>
+            
             <UnifiedTokenomicsGraphs
                 primaryMaxSupply={tokenomicsValues.primaryMaxSupply}
                 tgeAllocation={tokenomicsValues.tgeAllocation}
                 initialSecondaryBurn={tokenomicsValues.initialSecondaryBurn}
                 halvingStep={tokenomicsValues.halvingStep}
                 initialRewardPerBurnUnit={tokenomicsValues.initialRewardPerBurnUnit}
-                deployedSchedule={tokenomicsSchedule}
+                deployedSchedule={poolData?.[1]}
             />
         </div>
     );

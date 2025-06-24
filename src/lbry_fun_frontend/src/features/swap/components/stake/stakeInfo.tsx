@@ -36,56 +36,36 @@ const StakedInfo: React.FC<StakedInfoProps> = ({ setLoadingModalV, setActionType
     }, [isAuthenticated, principal, swap, dispatch])
 
     return (
-        <div >
-           <table className="min-w-full border-collapse">
-                <thead>
-                    {/* Header row hidden on small screens */}
-                    <tr className="hidden sm:table-row border-b border-gray-300 border-gray-700 hover:bg-gray-100 hover:bg-gray-800">
-                    <th className="py-3 text-left text-lg font-semibold text-radiocolor text-white whitespace-nowrap">
-                        <span className="flex me-7">Date</span>
-                    </th>
-                    <th className="py-3 text-left text-lg font-semibold text-radiocolor text-white whitespace-nowrap">
-                        <span className="flex me-7">Amount Staked</span>
-                    </th>
-                    <th className="py-3 text-left text-lg font-semibold text-radiocolor text-white whitespace-nowrap">
-                        <span className="flex me-7">Amount Earned</span>
-                    </th>
-                    <th className="py-3 text-left text-lg font-semibold text-radiocolor text-white whitespace-nowrap">
-                        <span className="flex me-7">Estimated Reward</span>
-                    </th>
-                    </tr>
-                </thead>
-                <tbody className="text-gray-600 text-gray-300 text-sm font-light">
-                    {/* Each row switches between horizontal and vertical */}
-                    <tr className="block sm:table-row border-b border-gray-300 border-gray-700 hover:bg-gray-100 hover:bg-gray-800">
-                    <td className="block sm:table-cell py-3 text-left text-base font-medium text-radiocolor text-white whitespace-nowrap">
-                        <span className="block sm:hidden font-semibold text-gray-400">Date:</span>
-                        {new Date(Number(swap.stakeInfo.unix_stake_time) / 1e6).toLocaleString()}
-                    </td>
-                    <td className="block sm:table-cell py-3 sm:px-6 xs:px-2 text-left text-base font-medium text-radiocolor text-white whitespace-nowrap">
-                        <span className="block sm:hidden font-semibold text-gray-400">Amount Staked:</span>
-                        {swap.stakeInfo.stakedPrimary} {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}
-                    </td>
-                    <td className="block sm:table-cell py-3 sm:px-6 xs:px-2 text-left text-base font-medium text-radiocolor text-white whitespace-nowrap">
-                        <span className="block sm:hidden font-semibold text-gray-400">Amount Earned:</span>
-                        {swap.stakeInfo.rewardIcp} ICP
-                    </td>
-                    <td className="block sm:table-cell py-3 sm:px-6 xs:px-2 text-left text-base font-medium text-radiocolor text-white whitespace-nowrap">
-                        <span className="block sm:hidden font-semibold text-gray-400">Estimated Reward:</span>
-                        {userEstimateReward} ICP
-                    </td>
-                    <td className="block sm:table-cell py-3 sm:px-6 xs:px-2 text-left">
-                        <span className="block sm:hidden font-semibold text-gray-400">Actions:</span>
-                        <div className="stake-table whitespace-nowrap">
+        <div>
+            <div className="terminal-header mb-2">
+                <span className="terminal-prompt">&gt;</span> stake_info
+            </div>
+            <div className="terminal-info">
+                <div className="terminal-row">
+                    <span className="terminal-label">date:</span>
+                    <span className="terminal-value">{new Date(Number(swap.stakeInfo.unix_stake_time) / 1e6).toLocaleString()}</span>
+                </div>
+                <div className="terminal-row">
+                    <span className="terminal-label">amount_staked:</span>
+                    <span className="terminal-value">{swap.stakeInfo.stakedPrimary} {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span>
+                </div>
+                <div className="terminal-row">
+                    <span className="terminal-label">amount_earned:</span>
+                    <span className="terminal-value">{swap.stakeInfo.rewardIcp} ICP</span>
+                </div>
+                <div className="terminal-row">
+                    <span className="terminal-label">estimated_reward:</span>
+                    <span className="terminal-value">{userEstimateReward} ICP</span>
+                </div>
+                <div className="terminal-row mt-2">
+                    <span className="terminal-label">actions:</span>
+                    <div className="flex gap-2">
                         <ClaimReward setLoadingModalV={setLoadingModalV} setActionType={setActionType} />
                         <Unstake setLoadingModalV={setLoadingModalV} setActionType={setActionType} />
-                        </div>
-                    </td>
-                    </tr>
-                </tbody>
-           </table>
-
-
-        </div>);
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 };
 export default StakedInfo;
