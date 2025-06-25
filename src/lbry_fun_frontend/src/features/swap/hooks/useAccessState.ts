@@ -2,7 +2,6 @@ import { useMemo, useEffect, useState } from 'react';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { AccessState } from '../types/accessControl.types';
 import { RootState } from '@/store';
-import { LAUNCH_PERIOD_NANOS } from '@/constants/launchPeriod';
 
 export function useAccessState() {
   const { isAuthenticated, isLoading: authLoading } = useAppSelector((state: RootState) => state.auth);
@@ -17,10 +16,14 @@ export function useAccessState() {
     const tokenRecord = swap.activeSwapPool[1];
     const currentTimeNanos = Date.now() * 1000000; // Convert to nanoseconds
     
-    // Token is live if pool created successfully and 24 hours have passed
+    // Use launch_delay_seconds from token record, default to 24 hours if not present
+    const launchDelaySeconds = tokenRecord.launch_delay_seconds || 86400; // 24 hours default
+    const launchDelayNanos = BigInt(launchDelaySeconds) * BigInt(1_000_000_000);
+    
+    // Token is live if pool created successfully and launch delay has passed
     return !tokenRecord.pool_creation_failed && 
            Number(tokenRecord.pool_created_at) > 0 && 
-           currentTimeNanos >= Number(tokenRecord.created_time) + Number(LAUNCH_PERIOD_NANOS);
+           currentTimeNanos >= Number(tokenRecord.created_time) + Number(launchDelayNanos);
   }, [swap.activeSwapPool]);
 
   // Calculate countdown if token is not live
@@ -28,7 +31,11 @@ export function useAccessState() {
     if (!isTokenLive && swap.activeSwapPool?.[1]) {
       const tokenRecord = swap.activeSwapPool[1];
       const currentTimeNanos = Date.now() * 1000000;
-      const launchTimeNanos = Number(tokenRecord.created_time) + Number(LAUNCH_PERIOD_NANOS);
+      
+      // Use launch_delay_seconds from token record, default to 24 hours if not present
+      const launchDelaySeconds = tokenRecord.launch_delay_seconds || 86400; // 24 hours default
+      const launchDelayNanos = BigInt(launchDelaySeconds) * BigInt(1_000_000_000);
+      const launchTimeNanos = Number(tokenRecord.created_time) + Number(launchDelayNanos);
       
       if (launchTimeNanos > currentTimeNanos) {
         const remainingNanos = launchTimeNanos - currentTimeNanos;

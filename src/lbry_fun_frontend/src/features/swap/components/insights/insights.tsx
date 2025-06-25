@@ -46,12 +46,14 @@ const Insights: React.FC = () => {
     
     if (isLoading) {
         return (
-            <div className="terminal-pure">
+            <div className="terminal-pure terminal-boot">
                 <div className="terminal-header">
                     <span className="terminal-prompt">&gt;&gt;</span> loading_insights
                 </div>
                 <div className="flex justify-center items-center h-32">
-                    <LoaderCircle size={20} className="animate animate-spin text-white" />
+                    <div className="terminal-status-loading">
+                        FETCHING BLOCKCHAIN DATA
+                    </div>
                 </div>
             </div>
         );
@@ -59,13 +61,13 @@ const Insights: React.FC = () => {
 
     if (error) {
         return (
-            <div className="terminal-pure">
+            <div className="terminal-pure terminal-boot">
                 <div className="terminal-header">
                     <span className="terminal-prompt">&gt;&gt;</span> insights_error
                 </div>
                 <div className="terminal-row">
-                    <span className="terminal-status">[ERROR]</span>
-                    <span className="terminal-accent">{error}</span>
+                    <span className="terminal-status-error">[ERROR]</span>
+                    <span className="terminal-accent ml-2">{error}</span>
                 </div>
             </div>
         );

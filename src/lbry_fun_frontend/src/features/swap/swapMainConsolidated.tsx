@@ -99,20 +99,29 @@ const SwapMainConsolidated = () => {
                         <div className='tabs-content'>
                             <div className='tabs-content'>
                                 {/* Consolidated Tab Navigation */}
-                                <div className="flex mb-3 flex-wrap">
-                                    {tabs.map(tab => (
-                                        <button
-                                            key={tab.id}
-                                            onClick={() => navigate(`/swap/${tab.path}?id=${poolId}`)}
-                                            className={`font-mono text-sm px-4 py-2 mr-2 mb-2 transition-colors ${
-                                                activeTab === tab.id
-                                                    ? 'bg-black border-2 border-lime-500 text-lime-500'
-                                                    : 'bg-black border border-white/30 text-gray-400 hover:text-white hover:border-white/50'
-                                            }`}
-                                        >
-                                            {tab.label}
-                                        </button>
-                                    ))}
+                                <div className="terminal-pure mb-4">
+                                    <pre className="terminal-ascii-header text-xs mb-3">
+{`╔════════════════════════════════════════════════════════════════════╗
+║                    CYPHERPUNK SWAP TERMINAL                        ║
+╚════════════════════════════════════════════════════════════════════╝`}
+                                    </pre>
+                                    <div className="flex mb-3 flex-wrap">
+                                        {tabs.map((tab, index) => (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => navigate(`/swap/${tab.path}?id=${poolId}`)}
+                                                className={`font-mono text-xs px-4 py-2 mr-2 mb-2 transition-all terminal-boot ${
+                                                    activeTab === tab.id
+                                                        ? 'bg-black border-2 border-lime-500 text-lime-500 shadow-lg shadow-lime-500/20 terminal-pulse'
+                                                        : 'bg-black border border-white/30 text-gray-400 hover:text-white hover:border-white/50'
+                                                }`}
+                                                style={{ animationDelay: `${index * 0.1}s` }}
+                                            >
+                                                [{tab.id}] {tab.label.toUpperCase()}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="terminal-divider-single" />
                                 </div>
 
                                 <div className="mt-4">

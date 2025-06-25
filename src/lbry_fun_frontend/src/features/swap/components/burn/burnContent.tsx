@@ -18,7 +18,7 @@ import SuccessModal from "../successModal";
 import ErrorModal from "../errorModal";
 import BurnInfo from "./burnInfo";
 import calculateMaxBurnAllowed from "./calculateMaxBurnAllowed";
-import { Entry } from "@/layouts/parts/Header";
+import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
 import { RootState } from "@/store";
 import fetchTransactionHistory from "../../thunks/fetchTransactionHistory.thunk";
 
@@ -224,7 +224,7 @@ const BurnContent = () => {
                         </button>
                     ) : (
                         <div className="terminal-button w-full flex items-center justify-center">
-                            <Entry />
+                            <TerminalAuthMenu />
                         </div>
                     )}
                 </div>

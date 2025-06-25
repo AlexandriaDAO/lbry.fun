@@ -38,11 +38,14 @@ type TokenRecord = record {
   created_time : nat64;
   initial_secondary_burn : nat64;
   logs_canister_id : principal;
+  distribution_interval_seconds : nat64;
+  launch_delay_seconds : nat64;
 };
 type TokenStatus = record {
   pool_creation_failed : bool;
   pool_created_at : nat64;
   created_time : nat64;
+  launch_delay_seconds : nat64;
 };
 type TokenStatusDetail = record {
   is_live : bool;
@@ -75,6 +78,8 @@ service : () -> {
       text,
       text,
       text,
+      nat64,
+      nat64,
       nat64,
       nat64,
       nat64,

@@ -11,7 +11,7 @@ import getAccountId from "@/features/icp-ledger/thunks/getAccountId";
 import getIcpPrice from "../../../icp-ledger/thunks/getIcpPrice";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRotate } from "@fortawesome/free-solid-svg-icons";
-import { Entry } from "@/layouts/parts/Header";
+import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
 import { toast } from "sonner";
 import PoolCard from "./poolCard";
 import { RootState } from "@/store";
@@ -187,7 +187,7 @@ const AccountCards: React.FC = () => {
                     ) : (
                         <div className="mb-20 xxl:mb-20">
                             <div className="flex justify-between mb-3 xxl:mb-3 text-white white-auth-btn">
-                                <Entry />
+                                <TerminalAuthMenu />
                             </div>
                         </div>
                     )}

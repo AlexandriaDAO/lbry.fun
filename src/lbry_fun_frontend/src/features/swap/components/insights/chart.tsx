@@ -43,7 +43,7 @@ const LineChart: React.FC<ChartProps> = ({
 
     useEffect(() => {
         if (chartRef.current && dataYaxis && dataYaxis.length > 0) {
-            const myChart = echarts.init(chartRef.current, 'dark');
+            const myChart = echarts.init(chartRef.current);
             
             // Resolve CSS custom properties to actual color values
             const resolvedLineColor = resolveColor(lineColor);
@@ -51,8 +51,14 @@ const LineChart: React.FC<ChartProps> = ({
             const resolvedLineColor2 = lineColor2 ? resolveColor(lineColor2) : '#5470c6';
 
             const option: ECBasicOption = {
+                backgroundColor: 'transparent',
                 tooltip: {
-                    trigger: 'axis'
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    textStyle: {
+                        color: '#fff'
+                    }
                 },
                 xAxis: {
                     type: 'category',
@@ -83,7 +89,8 @@ const LineChart: React.FC<ChartProps> = ({
                         },
                         splitLine: {
                             lineStyle: {
-                                color: 'hsl(var(--border))'
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                type: 'dashed'
                             }
                         }
                     }

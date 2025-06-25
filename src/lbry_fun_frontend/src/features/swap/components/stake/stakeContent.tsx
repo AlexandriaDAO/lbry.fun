@@ -14,7 +14,7 @@ import { LoaderCircle } from "lucide-react";
 import LoadingModal from "../loadingModal";
 import SuccessModal from "../successModal";
 import ErrorModal from "../errorModal";
-import { Entry } from "@/layouts/parts/Header";
+import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
 import { RootState } from "@/store";
 import StakeContentSkeleton from "./stakeContentSkeleton";
 
@@ -215,7 +215,7 @@ const StakeContent = () => {
                     </button> : <div
                         className="terminal-button w-full mb-2 flex items-center justify-center"
                     >
-                        <Entry />
+                        <TerminalAuthMenu />
                     </div>}
                     <div className="terminal-row">
                         <span className="terminal-status text-xs">*</span>

@@ -581,6 +581,7 @@ pub struct TokenStatus {
     pub created_time: u64,
     pub pool_creation_failed: bool,
     pub pool_created_at: u64,
+    pub launch_delay_seconds: u64,
 }
 
 pub async fn is_live() -> Result<bool, String> {
@@ -609,11 +610,11 @@ pub async fn is_live() -> Result<bool, String> {
                 return Ok(false);
             }
             
-            // Check if 24 hours have passed since creation
+            // Check if launch delay has passed since creation
             let current_time = ic_cdk::api::time();
-            use crate::constants::LAUNCH_PERIOD_NANOS;
+            let launch_delay_nanos = status.launch_delay_seconds * 1_000_000_000;
    
-            Ok(current_time >= status.created_time + LAUNCH_PERIOD_NANOS)
+            Ok(current_time >= status.created_time + launch_delay_nanos)
         },
         Ok((None,)) => Err("Token not found in parent canister".to_string()),
         Err((code, msg)) => Err(format!("Failed to get token status: {:?} - {}", code, msg)),

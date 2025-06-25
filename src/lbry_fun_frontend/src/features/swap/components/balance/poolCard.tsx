@@ -16,7 +16,6 @@ import type { Value as Icrc1Value } from "../../../../../../declarations/icp_led
 import { setActiveSwapPool } from '@/features/swap/swapSlice';
 import { TokenConversionService } from "@/utils/TokenConversionService";
 import { RootState } from "@/store";
-import { LAUNCH_PERIOD_NANOS } from "@/constants/launchPeriod";
 
 const PoolCard: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -129,7 +128,10 @@ const PoolCard: React.FC = () => {
         if (activeSwapPoolFromRedux && activeSwapPoolFromRedux[1] && !activeSwapPoolFromRedux[1].isLive && activeSwapPoolFromRedux[1].created_time) {
             // created_time from the backend is in nanoseconds (as a BigInt or can be converted to one).
             const createdTimeNs = BigInt(activeSwapPoolFromRedux[1].created_time);
-            const launchTimeNs = createdTimeNs + LAUNCH_PERIOD_NANOS;
+            // Use launch_delay_seconds from token record, default to 24 hours if not present
+            const launchDelaySeconds = activeSwapPoolFromRedux[1].launch_delay_seconds || 86400; // 24 hours default
+            const launchDelayNanos = BigInt(launchDelaySeconds) * BigInt(1_000_000_000);
+            const launchTimeNs = createdTimeNs + launchDelayNanos;
 
             const intervalId = setInterval(() => {
                 // Current time in milliseconds from local clock, convert to nanoseconds BigInt.

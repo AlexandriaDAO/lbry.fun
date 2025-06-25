@@ -14,83 +14,85 @@ export const AnalyticsTerminal: React.FC = React.memo(() => {
   const renderActiveView = () => {
     switch (activeView) {
       case 'insights':
-        return (
-          <div className="mt-3">
-            <Insights />
-          </div>
-        );
+        return <Insights />;
       case 'tokenomics':
-        return (
-          <div className="mt-3">
-            <TokenomicsTab />
-          </div>
-        );
+        return <TokenomicsTab />;
       case 'technical':
-        return (
-          <div className="mt-3">
-            <InfoCard />
-          </div>
-        );
+        return <InfoCard />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="terminal-pure">
+    <div className="terminal-pure terminal-flicker">
+      {/* ASCII Art Header */}
+      <pre className="terminal-ascii-header">
+{`╔══════════════════════════════════════╗
+║    ANALYTICS TERMINAL v2.049         ║
+║    [REAL-TIME DATA MONITORING]       ║
+╚══════════════════════════════════════╝`}
+      </pre>
+
       {/* Terminal Header */}
-      <div className="terminal-header mb-3">
+      <div className="terminal-header terminal-boot">
         <span className="terminal-prompt">&gt;&gt;</span> analytics_terminal
+        <span className="terminal-status-live ml-2">[LIVE]</span>
       </div>
 
+      <div className="terminal-divider-double" />
+
       {/* Quick Stats Summary */}
-      <div className="terminal-section mb-3">
-        <div className="terminal-header mb-2">
-          <span className="terminal-prompt">&gt;</span> quick_stats
-        </div>
+      <div className="terminal-section terminal-boot" style={{ animationDelay: '0.1s' }}>
+        <span className="terminal-prompt">&gt;</span> quick_stats
         {poolData ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-            <div>
-              <div className="terminal-label">pool_name:</div>
-              <div className="terminal-value truncate">{poolData[1].pool_name}</div>
+          <>
+            <pre className="text-gray-600 text-xs ml-4 mb-2">
+{`┌─────────────────────────────────────┐
+│ POOL METRICS - REAL TIME            │
+└─────────────────────────────────────┘`}
+            </pre>
+            <div className="ml-4 grid grid-cols-2 md:grid-cols-4 gap-x-4 text-xs">
+              <div className="terminal-row">
+                <span className="terminal-label">pool_name:</span>
+                <span className="terminal-value ml-1 terminal-typewriter">{poolData[1].pool_name}</span>
+              </div>
+              <div className="terminal-row">
+                <span className="terminal-label">primary_token:</span>
+                <span className="terminal-primary ml-1 cyber-glow">{poolData[1].primary_token_symbol}</span>
+              </div>
+              <div className="terminal-row">
+                <span className="terminal-label">secondary_token:</span>
+                <span className="terminal-value ml-1">{poolData[1].secondary_token_symbol}</span>
+              </div>
+              <div className="terminal-row">
+                <span className="terminal-label">status:</span>
+                <span className="terminal-status-live ml-1">[ACTIVE]</span>
+              </div>
             </div>
-            <div>
-              <div className="terminal-label">primary_token:</div>
-              <div className="terminal-primary">{poolData[1].primary_token_symbol}</div>
-            </div>
-            <div>
-              <div className="terminal-label">secondary_token:</div>
-              <div className="terminal-value">{poolData[1].secondary_token_symbol}</div>
-            </div>
-            <div>
-              <div className="terminal-label">status:</div>
-              <div className="terminal-status">[LIVE]</div>
-            </div>
-          </div>
+          </>
         ) : (
-          <div className="text-gray-400 text-xs">Loading pool data...</div>
+          <div className="terminal-status-loading ml-4">Loading pool metrics</div>
         )}
       </div>
 
       {/* View Navigation */}
-      <div className="terminal-section mb-3">
-        <div className="flex gap-2">
-          {(['insights', 'tokenomics', 'technical'] as const).map(view => (
-            <button
-              key={view}
-              onClick={() => setActiveView(view)}
-              className={`
-                font-mono text-xs px-3 py-1 transition-colors
-                ${activeView === view
-                  ? 'bg-black border border-lime-500 text-lime-500'
-                  : 'bg-black border border-white/30 text-gray-400 hover:text-white hover:border-white/50'
-                }
-              `}
-            >
-              [{view.toUpperCase()}]
-            </button>
-          ))}
-        </div>
+      <div className="flex gap-2 mt-2 mb-1">
+        {(['insights', 'tokenomics', 'technical'] as const).map(view => (
+          <button
+            key={view}
+            onClick={() => setActiveView(view)}
+            className={`
+              terminal-button text-xs px-2 py-0.5
+              ${activeView === view
+                ? 'border-lime-500 text-lime-500'
+                : 'border-white/30 text-gray-400 hover:text-white hover:border-white/50'
+              }
+            `}
+          >
+            [{view.toUpperCase()}]
+          </button>
+        ))}
       </div>
 
       {/* Active View Content */}

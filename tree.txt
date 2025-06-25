@@ -1,591 +1,285 @@
 ├── .babelrc (7 lines)
+├── .claude/
+│   └── settings.local.json (74 lines)
 ├── .cursorignore (9 lines)
-├── .mops/
-│   ├── _github/
-│   │   ├── array#v0.2.1/
-│   │   │   ├── Makefile (6 lines)
-│   │   │   ├── src/
-│   │   │   │   ├── Array.mo (45 lines)
-│   │   │   │   └── Copy.mo (35 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── Array.mo (32 lines)
-│   │   │   │   └── Copy.mo (19 lines)
-│   │   │   ├── vessel.dhall (5 lines)
-│   │   │   ├── vessel.json (1 lines)
-│   │   ├── base-0.7.3#moc-0.7.3@aafcdee0c8328087aeed506e64aa2ff4ed329b47/
-│   │   │   ├── NOTICE (13 lines)
-│   │   │   ├── doc/
-│   │   │   │   ├── antora.yml (6 lines)
-│   │   │   │   ├── design.md (170 lines)
-│   │   │   │   ├── make_docs.sh (8 lines)
-│   │   │   │   ├── module_graph.py (31 lines)
-│   │   │   │   ├── module_nav.py (26 lines)
-│   │   │   │   ├── modules/
-│   │   │   │   │   └── base-libraries/
-│   │   │   │   │       └── pages/
-│   │   │   ├── src/
-│   │   │   │   ├── Array.mo (345 lines)
-│   │   │   │   ├── AssocList.mo (204 lines)
-│   │   │   │   ├── Blob.mo (56 lines)
-│   │   │   │   ├── Bool.mo (45 lines)
-│   │   │   │   ├── Buffer.mo (1938 lines)
-│   │   │   │   ├── CertifiedData.mo (30 lines)
-│   │   │   │   ├── Char.mo (68 lines)
-│   │   │   │   ├── Debug.mo (16 lines)
-│   │   │   │   ├── Deque.mo (76 lines)
-│   │   │   │   ├── Error.mo (42 lines)
-│   │   │   │   ├── ExperimentalCycles.mo (52 lines)
-│   │   │   │   ├── ExperimentalInternetComputer.mo (37 lines)
-│   │   │   │   ├── ExperimentalStableMemory.mo (122 lines)
-│   │   │   │   ├── Float.mo (151 lines)
-│   │   │   │   ├── Func.mo (39 lines)
-│   │   │   │   ├── Hash.mo (84 lines)
-│   │   │   │   ├── HashMap.mo (230 lines)
-│   │   │   │   ├── Heap.mo (114 lines)
-│   │   │   │   ├── Int.mo (151 lines)
-│   │   │   │   ├── Int16.mo (160 lines)
-│   │   │   │   ├── Int32.mo (161 lines)
-│   │   │   │   ├── Int64.mo (162 lines)
-│   │   │   │   ├── Int8.mo (161 lines)
-│   │   │   │   ├── Iter.mo (221 lines)
-│   │   │   │   ├── IterType.mo (8 lines)
-│   │   │   │   ├── List.mo (434 lines)
-│   │   │   │   ├── Nat.mo (76 lines)
-│   │   │   │   ├── Nat16.mo (147 lines)
-│   │   │   │   ├── Nat32.mo (147 lines)
-│   │   │   │   ├── Nat64.mo (147 lines)
-│   │   │   │   ├── Nat8.mo (147 lines)
-│   │   │   │   ├── None.mo (20 lines)
-│   │   │   │   ├── Option.mo (161 lines)
-│   │   │   │   ├── Order.mo (47 lines)
-│   │   │   │   ├── Prelude.mo (34 lines)
-│   │   │   │   ├── Principal.mo (59 lines)
-│   │   │   │   ├── RBTree.mo (219 lines)
-│   │   │   │   ├── Random.mo (189 lines)
-│   │   │   │   ├── Result.mo (211 lines)
-│   │   │   │   ├── Stack.mo (41 lines)
-│   │   │   │   ├── Text.mo (616 lines)
-│   │   │   │   ├── Time.mo (38 lines)
-│   │   │   │   ├── Trie.mo (1224 lines)
-│   │   │   │   ├── TrieMap.mo (181 lines)
-│   │   │   │   └── TrieSet.mo (98 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── Makefile (40 lines)
-│   │   │   │   ├── RBTreeTest.mo (62 lines)
-│   │   │   │   ├── TrieExampleTest.mo (39 lines)
-│   │   │   │   ├── arrayTest.mo (239 lines)
-│   │   │   │   ├── bufTest.mo (3293 lines)
-│   │   │   │   ├── charTest.mo (65 lines)
-│   │   │   │   ├── dequeTest.mo (46 lines)
-│   │   │   │   ├── floatTest.mo (101 lines)
-│   │   │   │   ├── funcTest.mo (25 lines)
-│   │   │   │   ├── hashMapTest.mo (147 lines)
-│   │   │   │   ├── heapTest.mo (52 lines)
-│   │   │   │   ├── int8Test.mo (8 lines)
-│   │   │   │   ├── intTest.mo (24 lines)
-│   │   │   │   ├── iterTest.mo (177 lines)
-│   │   │   │   ├── listTest.mo (223 lines)
-│   │   │   │   ├── natTest.mo (22 lines)
-│   │   │   │   ├── noneTest.mo (14 lines)
-│   │   │   │   ├── optionTest.mo (267 lines)
-│   │   │   │   ├── orderTest.mo (29 lines)
-│   │   │   │   ├── resultTest.mo (63 lines)
-│   │   │   │   ├── stackTest.mo (16 lines)
-│   │   │   │   ├── textTest.mo (812 lines)
-│   │   │   │   ├── trieMapTest.mo (139 lines)
-│   │   │   │   ├── trieSetTest.mo (53 lines)
-│   │   │   │   ├── vessel.dhall (2 lines)
-│   │   ├── candy_0_3_0#v0.3.0@907a4e7363aac6c6a4e114ebc73e3d3f21e138af/
-│   │   │   ├── CHANGELOG.md (4 lines)
-│   │   │   ├── ICRC16.md (113 lines)
-│   │   │   ├── Makefile (25 lines)
-│   │   │   ├── dfx.json (22 lines)
-│   │   │   ├── docs/
-│   │   │   │   ├── candid.html (7 lines)
-│   │   │   │   ├── clone.html (8 lines)
-│   │   │   │   ├── conversion.html (341 lines)
-│   │   │   │   ├── hex.html (8 lines)
-│   │   │   │   ├── index.html (26 lines)
-│   │   │   │   ├── json.html (8 lines)
-│   │   │   │   ├── properties.html (209 lines)
-│   │   │   │   ├── styles.css (163 lines)
-│   │   │   │   ├── types.html (87 lines)
-│   │   │   │   ├── upgrade.html (6 lines)
-│   │   │   │   └── workspace.html (58 lines)
-│   │   │   ├── mops.toml (23 lines)
-│   │   │   ├── old_package-set.dhall (38 lines)
-│   │   │   ├── old_vessel.dhall (5 lines)
-│   │   │   ├── src/
-│   │   │   │   ├── candid.mo (307 lines)
-│   │   │   │   ├── clone.mo (54 lines)
-│   │   │   │   ├── conversion.mo (2097 lines)
-│   │   │   │   ├── json.mo (109 lines)
-│   │   │   │   ├── properties.mo (567 lines)
-│   │   │   │   ├── types.mo (1051 lines)
-│   │   │   │   ├── upgrade.mo (303 lines)
-│   │   │   │   └── workspace.mo (562 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── candid.test.mo (323 lines)
-│   │   │   │   ├── clone.test.mo (221 lines)
-│   │   │   │   ├── json.test.mo (162 lines)
-│   │   │   │   ├── properties.test.mo (191 lines)
-│   │   │   │   ├── types.test.mo (175 lines)
-│   │   │   │   ├── upgrade.test.mo (120 lines)
-│   │   │   │   └── workspaces.test.mo (218 lines)
-│   │   │   ├── test_runner.sh (23 lines)
-│   │   │   ├── tests/
-│   │   │   │   └── test_runner.mo (70 lines)
-│   │   ├── cert#v0.1.3@c403ffec0a60f658a1009976c785aa567ff0da77/
-│   │   │   ├── Developent.md (17 lines)
-│   │   │   ├── Makefile (14 lines)
-│   │   │   ├── demo/
-│   │   │   │   ├── ManagementCanister.mo (26 lines)
-│   │   │   │   ├── canister_ids.json (5 lines)
-│   │   │   │   ├── dfx.json (17 lines)
-│   │   │   │   ├── main.mo (483 lines)
-│   │   │   │   ├── vessel.dhall (5 lines)
-│   │   │   ├── flake.lock (46 lines)
-│   │   │   ├── flake.nix (59 lines)
-│   │   │   ├── gen-tests/
-│   │   │   │   ├── cabal.project.freeze (84 lines)
-│   │   │   │   ├── gen-tests.cabal (21 lines)
-│   │   │   │   ├── main.hs (290 lines)
-│   │   │   ├── mops.nix/
-│   │   │   │   ├── default.nix (18 lines)
-│   │   │   │   ├── node-env.nix (690 lines)
-│   │   │   │   └── node-packages.nix (3258 lines)
-│   │   │   ├── mops.toml (14 lines)
-│   │   │   ├── src/
-│   │   │   │   ├── CanisterSigs.mo (200 lines)
-│   │   │   │   ├── CertTree.mo (109 lines)
-│   │   │   │   ├── Dyadic.mo (105 lines)
-│   │   │   │   ├── MerkleTree.mo (731 lines)
-│   │   │   │   └── ReqData.mo (118 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── Makefile (4 lines)
-│   │   │   │   ├── Test.mo (210 lines)
-│   │   │   │   ├── vessel.dhall (5 lines)
-│   │   │   ├── vessel.dhall (2 lines)
-│   │   │   ├── vessel.json (1 lines)
-│   │   ├── encoding#v0.4.1@2711d18727e954b11afc0d37945608512b5fbce2/
-│   │   │   ├── Makefile (6 lines)
-│   │   │   ├── src/
-│   │   │   │   ├── Base32.mo (152 lines)
-│   │   │   │   ├── Base64.mo (254 lines)
-│   │   │   │   ├── Binary.mo (115 lines)
-│   │   │   │   └── Hex.mo (115 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── Base32.mo (28 lines)
-│   │   │   │   ├── Base64.mo (39 lines)
-│   │   │   │   ├── Binary.mo (10 lines)
-│   │   │   │   ├── Hex.mo (35 lines)
-│   │   │   │   └── util.mo (29 lines)
-│   │   │   ├── vessel.dhall (5 lines)
-│   │   │   ├── vessel.json (1 lines)
-│   │   ├── encoding_0_4_1#v0.4.1@2711d18727e954b11afc0d37945608512b5fbce2/
-│   │   │   ├── Makefile (6 lines)
-│   │   │   ├── src/
-│   │   │   │   ├── Base32.mo (152 lines)
-│   │   │   │   ├── Base64.mo (254 lines)
-│   │   │   │   ├── Binary.mo (115 lines)
-│   │   │   │   └── Hex.mo (115 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── Base32.mo (28 lines)
-│   │   │   │   ├── Base64.mo (39 lines)
-│   │   │   │   ├── Binary.mo (10 lines)
-│   │   │   │   ├── Hex.mo (35 lines)
-│   │   │   │   └── util.mo (29 lines)
-│   │   │   ├── vessel.dhall (5 lines)
-│   │   │   ├── vessel.json (1 lines)
-│   │   ├── map9#v9.0.1@10b68f6ea8df5e72dfa4c07a50c8bb60a916c233/
-│   │   │   ├── dfx.json (16 lines)
-│   │   │   ├── mops.toml (7 lines)
-│   │   │   ├── src/
-│   │   │   │   ├── Map/
-│   │   │   │   │   ├── const.mo (14 lines)
-│   │   │   │   │   ├── lib.mo (67 lines)
-│   │   │   │   │   ├── modules/
-│   │   │   │   │   │   ├── clone.mo (367 lines)
-│   │   │   │   │   │   ├── find.mo (248 lines)
-│   │   │   │   │   │   ├── fromIter.mo (600 lines)
-│   │   │   │   │   │   ├── get.mo (68 lines)
-│   │   │   │   │   │   ├── init.mo (123 lines)
-│   │   │   │   │   │   ├── iterate.mo (1860 lines)
-│   │   │   │   │   │   ├── put.mo (876 lines)
-│   │   │   │   │   │   ├── queue.mo (247 lines)
-│   │   │   │   │   │   ├── rehash.mo (78 lines)
-│   │   │   │   │   │   ├── remove.mo (158 lines)
-│   │   │   │   │   │   └── toArray.mo (162 lines)
-│   │   │   │   │   ├── types.mo (37 lines)
-│   │   │   │   │   └── utils.mo (203 lines)
-│   │   │   │   └── Set/
-│   │   │   │       ├── const.mo (14 lines)
-│   │   │   │       ├── lib.mo (67 lines)
-│   │   │   │       ├── modules/
-│   │   │   │       │   ├── clone.mo (180 lines)
-│   │   │   │       │   ├── find.mo (197 lines)
-│   │   │   │       │   ├── fromIter.mo (580 lines)
-│   │   │   │       │   ├── get.mo (50 lines)
-│   │   │   │       │   ├── init.mo (74 lines)
-│   │   │   │       │   ├── iterate.mo (612 lines)
-│   │   │   │       │   ├── put.mo (306 lines)
-│   │   │   │       │   ├── queue.mo (227 lines)
-│   │   │   │       │   ├── rehash.mo (75 lines)
-│   │   │   │       │   ├── remove.mo (155 lines)
-│   │   │   │       │   └── toArray.mo (146 lines)
-│   │   │   │       ├── types.mo (36 lines)
-│   │   │   │       └── utils.mo (203 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── Map.mo (328 lines)
-│   │   │   │   └── Set.mo (259 lines)
-│   │   │   ├── test.mo (112 lines)
-│   │   │   ├── vessel.dhall (7 lines)
-│   │   │   ├── vessel.json (1 lines)
-│   │   ├── matchers#v1.3.0@3dac8a071b69e4e651b25a7d9683fe831eb7cffd/
-│   │   │   ├── src/
-│   │   │   │   ├── Canister.mo (162 lines)
-│   │   │   │   ├── Matchers.mo (231 lines)
-│   │   │   │   ├── Suite.mo (116 lines)
-│   │   │   │   ├── Testable.mo (286 lines)
-│   │   │   │   └── matchers/
-│   │   │   │       └── Hashmap.mo (36 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── Test.mo (164 lines)
-│   │   │   │   └── run_test.sh (11 lines)
-│   │   │   ├── vessel.dhall (5 lines)
-│   │   │   ├── vessel.json (1 lines)
-│   │   ├── motoko_numbers#v1.1.0@773953141f976ccdfc2e6a2c451b841a53bb39a0/
-│   │   │   ├── Makefile (14 lines)
-│   │   │   ├── build.sh (12 lines)
-│   │   │   ├── dfx.json (11 lines)
-│   │   │   ├── mops.toml (8 lines)
-│   │   │   ├── samples/
-│   │   │   │   └── Sample.mo (3 lines)
-│   │   │   ├── src/
-│   │   │   │   ├── FloatX.mo (213 lines)
-│   │   │   │   ├── IntX.mo (279 lines)
-│   │   │   │   ├── NatX.mo (313 lines)
-│   │   │   │   └── Util.mo (147 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── FloatXTests.mo (58 lines)
-│   │   │   │   ├── IntXTests.mo (234 lines)
-│   │   │   │   ├── Makefile (4 lines)
-│   │   │   │   ├── NatXTests.mo (206 lines)
-│   │   │   │   ├── TestUtil.mo (21 lines)
-│   │   │   │   └── Tests.mo (8 lines)
-│   │   │   ├── test.sh (11 lines)
-│   │   │   ├── vessel.dhall (5 lines)
-│   │   │   ├── vessel.json (1 lines)
-│   │   ├── sha224#82e0aa1a77a8c0a2f98332b59ffc242d820e62cb/
-│   │   │   ├── Makefile (14 lines)
-│   │   │   ├── dfx.json (21 lines)
-│   │   │   ├── src/
-│   │   │   │   └── SHA224.mo (195 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── Makefile (4 lines)
-│   │   │   │   ├── Test.mo (289 lines)
-│   │   │   │   ├── vessel.dhall (5 lines)
-│   │   │   ├── vessel.dhall (2 lines)
-│   │   │   ├── vessel.json (1 lines)
-│   │   ├── sha256#9e2468f51ef060ae04fde8d573183191bda30189/
-│   │   │   ├── Makefile (14 lines)
-│   │   │   ├── NOTICE (13 lines)
-│   │   │   ├── dfx.json (8 lines)
-│   │   │   ├── run.sh (18 lines)
-│   │   │   ├── src/
-│   │   │   │   └── SHA256.mo (201 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── Makefile (4 lines)
-│   │   │   │   ├── Test.mo (512 lines)
-│   │   │   │   ├── vessel.dhall (5 lines)
-│   │   │   ├── vessel.dhall (2 lines)
-│   │   │   ├── vessel.json (1 lines)
-│   │   ├── stable-write-only#v0.1.0@02e9aac74bdbed86b52ebed985d82b6ef66a76d8/
-│   │   │   ├── CHANGELOG.md (3 lines)
-│   │   │   ├── dfx.json (24 lines)
-│   │   │   ├── mops.toml (17 lines)
-│   │   │   ├── src/
-│   │   │   │   └── lib.mo (433 lines)
-│   │   │   ├── test/
-│   │   │   │   └── lib.test.mo (47 lines)
-│   │   │   ├── testActor/
-│   │   │   │   ├── childv1.mo (218 lines)
-│   │   │   │   ├── childv2.mo (108 lines)
-│   │   │   │   └── test_runner.mo (573 lines)
-│   │   ├── stablebuffer#v0.2.0@110660769d11ba93c618dc4712525d20503bdc37/
-│   │   │   ├── Makefile (14 lines)
-│   │   │   ├── reference/
-│   │   │   │   └── Buffer.mo (150 lines)
-│   │   │   ├── src/
-│   │   │   │   └── StableBuffer.mo (174 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── Makefile (4 lines)
-│   │   │   │   ├── StableBufferTest.mo (118 lines)
-│   │   │   │   ├── vessel.dhall (5 lines)
-│   │   │   ├── vessel.dhall (2 lines)
-│   │   │   ├── vessel.json (1 lines)
-│   │   ├── stablebuffer_1_3_0#v1.3.0@acdde6bb5b939227997cebdbb8919d2e6da8691c/
-│   │   │   ├── Makefile (14 lines)
-│   │   │   ├── reference/
-│   │   │   │   └── Buffer.mo (2661 lines)
-│   │   │   ├── src/
-│   │   │   │   └── StableBuffer.mo (2629 lines)
-│   │   │   ├── test/
-│   │   │   │   ├── Makefile (6 lines)
-│   │   │   │   ├── StableBuffer.test.mo (3742 lines)
-│   │   │   │   ├── vessel.dhall (5 lines)
-│   │   │   ├── vessel.dhall (2 lines)
-│   │   │   ├── vessel.json (1 lines)
-│   │   └── xtended-numbers#v1.0.2/
-│   │       ├── build.sh (12 lines)
-│   │       ├── dfx.json (17 lines)
-│   │       ├── mops.toml (8 lines)
-│   │       ├── samples/
-│   │       │   └── Sample.mo (3 lines)
-│   │       ├── src/
-│   │       │   ├── FloatX.mo (213 lines)
-│   │       │   ├── IntX.mo (245 lines)
-│   │       │   ├── NatX.mo (199 lines)
-│   │       │   └── Util.mo (147 lines)
-│   │       ├── test/
-│   │       │   ├── FloatXTests.mo (58 lines)
-│   │       │   ├── IntXTests.mo (144 lines)
-│   │       │   ├── NatXTests.mo (132 lines)
-│   │       │   ├── TestUtil.mo (21 lines)
-│   │       │   └── Tests.mo (8 lines)
-│   │       ├── test.sh (11 lines)
-│   │       ├── vessel.dhall (5 lines)
-│   │       ├── vessel.json (1 lines)
-│   ├── base@0.12.1/
-│   │   ├── NOTICE (13 lines)
-│   │   ├── mops.toml (15 lines)
-│   │   ├── src/
-│   │   │   ├── Array.mo (866 lines)
-│   │   │   ├── AssocList.mo (403 lines)
-│   │   │   ├── Blob.mo (208 lines)
-│   │   │   ├── Bool.mo (45 lines)
-│   │   │   ├── Buffer.mo (2661 lines)
-│   │   │   ├── CertifiedData.mo (54 lines)
-│   │   │   ├── Char.mo (66 lines)
-│   │   │   ├── Debug.mo (57 lines)
-│   │   │   ├── Deque.mo (244 lines)
-│   │   │   ├── Error.mo (69 lines)
-│   │   │   ├── ExperimentalCycles.mo (152 lines)
-│   │   │   ├── ExperimentalInternetComputer.mo (86 lines)
-│   │   │   ├── ExperimentalStableMemory.mo (354 lines)
-│   │   │   ├── Float.mo (855 lines)
-│   │   │   ├── Func.mo (47 lines)
-│   │   │   ├── Hash.mo (83 lines)
-│   │   │   ├── HashMap.mo (458 lines)
-│   │   │   ├── Heap.mo (234 lines)
-│   │   │   ├── Int.mo (371 lines)
-│   │   │   ├── Int16.mo (642 lines)
-│   │   │   ├── Int32.mo (654 lines)
-│   │   │   ├── Int64.mo (640 lines)
-│   │   │   ├── Int8.mo (635 lines)
-│   │   │   ├── Iter.mo (259 lines)
-│   │   │   ├── IterType.mo (8 lines)
-│   │   │   ├── List.mo (933 lines)
-│   │   │   ├── Nat.mo (336 lines)
-│   │   │   ├── Nat16.mo (578 lines)
-│   │   │   ├── Nat32.mo (587 lines)
-│   │   │   ├── Nat64.mo (566 lines)
-│   │   │   ├── Nat8.mo (560 lines)
-│   │   │   ├── None.mo (20 lines)
-│   │   │   ├── Option.mo (162 lines)
-│   │   │   ├── Order.mo (47 lines)
-│   │   │   ├── Prelude.mo (34 lines)
-│   │   │   ├── Principal.mo (1223 lines)
-│   │   │   ├── RBTree.mo (682 lines)
-│   │   │   ├── Random.mo (271 lines)
-│   │   │   ├── Region.mo (391 lines)
-│   │   │   ├── Result.mo (234 lines)
-│   │   │   ├── Stack.mo (94 lines)
-│   │   │   ├── Text.mo (827 lines)
-│   │   │   ├── Time.mo (37 lines)
-│   │   │   ├── Timer.mo (63 lines)
-│   │   │   ├── Trie.mo (1576 lines)
-│   │   │   ├── TrieMap.mo (402 lines)
-│   │   │   └── TrieSet.mo (160 lines)
-│   ├── cbor@1.0.0/
-│   │   ├── mops.toml (15 lines)
-│   │   ├── src/
-│   │   │   ├── Decoder.mo (439 lines)
-│   │   │   ├── Encoder.mo (281 lines)
-│   │   │   ├── Types.mo (35 lines)
-│   │   │   └── Util.mo (10 lines)
-│   ├── fuzz@0.2.1/
-│   │   ├── mops.toml (10 lines)
-│   │   ├── src/
-│   │   │   ├── Array.mo (59 lines)
-│   │   │   ├── Blob.mo (15 lines)
-│   │   │   ├── Bool.mo (10 lines)
-│   │   │   ├── Buffer.mo (51 lines)
-│   │   │   ├── Char.mo (45 lines)
-│   │   │   ├── Float.mo (33 lines)
-│   │   │   ├── ICRC1.mo (23 lines)
-│   │   │   ├── Int.mo (25 lines)
-│   │   │   ├── Int16.mo (25 lines)
-│   │   │   ├── Int32.mo (25 lines)
-│   │   │   ├── Int64.mo (25 lines)
-│   │   │   ├── Int8.mo (25 lines)
-│   │   │   ├── Nat.mo (27 lines)
-│   │   │   ├── Nat16.mo (26 lines)
-│   │   │   ├── Nat32.mo (26 lines)
-│   │   │   ├── Nat64.mo (26 lines)
-│   │   │   ├── Nat8.mo (26 lines)
-│   │   │   ├── Option.mo (16 lines)
-│   │   │   ├── Principal.mo (21 lines)
-│   │   │   ├── Text.mo (47 lines)
-│   │   │   ├── lib.mo (111 lines)
-│   │   │   ├── types.mo (6 lines)
-│   │   │   └── utils.mo (16 lines)
-│   ├── icrc3-mo@0.2.6/
-│   │   ├── example/
-│   │   │   └── main.mo (174 lines)
-│   │   ├── mops.toml (21 lines)
-│   │   ├── src/
-│   │   │   ├── archive/
-│   │   │   │   └── lib.mo (138 lines)
-│   │   │   ├── helper.mo (24 lines)
-│   │   │   ├── lib.mo (854 lines)
-│   │   │   ├── migrations/
-│   │   │   │   ├── lib.mo (51 lines)
-│   │   │   │   ├── types.mo (18 lines)
-│   │   │   │   ├── v000_000_000/
-│   │   │   │   │   ├── lib.mo (15 lines)
-│   │   │   │   │   └── types.mo (13 lines)
-│   │   │   │   └── v000_001_000/
-│   │   │   │       ├── lib.mo (64 lines)
-│   │   │   │       └── types.mo (234 lines)
-│   │   │   └── service.mo (68 lines)
-│   │   ├── testActor/
-│   │   │   ├── fake.mo (8 lines)
-│   │   │   └── test_runner.mo (702 lines)
-│   ├── icrc37-mo@0.4.2/
-│   │   ├── mops.toml (25 lines)
-│   │   ├── src/
-│   │   │   ├── lib.mo (1785 lines)
-│   │   │   ├── migrations/
-│   │   │   │   ├── lib.mo (53 lines)
-│   │   │   │   ├── types.mo (25 lines)
-│   │   │   │   ├── v000_000_000/
-│   │   │   │   │   ├── lib.mo (13 lines)
-│   │   │   │   │   └── types.mo (13 lines)
-│   │   │   │   └── v000_001_000/
-│   │   │   │       ├── lib.mo (71 lines)
-│   │   │   │       └── types.mo (384 lines)
-│   │   │   └── service.mo (166 lines)
-│   ├── icrc7-mo@0.4.1/
-│   │   ├── example/
-│   │   │   └── main.mo (14 lines)
-│   │   ├── mops.toml (24 lines)
-│   │   ├── src/
-│   │   │   ├── lib.mo (1916 lines)
-│   │   │   ├── migrations/
-│   │   │   │   ├── lib.mo (53 lines)
-│   │   │   │   ├── types.mo (35 lines)
-│   │   │   │   ├── v000_000_000/
-│   │   │   │   │   ├── lib.mo (13 lines)
-│   │   │   │   │   └── types.mo (13 lines)
-│   │   │   │   └── v000_001_000/
-│   │   │   │       ├── lib.mo (135 lines)
-│   │   │   │       └── types.mo (404 lines)
-│   │   │   └── service.mo (91 lines)
-│   ├── rep-indy-hash@0.1.1/
-│   │   ├── mops.toml (15 lines)
-│   │   ├── src/
-│   │   │   └── lib.mo (116 lines)
-│   ├── sha2@0.0.5/
-│   │   ├── NOTICE (13 lines)
-│   │   ├── mops.toml (18 lines)
-│   │   ├── src/
-│   │   │   ├── Sha256.mo (491 lines)
-│   │   │   └── Sha512.mo (588 lines)
-│   ├── test@2.0.0/
-│   │   ├── mops.toml (17 lines)
-│   │   ├── src/
-│   │   │   ├── async.mo (31 lines)
-│   │   │   ├── expect/
-│   │   │   │   ├── async.mo (8 lines)
-│   │   │   │   ├── expect-array.mo (63 lines)
-│   │   │   │   ├── expect-blob.mo (28 lines)
-│   │   │   │   ├── expect-bool.mo (27 lines)
-│   │   │   │   ├── expect-call.mo (34 lines)
-│   │   │   │   ├── expect-char.mo (15 lines)
-│   │   │   │   ├── expect-int.mo (13 lines)
-│   │   │   │   ├── expect-int16.mo (13 lines)
-│   │   │   │   ├── expect-int32.mo (13 lines)
-│   │   │   │   ├── expect-int64.mo (13 lines)
-│   │   │   │   ├── expect-int8.mo (13 lines)
-│   │   │   │   ├── expect-nat.mo (13 lines)
-│   │   │   │   ├── expect-nat16.mo (13 lines)
-│   │   │   │   ├── expect-nat32.mo (13 lines)
-│   │   │   │   ├── expect-nat64.mo (13 lines)
-│   │   │   │   ├── expect-nat8.mo (13 lines)
-│   │   │   │   ├── expect-option.mo (61 lines)
-│   │   │   │   ├── expect-principal.mo (28 lines)
-│   │   │   │   ├── expect-result.mo (30 lines)
-│   │   │   │   ├── expect-text.mo (18 lines)
-│   │   │   │   ├── lib.mo (44 lines)
-│   │   │   │   └── utils.mo (28 lines)
-│   │   │   └── lib.mo (28 lines)
-│   └── vector@0.4.0/
-│       ├── NOTICE (13 lines)
-│       ├── mops.toml (23 lines)
-│       ├── src/
-│       │   ├── Class.mo (1055 lines)
-│       │   └── lib.mo (1739 lines)
-├── Cargo.lock (2278 lines)
-├── Cargo.toml (10 lines)
+├── CLAUDE.local.md (11 lines)
+├── CLAUDE.md (167 lines)
+├── Cargo.toml (11 lines)
+├── LAUNCH_PAGE_ENHANCEMENTS_SUMMARY.md (58 lines)
+├── LBRY_ALEX_TOKENOMICS_VALIDATION_PLAN.md (349 lines)
+├── RUST_TEST_SUITE_MAINTENANCE_GUIDE.md (292 lines)
+├── TERMINAL_COMPACT_DESIGN_PLAN.md (160 lines)
+├── TERMINAL_ENHANCEMENTS_SUMMARY.md (49 lines)
+├── TERMINAL_POOL_CARD_REDESIGN.md (43 lines)
+├── UNIFIED_ACCESS_CONTROL_PLAN.md (254 lines)
 ├── __mocks__/
-│   └── fileMock.js (2 lines)
-├── break, (1 lines)
-├── canister_ids.json (68 lines)
+│   ├── fileMock.js (2 lines)
+│   └── styleMock.js (1 lines)
+├── bin/
+├── canister_ids.json (14 lines)
+├── cdk-rs/
+│   ├── .mergify.yml (30 lines)
+│   ├── Cargo.toml (36 lines)
+│   ├── docs/
+│   │   ├── antora.yml (2 lines)
+│   │   └── modules/
+│   │       └── rust-guide/
+│   │           ├── examples/
+│   │           │   ├── counter-tutorial/
+│   │           │   │   ├── counter.did (6 lines)
+│   │           │   │   └── counter.rs (30 lines)
+│   │           │   ├── hello-dfx.json (35 lines)
+│   │           │   ├── intercanister-tutorial/
+│   │           │   │   ├── profile-interoperation.rs (25 lines)
+│   │           │   │   ├── profile_inter.did (13 lines)
+│   │           │   │   └── rust_profile2_dfx.json (31 lines)
+│   │           │   ├── mul-deps/
+│   │           │   │   ├── deps-main.rs (10 lines)
+│   │           │   │   ├── mul-deps-dfx.json (23 lines)
+│   │           │   │   └── mul-deps.mo (12 lines)
+│   │           │   ├── profile-tutorial/
+│   │           │   │   ├── profile.did (14 lines)
+│   │           │   │   └── profile.rs (85 lines)
+│   │           │   └── rust_counter_dfx.json (18 lines)
+│   │           ├── images/
+│   │           │   └── Rust-building-blocks.svg (1 lines)
+│   │           ├── pages/
+│   │           └── rust-nav.adoc (8 lines)
+│   ├── e2e-tests/
+│   │   ├── Cargo.toml (52 lines)
+│   │   ├── canisters/
+│   │   │   ├── api_call.rs (19 lines)
+│   │   │   ├── async.rs (105 lines)
+│   │   │   ├── canister_info.rs (84 lines)
+│   │   │   ├── management_caller.rs (84 lines)
+│   │   │   ├── reverse.rs (15 lines)
+│   │   │   ├── simple_kv_store.rs (34 lines)
+│   │   │   └── timers.rs (96 lines)
+│   │   ├── src/
+│   │   │   └── lib.rs (42 lines)
+│   │   └── tests/
+│   │       └── e2e.rs (488 lines)
+│   ├── examples/
+│   │   ├── asset_storage/
+│   │   │   ├── Cargo.toml (9 lines)
+│   │   │   ├── dfx.json (12 lines)
+│   │   │   ├── src/
+│   │   │   │   └── asset_storage_rs/
+│   │   │   │       ├── Cargo.toml (15 lines)
+│   │   │   │       ├── asset_storage.did (7 lines)
+│   │   │   │       └── lib.rs (57 lines)
+│   │   │   └── tests/
+│   │   │       └── basic.bats (71 lines)
+│   │   ├── bats/
+│   │   │   ├── bats-assert/
+│   │   │   ├── bats-core/
+│   │   │   └── bats-support/
+│   │   ├── build.sh (26 lines)
+│   │   ├── chess/
+│   │   │   ├── Cargo.toml (9 lines)
+│   │   │   ├── dfx.json (12 lines)
+│   │   │   ├── src/
+│   │   │   │   └── chess_rs/
+│   │   │   │       ├── Cargo.toml (18 lines)
+│   │   │   │       ├── chess.did (8 lines)
+│   │   │   │       ├── getrandom_fail.rs (12 lines)
+│   │   │   │       └── lib.rs (80 lines)
+│   │   │   └── tests/
+│   │   │       └── basic.bats (24 lines)
+│   │   ├── counter/
+│   │   │   ├── Cargo.toml (8 lines)
+│   │   │   ├── dfx.json (55 lines)
+│   │   │   ├── src/
+│   │   │   │   ├── counter_mo/
+│   │   │   │   │   └── main.mo (16 lines)
+│   │   │   │   ├── counter_rs/
+│   │   │   │   │   ├── Cargo.toml (16 lines)
+│   │   │   │   │   └── lib.rs (38 lines)
+│   │   │   │   ├── inter2_mo/
+│   │   │   │   │   └── main.mo (16 lines)
+│   │   │   │   ├── inter2_rs/
+│   │   │   │   │   ├── Cargo.toml (18 lines)
+│   │   │   │   │   ├── build.rs (12 lines)
+│   │   │   │   │   ├── lib.did (6 lines)
+│   │   │   │   │   └── lib.rs (20 lines)
+│   │   │   │   ├── inter_mo/
+│   │   │   │   │   └── main.mo (16 lines)
+│   │   │   │   └── inter_rs/
+│   │   │   │       ├── Cargo.toml (18 lines)
+│   │   │   │       ├── build.rs (12 lines)
+│   │   │   │       ├── lib.did (6 lines)
+│   │   │   │       └── lib.rs (20 lines)
+│   │   │   └── tests/
+│   │   │       └── basic.bats (65 lines)
+│   │   ├── management_canister/
+│   │   │   ├── Cargo.toml (5 lines)
+│   │   │   ├── dfx.json (11 lines)
+│   │   │   ├── src/
+│   │   │   │   └── caller/
+│   │   │   │       ├── Cargo.toml (16 lines)
+│   │   │   │       ├── caller.did (7 lines)
+│   │   │   │       └── lib.rs (141 lines)
+│   │   │   └── tests/
+│   │   │       └── basic.bats (30 lines)
+│   │   ├── print/
+│   │   │   ├── Cargo.toml (7 lines)
+│   │   │   ├── dfx.json (12 lines)
+│   │   │   ├── src/
+│   │   │   │   └── print_rs/
+│   │   │   │       ├── Cargo.toml (15 lines)
+│   │   │   │       ├── lib.rs (7 lines)
+│   │   │   │       └── print.did (4 lines)
+│   │   │   └── tests/
+│   │   │       └── basic.bats (18 lines)
+│   │   ├── profile/
+│   │   │   ├── Cargo.toml (9 lines)
+│   │   │   ├── dfx.json (31 lines)
+│   │   │   ├── src/
+│   │   │   │   ├── profile_inter_rs/
+│   │   │   │   │   ├── Cargo.toml (19 lines)
+│   │   │   │   │   ├── build.rs (12 lines)
+│   │   │   │   │   ├── lib.rs (25 lines)
+│   │   │   │   │   └── profile.did (13 lines)
+│   │   │   │   └── profile_rs/
+│   │   │   │       ├── Cargo.toml (16 lines)
+│   │   │   │       ├── lib.rs (85 lines)
+│   │   │   │       └── profile.did (13 lines)
+│   │   │   └── tests/
+│   │   │       └── basic.bats (32 lines)
+│   │   └── rust-toolchain.toml (5 lines)
+│   ├── ic0.txt (69 lines)
+│   ├── legacy/
+│   │   ├── ic-cdk-optimizer/
+│   │   │   ├── CHANGELOG.md (20 lines)
+│   │   │   ├── Cargo.toml (26 lines)
+│   │   │   └── src/
+│   │   │       ├── main.rs (72 lines)
+│   │   │       ├── passes/
+│   │   │       │   └── binaryen.rs (28 lines)
+│   │   │       └── passes.rs (36 lines)
+│   │   └── ic-certified-assets/
+│   ├── library/
+│   │   ├── ic-certified-map/
+│   │   │   ├── CHANGELOG.md (51 lines)
+│   │   │   ├── Cargo.toml (32 lines)
+│   │   │   └── src/
+│   │   │       ├── hashtree/
+│   │   │       │   └── test.rs (41 lines)
+│   │   │       ├── hashtree.rs (125 lines)
+│   │   │       ├── lib.rs (86 lines)
+│   │   │       ├── rbtree/
+│   │   │       │   └── test.rs (401 lines)
+│   │   │       └── rbtree.rs (1111 lines)
+│   │   └── ic-ledger-types/
+│   │       ├── CHANGELOG.md (77 lines)
+│   │       ├── Cargo.toml (27 lines)
+│   │       └── src/
+│   │           └── lib.rs (984 lines)
+│   ├── rust-toolchain.toml (5 lines)
+│   ├── scripts/
+│   │   └── download_state_machine_binary.sh (19 lines)
+│   └── src/
+│       ├── candid-extractor/
+│       │   ├── Cargo.toml (29 lines)
+│       │   ├── ic0.txt (69 lines)
+│       │   ├── ic_mock.wat (55 lines)
+│       │   ├── src/
+│       │   │   └── main.rs (51 lines)
+│       │   └── util/
+│       ├── ic-cdk/
+│       │   ├── CHANGELOG.md (355 lines)
+│       │   ├── Cargo.toml (42 lines)
+│       │   ├── src/
+│       │   │   ├── api/
+│       │   │   │   ├── call.rs (744 lines)
+│       │   │   │   ├── management_canister/
+│       │   │   │   │   ├── bitcoin/
+│       │   │   │   │   │   ├── mod.rs (118 lines)
+│       │   │   │   │   │   └── types.rs (156 lines)
+│       │   │   │   │   ├── ecdsa/
+│       │   │   │   │   │   ├── mod.rs (36 lines)
+│       │   │   │   │   │   └── types.rs (78 lines)
+│       │   │   │   │   ├── http_request/
+│       │   │   │   │   │   ├── mod.rs (101 lines)
+│       │   │   │   │   │   └── types.rs (137 lines)
+│       │   │   │   │   ├── main/
+│       │   │   │   │   │   ├── mod.rs (147 lines)
+│       │   │   │   │   │   └── types.rs (340 lines)
+│       │   │   │   │   ├── mod.rs (18 lines)
+│       │   │   │   │   └── provisional.rs (60 lines)
+│       │   │   │   ├── mod.rs (179 lines)
+│       │   │   │   └── stable/
+│       │   │   │       ├── canister.rs (68 lines)
+│       │   │   │       ├── mod.rs (511 lines)
+│       │   │   │       ├── private.rs (53 lines)
+│       │   │   │       └── tests.rs (282 lines)
+│       │   │   ├── futures.rs (139 lines)
+│       │   │   ├── lib.rs (87 lines)
+│       │   │   ├── printer.rs (29 lines)
+│       │   │   └── storage.rs (28 lines)
+│       │   └── tests/
+│       │       ├── compile_fail/
+│       │       │   ├── lifecycle_functions_should_have_no_return.rs (19 lines)
+│       │       │   ├── lifecycle_functions_should_have_no_return.stderr (40 lines)
+│       │       │   ├── no_generic.rs (7 lines)
+│       │       │   ├── no_generic.stderr (6 lines)
+│       │       │   ├── no_guard_function_for_lifecycle.rs (23 lines)
+│       │       │   ├── no_guard_function_for_lifecycle.stderr (30 lines)
+│       │       │   ├── no_self.rs (7 lines)
+│       │       │   ├── no_self.stderr (6 lines)
+│       │       │   ├── only_function.rs (7 lines)
+│       │       │   └── only_function.stderr (7 lines)
+│       │       ├── compile_test.rs (7 lines)
+│       │       └── pass/
+│       │           └── blank_methods.rs (34 lines)
+│       ├── ic-cdk-bindgen/
+│       │   ├── CHANGELOG.md (21 lines)
+│       │   ├── Cargo.toml (17 lines)
+│       │   └── src/
+│       │       └── lib.rs (85 lines)
+│       ├── ic-cdk-macros/
+│       │   ├── CHANGELOG.md (64 lines)
+│       │   ├── Cargo.toml (32 lines)
+│       │   └── src/
+│       │       ├── export.rs (540 lines)
+│       │       └── lib.rs (371 lines)
+│       ├── ic-cdk-timers/
+│       │   ├── CHANGELOG.md (52 lines)
+│       │   ├── Cargo.toml (33 lines)
+│       │   └── src/
+│       │       └── lib.rs (290 lines)
+│       └── ic0/
+│           ├── Cargo.toml (27 lines)
+│           ├── ic0.txt (69 lines)
+│           ├── src/
+│           │   ├── ic0.rs (235 lines)
+│           │   └── lib.rs (13 lines)
+│           └── util/
+│               ├── ic0build.rs (196 lines)
+│               └── work.rs (7 lines)
 ├── components.json (18 lines)
-├── coverage/
-│   ├── clover.xml (20 lines)
-│   ├── coverage-final.json (4 lines)
-│   ├── lcov-report/
-│   │   ├── Alert.tsx.html (298 lines)
-│   │   ├── Loading.tsx.html (151 lines)
-│   │   ├── base.css (225 lines)
-│   │   ├── block-navigation.js (88 lines)
-│   │   ├── favicon.png (3 lines)
-│   │   ├── index.html (131 lines)
-│   │   ├── prettify.css (2 lines)
-│   │   ├── prettify.js (3 lines)
-│   │   ├── sort-arrow-sprite.png (3 lines)
-│   │   └── sorter.js (197 lines)
-│   └── lcov.info (37 lines)
-├── deps/
-│   ├── candid/
-│   │   └── rdmx6-jaaaa-aaaaa-aaadq-cai.did (900 lines)
-│   ├── init.json (8 lines)
-│   └── pulled.json (13 lines)
-├── dfx.json (56 lines)
-├── dfx_local.json (56 lines)
-├── dfx_mainnet.json (124 lines)
-├── ic-vetkd-utils-0.1.0.tgz (327 lines)
-├── jest.config.js (19 lines)
-├── jest.setup.js (15 lines)
+├── dfx.json (72 lines)
+├── jest.config.js (38 lines)
+├── kongswap_audit_report.md (234 lines)
+├── kongswap_integration_issue.md (137 lines)
 ├── mops.toml (30 lines)
-├── plan.md (265 lines)
+├── plan.md (120 lines)
 ├── postcss.config.js (9 lines)
 ├── scripts/
-│   ├── build.sh (108 lines)
+│   ├── build.sh (127 lines)
+│   ├── collect_tokenomics_data.sh (125 lines)
 │   ├── icp_swap_argument.txt (144 lines)
 │   ├── kill_zombies.sh (67 lines)
 │   ├── network_deploy.sh (195 lines)
 │   ├── network_deploy_frontend.sh (41 lines)
-│   ├── old_readme.md (262 lines)
 │   ├── snapshot.sh (57 lines)
 │   ├── src/
-│   │   └── icp_swap_factory/
-│   │       └── icp_swap_factory.did (195 lines)
-│   ├── test.sh (26 lines)
-│   ├── testnet_migration.md (23 lines)
-│   ├── whitepaper.md (463 lines)
+│   │   ├── icp_ledger_canister/
+│   │   ├── icp_swap_factory/
+│   │   │   └── icp_swap_factory.did (195 lines)
+│   │   └── lbry_fun/
+│   │       └── src/
+│   └── test.sh (26 lines)
 ├── src/
 │   ├── ICRC/
 │   │   ├── ICRC.did (454 lines)
@@ -593,308 +287,453 @@
 │   │   ├── ICRC.did.js (436 lines)
 │   │   ├── index.d.ts (51 lines)
 │   │   └── index.js (43 lines)
+│   ├── __tests__/
+│   │   ├── hooks/
+│   │   │   └── useSwapDataLoader.test.ts (564 lines)
+│   │   ├── middleware/
+│   │   │   └── requestDeduplication.test.ts (377 lines)
+│   │   ├── performance/
+│   │   │   └── swapPerformance.test.ts (137 lines)
+│   │   └── utils/
+│   ├── features/
+│   │   └── swap/
+│   │       └── selectors/
+│   │           └── index.ts (19 lines)
+│   ├── icp_ledger_canister/
+│   │   └── ledger.did (380 lines)
 │   ├── icp_swap/
-│   │   ├── Cargo.toml (28 lines)
-│   │   ├── icp_swap.did (123 lines)
+│   │   ├── Cargo.toml (25 lines)
+│   │   ├── icp_swap.did (129 lines)
 │   │   ├── icp_swap_prelim_audit.txt (128 lines)
 │   │   └── src/
-│   │       ├── constants.rs (11 lines)
-│   │       ├── dex_integration.rs (197 lines)
-│   │       ├── error.rs (238 lines)
+│   │       ├── constants.rs (19 lines)
+│   │       ├── dex_integration.rs (340 lines)
+│   │       ├── error.rs (242 lines)
 │   │       ├── guard.rs (41 lines)
-│   │       ├── lib.rs (28 lines)
-│   │       ├── queries.rs (164 lines)
-│   │       ├── script.rs (221 lines)
-│   │       ├── storage.rs (302 lines)
-│   │       ├── update.rs (1757 lines)
-│   │       └── utils.rs (558 lines)
-│   ├── icp_swap_factory/
-│   │   ├── icp_swap_factory copy.did (195 lines)
-│   │   ├── icp_swap_factory.did (195 lines)
-│   │   ├── icp_swap_factory.did.d.ts (163 lines)
-│   │   ├── icp_swap_factory.did.js (191 lines)
-│   │   ├── index.d.ts (51 lines)
-│   │   └── index.js (43 lines)
+│   │       ├── lib.rs (29 lines)
+│   │       ├── queries.rs (176 lines)
+│   │       ├── script.rs (256 lines)
+│   │       ├── storage.rs (348 lines)
+│   │       ├── update.rs (1955 lines)
+│   │       └── utils.rs (623 lines)
 │   ├── lbry_fun/
 │   │   ├── Cargo.toml (30 lines)
-│   │   ├── lbry_fun.did (58 lines)
-│   │   ├── prd.md (319 lines)
+│   │   ├── lbry_fun.did (100 lines)
+│   │   ├── lbry_fun.did.new (95 lines)
 │   │   └── src/
-│   │       ├── ic-icrc1-ledger.did (453 lines)
-│   │       ├── ic-icrc1-ledger.wasm (6728 lines)
-│   │       ├── ic-icrc1-ledger.wasm.gz (2103 lines)
-│   │       ├── icp_swap.wasm (8667 lines)
-│   │       ├── lib.rs (13 lines)
-│   │       ├── queries.rs (49 lines)
+│   │       ├── constants.rs (4 lines)
+│   │       ├── lib.rs (30 lines)
+│   │       ├── preview_canister.rs (209 lines)
+│   │       ├── queries.rs (149 lines)
 │   │       ├── script.rs (33 lines)
-│   │       ├── storage.rs (58 lines)
-│   │       ├── tokenomics.wasm (5247 lines)
-│   │       ├── update.rs (639 lines)
-│   │       └── utlis.rs (247 lines)
+│   │       ├── simulation.rs (250 lines)
+│   │       ├── simulation_new.rs (118 lines)
+│   │       ├── storage.rs (60 lines)
+│   │       ├── tokenomics_simple.rs (241 lines)
+│   │       ├── update.rs (861 lines)
+│   │       └── utlis.rs (256 lines)
 │   ├── lbry_fun_frontend/
-│   │   ├── src/
-│   │   │   ├── App.tsx (41 lines)
-│   │   │   ├── actors/
-│   │   │   │   ├── IcpSwapActor.tsx (36 lines)
-│   │   │   │   ├── LbryFunActor.tsx (36 lines)
-│   │   │   │   └── TokenomicsActor.tsx (36 lines)
-│   │   │   ├── components/
-│   │   │   │   ├── ErrorBoundary.tsx (37 lines)
-│   │   │   │   ├── ErrorFallback.tsx (25 lines)
-│   │   │   │   ├── Loading.tsx (23 lines)
-│   │   │   │   ├── Logo.tsx (48 lines)
-│   │   │   │   ├── RiskWarningModal.tsx (46 lines)
-│   │   │   │   ├── Tabs.tsx (49 lines)
-│   │   │   │   └── TopProgressBar.tsx (16 lines)
-│   │   │   ├── contexts/
-│   │   │   │   ├── KeysContext.tsx (29 lines)
-│   │   │   │   ├── SessionContext.tsx (14 lines)
-│   │   │   │   └── actors/
-│   │   │   │       ├── IcpLedgerContext.tsx (7 lines)
-│   │   │   │       ├── IcpSwapContext.tsx (7 lines)
-│   │   │   │       ├── LbryContext.tsx (7 lines)
-│   │   │   │       ├── LbryFunContext.tsx (7 lines)
-│   │   │   │       ├── TokenomicsContext.tsx (7 lines)
-│   │   │   │       └── index.tsx (5 lines)
-│   │   │   ├── features/
-│   │   │   │   ├── auth/
-│   │   │   │   │   ├── authSlice.ts (63 lines)
-│   │   │   │   │   ├── components/
-│   │   │   │   │   │   └── AuthMenu.tsx (92 lines)
-│   │   │   │   │   ├── index.tsx (20 lines)
-│   │   │   │   │   ├── thunks/
-│   │   │   │   │   └── utils/
-│   │   │   │   │       └── authUtils.ts (123 lines)
-│   │   │   │   ├── icp-ledger/
-│   │   │   │   │   ├── icpLedgerSlice.ts (135 lines)
-│   │   │   │   │   └── thunks/
-│   │   │   │   │       ├── getAccountId.ts (32 lines)
-│   │   │   │   │       ├── getCanisterBal.ts (42 lines)
-│   │   │   │   │       ├── getIcpBal.ts (35 lines)
-│   │   │   │   │       ├── getIcpPrice.ts (52 lines)
-│   │   │   │   │       └── transferICP.ts (59 lines)
-│   │   │   │   ├── login/
-│   │   │   │   │   ├── components/
-│   │   │   │   │   ├── loginSlice.ts (55 lines)
-│   │   │   │   │   ├── processors/
-│   │   │   │   │   │   ├── ETHProcessor/
-│   │   │   │   │   │   └── SOLProcessor/
-│   │   │   │   │   └── thunks/
-│   │   │   │   ├── swap/
-│   │   │   │   │   ├── components/
-│   │   │   │   │   │   ├── balance/
-│   │   │   │   │   │   │   ├── accountCards.tsx (168 lines)
-│   │   │   │   │   │   │   ├── balanceContent.tsx (38 lines)
-│   │   │   │   │   │   │   ├── getAlexBal.tsx (31 lines)
-│   │   │   │   │   │   │   ├── poolCard.tsx (304 lines)
-│   │   │   │   │   │   │   ├── primaryBalanceCard.tsx (69 lines)
-│   │   │   │   │   │   │   └── secondaryBalanceCard.tsx (55 lines)
-│   │   │   │   │   │   ├── burn/
-│   │   │   │   │   │   │   ├── burnContent.tsx (213 lines)
-│   │   │   │   │   │   │   ├── burnInfo.tsx (46 lines)
-│   │   │   │   │   │   │   └── calculateMaxBurnAllowed.ts (24 lines)
-│   │   │   │   │   │   ├── copyHelper.tsx (48 lines)
-│   │   │   │   │   │   ├── errorModal.tsx (38 lines)
-│   │   │   │   │   │   ├── insights/
-│   │   │   │   │   │   │   ├── chart.tsx (162 lines)
-│   │   │   │   │   │   │   └── insights.tsx (38 lines)
-│   │   │   │   │   │   ├── loadingModal.tsx (48 lines)
-│   │   │   │   │   │   ├── receive/
-│   │   │   │   │   │   │   └── receiveContent.tsx (192 lines)
-│   │   │   │   │   │   ├── redeem/
-│   │   │   │   │   │   │   └── redeemContent.tsx (104 lines)
-│   │   │   │   │   │   ├── send/
-│   │   │   │   │   │   │   └── sendContent.tsx (356 lines)
-│   │   │   │   │   │   ├── stake/
-│   │   │   │   │   │   │   ├── claimReward.tsx (43 lines)
-│   │   │   │   │   │   │   ├── stakeContent.tsx (242 lines)
-│   │   │   │   │   │   │   ├── stakeInfo.tsx (94 lines)
-│   │   │   │   │   │   │   └── unstake.tsx (44 lines)
-│   │   │   │   │   │   ├── successModal.tsx (37 lines)
-│   │   │   │   │   │   ├── swap/
-│   │   │   │   │   │   │   └── swapContent.tsx (238 lines)
-│   │   │   │   │   │   └── transactionHistory/
-│   │   │   │   │   │       ├── detailTransaction.tsx (121 lines)
-│   │   │   │   │   │       ├── transactionHistory.tsx (95 lines)
-│   │   │   │   │   │       └── transactionHistoryObj.tsx (42 lines)
-│   │   │   │   │   ├── index.tsx (14 lines)
-│   │   │   │   │   ├── primarySlice.ts (96 lines)
-│   │   │   │   │   ├── style.css (87 lines)
-│   │   │   │   │   ├── swapMain.tsx (144 lines)
-│   │   │   │   │   ├── swapSlice.ts (462 lines)
-│   │   │   │   │   ├── thunks/
-│   │   │   │   │   │   ├── burnSecondary.ts (97 lines)
-│   │   │   │   │   │   ├── claimReward.ts (50 lines)
-│   │   │   │   │   │   ├── getAllStakesInfo.ts (45 lines)
-│   │   │   │   │   │   ├── getArchivedBal.ts (46 lines)
-│   │   │   │   │   │   ├── getAverageApy.ts (47 lines)
-│   │   │   │   │   │   ├── getCanisterArchivedBal.ts (47 lines)
-│   │   │   │   │   │   ├── getSecondaryratio.ts (34 lines)
-│   │   │   │   │   │   ├── getStakedInfo.ts (62 lines)
-│   │   │   │   │   │   ├── getStakersCount.ts (38 lines)
-│   │   │   │   │   │   ├── insights/
-│   │   │   │   │   │   │   └── getAllLogs.ts (83 lines)
-│   │   │   │   │   │   ├── primaryIcrc/
-│   │   │   │   │   │   │   ├── getAccountPrimaryBalance.ts (47 lines)
-│   │   │   │   │   │   │   ├── getAlexSpendingBalance.ts (48 lines)
-│   │   │   │   │   │   │   ├── getPrimaryFee.ts (41 lines)
-│   │   │   │   │   │   │   ├── getPrimaryPrice.ts (27 lines)
-│   │   │   │   │   │   │   └── transferPrimary.ts (60 lines)
-│   │   │   │   │   │   ├── redeemArchivedBalance.ts (37 lines)
-│   │   │   │   │   │   ├── secondaryIcrc/
-│   │   │   │   │   │   │   ├── getSecondaryBalance.ts (47 lines)
-│   │   │   │   │   │   │   ├── getSecondaryFee.ts (44 lines)
-│   │   │   │   │   │   │   ├── getSpendingBalance.ts (49 lines)
-│   │   │   │   │   │   │   ├── getTransactions.ts (157 lines)
-│   │   │   │   │   │   │   ├── topUpLBRY.ts (54 lines)
-│   │   │   │   │   │   │   └── transferSecondary.ts (64 lines)
-│   │   │   │   │   │   ├── stakePrimary.ts (88 lines)
-│   │   │   │   │   │   ├── swapSecondary.ts (78 lines)
-│   │   │   │   │   │   ├── tokenomics/
-│   │   │   │   │   │   │   └── getPrimaryMintRate.ts (36 lines)
-│   │   │   │   │   │   ├── transferICPFromUserWallet.ts (38 lines)
-│   │   │   │   │   │   └── unstake.ts (41 lines)
-│   │   │   │   │   ├── tokenomicsSilce.ts (48 lines)
-│   │   │   │   │   └── utlis/
-│   │   │   │   │       └── erorrs.ts (160 lines)
-│   │   │   │   └── token/
-│   │   │   │       ├── components/
-│   │   │   │       │   ├── TokenomicsGraphs.tsx (441 lines)
-│   │   │   │       │   ├── TooltipIcon.tsx (43 lines)
-│   │   │   │       │   ├── createTokenForm.tsx (621 lines)
-│   │   │   │       │   ├── getTokenPools.tsx (125 lines)
-│   │   │   │       │   ├── liveTokens.tsx (50 lines)
-│   │   │   │       │   ├── success.tsx (27 lines)
-│   │   │   │       │   ├── upcommingTokens.tsx (54 lines)
-│   │   │   │       │   └── userICPBalance.tsx (55 lines)
-│   │   │   │       ├── lbryFunSlice.ts (126 lines)
-│   │   │   │       └── thunk/
-│   │   │   │           ├── createToken.thunk.ts (100 lines)
-│   │   │   │           ├── fetchTokenLogosForPoolThunk.ts (43 lines)
-│   │   │   │           ├── getLiveTokens.thunk.ts (81 lines)
-│   │   │   │           ├── getTokenPools.thunk.ts (92 lines)
-│   │   │   │           ├── getUpcommingTokens.thunk.ts (55 lines)
-│   │   │   │           └── lbryFunSlice.ts (105 lines)
-│   │   │   ├── fonts/
-│   │   │   │   ├── Syne-Bold.woff (144 lines)
-│   │   │   │   ├── Syne-Bold.woff2 (108 lines)
-│   │   │   │   ├── Syne-ExtraBold.woff (147 lines)
-│   │   │   │   ├── Syne-ExtraBold.woff2 (111 lines)
-│   │   │   │   ├── Syne-Medium.woff (146 lines)
-│   │   │   │   ├── Syne-Medium.woff2 (113 lines)
-│   │   │   │   ├── Syne-Regular.woff (124 lines)
-│   │   │   │   ├── Syne-Regular.woff2 (121 lines)
-│   │   │   │   ├── Syne-SemiBold.woff (161 lines)
-│   │   │   │   └── Syne-SemiBold.woff2 (113 lines)
-│   │   │   ├── guards/
-│   │   │   │   ├── AuthGuard.tsx (101 lines)
-│   │   │   │   └── Protected.tsx (24 lines)
-│   │   │   ├── hooks/
-│   │   │   │   ├── useIdentity.tsx (33 lines)
-│   │   │   │   ├── useLogout.tsx (15 lines)
-│   │   │   │   └── useRiskWarning.ts (27 lines)
-│   │   │   ├── index.tsx (96 lines)
-│   │   │   ├── layouts/
-│   │   │   │   ├── AppLayout.tsx (17 lines)
-│   │   │   │   ├── BaseLayout.tsx (23 lines)
-│   │   │   │   ├── DashboardLayout.tsx (24 lines)
-│   │   │   │   ├── MainLayout.tsx (17 lines)
-│   │   │   │   └── parts/
-│   │   │   │       ├── AppHeader.tsx (18 lines)
-│   │   │   │       ├── AuthNavigation.tsx (41 lines)
-│   │   │   │       ├── DashboardSidebar.tsx (93 lines)
-│   │   │   │       └── Header.tsx (70 lines)
-│   │   │   ├── lib/
-│   │   │   │   ├── components/
-│   │   │   │   │   ├── alert-dialog.tsx (140 lines)
-│   │   │   │   │   ├── alert.tsx (60 lines)
-│   │   │   │   │   ├── aspect-ratio.tsx (6 lines)
-│   │   │   │   │   ├── badge.tsx (40 lines)
-│   │   │   │   │   ├── button.tsx (69 lines)
-│   │   │   │   │   ├── card.tsx (80 lines)
-│   │   │   │   │   ├── checkbox.tsx (29 lines)
-│   │   │   │   │   ├── collapsible.tsx (12 lines)
-│   │   │   │   │   ├── command.tsx (152 lines)
-│   │   │   │   │   ├── dialog.tsx (121 lines)
-│   │   │   │   │   ├── dropdown-menu.tsx (199 lines)
-│   │   │   │   │   ├── input.tsx (92 lines)
-│   │   │   │   │   ├── label.tsx (45 lines)
-│   │   │   │   │   ├── mode-toggle.tsx (20 lines)
-│   │   │   │   │   ├── popover.tsx (32 lines)
-│   │   │   │   │   ├── progress.tsx (29 lines)
-│   │   │   │   │   ├── scroll-area.tsx (47 lines)
-│   │   │   │   │   ├── select.tsx (159 lines)
-│   │   │   │   │   ├── separator.tsx (30 lines)
-│   │   │   │   │   ├── skeleton.tsx (17 lines)
-│   │   │   │   │   ├── slider.tsx (27 lines)
-│   │   │   │   │   ├── sonner.tsx (37 lines)
-│   │   │   │   │   ├── switch.tsx (28 lines)
-│   │   │   │   │   ├── table.tsx (118 lines)
-│   │   │   │   │   ├── tabs.tsx (54 lines)
-│   │   │   │   │   ├── textarea.tsx (23 lines)
-│   │   │   │   │   ├── toggle-group.tsx (60 lines)
-│   │   │   │   │   ├── toggle.tsx (85 lines)
-│   │   │   │   │   └── tooltip.tsx (29 lines)
-│   │   │   │   └── utils.ts (6 lines)
-│   │   │   ├── pages/
-│   │   │   ├── providers/
-│   │   │   │   ├── AuthProvider/
-│   │   │   │   │   └── IIProvider.tsx (23 lines)
-│   │   │   │   ├── ReduxProvider.tsx (14 lines)
-│   │   │   │   ├── SessionProvider.tsx (90 lines)
-│   │   │   │   └── ThemeProvider.tsx (63 lines)
-│   │   │   ├── routes/
-│   │   │   │   ├── index.tsx (55 lines)
-│   │   │   │   └── routeConfig.ts (109 lines)
-│   │   │   ├── store/
-│   │   │   │   ├── hooks/
-│   │   │   │   │   ├── useAppDispatch.ts (4 lines)
-│   │   │   │   │   └── useAppSelector.ts (5 lines)
-│   │   │   │   ├── index.ts (11 lines)
-│   │   │   │   ├── rootReducer.ts (24 lines)
-│   │   │   │   └── slices/
-│   │   │   │       └── uiSlice.ts (31 lines)
-│   │   │   ├── styles/
-│   │   │   │   ├── style.css (81 lines)
-│   │   │   │   └── tailwind.css (104 lines)
-│   │   │   ├── utils/
-│   │   │   │   ├── LedgerService.tsx (73 lines)
-│   │   │   │   ├── general.ts (144 lines)
-│   │   │   │   ├── logoUtils.ts (50 lines)
-│   │   │   │   ├── principal.ts (11 lines)
-│   │   │   │   └── utils.tsx (9 lines)
+│   │   ├── CLAUDE.md (102 lines)
+│   │   ├── TERMINAL_DESIGN_ENHANCEMENTS.md (114 lines)
+│   │   ├── cacheable_data_fix_plan.md (55 lines)
+│   │   └── src/
+│   │       ├── App.tsx (42 lines)
+│   │       ├── actors/
+│   │       │   ├── IcpSwapActor.tsx (36 lines)
+│   │       │   ├── LbryFunActor.tsx (36 lines)
+│   │       │   ├── TokenomicsActor.tsx (36 lines)
+│   │       │   ├── createLogsActor.ts (23 lines)
+│   │       │   └── index.tsx (4 lines)
+│   │       ├── components/
+│   │       │   ├── ErrorBoundary.tsx (37 lines)
+│   │       │   ├── ErrorFallback.tsx (25 lines)
+│   │       │   ├── Loading.tsx (23 lines)
+│   │       │   ├── Logo.tsx (48 lines)
+│   │       │   ├── RiskWarningModal.tsx (46 lines)
+│   │       │   ├── RouteErrorBoundary.tsx (14 lines)
+│   │       │   └── TopProgressBar.tsx (16 lines)
+│   │       ├── constants/
+│   │       │   └── launchPeriod.ts (17 lines)
+│   │       ├── contexts/
+│   │       │   ├── KeysContext.tsx (29 lines)
+│   │       │   ├── SessionContext.tsx (14 lines)
+│   │       │   └── actors/
+│   │       │       ├── IcpLedgerContext.tsx (7 lines)
+│   │       │       ├── IcpSwapContext.tsx (7 lines)
+│   │       │       ├── LbryContext.tsx (7 lines)
+│   │       │       ├── LbryFunContext.tsx (7 lines)
+│   │       │       ├── TokenomicsContext.tsx (7 lines)
+│   │       │       └── index.tsx (5 lines)
+│   │       ├── data/
+│   │       │   └── .ic-assets.json5 (57 lines)
+│   │       ├── features/
+│   │       │   ├── auth/
+│   │       │   │   ├── authSlice.ts (63 lines)
+│   │       │   │   ├── components/
+│   │       │   │   │   ├── TerminalAuthMenu.tsx (59 lines)
+│   │       │   │   │   └── TerminalAuthModal.tsx (71 lines)
+│   │       │   │   ├── index.tsx (20 lines)
+│   │       │   │   ├── thunks/
+│   │       │   │   └── utils/
+│   │       │   │       └── authUtils.ts (238 lines)
+│   │       │   ├── icp-ledger/
+│   │       │   │   ├── icpLedgerSlice.ts (135 lines)
+│   │       │   │   └── thunks/
+│   │       │   │       ├── getAccountId.ts (32 lines)
+│   │       │   │       ├── getCanisterBal.ts (41 lines)
+│   │       │   │       ├── getIcpBal.ts (33 lines)
+│   │       │   │       ├── getIcpPrice.ts (63 lines)
+│   │       │   │       └── transferICP.ts (60 lines)
+│   │       │   ├── login/
+│   │       │   │   ├── components/
+│   │       │   │   ├── loginSlice.ts (55 lines)
+│   │       │   │   ├── processors/
+│   │       │   │   │   ├── ETHProcessor/
+│   │       │   │   │   └── SOLProcessor/
+│   │       │   │   └── thunks/
+│   │       │   ├── swap/
+│   │       │   │   ├── actions/
+│   │       │   │   │   └── swapActions.ts (12 lines)
+│   │       │   │   ├── components/
+│   │       │   │   │   ├── AccessGuard.tsx (118 lines)
+│   │       │   │   │   ├── SwapErrorBoundary.tsx (65 lines)
+│   │       │   │   │   ├── SwapPageWrapper.tsx (75 lines)
+│   │       │   │   │   ├── SwapSuspenseWrapper.tsx (28 lines)
+│   │       │   │   │   ├── balance/
+│   │       │   │   │   │   ├── ConsolidatedTerminal.tsx (227 lines)
+│   │       │   │   │   │   ├── accountCards.tsx (202 lines)
+│   │       │   │   │   │   ├── balanceCardSkeleton.tsx (29 lines)
+│   │       │   │   │   │   ├── getAlexBal.tsx (30 lines)
+│   │       │   │   │   │   └── poolCard.tsx (314 lines)
+│   │       │   │   │   ├── burn/
+│   │       │   │   │   │   ├── burnContent.tsx (276 lines)
+│   │       │   │   │   │   ├── burnInfo.tsx (46 lines)
+│   │       │   │   │   │   └── calculateMaxBurnAllowed.ts (53 lines)
+│   │       │   │   │   ├── copyHelper.tsx (48 lines)
+│   │       │   │   │   ├── errorModal.tsx (38 lines)
+│   │       │   │   │   ├── info/
+│   │       │   │   │   │   ├── CanisterCycles.tsx (58 lines)
+│   │       │   │   │   │   └── InfoCard.tsx (97 lines)
+│   │       │   │   │   ├── insights/
+│   │       │   │   │   │   ├── chart.tsx (183 lines)
+│   │       │   │   │   │   └── insights.tsx (211 lines)
+│   │       │   │   │   ├── loadingModal.tsx (48 lines)
+│   │       │   │   │   ├── stake/
+│   │       │   │   │   │   ├── claimReward.tsx (40 lines)
+│   │       │   │   │   │   ├── stakeContent.tsx (237 lines)
+│   │       │   │   │   │   ├── stakeContentSkeleton.tsx (98 lines)
+│   │       │   │   │   │   ├── stakeInfo.tsx (71 lines)
+│   │       │   │   │   │   └── unstake.tsx (41 lines)
+│   │       │   │   │   ├── successModal.tsx (37 lines)
+│   │       │   │   │   ├── swap/
+│   │       │   │   │   │   ├── swapContent.tsx (316 lines)
+│   │       │   │   │   │   └── swapContentSkeleton.tsx (74 lines)
+│   │       │   │   │   ├── terminals/
+│   │       │   │   │   │   ├── AnalyticsTerminal.tsx (107 lines)
+│   │       │   │   │   │   ├── StakingTerminal.tsx (129 lines)
+│   │       │   │   │   │   ├── TerminalUtils.tsx (118 lines)
+│   │       │   │   │   │   └── TradingTerminal.tsx (167 lines)
+│   │       │   │   │   ├── tokenomics/
+│   │       │   │   │   │   └── TokenomicsTab.tsx (93 lines)
+│   │       │   │   │   ├── transactionHistory/
+│   │       │   │   │   │   ├── TransactionItem.tsx (87 lines)
+│   │       │   │   │   │   ├── detailTransaction.tsx (117 lines)
+│   │       │   │   │   │   ├── transactionHistory.tsx (97 lines)
+│   │       │   │   │   │   └── transactionHistoryObj.tsx (39 lines)
+│   │       │   │   │   └── transfer/
+│   │       │   │   │       └── TransferContent.tsx (282 lines)
+│   │       │   │   ├── hooks/
+│   │       │   │   │   ├── useAccessState.ts (75 lines)
+│   │       │   │   │   ├── useActiveSwapPool.ts (62 lines)
+│   │       │   │   │   ├── useBalance.ts (83 lines)
+│   │       │   │   │   ├── usePoolInitializer.ts (112 lines)
+│   │       │   │   │   ├── useSwapDataLoader.ts (165 lines)
+│   │       │   │   │   ├── useSwapState.ts (69 lines)
+│   │       │   │   │   └── useTransactionHistory.ts (52 lines)
+│   │       │   │   ├── index.tsx (13 lines)
+│   │       │   │   ├── middleware/
+│   │       │   │   │   └── requestDeduplication.ts (107 lines)
+│   │       │   │   ├── primarySlice.ts (96 lines)
+│   │       │   │   ├── providers/
+│   │       │   │   ├── selectors/
+│   │       │   │   │   ├── balanceSelectors.ts (71 lines)
+│   │       │   │   │   └── uiSelectors.ts (65 lines)
+│   │       │   │   ├── shared/
+│   │       │   │   │   ├── BalanceCard.tsx (95 lines)
+│   │       │   │   │   ├── ConfirmModal.tsx (142 lines)
+│   │       │   │   │   ├── HeaderBalance.tsx (162 lines)
+│   │       │   │   │   ├── RefreshButton.tsx (58 lines)
+│   │       │   │   │   ├── StatusIndicator.tsx (101 lines)
+│   │       │   │   │   ├── TokenDisplay.tsx (90 lines)
+│   │       │   │   │   ├── TransactionRow.tsx (115 lines)
+│   │       │   │   │   └── index.ts (12 lines)
+│   │       │   │   ├── style.css (87 lines)
+│   │       │   │   ├── swapMainConsolidated.tsx (158 lines)
+│   │       │   │   ├── swapSlice.ts (514 lines)
+│   │       │   │   ├── thunks/
+│   │       │   │   │   ├── burnSecondary.ts (131 lines)
+│   │       │   │   │   ├── claimReward.ts (55 lines)
+│   │       │   │   │   ├── fetchTransactionHistory.thunk.ts (110 lines)
+│   │       │   │   │   ├── getAllStakesInfo.ts (43 lines)
+│   │       │   │   │   ├── getArchivedBal.ts (44 lines)
+│   │       │   │   │   ├── getAverageApy.ts (46 lines)
+│   │       │   │   │   ├── getCanisterArchivedBal.ts (46 lines)
+│   │       │   │   │   ├── getSecondaryratio.ts (35 lines)
+│   │       │   │   │   ├── getStakedInfo.ts (61 lines)
+│   │       │   │   │   ├── getStakersCount.ts (38 lines)
+│   │       │   │   │   ├── insights/
+│   │       │   │   │   │   └── getAllLogs.thunk.ts (61 lines)
+│   │       │   │   │   ├── primaryIcrc/
+│   │       │   │   │   │   ├── getAccountPrimaryBalance.ts (41 lines)
+│   │       │   │   │   │   ├── getPrimaryFee.ts (38 lines)
+│   │       │   │   │   │   ├── getPrimaryPrice.ts (30 lines)
+│   │       │   │   │   │   └── transferPrimary.ts (60 lines)
+│   │       │   │   │   ├── redeemArchivedBalance.ts (37 lines)
+│   │       │   │   │   ├── secondaryIcrc/
+│   │       │   │   │   │   ├── getSecondaryBalance.ts (52 lines)
+│   │       │   │   │   │   ├── getSecondaryFee.ts (43 lines)
+│   │       │   │   │   │   └── transferSecondary.ts (64 lines)
+│   │       │   │   │   ├── stakePrimary.ts (109 lines)
+│   │       │   │   │   ├── swapSecondary.ts (95 lines)
+│   │       │   │   │   ├── tokenomics/
+│   │       │   │   │   │   ├── getPrimaryMintRate.ts (37 lines)
+│   │       │   │   │   │   ├── getTokenomicsInfo.ts (55 lines)
+│   │       │   │   │   │   └── getTotalPrimarySupply.ts (26 lines)
+│   │       │   │   │   ├── transferICPFromUserWallet.ts (48 lines)
+│   │       │   │   │   └── unstake.ts (50 lines)
+│   │       │   │   ├── tokenomicsSilce.ts (95 lines)
+│   │       │   │   ├── types/
+│   │       │   │   │   ├── accessControl.types.ts (25 lines)
+│   │       │   │   │   ├── logs.ts (10 lines)
+│   │       │   │   │   ├── swapState.ts (94 lines)
+│   │       │   │   │   └── transactionTypes.ts (27 lines)
+│   │       │   │   ├── utils/
+│   │       │   │   │   └── performanceMonitor.ts (187 lines)
+│   │       │   │   └── utlis/
+│   │       │   │       └── erorrs.ts (86 lines)
+│   │       │   └── token/
+│   │       │       ├── components/
+│   │       │       │   ├── TokenomicsGraphsBackend.tsx (8 lines)
+│   │       │       │   ├── TooltipIcon.tsx (43 lines)
+│   │       │       │   ├── UnifiedTokenomicsGraphs.tsx (397 lines)
+│   │       │       │   ├── getTokenPools.tsx (89 lines)
+│   │       │       │   ├── liveTokens.tsx (50 lines)
+│   │       │       │   ├── success.tsx (27 lines)
+│   │       │       │   ├── terminal/
+│   │       │       │   │   ├── TerminalCreateToken.tsx (641 lines)
+│   │       │       │   │   ├── TerminalFormInputs.tsx (258 lines)
+│   │       │       │   │   └── TerminalPoolCard.tsx (273 lines)
+│   │       │       │   ├── upcommingTokens.tsx (54 lines)
+│   │       │       │   └── userICPBalance.tsx (44 lines)
+│   │       │       ├── lbryFunSlice.ts (186 lines)
+│   │       │       └── thunk/
+│   │       │           ├── createToken.thunk.ts (101 lines)
+│   │       │           ├── fetchTokenLogosForPoolThunk.ts (43 lines)
+│   │       │           ├── getLiveTokens.thunk.ts (83 lines)
+│   │       │           ├── getPoolsTvl.thunk.ts (82 lines)
+│   │       │           ├── getTokenPools.thunk.ts (106 lines)
+│   │       │           ├── getUpcommingTokens.thunk.ts (55 lines)
+│   │       │           └── previewTokenomics.thunk.ts (70 lines)
+│   │       ├── fonts/
+│   │       │   ├── Syne-Bold.woff (144 lines)
+│   │       │   ├── Syne-Bold.woff2 (108 lines)
+│   │       │   ├── Syne-ExtraBold.woff (147 lines)
+│   │       │   ├── Syne-ExtraBold.woff2 (111 lines)
+│   │       │   ├── Syne-Medium.woff (146 lines)
+│   │       │   ├── Syne-Medium.woff2 (113 lines)
+│   │       │   ├── Syne-Regular.woff (124 lines)
+│   │       │   ├── Syne-Regular.woff2 (121 lines)
+│   │       │   ├── Syne-SemiBold.woff (161 lines)
+│   │       │   └── Syne-SemiBold.woff2 (113 lines)
+│   │       ├── guards/
+│   │       │   ├── AuthGuard.tsx (101 lines)
+│   │       │   └── Protected.tsx (24 lines)
+│   │       ├── hooks/
+│   │       │   ├── actors/
+│   │       │   │   ├── index.tsx (1 lines)
+│   │       │   │   └── useActorErrorHandler.ts (47 lines)
+│   │       │   ├── useIcpBalance.ts (51 lines)
+│   │       │   ├── useIdentity.tsx (33 lines)
+│   │       │   ├── useLogout.tsx (15 lines)
+│   │       │   └── useRiskWarning.ts (27 lines)
+│   │       ├── index.tsx (96 lines)
+│   │       ├── layouts/
+│   │       │   ├── AppLayout.tsx (17 lines)
+│   │       │   ├── BaseLayout.tsx (23 lines)
+│   │       │   ├── DashboardLayout.tsx (24 lines)
+│   │       │   ├── MainLayout.tsx (17 lines)
+│   │       │   └── parts/
+│   │       │       ├── AppHeader.tsx (18 lines)
+│   │       │       ├── AuthNavigation.tsx (41 lines)
+│   │       │       ├── DashboardSidebar.tsx (93 lines)
+│   │       │       └── TerminalHeader.tsx (16 lines)
+│   │       ├── lib/
+│   │       │   ├── components/
+│   │       │   │   ├── alert-dialog.tsx (140 lines)
+│   │       │   │   ├── button.tsx (69 lines)
+│   │       │   │   ├── dialog.tsx (121 lines)
+│   │       │   │   ├── scroll-area.tsx (47 lines)
+│   │       │   │   ├── skeleton.tsx (17 lines)
+│   │       │   │   ├── sonner.tsx (35 lines)
+│   │       │   │   └── toggle.tsx (85 lines)
+│   │       │   └── utils.ts (6 lines)
+│   │       ├── pages/
+│   │       ├── providers/
+│   │       │   ├── ActorProvider.tsx (15 lines)
+│   │       │   ├── AuthProvider/
+│   │       │   │   └── IIProvider.tsx (23 lines)
+│   │       │   ├── ReduxProvider.tsx (14 lines)
+│   │       │   └── SessionProvider.tsx (90 lines)
+│   │       ├── routes/
+│   │       │   ├── index.tsx (45 lines)
+│   │       │   └── routeConfig.ts (93 lines)
+│   │       ├── services/
+│   │       │   └── kongswapService.ts (186 lines)
+│   │       ├── store/
+│   │       │   ├── hooks/
+│   │       │   │   ├── useAppDispatch.ts (4 lines)
+│   │       │   │   └── useAppSelector.ts (5 lines)
+│   │       │   ├── index.ts (14 lines)
+│   │       │   ├── rootReducer.ts (24 lines)
+│   │       │   └── slices/
+│   │       │       └── uiSlice.ts (31 lines)
+│   │       ├── styles/
+│   │       │   ├── style.css (81 lines)
+│   │       │   ├── tailwind.css (160 lines)
+│   │       │   ├── terminal-forms.css (204 lines)
+│   │       │   └── terminal.css (317 lines)
+│   │       └── utils/
+│   │           ├── LedgerService.tsx (57 lines)
+│   │           ├── TokenConversionService.ts (84 lines)
+│   │           ├── general.ts (144 lines)
+│   │           ├── logoUtils.ts (50 lines)
+│   │           ├── principal.ts (11 lines)
+│   │           └── utils.tsx (9 lines)
 │   ├── logs/
 │   │   ├── Cargo.toml (23 lines)
-│   │   ├── logs.did (18 lines)
+│   │   ├── logs.did (23 lines)
 │   │   └── src/
 │   │       ├── guard.rs (9 lines)
 │   │       ├── lib.rs (20 lines)
+│   │       ├── lib.rs:15:5 (1 lines)
 │   │       ├── queries.rs (22 lines)
-│   │       ├── script.rs (18 lines)
-│   │       ├── storage.rs (57 lines)
-│   │       ├── update.rs (47 lines)
-│   │       └── utils.rs (131 lines)
+│   │       ├── script.rs (54 lines)
+│   │       ├── storage.rs (94 lines)
+│   │       ├── update.rs (44 lines)
+│   │       └── utils.rs (99 lines)
+│   ├── plans/
+│   │   └── swap-redirect-fix-plan.md (59 lines)
+│   ├── setupTests.ts (40 lines)
 │   ├── tokenomics/
 │   │   ├── Cargo.toml (26 lines)
-│   │   ├── image.png (45 lines)
 │   │   ├── src/
 │   │   │   ├── error.rs (67 lines)
 │   │   │   ├── guard.rs (12 lines)
 │   │   │   ├── lib.rs (21 lines)
 │   │   │   ├── queries.rs (200 lines)
-│   │   │   ├── script.rs (200 lines)
-│   │   │   ├── storage.rs (153 lines)
-│   │   │   ├── update.rs (435 lines)
-│   │   │   └── utils.rs (103 lines)
+│   │   │   ├── script.rs (196 lines)
+│   │   │   ├── storage.rs (152 lines)
+│   │   │   ├── update.rs (414 lines)
+│   │   │   └── utils.rs (111 lines)
 │   │   ├── tokenomics. (12 lines)
-│   │   ├── tokenomics.did (83 lines)
-│   │   ├── tokenomics_audit.md (174 lines)
-│   │   └── tokenomics_audit5.md (91 lines)
-│   ├── xrc/
-│   │   ├── Cargo.toml (27 lines)
-│   │   ├── src/
-│   │   │   └── lib.rs (122 lines)
-│   │   └── xrc.did (44 lines)
-├── tailwind.config.js (223 lines)
+│   │   └── tokenomics.did (81 lines)
+│   └── xrc/
+│       ├── Cargo.toml (27 lines)
+│       ├── src/
+│       │   └── lib.rs (122 lines)
+│       └── xrc.did (44 lines)
+├── tailwind.config.js (230 lines)
+├── test_halving_math.js (28 lines)
+├── test_kong_integration.sh (22 lines)
+├── test_schedule.rs (64 lines)
+├── test_schedule_generation.sh (72 lines)
+├── test_token_status.sh (33 lines)
+├── test_tokenomics_fix.sh (31 lines)
+├── tests/
+│   ├── CLAUDE.md (18 lines)
+│   ├── Cargo.toml (18 lines)
+│   ├── deploy_parent_canisters.sh (65 lines)
+│   ├── extract_preset_data.js (153 lines)
+│   ├── main.rs (178 lines)
+│   ├── mock_kong_swap_canister.did (38 lines)
+│   ├── operational_validation/
+│   │   ├── cumulative_tests.rs (169 lines)
+│   │   ├── edge_case_ops.rs (227 lines)
+│   │   ├── graph_comparison_tests.rs (142 lines)
+│   │   ├── large_scale_env.rs (479 lines)
+│   │   ├── mod.rs (14 lines)
+│   │   ├── precision_analysis.rs (156 lines)
+│   │   └── validation_scenarios.rs (329 lines)
+│   ├── prompts/
+│   ├── run_tests_with_parent.sh (40 lines)
+│   ├── simulate_graph_data.js (108 lines)
+│   ├── simulation/
+│   │   ├── backend_validation_tests.rs (539 lines)
+│   │   ├── canister_management_tests.rs (34 lines)
+│   │   ├── common.rs (104 lines)
+│   │   ├── comprehensive_backend_validation.rs (562 lines)
+│   │   ├── icp_swap_tests.rs (48 lines)
+│   │   ├── phase4_tokenomics_lifecycle_tests.rs (895 lines)
+│   │   ├── phase5_stress_testing.rs (672 lines)
+│   │   └── token_management_tests.rs (389 lines)
+│   ├── src/
+│   ├── test_principals.rs (15 lines)
+│   └── tests/
+│       ├── helpers/
+│       │   ├── mock_root_icp_swap.did (24 lines)
+│       │   ├── mock_root_icp_swap.rs (65 lines)
+│       │   ├── shared_helpers.rs (416 lines)
+│       │   └── token_testing/
+│       │       ├── deployment.rs (1 lines)
+│       │       ├── mock_kong_swap.rs (100 lines)
+│       │       └── mod.rs (5 lines)
+│       ├── integration/
+│       │   ├── integrated_token_tests.rs (833 lines)
+│       │   ├── phase1_environment_tests.rs (199 lines)
+│       │   ├── phase2_token_operations.rs (1043 lines)
+│       │   ├── phase3_comprehensive_distribution.rs (303 lines)
+│       │   ├── phase3_debug_stake.rs (86 lines)
+│       │   ├── phase3_distribution.rs (384 lines)
+│       │   ├── phase3_simple_distribution.rs (102 lines)
+│       │   ├── phase3_test_staking_only.rs (134 lines)
+│       │   ├── phase3_timer_distribution.rs (377 lines)
+│       │   ├── real_execution.rs (342 lines)
+│       │   ├── real_execution_v2.rs (118 lines)
+│       │   └── test_kong_pool_creation.rs (82 lines)
+│       ├── stress/
+│       └── unit/
+│           ├── individual_canister_tests.rs (329 lines)
+│           ├── test_actual_backend_response.rs (132 lines)
+│           ├── test_backend_fix_validation.rs (176 lines)
+│           ├── test_backend_raw_data.rs (99 lines)
+│           ├── test_backend_table_data.rs (171 lines)
+│           ├── test_burn_cost_analysis.rs (94 lines)
+│           ├── test_burn_unit_exploit.rs (346 lines)
+│           ├── test_burn_unit_one_exact.rs (135 lines)
+│           ├── test_debug_calculation.rs (64 lines)
+│           ├── test_exact_backend_output.rs (139 lines)
+│           ├── test_final_verification.rs (99 lines)
+│           ├── test_fix_verification.rs (57 lines)
+│           ├── test_fixed_simulation.rs (71 lines)
+│           ├── test_graph_data_interpretation.rs (171 lines)
+│           ├── test_graph_vs_reality.rs (401 lines)
+│           ├── test_original_formula_analysis.rs (53 lines)
+│           ├── test_principals.rs (19 lines)
+│           ├── test_simple_fix_verification.rs (92 lines)
+│           ├── test_simulation_calculation.rs (39 lines)
+│           ├── test_simulation_e8s_bug.rs (108 lines)
+│           ├── test_simulation_fix_validation.rs (154 lines)
+│           ├── test_tokenomics_adversarial.rs (607 lines)
+│           ├── test_tokenomics_bug_demonstration.rs (122 lines)
+│           ├── test_tokenomics_bug_simple_demo.rs (147 lines)
+│           ├── test_tokenomics_configurations.rs (365 lines)
+│           ├── test_tokenomics_edge_cases.rs (488 lines)
+│           ├── test_tokenomics_realworld_validation.rs (592 lines)
+│           ├── test_tokenomics_realworld_validation_v2.rs (479 lines)
+│           ├── test_tokenomics_schedule_generation.rs (140 lines)
+│           ├── test_tokenomics_validation.rs (782 lines)
+│           ├── test_trace_calculation.rs (55 lines)
+│           ├── test_unit_analysis.rs (50 lines)
+│           └── test_verify_correct_fix.rs (79 lines)
 ├── tsconfig.json (35 lines)
-├── webpack.config.js (279 lines)
+└── webpack.config.js (279 lines)

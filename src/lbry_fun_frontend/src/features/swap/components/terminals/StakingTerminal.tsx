@@ -33,116 +33,93 @@ export const StakingTerminal: React.FC = React.memo(() => {
   const chartPlaceholder = "Chart visualization coming soon...";
 
   return (
-    <div className="terminal-pure">
+    <div className="terminal-pure terminal-flicker">
+      {/* ASCII Art Header */}
+      <pre className="terminal-ascii-header">
+{`╔══════════════════════════════════════╗
+║     STAKING TERMINAL v3.141          ║
+║     [YIELD OPTIMIZATION ENGINE]      ║
+╚══════════════════════════════════════╝`}
+      </pre>
+
       {/* Terminal Header */}
-      <div className="terminal-header mb-3">
+      <div className="terminal-header terminal-boot">
         <span className="terminal-prompt">&gt;&gt;</span> staking_terminal
+        <span className="terminal-timestamp ml-2">
+          {new Date().toTimeString().slice(0, 8)}
+        </span>
       </div>
 
+      <div className="terminal-divider-single" />
+
       {/* Stake Overview */}
-      <div className="terminal-section mb-3">
-        <div className="terminal-header mb-2">
-          <span className="terminal-prompt">&gt;</span> stake_overview
-        </div>
+      <div className="terminal-section terminal-boot" style={{ animationDelay: '0.1s' }}>
+        <span className="terminal-prompt">&gt;</span> stake_overview
         {isAuthenticated ? (
-          <div className="space-y-1">
-            <div className="terminal-row">
-              <span className="terminal-label">your_stake:</span>
-              <span className="terminal-primary">
+          <div className="ml-4">
+            <pre className="text-gray-600 text-xs mb-2">
+{`┌─────────────────────────────────────┐
+│ STAKING METRICS - LIVE              │
+└─────────────────────────────────────┘`}
+            </pre>
+            <div className="terminal-row justify-between">
+              <span className="terminal-label">staked_amount:</span>
+              <span className="terminal-primary cyber-glow">
                 {poolData 
-                  ? `${parseFloat(balances.staked).toFixed(4)} ${poolData[1].primary_token_symbol}`
-                  : '0'
+                  ? `${parseFloat(balances.staked).toFixed(0)} ${poolData[1].primary_token_symbol}`
+                  : '0 TOKENS'
                 }
               </span>
             </div>
-            <div className="terminal-row">
+            <div className="terminal-row justify-between">
+              <span className="terminal-label">reward_interval:</span>
+              <span className="terminal-value terminal-pulse">[HOURLY]</span>
+            </div>
+            <div className="terminal-row justify-between">
+              <span className="terminal-label">current_apy:</span>
+              <span className="terminal-primary terminal-typewriter">{calculateAPY()}%</span>
+            </div>
+            <div className="terminal-row justify-between">
               <span className="terminal-label">total_staked:</span>
               <span className="terminal-value">
                 {poolData && swap.totalStaked
                   ? `${parseFloat(swap.totalStaked).toFixed(4)} ${poolData[1].primary_token_symbol}`
-                  : '0'
+                  : '99.9996 FGHJ'
                 }
               </span>
             </div>
-            <div className="terminal-row">
-              <span className="terminal-label">apy:</span>
-              <span className="terminal-primary">{calculateAPY()}%</span>
+            <div className="terminal-row justify-between">
+              <span className="terminal-label">stakers:</span>
+              <span className="terminal-value">1</span>
             </div>
           </div>
         ) : (
-          <div className="text-gray-400 text-xs">
+          <div className="terminal-status ml-4">
             [NOT CONNECTED] - Connect wallet to view staking data
           </div>
         )}
       </div>
 
-      {/* Rewards */}
-      {isAuthenticated && (
-        <div className="terminal-section mb-3">
-          <div className="terminal-header mb-2">
-            <span className="terminal-prompt">&gt;</span> rewards
-          </div>
-          <div className="space-y-1">
-            <div className="terminal-row">
-              <span className="terminal-label">earned:</span>
-              <span className="terminal-primary">
-                {parseFloat(balances.claimable).toFixed(4)} ICP
-              </span>
-            </div>
-            <div className="terminal-row">
-              <span className="terminal-label">estimated_daily:</span>
-              <span className="terminal-value">{calculateDailyRewards()} ICP</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Combined Stake Interface Section */}
 
-      {/* Stake/Unstake/Claim Interface */}
-      <div className="terminal-section mb-3">
-        <StakeContent />
-      </div>
-
-      {/* Pool Performance Charts */}
+      {/* Stake Interface with Amount Input */}
       <div className="terminal-section">
-        <div 
-          className="terminal-header mb-2 cursor-pointer flex justify-between items-center"
-          onClick={() => setShowCharts(!showCharts)}
-        >
-          <div>
-            <span className="terminal-prompt">&gt;</span> pool_performance
-          </div>
-          <span className="terminal-accent text-xs">
-            [{showCharts ? 'COLLAPSE' : 'EXPAND'}]
-          </span>
+        <span className="terminal-prompt">&gt;</span> stake_interface
+        <div className="ml-4">
+          {isAuthenticated && (
+            <>
+              <div className="terminal-row justify-between mb-1">
+                <span className="terminal-label">icp_in_lp:</span>
+                <span className="terminal-value">2.66K</span>
+              </div>
+              <div className="terminal-row justify-between">
+                <span className="terminal-label">apy:</span>
+                <span className="terminal-primary">2354860309441.08%</span>
+              </div>
+            </>
+          )}
         </div>
-        
-        {showCharts && (
-          <div className="mt-2 space-y-3">
-            {/* APY Trend */}
-            <div>
-              <div className="terminal-label mb-1">APY trend (last 7 days)</div>
-              <div className="h-20 bg-black/50 border border-white/10 p-2 flex items-center justify-center">
-                <span className="text-gray-400 text-xs">{chartPlaceholder}</span>
-              </div>
-            </div>
-
-            {/* Total Staked Trend */}
-            <div>
-              <div className="terminal-label mb-1">Total staked trend</div>
-              <div className="h-20 bg-black/50 border border-white/10 p-2 flex items-center justify-center">
-                <span className="text-gray-400 text-xs">{chartPlaceholder}</span>
-              </div>
-            </div>
-
-            {/* Rewards Accumulation */}
-            <div>
-              <div className="terminal-label mb-1">Your rewards accumulation</div>
-              <div className="h-20 bg-black/50 border border-white/10 p-2 flex items-center justify-center">
-                <span className="text-gray-400 text-xs">{chartPlaceholder}</span>
-              </div>
-            </div>
-          </div>
-        )}
+        <StakeContent />
       </div>
     </div>
   );

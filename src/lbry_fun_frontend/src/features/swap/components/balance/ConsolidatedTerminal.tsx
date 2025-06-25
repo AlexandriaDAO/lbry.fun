@@ -6,7 +6,7 @@ import CopyHelper from "../copyHelper";
 import getAccountId from "@/features/icp-ledger/thunks/getAccountId";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRotate } from "@fortawesome/free-solid-svg-icons";
-import { Entry } from "@/layouts/parts/Header";
+import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
 import { toast } from "sonner";
 import { RootState } from "@/store";
 import getAccountPrimaryBalance from "../../thunks/primaryIcrc/getAccountPrimaryBalance";
@@ -76,11 +76,11 @@ const ConsolidatedTerminal: React.FC = () => {
 
     if (!isAuthenticated || !principal) {
         return (
-            <div className="terminal-pure mb-2">
+            <div className="terminal-pure mb-2 terminal-boot">
                 <div className="text-center py-2">
-                    <span className="terminal-label">connect wallet to continue</span>
+                    <span className="terminal-status-error terminal-blink">WALLET_NOT_CONNECTED</span>
                     <div className="mt-2">
-                        <Entry />
+                        <TerminalAuthMenu />
                     </div>
                 </div>
             </div>
@@ -88,9 +88,22 @@ const ConsolidatedTerminal: React.FC = () => {
     }
 
     return (
-        <div className="terminal-pure mb-2">
+        <div className="terminal-pure mb-2 terminal-flicker">
+            {/* System Status Header */}
+            <div className="flex justify-between items-center mb-2">
+                <div className="terminal-header">
+                    <span className="terminal-prompt">&gt;&gt;</span> WALLET_TERMINAL
+                    <span className="terminal-status-live ml-2">[LIVE]</span>
+                </div>
+                <span className="terminal-timestamp">
+                    {new Date().toTimeString().slice(0, 8)}
+                </span>
+            </div>
+            
+            <div className="terminal-divider-dots" />
+            
             {/* Principal & Account */}
-            <div className="terminal-row mt-1">
+            <div className="terminal-row mt-1 terminal-boot" style={{ animationDelay: '0.1s' }}>
                 <span className="terminal-label">principal:</span>
                 <div className="flex items-center gap-2">
                     <span className="hex-address">{formattedPrincipal}</span>
@@ -135,21 +148,23 @@ const ConsolidatedTerminal: React.FC = () => {
             )}
 
             {/* Balances Section */}
-            <div className="border-t border-white/30 mt-2 pt-2">
-                <div className="flex justify-between items-center mb-1">
-                    <span className="terminal-accent text-xs">balances</span>
+            <div className="border-t border-white/30 mt-2 pt-2 terminal-boot" style={{ animationDelay: '0.3s' }}>
+                <div className="flex justify-between items-center mb-2">
+                    <span className="terminal-accent text-xs">
+                        <span className="terminal-prompt">&gt;</span> wallet_assets
+                    </span>
                     <FontAwesomeIcon 
                         role="button" 
                         icon={faRotate} 
                         onClick={handleRefresh} 
-                        className="text-pink-500 hover:text-pink-400 cursor-pointer text-xs"
+                        className="text-pink-500 hover:text-pink-400 cursor-pointer text-xs hover:animate-spin"
                     />
                 </div>
                 
                 <div className="terminal-row">
-                    <span className="terminal-label">icp:</span>
+                    <span className="terminal-label">icp_balance:</span>
                     <div className="text-right">
-                        <span className="terminal-primary">{icpLedgerAccountBalance}</span>
+                        <span className="terminal-primary cyber-glow">{icpLedgerAccountBalance}</span>
                         <span className="terminal-accent ml-2">[${icpLedgerAccountBalanceUSD}]</span>
                     </div>
                 </div>

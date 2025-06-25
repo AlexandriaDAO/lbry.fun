@@ -1,32 +1,10 @@
-- Either I edited the wrong spot, or the AI is false and the frontend is actually not mediated by the backend 24 hour timer.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- Add the expected graphs as a tab.
-
-
-- Initial allocation percentage.
+- Time to launch advanced setting?
 - Definitely going to need to display the price chart.
 - "We are here" on all the live graphs.
-- Upload a non-svg cover image (an nft?) (optional)
+- Upload a non-svg cover image (an nft?) and a real project description (optional)
 - Dynamic price feeds from kongswap.
 - y-axis label on graphs 1, 2 and 4
-- Consistent slider and input option for all 4 parameters with default values.
-- Annual APY history in the logs canister.
-- Understand if the countdown is reliable across timezones.
-- Can we make the create_token() atomic in case of character limit or other failures?
+- Annual APY fix in logs canister.
 - The logs canister isn't getting real lp data from kongswap (and maybe fake data in other graphs)
 - Since pool creation happens on a timer we need a safer way to make it closer to atomic and with no silent failures.
 - How do we get ksICP pool to be ICP pool on mainnet.

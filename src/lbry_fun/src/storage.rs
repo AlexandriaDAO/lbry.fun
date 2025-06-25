@@ -41,6 +41,7 @@ pub struct TokenRecord {
     pub initial_secondary_burn: u64,
     pub halving_step: u64,
     pub distribution_interval_seconds: u64,
+    pub launch_delay_seconds: u64,
     pub caller: Principal,
     pub created_time: u64,
     pub pool_creation_failed: bool,

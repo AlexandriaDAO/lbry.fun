@@ -24,6 +24,54 @@ interface TerminalPoolCardProps {
   tvlLoading?: boolean;
 }
 
+// Token metadata hook
+const useTokenMetadata = (tokenId: string) => {
+  const [metadata, setMetadata] = useState<{ description?: string }>({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      if (!tokenId || loading) return;
+      
+      setLoading(true);
+      try {
+        const network = process.env.DFX_NETWORK || process.env.REACT_APP_DFX_NETWORK;
+        const localReplicaHost = network === 'local' ? 'http://localhost:4943' : 'https://ic0.app';
+
+        const agent = new HttpAgent({ host: localReplicaHost });
+
+        await agent.fetchRootKey().catch(err => {
+          console.warn("Unable to fetch root key. Swallowing error.", err);
+        });
+
+        const tokenActor = Actor.createActor(icrc1IdlFactory, {
+          agent,
+          canisterId: Principal.fromText(tokenId),
+        });
+
+        const metadataArray = await tokenActor.icrc1_metadata() as Array<[string, Icrc1Value]>;
+        
+        // Look for description in metadata
+        const descEntry = metadataArray.find(([key]) => 
+          key === 'description' || key === 'icrc1:description'
+        );
+        
+        if (descEntry && descEntry[1] && 'Text' in descEntry[1]) {
+          setMetadata({ description: descEntry[1].Text });
+        }
+      } catch (error) {
+        console.error(`Failed to fetch metadata for ${tokenId}:`, error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMetadata();
+  }, [tokenId, loading]);
+
+  return metadata;
+};
+
 // Token Logo Component - Terminal Style
 const TokenLogo: React.FC<{
   tokenId: string;
@@ -104,6 +152,20 @@ const TokenLogo: React.FC<{
 
 const TerminalPoolCard: React.FC<TerminalPoolCardProps> = ({ pool, poolId, tvl, tvlLoading }) => {
   const navigate = useNavigate();
+  const [isVisible, setIsVisible] = useState(false);
+  
+  // Fetch metadata for both tokens
+  const primaryMetadata = useTokenMetadata(pool.primary_token_id);
+  const secondaryMetadata = useTokenMetadata(pool.secondary_token_id);
+
+  useEffect(() => {
+    // Add a small delay for staggered boot-up effect
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, Math.random() * 300);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const formatTvl = (tvlValue: string): string => {
     const formatted = TokenConversionService.formatE8sDisplay(BigInt(tvlValue), 0);
@@ -116,40 +178,61 @@ const TerminalPoolCard: React.FC<TerminalPoolCardProps> = ({ pool, poolId, tvl, 
   };
 
   return (
-    <div className="terminal-card">
+    <div className={`terminal-card ${isVisible ? 'terminal-boot' : 'opacity-0'}`}>
       <div className="terminal-card-header">
         <div>
           <span className="terminal-prompt">&gt;</span>
           <span className="terminal-pool-id ml-1">#{truncateId(poolId)}</span>
         </div>
-        <span className="terminal-status">
+        <span className={pool.isLive ? 'terminal-status-live' : 'terminal-status'}>
           {pool.isLive ? '[LIVE]' : '[PENDING]'}
         </span>
       </div>
       
       <div className="terminal-card-content">
-        {/* Primary Token */}
-        <div className="terminal-token-display">
-          <TokenLogo 
-            tokenId={pool.primary_token_id}
-            tokenSymbol={pool.primary_token_symbol}
-          />
-          <div className="terminal-token-info">
-            <div className="terminal-value truncate">{pool.primary_token_name}</div>
-            <div className="terminal-primary">${pool.primary_token_symbol}</div>
+        {/* Token Pair Display */}
+        <div className="space-y-3">
+          {/* Primary Token - Larger text */}
+          <div className="flex items-start gap-2">
+            <TokenLogo 
+              tokenId={pool.primary_token_id}
+              tokenSymbol={pool.primary_token_symbol}
+              className="w-12 h-12 flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="terminal-value text-base truncate">{pool.primary_token_name}</div>
+              <div className="terminal-primary text-sm">${pool.primary_token_symbol}</div>
+              {primaryMetadata.description && (
+                <div className="terminal-label text-xs opacity-60 truncate mt-1">
+                  {primaryMetadata.description}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-
-        {/* Secondary Token */}
-        <div className="terminal-row">
-          <span className="terminal-label">secondary:</span>
-          <div className="flex items-center space-x-2">
+          
+          {/* Visual Separator */}
+          <div className="flex items-center gap-2">
+            <div className="h-px bg-white/10 flex-1"></div>
+            <span className="text-gray-600 text-xs">/</span>
+            <div className="h-px bg-white/10 flex-1"></div>
+          </div>
+          
+          {/* Secondary Token - Smaller text */}
+          <div className="flex items-start gap-2">
             <TokenLogo 
               tokenId={pool.secondary_token_id}
               tokenSymbol={pool.secondary_token_symbol}
-              className="w-6 h-6"
+              className="w-8 h-8 flex-shrink-0"
             />
-            <span className="terminal-accent">${pool.secondary_token_symbol}</span>
+            <div className="flex-1 min-w-0">
+              <div className="terminal-value text-xs truncate">{pool.secondary_token_name}</div>
+              <div className="terminal-accent text-xs">${pool.secondary_token_symbol}</div>
+              {secondaryMetadata.description && (
+                <div className="terminal-label text-xs opacity-50 truncate mt-0.5">
+                  {secondaryMetadata.description}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -157,7 +240,7 @@ const TerminalPoolCard: React.FC<TerminalPoolCardProps> = ({ pool, poolId, tvl, 
         <div className="terminal-row">
           <span className="terminal-label">tvl:</span>
           <span className="terminal-primary">
-            {tvlLoading ? '...' : tvl ? `$${formatTvl(tvl.tvl)}` : '$0'}
+            {tvlLoading ? <span className="terminal-blink">...</span> : tvl ? `$${formatTvl(tvl.tvl)}` : '$0'}
           </span>
         </div>
 
@@ -172,13 +255,15 @@ const TerminalPoolCard: React.FC<TerminalPoolCardProps> = ({ pool, poolId, tvl, 
       
       <div className="terminal-card-footer">
         <button 
-          className="terminal-action flex-1 text-center" 
+          className="terminal-action flex-1 text-center group" 
           onClick={() => navigate(`/swap?id=${poolId}`)}
         >
-          &gt; trade
+          <span className="group-hover:hidden">&gt; trade</span>
+          <span className="hidden group-hover:inline">&gt; trade<span className="terminal-blink"></span></span>
         </button>
-        <button className="terminal-action flex-1 text-center">
-          &gt; kong
+        <button className="terminal-action flex-1 text-center group">
+          <span className="group-hover:hidden">&gt; kong</span>
+          <span className="hidden group-hover:inline">&gt; kong<span className="terminal-blink"></span></span>
         </button>
       </div>
     </div>

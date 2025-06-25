@@ -320,7 +320,7 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
         )}
       </div>
       <div className="space-y-8 mt-10 md:grid md:grid-cols-2 md:gap-x-8 md:space-y-0">
-        <div className="terminal-section bg-black border border-white/30 p-4 font-mono">
+        <div className="terminal-graph">
           <div className="terminal-section-header mb-4">
             <span className="terminal-prompt">&gt;</span> cumulative_primary_supply_vs_burn
             <TooltipIcon text="This graph shows the total amount of Primary Token that will be minted as more Secondary Tokens are burned. Look for how quickly the supply hard cap is reached. A steeper curve means faster minting in early stages. The line flattens when the supply Hard Cap is hit." />
@@ -334,7 +334,7 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
             gardientColor="hsl(var(--color-chart-primary) / 0.3)"
           />
         </div>
-        <div className="terminal-section bg-black border border-white/30 p-4 font-mono">
+        <div className="terminal-graph">
           <div className="terminal-section-header mb-4">
               <span className="terminal-prompt">&gt;</span> primary_tokens_minted_per_epoch
               <TooltipIcon text="This chart displays how many new Primary Tokens are created at each burn epoch. Typically, earlier epochs (left) will mint more tokens than later epochs (right), showing that early burners are rewarded more. A rapid decrease indicates a faster reduction in minting rewards per epoch." />
@@ -348,7 +348,7 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
             gardientColor="hsl(var(--color-chart-secondary) / 0.3)"
           />
         </div>
-        <div className="terminal-section bg-black border border-white/30 p-4 font-mono">
+        <div className="terminal-graph">
           <div className="terminal-section-header mb-4">
               <span className="terminal-prompt">&gt;</span> cost_to_mint_vs_supply
               <TooltipIcon text="This graph shows the 'price' to create one new Primary Token by burning Secondary Tokens. Notice how the cost jumps up at each stage (or 'epoch'). This increasing cost is what makes it more rewarding for early participants to mint tokens." />
@@ -362,7 +362,7 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
             gardientColor="hsl(var(--color-chart-success) / 0.3)"
           />
         </div>
-        <div className="terminal-section bg-black border border-white/30 p-4 font-mono">
+        <div className="terminal-graph">
           <div className="terminal-section-header mb-4">
               <span className="terminal-prompt">&gt;</span> minting_valuation_vs_primary
               <TooltipIcon text="Assuming each Secondary Token burned costs $0.005 (half a cent), this graph projects the total USD expenditure needed to mint a certain amount of Primary Tokens through the burning schedule. The cost of initially allocated Primary Tokens is considered $0 in this projection." />
@@ -381,7 +381,7 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
           />
         </div>
       </div>
-      <div className="terminal-section bg-black border border-white/30 p-4 font-mono text-center mt-8">
+      <div className="terminal-section p-4 font-mono text-center mt-8">
         <button 
           onClick={handleCopyData}
           className="terminal-command"

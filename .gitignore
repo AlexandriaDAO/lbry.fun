@@ -39,3 +39,22 @@ keys.json
 
 node_repl_history
 bundle-stats.json
+
+
+# Binary executables (pocket-ic is 151k+ lines)
+.bin/
+bin/pocket-ic
+
+# Test coverage reports
+coverage/
+
+
+# WebAssembly compiled files
+*.wasm
+
+# Large generated test files
+test_schedule
+
+# Temporary analysis scripts (if they're generated/temporary)
+analyze_*.js
+verify_*.js

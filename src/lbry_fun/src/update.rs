@@ -43,6 +43,7 @@ async fn create_token(
     halving_step: u64,
     initial_reward_per_burn_unit: u64,
     distribution_interval_seconds: u64,
+    launch_delay_seconds: u64,
 ) -> Result<String, String> {
     let user_principal = ic_cdk::api::caller(); // Get the calling user's principal
     ic_cdk::println!("[CREATE_TOKEN] Starting token creation for user: {}", user_principal);
@@ -199,6 +200,7 @@ async fn create_token(
         initial_secondary_burn,
         halving_step,
         distribution_interval_seconds,
+        launch_delay_seconds,
         caller: user_principal,
         created_time: ic_cdk::api::time(),
         pool_creation_failed: false,
@@ -583,20 +585,22 @@ async fn retry_pool_creation(token_id: u64) -> Result<String, String> {
                 }
             });
             
-            // Check if token should be live immediately (24 hours have passed)
+            // Check if token should be live immediately (launch delay has passed)
             let current_time = ic_cdk::api::time();
-            let twenty_four_hours_nanos = 24 * 60 * 60 * 1_000_000_000u64;
+            let launch_delay_nanos = token_record.launch_delay_seconds * 1_000_000_000;
             
-            if current_time >= token_record.created_time + twenty_four_hours_nanos {
+            if current_time >= token_record.created_time + launch_delay_nanos {
                 Ok(format!(
                     "Pool created successfully (ID: {}). Token is now live for minting/burning!",
                     reply.pool_id
                 ))
             } else {
-                let hours_remaining = ((token_record.created_time + twenty_four_hours_nanos - current_time) / 1_000_000_000) / 3600;
+                let remaining_seconds = ((token_record.created_time + launch_delay_nanos - current_time) / 1_000_000_000);
+                let hours_remaining = remaining_seconds / 3600;
+                let minutes_remaining = (remaining_seconds % 3600) / 60;
                 Ok(format!(
-                    "Pool created successfully (ID: {}). Token will go live in approximately {} hours.",
-                    reply.pool_id, hours_remaining
+                    "Pool created successfully (ID: {}). Token will go live in approximately {} hours {} minutes.",
+                    reply.pool_id, hours_remaining, minutes_remaining
                 ))
             }
         },

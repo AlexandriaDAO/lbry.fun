@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Lock, Clock, AlertCircle } from 'lucide-react';
 import { AccessState, AccessGuardProps } from '../types/accessControl.types';
-import { Entry } from '@/layouts/parts/Header';
+import { TerminalAuthMenu } from '@/features/auth/components/TerminalAuthMenu';
 
 const AccessGuard: React.FC<AccessGuardProps> = ({ 
   children, 
@@ -71,7 +71,7 @@ const AccessGuard: React.FC<AccessGuardProps> = ({
             <span className="terminal-value">connect_wallet_to_enable_trading</span>
           </div>
           <div className="mt-2">
-            <Entry />
+            <TerminalAuthMenu />
           </div>
         </div>
         {children}

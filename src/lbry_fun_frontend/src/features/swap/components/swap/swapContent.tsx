@@ -6,6 +6,7 @@ import { _SERVICE as _SERVICESWAP } from "../../../../../../declarations/icp_swa
 import { _SERVICE as _SERVICEICPLEDGER } from "../../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 import AccessGuard from "../AccessGuard";
 import { useAccessState } from "../../hooks/useAccessState";
+import { TerminalProgressBar, TerminalBoxHeader } from "../terminals/TerminalUtils";
 
 import { Link } from "react-router";
 import swapSecondary from "../../thunks/swapSecondary";
@@ -16,7 +17,7 @@ import getSecondaryBalance from "../../thunks/secondaryIcrc/getSecondaryBalance"
 import SuccessModal from "../successModal";
 import LoadingModal from "../loadingModal";
 import ErrorModal from "../errorModal";
-import { Entry } from "@/layouts/parts/Header";
+import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
 import { RootState } from "@/store";
 import SwapContentSkeleton from "./swapContentSkeleton";
 import fetchTransactionHistory from "../../thunks/fetchTransactionHistory.thunk";
@@ -224,7 +225,7 @@ const SwapContent: React.FC = () => {
                 </button>
               ) : (
                 <div className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-3 flex items-center justify-center">
-                  <Entry />
+                  <TerminalAuthMenu />
                 </div>
               )}
               

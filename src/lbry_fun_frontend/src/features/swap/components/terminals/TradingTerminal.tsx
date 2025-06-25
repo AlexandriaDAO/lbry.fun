@@ -44,27 +44,37 @@ export const TradingTerminal: React.FC = React.memo(() => {
   };
 
   return (
-    <div className="terminal-pure">
-      {/* Terminal Header */}
-      <div className="terminal-header mb-3">
+    <div className="terminal-pure terminal-flicker">
+      {/* ASCII Art Header */}
+      <pre className="terminal-ascii-header">
+{`╔══════════════════════════════════════╗
+║     TRADING TERMINAL v1.337          ║
+╚══════════════════════════════════════╝`}
+      </pre>
+
+      {/* Terminal Header with timestamp */}
+      <div className="terminal-header terminal-boot">
         <span className="terminal-prompt">&gt;&gt;</span> trading_terminal
+        <span className="terminal-timestamp ml-2">
+          {new Date().toTimeString().slice(0, 8)}
+        </span>
       </div>
 
+      <div className="terminal-divider-single" />
+
       {/* Operation Navigation */}
-      <div className="terminal-section mb-3">
-        <div className="terminal-header mb-2">
-          <span className="terminal-prompt">&gt;</span> active_operations
-        </div>
-        <div className="flex gap-2">
+      <div className="terminal-section terminal-boot" style={{ animationDelay: '0.1s' }}>
+        <span className="terminal-prompt">&gt;</span> active_operations
+        <div className="flex gap-2 mt-1">
           {(['swap', 'transfer', 'burn'] as const).map(op => (
             <button
               key={op}
               onClick={() => setActiveOperation(op)}
               className={`
-                font-mono text-xs px-3 py-1 transition-colors
+                terminal-button text-xs px-2 py-0.5
                 ${activeOperation === op
-                  ? 'bg-black border border-lime-500 text-lime-500'
-                  : 'bg-black border border-white/30 text-gray-400 hover:text-white hover:border-white/50'
+                  ? 'border-lime-500 text-lime-500'
+                  : 'border-white/30 text-gray-400 hover:text-white hover:border-white/50'
                 }
               `}
             >
@@ -75,69 +85,75 @@ export const TradingTerminal: React.FC = React.memo(() => {
       </div>
 
       {/* Account Summary */}
-      <div className="terminal-section mb-3">
-        <div className="terminal-header mb-2">
-          <span className="terminal-prompt">&gt;</span> account_summary
-        </div>
+      <div className="terminal-section terminal-boot" style={{ animationDelay: '0.2s' }}>
+        <span className="terminal-prompt">&gt;</span> account_summary
         {isAuthenticated ? (
-          <div className="space-y-1">
-            <div className="terminal-row">
+          <div className="ml-4">
+            <pre className="text-gray-600 text-xs mb-2">
+{`┌─────────────────────────────────────┐
+│ WALLET STATUS: CONNECTED            │
+└─────────────────────────────────────┘`}
+            </pre>
+            <div className="terminal-row justify-between">
               <span className="terminal-label">icp_balance:</span>
-              <div className="text-right">
-                <span className="terminal-primary">
-                  {parseFloat(balances.icp).toFixed(4)}
+              <span className="terminal-value cyber-glow">
+                {parseFloat(balances.icp).toFixed(4)}
+                <span className="terminal-accent ml-1 text-xs">
+                  {balances.icp === '0' ? '' : `ICP`}
                 </span>
-                <span className="terminal-accent ml-2">
-                  [{parseFloat(balances.icp).toFixed(2)} ICP]
-                </span>
-              </div>
+              </span>
             </div>
             {poolData && (
               <>
-                <div className="terminal-row">
-                  <span className="terminal-label">primary_balance:</span>
+                <div className="terminal-row justify-between">
+                  <span className="terminal-label">balance:</span>
                   <span className="terminal-value">
-                    {formatBalance(balances.primary, poolData[1].primary_token_symbol)}
+                    {parseFloat(balances.primary).toFixed(0)} {poolData[1].primary_token_symbol}
                   </span>
                 </div>
-                <div className="terminal-row">
-                  <span className="terminal-label">secondary_balance:</span>
+                <div className="terminal-row justify-between">  
+                  <span className="terminal-label">[max]</span>
                   <span className="terminal-value">
-                    {formatBalance(balances.secondary, poolData[1].secondary_token_symbol)}
+                    {parseFloat(balances.secondary).toFixed(0)} {poolData[1].secondary_token_symbol}
                   </span>
                 </div>
               </>
             )}
           </div>
         ) : (
-          <div className="text-gray-400 text-xs">
-            [NOT CONNECTED] - Connect wallet to view balances
+          <div className="terminal-status-error ml-4 terminal-blink">
+            [WALLET_NOT_CONNECTED] - Authentication required
           </div>
         )}
       </div>
 
+      <div className="terminal-divider-dots" />
+
       {/* Active Operation Interface */}
-      <div className="terminal-section mb-3">
+      <div className="terminal-section terminal-boot" style={{ animationDelay: '0.4s' }}>
+        <pre className="text-gray-600 text-xs mb-3">
+{`>>> EXECUTING: ${activeOperation.toUpperCase()}_PROTOCOL`}
+        </pre>
         {renderActiveOperation()}
       </div>
 
       {/* Recent Transactions (Collapsible) */}
       {isAuthenticated && (
-        <div className="terminal-section">
+        <div className="terminal-section terminal-boot" style={{ animationDelay: '0.5s' }}>
           <div 
-            className="terminal-header mb-2 cursor-pointer flex justify-between items-center"
+            className="terminal-row cursor-pointer justify-between"
             onClick={() => setShowTransactions(!showTransactions)}
           >
-            <div>
+            <span>
               <span className="terminal-prompt">&gt;</span> recent_transactions
-            </div>
+            </span>
             <span className="terminal-accent text-xs">
-              [{showTransactions ? 'COLLAPSE' : 'EXPAND'}]
+              [{showTransactions ? '-' : '+'}]
             </span>
           </div>
           
           {showTransactions && (
-            <div className="mt-2">
+            <div className="mt-1">
               <TransactionHistory />
             </div>
           )}

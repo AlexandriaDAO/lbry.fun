@@ -42,7 +42,6 @@ pub fn get_upcomming() -> Vec<(u64, TokenRecord)> {
 #[query]
 pub fn get_live() -> Vec<(u64, TokenRecord)> {
     let current_time = ic_cdk::api::time();
-    let twenty_four_hours_nanos = crate::constants::LAUNCH_PERIOD_NANOS;
     
     TOKENS.with(|tokens| {
         let tokens_map = tokens.borrow();
@@ -50,10 +49,11 @@ pub fn get_live() -> Vec<(u64, TokenRecord)> {
         tokens_map
             .iter()
             .filter(|(_, token)| {
-                // Live if: pool created successfully AND 24 hours have passed
+                // Live if: pool created successfully AND launch delay has passed
+                let launch_delay_nanos = token.launch_delay_seconds * 1_000_000_000;
                 !token.pool_creation_failed && 
                 token.pool_created_at > 0 && 
-                current_time >= token.created_time + twenty_four_hours_nanos
+                current_time >= token.created_time + launch_delay_nanos
             })
             .map(|(id, token)| (id.clone(), token.clone()))
             .collect()
@@ -79,6 +79,7 @@ pub struct TokenStatus {
     pub created_time: u64,
     pub pool_creation_failed: bool,
     pub pool_created_at: u64,
+    pub launch_delay_seconds: u64,
 }
 
 #[query]
@@ -93,6 +94,7 @@ pub fn get_token_status_by_swap_canister(swap_canister_id: Principal) -> Option<
                     created_time: token.created_time,
                     pool_creation_failed: token.pool_creation_failed,
                     pool_created_at: token.pool_created_at,
+                    launch_delay_seconds: token.launch_delay_seconds,
                 });
             }
         }
