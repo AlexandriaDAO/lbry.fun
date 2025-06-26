@@ -1,7 +1,7 @@
-import { Middleware } from '@reduxjs/toolkit';
+import { Middleware, PayloadAction, AsyncThunkAction } from '@reduxjs/toolkit';
 
 interface PendingRequest {
-  promise: Promise<any>;
+  promise: Promise<unknown>;
   timestamp: number;
 }
 
@@ -71,7 +71,15 @@ export const requestDeduplicationMiddleware: Middleware = store => next => actio
 /**
  * Generate a unique key for the request based on action type and payload
  */
-function generateRequestKey(action: any): string {
+interface AsyncThunkActionMeta {
+  type: string;
+  meta?: {
+    arg?: unknown;
+    requestId?: string;
+  };
+}
+
+function generateRequestKey(action: AsyncThunkActionMeta): string {
   const baseKey = action.type.replace('/pending', '');
   
   // Handle different thunk patterns

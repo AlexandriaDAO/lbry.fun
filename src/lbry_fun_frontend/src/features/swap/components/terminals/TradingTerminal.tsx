@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import SwapContent from '../swap/swapContent';
-import TransferContent from '../transfer/TransferContent';
-import BurnContent from '../burn/burnContent';
-import TransactionHistory from '../transactionHistory/transactionHistory';
+import SwapContent from '../SwapContent';
+import TransferContent from '../TransferContent';
+import BurnContent from '../BurnContent';
+import UnifiedTransaction from '../UnifiedTransaction';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 
 type OperationMode = 'swap' | 'transfer' | 'burn';
@@ -154,7 +154,7 @@ export const TradingTerminal: React.FC = React.memo(() => {
           
           {showTransactions && (
             <div className="mt-1">
-              <TransactionHistory />
+              <UnifiedTransaction view="history" />
             </div>
           )}
         </div>

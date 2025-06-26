@@ -7,19 +7,18 @@ import { setIsLoadingCriticalData, setIsLoadingSecondaryData } from '../swapSlic
 import { useIcpBalance } from '@/hooks/useIcpBalance';
 
 // Import thunks for data fetching
-import getSecondaryratio from '../thunks/getSecondaryratio';
-import getPrimaryMintRate from '../thunks/tokenomics/getPrimaryMintRate';
-import getTotalPrimarySupply from '../thunks/tokenomics/getTotalPrimarySupply';
-import getTokenomicsInfo from '../thunks/tokenomics/getTokenomicsInfo';
-import getSecondaryFee from '../thunks/secondaryIcrc/getSecondaryFee';
-import getPrimaryFee from '../thunks/primaryIcrc/getPrimaryFee';
-import getAccountPrimaryBalance from '../thunks/primaryIcrc/getAccountPrimaryBalance';
-import getSecondaryBalance from '../thunks/secondaryIcrc/getSecondaryBalance';
-import getStakedInfo from '../thunks/getStakedInfo';
+import { stakingThunks } from '../thunks/stakingThunks';
+import { tradingThunks } from '../thunks/tradingThunks';
+import { balanceThunks } from '../thunks/balanceThunks';
+import { analyticsThunks } from '../thunks/analyticsThunks';
 import getIcpPrice from '@/features/icp-ledger/thunks/getIcpPrice';
 import getCanisterBal from '@/features/icp-ledger/thunks/getCanisterBal';
-import getArchivedBal from '../thunks/getArchivedBal';
-import getCanisterArchivedBal from '../thunks/getCanisterArchivedBal';
+
+// Destructure for easier access
+const { getStakedInfo } = stakingThunks;
+const { getSecondaryRatio } = tradingThunks;
+const { getPrimaryBalance, getSecondaryBalance, getPrimaryFee, getSecondaryFee, getArchivedBalance, getCanisterArchivedBalance } = balanceThunks;
+const { getPrimaryMintRate, getTokenomicsInfo, getTotalPrimarySupply } = analyticsThunks;
 
 export enum LoadingPhase {
   IDLE = 'IDLE',
@@ -56,13 +55,13 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
     try {
       // Separate public data (always loads) from user data (only when authenticated)
       const publicDataPromises = [
-        dispatch(getSecondaryratio()).unwrap(),
+        dispatch(getSecondaryRatio()).unwrap(),
         dispatch(getPrimaryMintRate()).unwrap(),
         dispatch(getSecondaryFee()).unwrap(),
         dispatch(getPrimaryFee()).unwrap(),
         dispatch(getIcpPrice()).unwrap(),
         dispatch(getCanisterBal()).unwrap(), // Needed for burn calculations
-        dispatch(getCanisterArchivedBal()).unwrap(), // Also needed for burn calculations
+        dispatch(getCanisterArchivedBalance()).unwrap(), // Also needed for burn calculations
       ];
       
       // Add tokenomics data fetching if we have the canister IDs
@@ -84,7 +83,7 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
       // If authenticated, also load user-specific critical data
       if (isAuthenticated && principal) {
         const userDataPromises = [
-          dispatch(getAccountPrimaryBalance(principal)).unwrap(),
+          dispatch(getPrimaryBalance(principal)).unwrap(),
           dispatch(getSecondaryBalance(principal)).unwrap()
         ];
 
@@ -123,7 +122,7 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
       // Load secondary data in parallel
       const secondaryPromises = [
         dispatch(getStakedInfo(principal)).unwrap(),
-        dispatch(getArchivedBal(principal)).unwrap(),
+        dispatch(getArchivedBalance(principal)).unwrap(),
       ];
 
       await Promise.all(secondaryPromises);

@@ -3,7 +3,7 @@ import {
   getIcpLedgerActor,
   getLbryFunActor,
 } from "@/features/auth/utils/authUtils";
-import { ErrorMessage } from "@/features/swap/utlis/erorrs";
+import { ErrorMessage } from "@/features/swap/utils/errors";
 import { Principal } from "@dfinity/principal/lib/cjs";
 
 // Define the thunk

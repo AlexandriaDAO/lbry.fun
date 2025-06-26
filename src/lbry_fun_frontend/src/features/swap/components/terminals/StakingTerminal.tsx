@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import StakeContent from '../stake/stakeContent';
+import StakeContent from '../StakeContent';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 
 export const StakingTerminal: React.FC = React.memo(() => {

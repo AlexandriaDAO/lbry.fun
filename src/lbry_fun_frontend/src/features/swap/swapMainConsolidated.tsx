@@ -1,16 +1,19 @@
-import React, { useEffect, Suspense } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import "./style.css"
 
 import { useAppSelector } from '@/store/hooks/useAppSelector';
-import ConsolidatedTerminal from './components/balance/ConsolidatedTerminal';
+import ConsolidatedTerminal from './components/ConsolidatedTerminal';
 // Removed UnifiedSwapDataProvider - each terminal fetches its own data
 import { SwapErrorBoundary } from './components/SwapErrorBoundary';
 import { usePoolInitializer, PoolInitState } from './hooks/usePoolInitializer';
 import { LoaderCircle } from 'lucide-react';
-import { TradingTerminal } from './components/terminals/TradingTerminal';
-import { StakingTerminal } from './components/terminals/StakingTerminal';
-import { AnalyticsTerminal } from './components/terminals/AnalyticsTerminal';
+import UnifiedSkeleton from './components/UnifiedSkeleton';
+
+// Lazy load terminals for better performance
+const TradingTerminal = lazy(() => import('./components/terminals/TradingTerminal').then(m => ({ default: m.TradingTerminal })));
+const StakingTerminal = lazy(() => import('./components/terminals/StakingTerminal').then(m => ({ default: m.StakingTerminal })));
+const AnalyticsTerminal = lazy(() => import('./components/terminals/AnalyticsTerminal').then(m => ({ default: m.AnalyticsTerminal })));
 
 const SwapMainConsolidated = () => {
     const navigate = useNavigate();
@@ -126,14 +129,16 @@ const SwapMainConsolidated = () => {
 
                                 <div className="mt-4">
                                     <SwapErrorBoundary>
-                                        {(() => {
-                                            const activeTabData = tabs.find(tab => tab.path === effectivePath);
-                                            if (activeTabData && activeTabData.Component) {
-                                                const Component = activeTabData.Component;
-                                                return <Component />;
-                                            }
-                                            return null;
-                                        })()}
+                                        <Suspense fallback={<UnifiedSkeleton variant="terminal" />}>
+                                            {(() => {
+                                                const activeTabData = tabs.find(tab => tab.path === effectivePath);
+                                                if (activeTabData && activeTabData.Component) {
+                                                    const Component = activeTabData.Component;
+                                                    return <Component />;
+                                                }
+                                                return null;
+                                            })()}
+                                        </Suspense>
                                     </SwapErrorBoundary>
                                 </div>
                             </div>

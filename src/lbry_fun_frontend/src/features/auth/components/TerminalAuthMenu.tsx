@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { useLogout } from '@/hooks/useLogout';
-import CopyHelper from '@/features/swap/components/copyHelper';
+import CopyHelper from '@/features/swap/components/CopyHelper';
 import { TerminalAuthModal } from './TerminalAuthModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPowerOff, faWallet } from '@fortawesome/free-solid-svg-icons';

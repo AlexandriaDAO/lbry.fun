@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
-import Insights from '../insights/insights';
-import InfoCard from '../info/InfoCard';
-import TokenomicsTab from '../tokenomics/TokenomicsTab';
+import React, { useState, lazy, Suspense } from 'react';
+import UnifiedInfoDisplay from '../UnifiedInfoDisplay';
+import UnifiedSkeleton from '../UnifiedSkeleton';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
+
+// Lazy load heavy components
+const Insights = lazy(() => import('../Insights'));
+const TokenomicsTab = lazy(() => import('../TokenomicsTab'));
 
 type AnalyticsView = 'insights' | 'tokenomics' | 'technical';
 
@@ -14,11 +17,19 @@ export const AnalyticsTerminal: React.FC = React.memo(() => {
   const renderActiveView = () => {
     switch (activeView) {
       case 'insights':
-        return <Insights />;
+        return (
+          <Suspense fallback={<UnifiedSkeleton variant="card" rows={5} />}>
+            <Insights />
+          </Suspense>
+        );
       case 'tokenomics':
-        return <TokenomicsTab />;
+        return (
+          <Suspense fallback={<UnifiedSkeleton variant="card" rows={5} />}>
+            <TokenomicsTab />
+          </Suspense>
+        );
       case 'technical':
-        return <InfoCard />;
+        return <UnifiedInfoDisplay variant="developer" />;
       default:
         return null;
     }

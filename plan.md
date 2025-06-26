@@ -1,4 +1,3 @@
-- Time to launch advanced setting?
 - Definitely going to need to display the price chart.
 - "We are here" on all the live graphs.
 - Upload a non-svg cover image (an nft?) and a real project description (optional)

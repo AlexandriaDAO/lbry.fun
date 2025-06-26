@@ -27,6 +27,7 @@ type TokenRecord = record {
   tokenomics_canister_id : principal;
   secondary_token_name : text;
   primary_token_symbol : text;
+  launch_delay_seconds : nat64;
   icp_swap_canister_id : principal;
   halving_step : nat64;
   primary_token_max_supply : nat64;
@@ -35,17 +36,16 @@ type TokenRecord = record {
   primary_token_id : principal;
   caller : principal;
   pool_created_at : nat64;
+  distribution_interval_seconds : nat64;
   created_time : nat64;
   initial_secondary_burn : nat64;
   logs_canister_id : principal;
-  distribution_interval_seconds : nat64;
-  launch_delay_seconds : nat64;
 };
 type TokenStatus = record {
+  launch_delay_seconds : nat64;
   pool_creation_failed : bool;
   pool_created_at : nat64;
   created_time : nat64;
-  launch_delay_seconds : nat64;
 };
 type TokenStatusDetail = record {
   is_live : bool;

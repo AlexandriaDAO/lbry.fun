@@ -6,7 +6,7 @@ import getTokenPools, {
 import getUpcomming from "./thunk/getUpcommingTokens.thunk";
 import getLiveTokens from "./thunk/getLiveTokens.thunk";
 import fetchTokenLogosForPool from "./thunk/fetchTokenLogosForPoolThunk";
-import { ErrorMessage } from "@/features/swap/utlis/erorrs";
+import { ErrorMessage } from "@/features/swap/utils/errors";
 import previewTokenomics from "./thunk/previewTokenomics.thunk";
 import getPoolsTvl, { TokenTvlMap } from "./thunk/getPoolsTvl.thunk";
 

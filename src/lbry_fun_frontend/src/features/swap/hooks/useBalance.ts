@@ -1,8 +1,10 @@
 import { useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { useBalanceWithLoading } from './useSwapState';
-import getAccountPrimaryBalance from '../thunks/primaryIcrc/getAccountPrimaryBalance';
-import getSecondaryBalance from '../thunks/secondaryIcrc/getSecondaryBalance';
+import { balanceThunks } from '../thunks/balanceThunks';
+
+// Destructure for easier access
+const { getPrimaryBalance, getSecondaryBalance } = balanceThunks;
 
 interface UseBalanceOptions {
   refreshOnMount?: boolean;
@@ -18,7 +20,7 @@ export const useBalance = (options: UseBalanceOptions = {}) => {
 
   const refreshBalances = useCallback(() => {
     if (isAuthenticated && principal) {
-      dispatch(getAccountPrimaryBalance(principal));
+      dispatch(getPrimaryBalance(principal));
       dispatch(getSecondaryBalance(principal));
     }
   }, [dispatch, isAuthenticated, principal]);

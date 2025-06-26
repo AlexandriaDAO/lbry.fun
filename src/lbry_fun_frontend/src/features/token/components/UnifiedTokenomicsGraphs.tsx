@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import LineChart from '../../swap/components/insights/chart';
+import LineChart from '../../swap/components/Chart';
 import TooltipIcon from './TooltipIcon';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';

@@ -1,8 +1,11 @@
 import { useCallback, useEffect } from "react";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
-import fetchTransactionHistory from "../thunks/fetchTransactionHistory.thunk";
+import { analyticsThunks } from "../thunks/analyticsThunks";
 import { resetTransactionHistory } from "../swapSlice";
+
+// Destructure for easier access
+const { fetchTransactionHistory } = analyticsThunks;
 import { RootState } from "@/store";
 
 export const useTransactionHistory = () => {

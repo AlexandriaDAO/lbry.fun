@@ -3,10 +3,12 @@ import {
   createSlice,
 } from "@reduxjs/toolkit";
 import { toast } from "sonner";
-import getAccountPrimaryBalance from "./thunks/primaryIcrc/getAccountPrimaryBalance";
-import transferPrimary from "./thunks/primaryIcrc/transferPrimary";
-import getPrimaryFee from "./thunks/primaryIcrc/getPrimaryFee";
-import getPrimaryPrice from "./thunks/primaryIcrc/getPrimaryPrice";
+import { balanceThunks } from "./thunks/balanceThunks";
+import { tradingThunks } from "./thunks/tradingThunks";
+
+// Destructure for easier access
+const { getPrimaryBalance, getPrimaryFee, getPrimaryPrice } = balanceThunks;
+const { transferPrimary } = tradingThunks;
 // Define the interface for our node state
 export interface PrimaryState {
   primaryBal: string;
@@ -38,16 +40,16 @@ const primarySlice = createSlice({
   },
   extraReducers: (builder: ActionReducerMapBuilder<PrimaryState>) => {
     builder
-      .addCase(getAccountPrimaryBalance.pending, (state) => {
+      .addCase(getPrimaryBalance.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getAccountPrimaryBalance.fulfilled, (state, action) => {
+      .addCase(getPrimaryBalance.fulfilled, (state, action) => {
         state.primaryBal = action.payload;
         state.loading = false;
         state.error = null;
       })
-      .addCase(getAccountPrimaryBalance.rejected, (state, action) => {
+      .addCase(getPrimaryBalance.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

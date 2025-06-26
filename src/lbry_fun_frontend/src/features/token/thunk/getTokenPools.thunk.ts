@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getLbryFunActor } from "@/features/auth/utils/authUtils";
-import { ErrorMessage } from "@/features/swap/utlis/erorrs";
+import { ErrorMessage } from "@/features/swap/utils/errors";
 import { TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
 import fetchTokenLogosForPool from "./fetchTokenLogosForPoolThunk";
 import { LAUNCH_PERIOD_NANOS } from "@/constants/launchPeriod";

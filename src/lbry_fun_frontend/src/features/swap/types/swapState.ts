@@ -55,14 +55,29 @@ export interface ErrorState {
 }
 
 export interface ProcessedLogsData {
-  // Add proper type definition based on actual logs structure
-  [key: string]: any;
+  time: number[];
+  primaryTokenSupply: number[];
+  secondaryTokenSupply: number[];
+  totalSecondaryBurned: number[];
+  icpInLpTreasury: number[];
+  totalPrimaryStaked: number[];
+  stakerCount: number[];
+  apy: null;
+  hourlyIcpRewards: number[];
 }
 
 export interface TokenRecordStringified {
   primary_token_logo_base64?: string;
   secondary_token_logo_base64?: string;
-  [key: string]: any;
+  icp_swap_canister_id: string;
+  tokenomics_canister_id: string;
+  logs_canister_id: string;
+  primary_token_id: string;
+  secondary_token_id: string;
+  primary_token_symbol?: string;
+  secondary_token_symbol?: string;
+  launch_time?: string;
+  [key: string]: string | undefined; // Allow additional string fields
 }
 
 // Main normalized swap state
