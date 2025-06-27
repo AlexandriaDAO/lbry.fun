@@ -3,9 +3,10 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { RootState } from '@/store';
-import { setActiveSwapPool } from '../swapSlice';
+import { setActiveSwapPool } from '../store/swapSlice';
 import getTokenPools from '@/features/token/thunk/getTokenPools.thunk';
 import fetchTokenLogosForPool from '@/features/token/thunk/fetchTokenLogosForPoolThunk';
+import { fetchTokenomicsSchedule, fetchTokenomicsCurrentState } from '../thunks/tokenomicsThunks';
 
 export enum PoolInitState {
   IDLE = 'IDLE',
@@ -89,6 +90,12 @@ export const usePoolInitializer = (): UsePoolInitializerReturn => {
             primaryTokenId: poolData.primary_token_id,
             secondaryTokenId: poolData.secondary_token_id,
           }));
+        }
+        
+        // Fetch tokenomics schedule and current state for the pool
+        if (poolData.tokenomics_canister_id) {
+          dispatch(fetchTokenomicsSchedule(poolData.tokenomics_canister_id));
+          dispatch(fetchTokenomicsCurrentState(poolData.tokenomics_canister_id));
         }
       }
       setPoolInitState(PoolInitState.READY);

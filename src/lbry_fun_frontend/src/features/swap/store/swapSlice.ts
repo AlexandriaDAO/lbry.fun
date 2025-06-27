@@ -4,6 +4,8 @@ import { stakingThunks } from "../thunks/stakingThunks";
 import { tradingThunks } from "../thunks/tradingThunks";
 import { balanceThunks } from "../thunks/balanceThunks";
 import { analyticsThunks } from "../thunks/analyticsThunks";
+import { fetchTokenomicsSchedule, fetchTokenomicsCurrentState } from "../thunks/tokenomicsThunks";
+import { distributionThunks } from "../thunks/distributionThunks";
 import fetchTokenLogosForPool from "../../token/thunk/fetchTokenLogosForPoolThunk";
 import { SwapState } from "./swapTypes";
 import { initialState, swapActions } from "./swapActions";
@@ -13,6 +15,7 @@ const { stakePrimary, unstake, claimReward, getStakedInfo, getAllStakesInfo, get
 const { swapSecondary, burnSecondary, transferSecondary, getSecondaryRatio } = tradingThunks;
 const { getSecondaryBalance, getSecondaryFee, getArchivedBalance, getCanisterArchivedBalance, redeemArchivedBalance } = balanceThunks;
 const { fetchTransactionHistory, getAllLogs } = analyticsThunks;
+const { fetchDistributionSummary, fetchDistributionEvents, fetchLatestDistributionEvent } = distributionThunks;
 
 const swapSlice = createSlice({
   name: "swap",
@@ -31,7 +34,7 @@ const swapSlice = createSlice({
         state.error = null;
       })
       .addCase(getSecondaryRatio.rejected, (state) => {
-        toast.error("Secondary ratio could not be fetched!");
+        toast.error("[ERROR] SECONDARY RATIO FETCH FAILED");
         state.loading = false;
         state.error = null;
       })
@@ -47,7 +50,7 @@ const swapSlice = createSlice({
         state.error = null;
       })
       .addCase(getSecondaryBalance.rejected, (state, action) => {
-        toast.error("Secondary balance could not be fetched!");
+        toast.error("[ERROR] SECONDARY BALANCE FETCH FAILED");
         state.loading = false;
         state.error = {
           message: "",
@@ -66,7 +69,7 @@ const swapSlice = createSlice({
         state.error = null;
       })
       .addCase(getStakedInfo.rejected, (state, action) => {
-        toast.error("Staked info could not be fetched!");
+        toast.error("[ERROR] STAKED INFO FETCH FAILED");
         state.loading = false;
         state.error = {
           message: "",
@@ -84,13 +87,13 @@ const swapSlice = createSlice({
         state.swapSuccess = true;
         state.loading = false;
         state.error = null;
-        toast.success("Swap successful!");
+        toast.success("[SUCCESS] SWAP COMPLETE");
       })
       .addCase(swapSecondary.rejected, (state, action) => {
         state.loading = false;
         state.swapSuccess = false;
         state.error = action.payload || { title: "Swap failed", message: "Please try again" };
-        toast.error(`Failed to swap: ${action.payload?.title || "Unknown error"}`);
+        toast.error(`[ERROR] SWAP FAILED: ${action.payload?.title || "UNKNOWN ERROR"}`);
       })
       
       // Burn Secondary
@@ -103,13 +106,13 @@ const swapSlice = createSlice({
         state.burnSuccess = true;
         state.loading = false;
         state.error = null;
-        toast.success("Burn successful!");
+        toast.success("[SUCCESS] BURN COMPLETE");
       })
       .addCase(burnSecondary.rejected, (state, action) => {
         state.loading = false;
         state.burnSuccess = false;
         state.error = action.payload || { title: "Burn failed", message: "Please try again" };
-        toast.error(`Failed to burn: ${action.payload?.title || "Unknown error"}`);
+        toast.error(`[ERROR] BURN FAILED: ${action.payload?.title || "UNKNOWN ERROR"}`);
       })
       
       // Stake Primary
@@ -122,13 +125,13 @@ const swapSlice = createSlice({
         state.successStake = true;
         state.loading = false;
         state.error = null;
-        toast.success("Stake successful!");
+        toast.success("[SUCCESS] STAKE COMPLETE");
       })
       .addCase(stakePrimary.rejected, (state, action) => {
         state.loading = false;
         state.successStake = false;
         state.error = action.payload || { title: "Stake failed", message: "Please try again" };
-        toast.error(`Failed to stake: ${action.payload?.title || "Unknown error"}`);
+        toast.error(`[ERROR] STAKE FAILED: ${action.payload?.title || "UNKNOWN ERROR"}`);
       })
       
       // Transaction History
@@ -187,6 +190,78 @@ const swapSlice = createSlice({
           }
           state.activeSwapPool = [state.activeSwapPool[0], updatedRecord];
         }
+      })
+      
+      // Tokenomics Schedule
+      .addCase(fetchTokenomicsSchedule.pending, (state) => {
+        state.tokenomicsScheduleLoading = true;
+        state.tokenomicsScheduleError = null;
+      })
+      .addCase(fetchTokenomicsSchedule.fulfilled, (state, action) => {
+        state.tokenomicsSchedule = action.payload;
+        state.tokenomicsScheduleLoading = false;
+        state.tokenomicsScheduleError = null;
+      })
+      .addCase(fetchTokenomicsSchedule.rejected, (state, action) => {
+        state.tokenomicsScheduleLoading = false;
+        state.tokenomicsScheduleError = action.payload?.message || "Failed to fetch tokenomics schedule";
+      })
+      
+      // Tokenomics Current State
+      .addCase(fetchTokenomicsCurrentState.pending, (state) => {
+        state.tokenomicsCurrentStateLoading = true;
+        state.tokenomicsCurrentStateError = null;
+      })
+      .addCase(fetchTokenomicsCurrentState.fulfilled, (state, action) => {
+        state.tokenomicsCurrentState = action.payload;
+        state.tokenomicsCurrentStateLoading = false;
+        state.tokenomicsCurrentStateError = null;
+      })
+      .addCase(fetchTokenomicsCurrentState.rejected, (state, action) => {
+        state.tokenomicsCurrentStateLoading = false;
+        state.tokenomicsCurrentStateError = action.payload?.message || "Failed to fetch current state";
+      })
+      
+      // Distribution Summary
+      .addCase(fetchDistributionSummary.pending, (state) => {
+        state.distributionLoading = true;
+        state.distributionError = null;
+      })
+      .addCase(fetchDistributionSummary.fulfilled, (state, action) => {
+        state.distributionSummary = action.payload;
+        state.distributionLoading = false;
+      })
+      .addCase(fetchDistributionSummary.rejected, (state, action) => {
+        state.distributionError = action.payload as string;
+        state.distributionLoading = false;
+      })
+      
+      // Distribution Events
+      .addCase(fetchDistributionEvents.pending, (state) => {
+        state.distributionLoading = true;
+        state.distributionError = null;
+      })
+      .addCase(fetchDistributionEvents.fulfilled, (state, action) => {
+        state.distributionEvents = action.payload;
+        state.distributionLoading = false;
+      })
+      .addCase(fetchDistributionEvents.rejected, (state, action) => {
+        state.distributionError = action.payload as string;
+        state.distributionLoading = false;
+      })
+      
+      // Latest Distribution Event
+      .addCase(fetchLatestDistributionEvent.pending, (state) => {
+        state.distributionLoading = true;
+        state.distributionError = null;
+      })
+      .addCase(fetchLatestDistributionEvent.fulfilled, (state, action) => {
+        state.latestDistributionEvent = action.payload;
+        state.distributionLoading = false;
+      })
+      .addCase(fetchLatestDistributionEvent.rejected, (state, action) => {
+        state.distributionError = action.payload as string;
+        state.distributionLoading = false;
       });
   },
 });

@@ -15,8 +15,8 @@ import { analyticsThunks } from "../thunks/analyticsThunks";
 import { flagHandler } from "../swapSlice";
 import { LoaderCircle, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { icp_fee, minimum_icp } from "@/utils/utils";
-import Modal from "./Modal";
-import { useModal } from "../hooks/useModal";
+import TerminalNotification from "./TerminalNotification";
+import { useTerminalNotification } from "../hooks/useTerminalNotification";
 import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
 import { RootState } from "@/store";
 import UnifiedSkeleton from "./UnifiedSkeleton";
@@ -36,7 +36,7 @@ const SwapContent: React.FC = () => {
   const [amount, setAmount] = useState("");
   const [secondaryRatio, setSecondaryRatio] = useState(0.0);
   const [tentativeSecondary, setTentativeSecondary] = useState(Number);
-  const { modal, showLoading, showSuccess, showError, hide } = useModal();
+  const { notification, showLoading, showSuccess, showError, hide } = useTerminalNotification();
 
   const [inputState, setInputState] = useState<'default' | 'error' | 'focus'>('default');
   const [showRedeemSection, setShowRedeemSection] = useState(false);
@@ -48,8 +48,8 @@ const SwapContent: React.FC = () => {
     // Check if token is live
     if (!isTokenLive) {
       showError(
-        "Trading Not Yet Available", 
-        "This token is still in its launch period. Trading will be enabled after the 24-hour launch window."
+        "TRADING LOCKED", 
+        "Token in launch period. Trading enabled after 24h."
       );
       return;
     }
@@ -57,8 +57,8 @@ const SwapContent: React.FC = () => {
     let amountAfterFees = (Number(amount)).toFixed(4);
     dispatch(swapSecondary({ amount: amountAfterFees, userPrincipal: principal, canisterId: swap.activeSwapPool?.[1].icp_swap_canister_id }));
     showLoading(
-      "Swap in Progress",
-      `Your transaction from ICP to ${swap.activeSwapPool?.[1].secondary_token_symbol} is being processed. This may take a few moments`
+      "SWAP IN PROGRESS",
+      `Processing ICP → ${swap.activeSwapPool?.[1].secondary_token_symbol}`
     );
   }, [isAuthenticated, principal, swap.activeSwapPool, isTokenLive, amount, dispatch, showError, showLoading]);
 
@@ -78,11 +78,12 @@ const SwapContent: React.FC = () => {
     }
   }, [secondaryRatio]);
   useEffect(() => {
-    setSecondaryRatio(Number(swap.secondaryRatio));
+    const ratio = Number(swap.secondaryRatio) || 0;
+    setSecondaryRatio(ratio);
     setTentativeSecondary(
-      parseFloat((Number(swap.secondaryRatio) * Number(amount)).toFixed(4))
+      parseFloat((ratio * Number(amount)).toFixed(4))
     );
-  }, [swap.secondaryRatio]);
+  }, [swap.secondaryRatio, amount]);
   useEffect(() => {
     if (!isAuthenticated || !principal || !swap.activeSwapPool?.[1].secondary_token_id) return;
     if (swap.swapSuccess === true) {
@@ -91,7 +92,7 @@ const SwapContent: React.FC = () => {
       dispatch(fetchTransactionHistory({ userPrincipal: principal, startIndex: 0 }));
       dispatch(flagHandler());
       hide();
-      showSuccess("Success!", "Transaction Submitted!");
+      showSuccess("SUCCESS", "Transaction submitted");
       setAmount("");
       setTentativeSecondary(0);
     }
@@ -186,7 +187,7 @@ const SwapContent: React.FC = () => {
               <div className="bg-black border border-white/30 p-3">
                 <div className="flex justify-between items-center mb-2">
                   <span className="terminal-label">receive:</span>
-                  <span className="terminal-primary">{tentativeSecondary.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                  <span className="terminal-primary">{(tentativeSecondary || 0).toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -255,13 +256,13 @@ const SwapContent: React.FC = () => {
                 
                 <div className="flex justify-between items-center">
                   <span className="terminal-label">receive:</span>
-                  <span className="terminal-primary">{tentativeSecondary.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                  <span className="terminal-primary">{(tentativeSecondary || 0).toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
                 </div>
                 
                 <div className="border-t border-white/30 mt-3 pt-3">
                   <div className="flex justify-between items-center">
                     <span className="terminal-label">exchange_rate:</span>
-                    <span className="terminal-value">1 icp = {secondaryRatio} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                    <span className="terminal-value">1 icp = {secondaryRatio.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
                   </div>
                 </div>
                 
@@ -310,12 +311,12 @@ const SwapContent: React.FC = () => {
           </div>
         )}
 
-        <Modal 
-          type={modal.type}
-          isOpen={modal.isOpen}
+        <TerminalNotification
+          type={notification.type}
+          isOpen={notification.isOpen}
           onClose={hide}
-          title={modal.title}
-          message={modal.message}
+          title={notification.title}
+          message={notification.message}
         />
       </div>
     </AccessGuard>

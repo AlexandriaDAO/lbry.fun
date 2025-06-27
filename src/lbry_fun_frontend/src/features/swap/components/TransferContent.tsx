@@ -14,8 +14,8 @@ const { transferPrimary, transferSecondary } = tradingThunks;
 const { getPrimaryBalance, getSecondaryBalance } = balanceThunks;
 const { fetchTransactionHistory } = analyticsThunks;
 import { LoaderCircle } from "lucide-react";
-import Modal from "./Modal";
-import { useModal } from "../hooks/useModal";
+import TerminalNotification from "./TerminalNotification";
+import { useTerminalNotification } from "../hooks/useTerminalNotification";
 import CopyHelper from "./CopyHelper";
 import QRCode from "react-qr-code";
 import { icp_fee } from "@/utils/utils";
@@ -35,7 +35,7 @@ const TransferContent: React.FC = () => {
   const [principalError, setPrincipalError] = useState("");
   const [amount, setAmount] = useState("0");
   const [selectedToken, setSelectedToken] = useState("ICP");
-  const { modal, showLoading, showSuccess, showError, hide } = useModal();
+  const { notification, showLoading, showSuccess, showError, hide } = useTerminalNotification();
 
   const validatePrincipal = useCallback((principalString: string): boolean => {
     try {
@@ -78,7 +78,7 @@ const TransferContent: React.FC = () => {
       return;
     }
 
-    showLoading("Transfer in Progress", "Transaction is being processed. This may take a few moments.");
+    showLoading("TRANSFER IN PROGRESS", "PROCESSING TRANSACTION...");
 
     try {
       if (selectedToken === "ICP") {
@@ -101,12 +101,12 @@ const TransferContent: React.FC = () => {
       }
 
       hide();
-      showSuccess("Success!", "Transaction Submitted!");
+      showSuccess("SUCCESS", "TRANSACTION SUBMITTED");
       setAmount("0");
       setDestinationPrincipal("");
     } catch (error) {
       hide();
-      showError("Something went wrong...", "Please try again or seek help if needed");
+      showError("ERROR", "TRANSACTION FAILED → TRY AGAIN");
     }
   }, [validatePrincipal, destinationPrincipal, amount, selectedToken, swap.activeSwapPool, principal, dispatch, showLoading, hide, showSuccess, showError]);
 
@@ -274,13 +274,13 @@ const TransferContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Modals */}
-      <Modal 
-        type={modal.type}
-        isOpen={modal.isOpen}
+      {/* Notifications */}
+      <TerminalNotification 
+        type={notification.type}
+        isOpen={notification.isOpen}
         onClose={hide}
-        title={modal.title}
-        message={modal.message}
+        title={notification.title}
+        message={notification.message}
       />
     </>
   );

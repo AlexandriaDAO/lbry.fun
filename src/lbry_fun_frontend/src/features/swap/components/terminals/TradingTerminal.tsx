@@ -4,12 +4,16 @@ import TransferContent from '../TransferContent';
 import BurnContent from '../BurnContent';
 import UnifiedTransaction from '../UnifiedTransaction';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
+import { useSwapDataLoader } from '../../hooks/useSwapDataLoader';
 
 type OperationMode = 'swap' | 'transfer' | 'burn';
 
 export const TradingTerminal: React.FC = React.memo(() => {
   const [activeOperation, setActiveOperation] = useState<OperationMode>('swap');
   const [showTransactions, setShowTransactions] = useState(false);
+  
+  // Load swap data
+  const { loadingPhase, criticalDataLoaded } = useSwapDataLoader();
   
   // Get data directly from Redux - no provider needed
   const { auth, swap, icpLedger, primary } = useAppSelector(state => state);
@@ -44,7 +48,7 @@ export const TradingTerminal: React.FC = React.memo(() => {
   };
 
   return (
-    <div className="terminal-pure terminal-flicker">
+    <div className="terminal-pure terminal-flicker p-4 min-h-[400px]">
       {/* ASCII Art Header */}
       <pre className="terminal-ascii-header">
 {`╔══════════════════════════════════════╗
@@ -82,49 +86,6 @@ export const TradingTerminal: React.FC = React.memo(() => {
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Account Summary */}
-      <div className="terminal-section terminal-boot" style={{ animationDelay: '0.2s' }}>
-        <span className="terminal-prompt">&gt;</span> account_summary
-        {isAuthenticated ? (
-          <div className="ml-4">
-            <pre className="text-gray-600 text-xs mb-2">
-{`┌─────────────────────────────────────┐
-│ WALLET STATUS: CONNECTED            │
-└─────────────────────────────────────┘`}
-            </pre>
-            <div className="terminal-row justify-between">
-              <span className="terminal-label">icp_balance:</span>
-              <span className="terminal-value cyber-glow">
-                {parseFloat(balances.icp).toFixed(4)}
-                <span className="terminal-accent ml-1 text-xs">
-                  {balances.icp === '0' ? '' : `ICP`}
-                </span>
-              </span>
-            </div>
-            {poolData && (
-              <>
-                <div className="terminal-row justify-between">
-                  <span className="terminal-label">balance:</span>
-                  <span className="terminal-value">
-                    {parseFloat(balances.primary).toFixed(0)} {poolData[1].primary_token_symbol}
-                  </span>
-                </div>
-                <div className="terminal-row justify-between">  
-                  <span className="terminal-label">[max]</span>
-                  <span className="terminal-value">
-                    {parseFloat(balances.secondary).toFixed(0)} {poolData[1].secondary_token_symbol}
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="terminal-status-error ml-4 terminal-blink">
-            [WALLET_NOT_CONNECTED] - Authentication required
-          </div>
-        )}
       </div>
 
       <div className="terminal-divider-dots" />

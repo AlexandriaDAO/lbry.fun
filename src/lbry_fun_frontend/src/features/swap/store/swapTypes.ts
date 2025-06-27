@@ -2,6 +2,8 @@ import { TokenRecordStringified } from "../../token/thunk/getTokenPools.thunk";
 import { ProcessedLogsData } from "../types/logs";
 import { TransactionHistoryState } from "../types/transactionTypes";
 import { ErrorMessage } from "../utils/errors";
+import { TokenomicsSchedule, TokenomicsCurrentState } from "../thunks/tokenomicsThunks";
+import { SerializedDistributionSummary, SerializedDistributionEvent } from "@/utils/bigintSerialization";
 
 export interface StakeInfo {
   stakedPrimary: string;
@@ -47,4 +49,21 @@ export interface SwapState {
   // Global loading states for data orchestration
   isLoadingCriticalData: boolean;
   isLoadingSecondaryData: boolean;
+  
+  // Tokenomics schedule data
+  tokenomicsSchedule: TokenomicsSchedule | null;
+  tokenomicsScheduleLoading: boolean;
+  tokenomicsScheduleError: string | null;
+  
+  // Current tokenomics state
+  tokenomicsCurrentState: TokenomicsCurrentState | null;
+  tokenomicsCurrentStateLoading: boolean;
+  tokenomicsCurrentStateError: string | null;
+  
+  // Distribution tracking
+  distributionSummary: SerializedDistributionSummary | null;
+  distributionEvents: SerializedDistributionEvent[];
+  latestDistributionEvent: SerializedDistributionEvent | null;
+  distributionLoading: boolean;
+  distributionError: string | null;
 }

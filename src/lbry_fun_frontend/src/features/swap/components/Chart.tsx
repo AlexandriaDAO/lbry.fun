@@ -13,6 +13,9 @@ interface ChartProps {
     lineColor2?: string;
     yAxisLabel2?: string;
     yAxis2format?: 'percent';
+    currentPositionX?: number | string;
+    showCurrentPosition?: boolean;
+    currentPositionLabel?: string;
 }
 
 const LineChart: React.FC<ChartProps> = ({
@@ -26,6 +29,9 @@ const LineChart: React.FC<ChartProps> = ({
     lineColor2,
     yAxisLabel2,
     yAxis2format,
+    currentPositionX,
+    showCurrentPosition = false,
+    currentPositionLabel,
 }) => {
     const chartRef = useRef<HTMLDivElement | null>(null);
 
@@ -123,6 +129,56 @@ const LineChart: React.FC<ChartProps> = ({
                     containLabel: true
                 }
             };
+            
+            // Add current position marker if requested
+            if (showCurrentPosition && currentPositionX !== undefined && dataXaxis.length > 0) {
+                // Ensure position is within data bounds
+                let clampedPosition = currentPositionX;
+                
+                // For numeric x-axis data, clamp the position
+                if (typeof dataXaxis[0] === 'number') {
+                    const numericXaxis = dataXaxis.map(x => Number(x));
+                    const minX = Math.min(...numericXaxis);
+                    const maxX = Math.max(...numericXaxis);
+                    const numericPosition = Number(currentPositionX);
+                    
+                    if (!isNaN(numericPosition)) {
+                        clampedPosition = Math.max(minX, Math.min(maxX, numericPosition));
+                    }
+                }
+                
+                const markLineData = [{
+                    xAxis: clampedPosition,
+                    lineStyle: {
+                        color: '#00ff00',
+                        type: 'dashed',
+                        width: 2,
+                        opacity: 0.8
+                    },
+                    label: {
+                        show: true,
+                        formatter: currentPositionLabel || '▼ We are here',
+                        position: 'end',
+                        color: '#00ff00',
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        padding: [6, 10],
+                        borderRadius: 4,
+                        borderColor: '#00ff00',
+                        borderWidth: 1,
+                        shadowColor: '#00ff00',
+                        shadowBlur: 10
+                    }
+                }];
+                
+                // Add mark line to the first series
+                (option.series as any)[0].markLine = {
+                    silent: true,
+                    symbol: ['none', 'none'],
+                    data: markLineData
+                };
+            }
 
             if (dataYaxis2 && dataYaxis2.length > 0) {
                 (option.yAxis as echarts.EChartsCoreOption['yAxis'][]).push({
@@ -168,7 +224,7 @@ const LineChart: React.FC<ChartProps> = ({
                 myChart.dispose();
             };
         }
-    }, [dataXaxis, dataYaxis, xAxisLabel, yAxisLabel, lineColor, gardientColor, dataYaxis2, lineColor2, yAxisLabel2, yAxis2format]);
+    }, [dataXaxis, dataYaxis, xAxisLabel, yAxisLabel, lineColor, gardientColor, dataYaxis2, lineColor2, yAxisLabel2, yAxis2format, currentPositionX, showCurrentPosition, currentPositionLabel]);
 
     return (
         <div className="w-full">

@@ -174,3 +174,75 @@ pub fn get_config() -> Configs {
         c.borrow().get().clone()
     })
 }
+
+// Distribution event queries
+#[query]
+pub fn get_distribution_events(from_id: u64, limit: u32) -> Vec<DistributionEvent> {
+    DISTRIBUTION_EVENTS.with(|events| {
+        let events_map = events.borrow();
+        let mut result = Vec::new();
+        let limit = limit.min(100); // Cap at 100 events per query
+        
+        for i in 0..limit {
+            let event_id = from_id + i as u64;
+            if let Some(event) = events_map.get(&event_id) {
+                result.push(event.clone());
+            } else {
+                break; // No more events
+            }
+        }
+        
+        result
+    })
+}
+
+#[query]
+pub fn get_distribution_summary() -> DistributionSummary {
+    // Calculate totals from events
+    let mut total_alexandria = 0u64;
+    let mut total_stakers = 0u64;
+    let mut last_event = None;
+    
+    DISTRIBUTION_EVENTS.with(|events| {
+        let events_map = events.borrow();
+        for (_, event) in events_map.iter() {
+            if let Some(sent) = event.results.alexandria_sent {
+                total_alexandria += sent;
+            }
+            if let Some(distributed) = event.results.stakers_distributed {
+                total_stakers += distributed;
+            }
+            last_event = Some(event.clone());
+        }
+    });
+    
+    let total_lp_treasury = LP_TREASURY.with(|cell| *cell.borrow().get());
+    let total_distributed = total_alexandria + total_lp_treasury + total_stakers;
+    
+    DistributionSummary {
+        total_cycles: get_distribution_interval(),
+        total_alexandria_sent: total_alexandria,
+        total_lp_treasury_balance: total_lp_treasury,
+        total_stakers_distributed: total_stakers,
+        current_lp_provision_queue: get_accumulated_primary_tokens(),
+        last_distribution: last_event,
+        lifetime_totals: LifetimeDistributionTotals {
+            total_distributed,
+            alexandria_total: total_alexandria,
+            lp_treasury_total: total_lp_treasury,
+            stakers_total: total_stakers,
+        },
+    }
+}
+
+#[query]
+pub fn get_latest_distribution_event() -> Option<DistributionEvent> {
+    let current_id = NEXT_EVENT_ID.with(|id| *id.borrow().get());
+    if current_id > 0 {
+        DISTRIBUTION_EVENTS.with(|events| {
+            events.borrow().get(&(current_id - 1))
+        })
+    } else {
+        None
+    }
+}

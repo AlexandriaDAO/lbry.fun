@@ -54,18 +54,18 @@ const primarySlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(transferPrimary.pending, (state) => {
-        toast.info("Processing ALEX transfer!");
+        toast.info("[PROCESSING] ALEX TRANSFER...");
         state.loading = true;
         state.error = null;
       })
       .addCase(transferPrimary.fulfilled, (state, action) => {
-        toast.success("Successfully transfered!");
+        toast.success("[SUCCESS] TRANSFER COMPLETE");
         state.transferSuccess = true;
         state.loading = false;
         state.error = null;
       })
       .addCase(transferPrimary.rejected, (state, action) => {
-        toast.error("Error while transfering ALEX");
+        toast.error("[ERROR] ALEX TRANSFER FAILED");
         state.loading = false;
         state.error = action.payload as string;
       }).addCase(getPrimaryFee.pending, (state) => {

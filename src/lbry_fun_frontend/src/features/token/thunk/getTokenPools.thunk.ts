@@ -21,7 +21,7 @@ const getTokenPools = createAsyncThunk<
         // Calculate isLive status based on backend logic
         const isLive = !record.pool_creation_failed && 
                       record.pool_created_at > 0n && 
-                      currentTime >= Number(record.created_time) + Number(LAUNCH_PERIOD_NANOS);
+                      currentTime >= Number(record.created_time) + Number(record.launch_delay_seconds) * 1_000_000_000;
         
         return [
           poolId.toString(),
@@ -44,6 +44,7 @@ const getTokenPools = createAsyncThunk<
             created_time: record.created_time.toString(),
             pool_created_at: record.pool_created_at.toString(),
             pool_creation_failed: record.pool_creation_failed,
+            launch_delay_seconds: record.launch_delay_seconds.toString(),
             isLive: isLive,
           },
         ];
@@ -99,6 +100,7 @@ export type TokenRecordStringified = {
   created_time: string;
   pool_created_at: string;
   pool_creation_failed: boolean;
+  launch_delay_seconds: string;
   isLive: boolean;
   primary_token_logo_base64?: string;
   secondary_token_logo_base64?: string;

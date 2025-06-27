@@ -52,7 +52,7 @@ const tokenomicsSlice = createSlice({
         state.error = null;
       })
       .addCase(getPrimaryMintRate.rejected, (state, action) => {
-        toast.error("Could not fetched ALEX mint rate!");
+        toast.error("[ERROR] ALEX MINT RATE FETCH FAILED");
         state.loading = false;
         state.error = action.payload as string;
       })

@@ -33,14 +33,15 @@ export const StakingTerminal: React.FC = React.memo(() => {
   const chartPlaceholder = "Chart visualization coming soon...";
 
   return (
-    <div className="terminal-pure terminal-flicker">
-      {/* ASCII Art Header */}
-      <pre className="terminal-ascii-header">
+    <div className="terminal-container-lg">
+      <div className="terminal-pure terminal-flicker">
+        {/* ASCII Art Header */}
+        <pre className="terminal-ascii-header">
 {`╔══════════════════════════════════════╗
 ║     STAKING TERMINAL v3.141          ║
 ║     [YIELD OPTIMIZATION ENGINE]      ║
 ╚══════════════════════════════════════╝`}
-      </pre>
+        </pre>
 
       {/* Terminal Header */}
       <div className="terminal-header terminal-boot">
@@ -120,6 +121,7 @@ export const StakingTerminal: React.FC = React.memo(() => {
           )}
         </div>
         <StakeContent />
+      </div>
       </div>
     </div>
   );

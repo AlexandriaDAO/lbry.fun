@@ -1,4 +1,4 @@
-use candid::{CandidType, Principal};
+use candid::{CandidType, Principal, Nat};
 use candid::{Decode, Deserialize, Encode};
 use ic_stable_structures::memory_manager::VirtualMemory;
 use ic_stable_structures::storable::Bound;
@@ -31,6 +31,62 @@ pub const LP_TREASURY_MEM_ID: MemoryId = MemoryId::new(11);
 pub const TREASURY_STATE_MEM_ID: MemoryId = MemoryId::new(12);
 pub const ACCUMULATED_PRIMARY_TOKENS_MEM_ID: MemoryId = MemoryId::new(13);
 pub const DISTRIBUTION_INTERVAL_SECONDS_MEM_ID: MemoryId = MemoryId::new(14);
+pub const DISTRIBUTION_EVENTS_MEM_ID: MemoryId = MemoryId::new(15);
+pub const NEXT_EVENT_ID_MEM_ID: MemoryId = MemoryId::new(16);
+
+// Distribution tracking types
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct DistributionEvent {
+    pub event_id: u64,
+    pub timestamp: u64,
+    pub distribution_cycle: u32,
+    pub total_available: u64,
+    pub allocations: DistributionAllocations,
+    pub results: DistributionResults,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct DistributionAllocations {
+    pub alexandria_allocated: u64,      // Always 1% of distribution
+    pub lp_treasury_allocated: u64,     // Always 49.5% of distribution
+    pub stakers_allocated: u64,         // Always 49.5% of distribution
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct DistributionResults {
+    pub alexandria_sent: Option<u64>,           // None if transfer failed
+    pub lp_treasury_added: u64,                 // Always succeeds (internal counter)
+    pub stakers_distributed: Option<u64>,       // None if no stakers
+    pub stakers_rollover: u64,                  // Amount that rolls to next cycle
+    pub lp_provision_status: LpProvisionStatus, // Status of async LP provision
+    pub error_details: Option<String>,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub enum LpProvisionStatus {
+    Pending,                    // Not yet attempted
+    Success { lp_tokens: Nat }, // Successfully added liquidity
+    Failed { reason: String },  // Failed to add liquidity
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct DistributionSummary {
+    pub total_cycles: u32,
+    pub total_alexandria_sent: u64,
+    pub total_lp_treasury_balance: u64,
+    pub total_stakers_distributed: u64,
+    pub current_lp_provision_queue: u64,  // Accumulated primary tokens
+    pub last_distribution: Option<DistributionEvent>,
+    pub lifetime_totals: LifetimeDistributionTotals,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct LifetimeDistributionTotals {
+    pub total_distributed: u64,
+    pub alexandria_total: u64,
+    pub lp_treasury_total: u64,
+    pub stakers_total: u64,
+}
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
@@ -104,6 +160,15 @@ thread_local! {
     
     pub static DISTRIBUTION_INTERVAL_SECONDS: RefCell<StableCell<u64, Memory>> = RefCell::new(
         StableCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(DISTRIBUTION_INTERVAL_SECONDS_MEM_ID)), 3600).unwrap()
+    );
+    
+    // Distribution event tracking
+    pub static DISTRIBUTION_EVENTS: RefCell<StableBTreeMap<u64, DistributionEvent, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(DISTRIBUTION_EVENTS_MEM_ID)))
+    );
+    
+    pub static NEXT_EVENT_ID: RefCell<StableCell<u64, Memory>> = RefCell::new(
+        StableCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(NEXT_EVENT_ID_MEM_ID)), 0).unwrap()
     );
 }
 
@@ -344,4 +409,35 @@ pub fn withdraw_from_accumulated_primary_tokens(amount: u64) -> Result<(), Execu
         cell.borrow_mut().set(current).map_err(|_| ExecutionError::StateError("Failed to update accumulated primary tokens".to_string()))?;
         Ok(())
     })
+}
+
+// Distribution event helpers
+pub fn get_next_event_id() -> u64 {
+    NEXT_EVENT_ID.with(|cell| {
+        let current = *cell.borrow().get();
+        let next = current + 1;
+        let _ = cell.borrow_mut().set(next);
+        current
+    })
+}
+
+pub fn store_distribution_event(event: DistributionEvent) -> Result<(), ExecutionError> {
+    DISTRIBUTION_EVENTS.with(|events| {
+        events.borrow_mut().insert(event.event_id, event);
+        Ok(())
+    })
+}
+
+
+// Storable implementations for new types
+impl Storable for DistributionEvent {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
 }

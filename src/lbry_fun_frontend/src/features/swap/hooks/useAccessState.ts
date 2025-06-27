@@ -2,6 +2,7 @@ import { useMemo, useEffect, useState } from 'react';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { AccessState } from '../types/accessControl.types';
 import { RootState } from '@/store';
+import { calculateTokenStatus, calculateCountdown, parseTokenTimings } from '@/utils/tokenStatus';
 
 export function useAccessState() {
   const { isAuthenticated, isLoading: authLoading } = useAppSelector((state: RootState) => state.auth);
@@ -14,36 +15,48 @@ export function useAccessState() {
     if (!swap.activeSwapPool?.[1]) return false;
     
     const tokenRecord = swap.activeSwapPool[1];
-    const currentTimeNanos = Date.now() * 1000000; // Convert to nanoseconds
     
     // Use launch_delay_seconds from token record, default to 24 hours if not present
-    const launchDelaySeconds = tokenRecord.launch_delay_seconds || 86400; // 24 hours default
-    const launchDelayNanos = BigInt(launchDelaySeconds) * BigInt(1_000_000_000);
+    const launchDelaySeconds = tokenRecord.launch_delay_seconds || '86400'; // 24 hours default
     
-    // Token is live if pool created successfully and launch delay has passed
-    return !tokenRecord.pool_creation_failed && 
-           Number(tokenRecord.pool_created_at) > 0 && 
-           currentTimeNanos >= Number(tokenRecord.created_time) + Number(launchDelayNanos);
+    const { createdAt, launchDelay, poolCreatedAt } = parseTokenTimings(
+      tokenRecord.created_time,
+      launchDelaySeconds,
+      tokenRecord.pool_created_at
+    );
+    
+    const status = calculateTokenStatus(
+      createdAt,
+      launchDelay,
+      tokenRecord.pool_creation_failed,
+      poolCreatedAt
+    );
+    
+    return status === 'live';
   }, [swap.activeSwapPool]);
 
   // Calculate countdown if token is not live
   useEffect(() => {
     if (!isTokenLive && swap.activeSwapPool?.[1]) {
       const tokenRecord = swap.activeSwapPool[1];
-      const currentTimeNanos = Date.now() * 1000000;
       
       // Use launch_delay_seconds from token record, default to 24 hours if not present
-      const launchDelaySeconds = tokenRecord.launch_delay_seconds || 86400; // 24 hours default
-      const launchDelayNanos = BigInt(launchDelaySeconds) * BigInt(1_000_000_000);
-      const launchTimeNanos = Number(tokenRecord.created_time) + Number(launchDelayNanos);
+      const launchDelaySeconds = tokenRecord.launch_delay_seconds || '86400'; // 24 hours default
       
-      if (launchTimeNanos > currentTimeNanos) {
-        const remainingNanos = launchTimeNanos - currentTimeNanos;
-        const remainingSeconds = Math.floor(remainingNanos / 1_000_000_000);
-        setCountdown(remainingSeconds);
+      const { createdAt, launchDelay } = parseTokenTimings(
+        tokenRecord.created_time,
+        launchDelaySeconds,
+        tokenRecord.pool_created_at
+      );
+      
+      const { seconds, isLive } = calculateCountdown(createdAt, launchDelay);
+      
+      if (!isLive && seconds > 0) {
+        setCountdown(seconds);
         
         // Set launch time
-        const launchDate = new Date(launchTimeNanos / 1_000_000); // Convert nanos to millis
+        const launchTimeNanos = createdAt + (launchDelay * BigInt(1_000_000_000));
+        const launchDate = new Date(Number(launchTimeNanos / BigInt(1_000_000))); // Convert nanos to millis
         setLaunchTime(launchDate);
       }
     }

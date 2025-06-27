@@ -15,8 +15,8 @@ const { getPrimaryBalance, getAccountPrimaryBalance } = balanceThunks;
 const { stakePrimary } = stakingThunks;
 import StakedInfo from "./StakeInfo";
 import { LoaderCircle } from "lucide-react";
-import Modal from "./Modal";
-import { useModal } from "../hooks/useModal";
+import TerminalNotification from "./TerminalNotification";
+import { useTerminalNotification } from "../hooks/useTerminalNotification";
 import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
 import { RootState } from "@/store";
 import UnifiedSkeleton from "./UnifiedSkeleton";
@@ -31,7 +31,7 @@ const StakeContent = () => {
     const { accessState, countdown, launchTime, isTokenLive } = useAccessState();
 
     const [amount, setAmount] = useState("0");
-    const { modal, showLoading, showSuccess, showError, hide } = useModal();
+    const { notification, showLoading, showSuccess, showError, hide } = useTerminalNotification();
     const [userEstimateReward, setUserEstimatedReward] = useState(0);
     const [apr, setApr] = useState("0");
     const [annualizedApr, setAnnualizedApr] = useState("0");
@@ -43,14 +43,14 @@ const StakeContent = () => {
         // Check if token is live
         if (!isTokenLive) {
             showError(
-                "Staking Not Yet Available",
-                "This token is still in its launch period. Staking will be enabled after the 24-hour launch window."
+                "STAKING NOT AVAILABLE",
+                "TOKEN IN LAUNCH PERIOD → STAKING STARTS IN 24H"
             );
             return;
         }
         
         dispatch(stakePrimary({ amount, userPrincipal: principal }));
-        showLoading("Stake in Progress", "Transaction is being processed. This may take a few moments.");
+        showLoading("STAKE IN PROGRESS", "PROCESSING TRANSACTION...");
     }, [isAuthenticated, principal, isTokenLive, amount, dispatch, showError, showLoading]);
     const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (Number(e.target.value) < 0) {
@@ -93,9 +93,9 @@ const StakeContent = () => {
 
         if (swap.successStake === true || swap.unstakeSuccess === true || swap.burnSuccess === true || swap.successClaimReward === true) {
             dispatch(flagHandler());
-            if (isAuthenticated && principal) dispatch(getAccountPrimaryBalance(principal))
+            if (isAuthenticated && principal) dispatch(getPrimaryBalance(principal))
             hide();
-            showSuccess("Success!", "Transaction Submitted!");
+            showSuccess("SUCCESS", "TRANSACTION SUBMITTED");
         }
         if (swap.error) {
             hide();
@@ -214,12 +214,12 @@ const StakeContent = () => {
                 <div className="terminal-section mt-4">
                     <StakedInfo userEstimateReward={userEstimateReward} />
                 </div>
-                <Modal 
-                    type={modal.type}
-                    isOpen={modal.isOpen}
+                <TerminalNotification 
+                    type={notification.type}
+                    isOpen={notification.isOpen}
                     onClose={hide}
-                    title={modal.title}
-                    message={modal.message}
+                    title={notification.title}
+                    message={notification.message}
                 />
 
             </div>

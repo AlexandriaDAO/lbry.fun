@@ -29,12 +29,12 @@ export const useActorErrorHandler = (clearAuth?: () => void) => {
         if (clearAuth) {
           clearAuth();
         }
-        toast.error('Authentication expired. Please log in again.');
+        toast.error('[ERROR] AUTHENTICATION EXPIRED → PLEASE LOG IN AGAIN');
       } else {
         toast.error(error.message);
       }
     } else {
-      toast.error('An unexpected error occurred');
+      toast.error('[ERROR] UNEXPECTED ERROR OCCURRED');
     }
   }, [clearAuth]);
 

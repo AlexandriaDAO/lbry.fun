@@ -1,3 +1,20 @@
+A1: Distribution tracking frontend plan -> Kongswap lp problem
+A2: "We are here on the live graphs."
+A3: Terminals splitscreen.
+A4: Status popups.
+
+
+
+
+
+
+
+
+
+
+- Could we make all the terminals into expanders?
+- Get launch pending to update the state when time runs out.
+- Success page should update state with the new token page.
 - Definitely going to need to display the price chart.
 - "We are here" on all the live graphs.
 - Upload a non-svg cover image (an nft?) and a real project description (optional)
@@ -6,14 +23,19 @@
 - Annual APY fix in logs canister.
 - The logs canister isn't getting real lp data from kongswap (and maybe fake data in other graphs)
 - Since pool creation happens on a timer we need a safer way to make it closer to atomic and with no silent failures.
-- How do we get ksICP pool to be ICP pool on mainnet.
 - The backend currently accepts any initial parameters without validation.
+
+
+
+// Quick terminal UI grevances from testing things.
+- The swap does not give you proper estimates for secondary tokens
 
 
 
 // Before mainnet: 
 - Distribution backdoor function has to go beforehand.
 - Timing before launch back to 24hrs.
+- Minimum distribution intervals much higher than 1 second.
 
 
 
@@ -21,8 +43,6 @@
 
 
 
-
-dfx ledger transfer --icp 99 --memo 0 $(dfx ledger account-id --of-principal 3p5as-qtth3-qww4q-qhc55-unoun-3zyiy-d2rk7-537id-3bhfi-2rb5o-cqe)
 
 // Test deploymenbt of ksICP.
 dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner = principal "q5tir-zikyg-44in4-6txuu-vuya3-pmuy6-5kjev-fgvua-4njnq-qmtph-pqe" })'
@@ -31,7 +51,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "t677x-quppn-fa3t4-j7rwi-fejlc-jz4pv-5dxi7-baawk-pfk6a-va7x3-uae"; subaccount = null }; amount = (9_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "pautb-aqko4-cwwhr-ntlsx-wqu54-6t6uo-44pe3-myj3t-xj3uy-n7cj4-uqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
 
 dfx identity use default
 
@@ -69,7 +89,15 @@ That's a good plan but this conversation is running long and I'll like a new age
 ### Checklist
 Before we start building this out though, I want to do some planning with you. Ultrathink through this. I first want you to make a project plan for this. Inside the appropriate markdown file please build an in depth plan for the task. Have high level checkpoints for each major step and feature, then in each checkpoint have a broken down list of small tasks you'll need to do to complete that checkpoint. We will then review this plan together.
 
-
+### Make a plan
+Ultrathink about the best and most optimized and 
+  simple way to get these features working. How could we do this without making more backend 
+  fetches than nessasary? Do we keep redux thunks as optimized as possible? Are we minimizing the 
+  amount of code while keeping things reusable? These are the questions we should answer while 
+  thinking about a plan. Then when the plan is finalized, write a full markdown document with 
+  precise instructions of how to imlement it so the task can be passed off. Be detailed and always 
+  reference the actual files you're talking about so the one who implements the task has all the 
+  context they need.
 
 
 
@@ -116,3 +144,13 @@ Before we start building this out though, I want to do some planning with you. U
   - 1 ICP → LBRY (immediate transfer)
   - 49.5 ICP → LP treasury (waits for 1 ICP minimum)
   - 49.5 ICP → Stakers (distributed if > 0.01 ICP total)
+
+
+
+
+XWKa-Q2gppignoX_Ngs7VJYZPN_yhiy1ToovQ1NBMFs
+NVkSolD-1AJcJ0BMfEASJjIuak3Y6CvDJZ4XOIUbU9g
+8Pvu_hc9dQWqIPOIcEhtsRYuPtLiQe2TTvhgIj9zmq8
+93mQRQG7zpvKQj3sUaDlNu_dOWFmb3-vp2Myu8sw03I 09/2022
+QXvFGeh4LaqKQD7pxNOjs48FmFEjSAhhzxgvBairAFc
+bqQgrxMXYFJXTqS5EF_XgmHUYyLNPXUv5Ze_c0RlW18 

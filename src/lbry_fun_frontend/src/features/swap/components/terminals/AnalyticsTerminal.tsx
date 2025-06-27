@@ -36,14 +36,15 @@ export const AnalyticsTerminal: React.FC = React.memo(() => {
   };
 
   return (
-    <div className="terminal-pure terminal-flicker">
-      {/* ASCII Art Header */}
-      <pre className="terminal-ascii-header">
+    <div className="terminal-container-xl">
+      <div className="terminal-pure terminal-flicker">
+        {/* ASCII Art Header */}
+        <pre className="terminal-ascii-header">
 {`╔══════════════════════════════════════╗
 ║    ANALYTICS TERMINAL v2.049         ║
 ║    [REAL-TIME DATA MONITORING]       ║
 ╚══════════════════════════════════════╝`}
-      </pre>
+        </pre>
 
       {/* Terminal Header */}
       <div className="terminal-header terminal-boot">
@@ -109,6 +110,7 @@ export const AnalyticsTerminal: React.FC = React.memo(() => {
       {/* Active View Content */}
       <div className="terminal-section">
         {renderActiveView()}
+      </div>
       </div>
     </div>
   );

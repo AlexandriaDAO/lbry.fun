@@ -36,7 +36,7 @@ const ConsolidatedTerminal: React.FC = () => {
         dispatch(getIcpBal(principal));
         dispatch(getPrimaryBalance(principal));
         dispatch(getSecondaryBalance(principal));
-        toast.info("Refreshing balances!")
+        toast.info("[REFRESHING] BALANCE UPDATE IN PROGRESS")
     }
 
     useEffect(() => {
@@ -78,11 +78,13 @@ const ConsolidatedTerminal: React.FC = () => {
 
     if (!isAuthenticated || !principal) {
         return (
-            <div className="terminal-pure mb-2 terminal-boot">
-                <div className="text-center py-2">
-                    <span className="terminal-status-error terminal-blink">WALLET_NOT_CONNECTED</span>
-                    <div className="mt-2">
-                        <TerminalAuthMenu />
+            <div className="terminal-container-sm">
+                <div className="terminal-pure mb-2 terminal-boot">
+                    <div className="text-center py-2">
+                        <span className="terminal-status-error terminal-blink">WALLET_NOT_CONNECTED</span>
+                        <div className="mt-2">
+                            <TerminalAuthMenu />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -90,7 +92,7 @@ const ConsolidatedTerminal: React.FC = () => {
     }
 
     return (
-        <div className="terminal-pure mb-2 terminal-flicker">
+        <div className="terminal-pure terminal-flicker p-4 min-h-[400px]">
             {/* System Status Header */}
             <div className="flex justify-between items-center mb-2">
                 <div className="terminal-header">

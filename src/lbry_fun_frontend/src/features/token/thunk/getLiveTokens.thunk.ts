@@ -35,6 +35,7 @@ const getLiveTokens = createAsyncThunk<
         created_time: record.created_time.toString(),
         pool_created_at: record.pool_created_at.toString(),
         pool_creation_failed: record.pool_creation_failed,
+        launch_delay_seconds: record.launch_delay_seconds.toString(),
         isLive: true, // Since get_live() already filters for live tokens
       },
     ]);

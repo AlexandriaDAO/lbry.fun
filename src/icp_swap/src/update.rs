@@ -9,7 +9,9 @@ use crate::{
 };
 use crate::{get_stake, storage::*};
 use crate::{get_user_archive_balance, utils::*};
-use crate::storage::{get_accumulated_primary_tokens, add_to_accumulated_primary_tokens, withdraw_from_accumulated_primary_tokens};
+use crate::storage::{get_accumulated_primary_tokens, add_to_accumulated_primary_tokens, withdraw_from_accumulated_primary_tokens, 
+    get_next_event_id, store_distribution_event, DistributionEvent, DistributionAllocations, 
+    DistributionResults, LpProvisionStatus};
 use crate::{constants::*, dex_integration::{*, get_pool_reserves, mint_tokens_with_icp}};
 use candid::{CandidType, Nat, Principal};
 use ic_cdk::{self, caller, update};
@@ -985,6 +987,18 @@ pub async fn un_stake_all_primary(from_subaccount: Option<[u8; 32]>) -> Result<S
     Ok("Successfully unstaked!".to_string())
 }
 
+// Helper function to update LP provision status in the latest event
+async fn update_lp_provision_status(event_id: u64, status: LpProvisionStatus) {
+    DISTRIBUTION_EVENTS.with(|events| {
+        let mut events_map = events.borrow_mut();
+        if let Some(event) = events_map.get(&event_id) {
+            let mut event = event.clone();
+            event.results.lp_provision_status = status;
+            events_map.insert(event_id, event);
+        }
+    });
+}
+
 // This is now an internal function, called by a timer.
 async fn provide_liquidity_from_treasury() {
     let treasury_balance = LP_TREASURY.with(|cell| *cell.borrow().get());
@@ -992,6 +1006,9 @@ async fn provide_liquidity_from_treasury() {
     if treasury_balance < MIN_ICP_FOR_PROVISION_E8S {
         return; // Not enough balance, wait for the next scheduled call.
     }
+    
+    // Get the latest event ID to update
+    let latest_event_id = NEXT_EVENT_ID.with(|id| *id.borrow().get()).saturating_sub(1);
     
     let result: Result<String, ExecutionError> = async {
         // Use 2% of the treasury for deployment (1% buyback + 1% LP).
@@ -1005,7 +1022,9 @@ async fn provide_liquidity_from_treasury() {
         
         // Check if pool has liquidity
         let pool_reserves = get_pool_reserves().await
-            .map_err(|e| ExecutionError::StateError(format!("Failed to get pool reserves: {}", e)))?;
+            .map_err(|e| ExecutionError::StateError(format!(
+                "Failed to get pool reserves: {}. If KongSwap API changed, fallback will be used.", e
+            )))?;
         
         if pool_reserves.icp_reserve < 100_000_000 { // Less than 1 ICP
             // Pool has no liquidity - use all 2% to mint tokens and add initial liquidity
@@ -1013,12 +1032,32 @@ async fn provide_liquidity_from_treasury() {
                 .map_err(|e| ExecutionError::StateError(format!("Failed to mint tokens with ICP: {}", e)))?;
             
             let lp_result = add_liquidity_to_kong(
-                primary_token_symbol,
+                primary_token_symbol.clone(),
                 tokens_to_mint,
                 Nat::from(icp_to_deploy),
             )
             .await
-            .map_err(|e| ExecutionError::StateError(format!("Failed to add initial liquidity: {}", e)))?;
+            .map_err(|e| {
+                // Update LP provision status to failed
+                let event_id = latest_event_id;
+                let error_string = e.to_string();
+                ic_cdk::spawn(async move {
+                    update_lp_provision_status(
+                        event_id,
+                        LpProvisionStatus::Failed { reason: error_string }
+                    ).await;
+                });
+                ExecutionError::StateError(format!(
+                    "Failed to add initial liquidity to KongSwap pool '{}': {}. Funds are safe and will retry next cycle.", 
+                    primary_token_symbol, e
+                ))
+            })?;
+            
+            // Update LP provision status to success
+            update_lp_provision_status(
+                latest_event_id, 
+                LpProvisionStatus::Success { lp_tokens: lp_result.add_lp_token_amount.clone() }
+            ).await;
             
             // Update treasury balance
             withdraw_from_lp_treasury(icp_to_deploy)?;
@@ -1046,10 +1085,16 @@ async fn provide_liquidity_from_treasury() {
                 primary_token_symbol.clone(),
             )
             .await
-            .map_err(|e| ExecutionError::StateError(format!("Failed to execute swap on DEX: {}", e)))?;
+            .map_err(|e| ExecutionError::StateError(format!(
+                "Failed to execute buyback swap on KongSwap (ICP -> {}): {}. Will retry next cycle.", 
+                primary_token_symbol, e
+            )))?;
 
             if primary_tokens_bought_nat == Nat::from(0u32) {
-                return Err(ExecutionError::StateError("Buyback resulted in zero primary tokens. Aborting.".to_string()));
+                return Err(ExecutionError::StateError(format!(
+                    "Buyback of {} ICP resulted in zero {} tokens. Pool may have insufficient liquidity. Will retry next cycle.",
+                    icp_for_buyback / 100_000_000, primary_token_symbol
+                )));
             }
             
             total_primary_tokens_nat = total_primary_tokens_nat + primary_tokens_bought_nat;
@@ -1067,7 +1112,14 @@ async fn provide_liquidity_from_treasury() {
             Nat::from(icp_for_pairing),
         )
         .await {
-            Ok(result) => result,
+            Ok(result) => {
+                // Update LP provision status to success
+                update_lp_provision_status(
+                    latest_event_id, 
+                    LpProvisionStatus::Success { lp_tokens: result.add_lp_token_amount.clone() }
+                ).await;
+                result
+            },
             Err(e) => {
                 // LP failed - save the primary tokens for next attempt
                 let tokens_to_save: u64 = total_primary_tokens_nat.0.try_into()
@@ -1079,9 +1131,15 @@ async fn provide_liquidity_from_treasury() {
                     add_to_accumulated_primary_tokens(new_tokens)?;
                 }
                 
+                // Update LP provision status to failed
+                update_lp_provision_status(
+                    latest_event_id,
+                    LpProvisionStatus::Failed { reason: e.to_string() }
+                ).await;
+                
                 return Err(ExecutionError::StateError(format!(
-                    "Failed to add liquidity: {}. Saved {} primary tokens for next attempt", 
-                    e, new_tokens
+                    "Failed to add liquidity to KongSwap pool 'ICP_{}': {}. Saved {} {} tokens for next attempt. No funds lost.", 
+                    primary_token_symbol, e, new_tokens / 100_000_000, primary_token_symbol
                 )));
             }
         };
@@ -1265,15 +1323,38 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
         details: "Failed to calculate staker_share".to_string()
     })?;
 
+    // Create distribution event
+    let mut event = DistributionEvent {
+        event_id: get_next_event_id(),
+        timestamp: ic_cdk::api::time(),
+        distribution_cycle: intervals,
+        total_available: total_icp_allocated as u64,
+        allocations: DistributionAllocations {
+            alexandria_allocated: alexandria_fee_share as u64,
+            lp_treasury_allocated: lp_treasury_share as u64,
+            stakers_allocated: staker_share as u64,
+        },
+        results: DistributionResults {
+            alexandria_sent: None,
+            lp_treasury_added: 0,
+            stakers_distributed: None,
+            stakers_rollover: 0,
+            lp_provision_status: LpProvisionStatus::Pending,
+            error_details: None,
+        },
+    };
+
     let lbry_fun_principal = Principal::from_text(LBRY_FUN_CANISTER_ID).expect("Invalid lbry_fun canister principal");
 
     if alexandria_fee_share > 0 {
         match send_icp(lbry_fun_principal, alexandria_fee_share as u64, None).await {
             Ok(_) => {
+                event.results.alexandria_sent = Some(alexandria_fee_share as u64);
                 register_info_log(caller(), "distribute_reward", &format!("Successfully sent {} e8s fee to lbry_fun.", alexandria_fee_share));
             },
             Err(e) => {
                 // Log the critical error but allow other distributions to proceed
+                event.results.error_details = Some(format!("Alexandria: {}", e));
                 register_error_log(caller(), "distribute_reward", ExecutionError::TransferFailed {
                     source: "self".to_string(),
                     dest: "lbry_fun".to_string(),
@@ -1287,6 +1368,36 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
     }
     
     add_to_lp_treasury(lp_treasury_share as u64)?;
+    event.results.lp_treasury_added = lp_treasury_share as u64;
+
+    // Now handle staker distribution if there are stakers
+    let total_staked_primary = get_total_primary_staked().await? as u128;
+
+    if total_staked_primary == 0 {
+        // No stakers, but Alexandria fee and LP treasury have been processed
+        event.results.stakers_rollover = staker_share as u64;
+        register_info_log(
+            caller(),
+            "distribute_reward",
+            &format!("Distribution complete: Alexandria fee ({} e8s) and LP treasury ({} e8s) processed. No stakers to distribute to.", 
+                     alexandria_fee_share, lp_treasury_share),
+        );
+        
+        // Store the event before triggering LP provision
+        store_distribution_event(event)?;
+        
+        // Increment distribution intervals even when no stakers
+        add_to_distribution_intervals(1)?;
+        
+        // Provide liquidity from treasury after distribution
+        if LP_TREASURY.with(|cell| *cell.borrow().get()) >= MIN_ICP_FOR_PROVISION_E8S {
+            ic_cdk::spawn(async {
+                provide_liquidity_from_treasury().await;
+            });
+        }
+        
+        return Ok("Reward distribution complete (no stakers)".to_string());
+    }
 
     if staker_share < 1_000_000 {
         return Err(ExecutionError::new_with_log(
@@ -1295,18 +1406,6 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
             ExecutionError::InsufficientBalanceRewardDistribution {
                 available: staker_share,
                 details: DEFAULT_INSUFFICIENT_BALANCE_REWARD_DISTRIBUTION_ERROR.to_string(),
-            },
-        ));
-    }
-
-    let total_staked_primary = get_total_primary_staked().await? as u128;
-
-    if total_staked_primary == 0 {
-        return Err(ExecutionError::new_with_log(
-            caller(),
-            "distribute_reward",
-            ExecutionError::RewardDistributionError {
-                reason: "No primary staked, cannot distribute rewards".to_string(),
             },
         ));
     }
@@ -1436,6 +1535,12 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
     });
 
     add_to_unclaimed_amount(total_icp_reward as u64)?;
+    
+    // Record staker distribution in the event
+    event.results.stakers_distributed = Some(total_icp_reward as u64);
+    
+    // Store the event before triggering LP provision
+    store_distribution_event(event)?;
 
     add_to_distribution_intervals(1)?;
     register_info_log(

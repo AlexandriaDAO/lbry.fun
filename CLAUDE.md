@@ -162,5 +162,5 @@ Created `UnifiedTokenomicsGraphs` component that:
 
 ## Responses
 - When providing technical advice, ultra deep think about specific actionable steps rather than abstract concepts.
-- If troubleshooting leats to a dead end, go back to planning in a fresh markdown file that we discuss together.
+- If troubleshooting leads to a dead end, go back to planning in a fresh markdown file that we discuss together.
 - Don't make core changes unless you're confident we have an optimized solution.

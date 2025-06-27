@@ -62,23 +62,23 @@ const icpLedgerSlice = createSlice({
         state.error = null;
       })
       .addCase(getIcpBal.rejected, (state, action) => {
-        toast.error("Icp balance could not be fetched");
+        toast.error("[ERROR] ICP BALANCE FETCH FAILED");
         state.loading = false;
         state.error = action.payload as string;
       })
       .addCase(transferICP.pending, (state) => {
-        toast.info("Processing transfer ");
+        toast.info("[PROCESSING] TRANSFER...");
         state.loading = true;
         state.error = null;
       })
       .addCase(transferICP.fulfilled, (state, action) => {
-        toast.success("Successfully transfered.");
+        toast.success("[SUCCESS] TRANSFER COMPLETE");
         state.loading = false;
         state.transferSuccess = true;
         state.error = null;
       })
       .addCase(transferICP.rejected, (state, action) => {
-        toast.error("Error in transfer.");
+        toast.error("[ERROR] TRANSFER FAILED");
         state.loading = false;
         state.error = action.payload as string;
       })
@@ -92,7 +92,7 @@ const icpLedgerSlice = createSlice({
         state.error = null;
       })
       .addCase(getAccountId.rejected, (state, action) => {
-        toast.error("Error in accountId.");
+        toast.error("[ERROR] ACCOUNT ID FETCH FAILED");
         state.loading = false;
         state.error = action.payload as string;
       })
@@ -110,7 +110,7 @@ const icpLedgerSlice = createSlice({
         state.error = null;
       })
       .addCase(getIcpPrice.rejected, (state, action) => {
-        toast.error("Error while fetching ICP price!");
+        toast.error("[ERROR] ICP PRICE FETCH FAILED");
         state.loading = false;
         state.error = action.payload as string;
       })
@@ -124,7 +124,7 @@ const icpLedgerSlice = createSlice({
         state.error = null;
       })
       .addCase(getCanisterBal.rejected, (state, action) => {
-        toast.error("Canister balance could not be fetched!");
+        toast.error("[ERROR] CANISTER BALANCE FETCH FAILED");
         state.loading = false;
         state.error = action.payload as string;
       });

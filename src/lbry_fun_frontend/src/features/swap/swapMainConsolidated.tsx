@@ -1,10 +1,9 @@
 import React, { useEffect, Suspense, lazy } from 'react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import "./style.css"
 
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import ConsolidatedTerminal from './components/ConsolidatedTerminal';
-// Removed UnifiedSwapDataProvider - each terminal fetches its own data
 import { SwapErrorBoundary } from './components/SwapErrorBoundary';
 import { usePoolInitializer, PoolInitState } from './hooks/usePoolInitializer';
 import { LoaderCircle } from 'lucide-react';
@@ -17,7 +16,6 @@ const AnalyticsTerminal = lazy(() => import('./components/terminals/AnalyticsTer
 
 const SwapMainConsolidated = () => {
     const navigate = useNavigate();
-    const location = useLocation();
     const [searchParams] = useSearchParams();
     const swap = useAppSelector(state => state.swap);
     const idFromUrl = searchParams.get("id");
@@ -28,30 +26,18 @@ const SwapMainConsolidated = () => {
     // Use activeSwapPool ID as fallback when URL param is missing
     const poolId = idFromUrl || swap.activeSwapPool?.[0];
     
-    const tabs = [
-        { id: 1, path: 'trade', label: 'Trading Terminal', Component: TradingTerminal },
-        { id: 2, path: 'stake', label: 'Staking & Rewards', Component: StakingTerminal },
-        { id: 3, path: 'analytics', label: 'Analytics & Info', Component: AnalyticsTerminal }
+    const terminals = [
+        { id: 1, label: 'Wallet Terminal', Component: ConsolidatedTerminal },
+        { id: 2, label: 'Trading Terminal', Component: TradingTerminal },
+        { id: 3, label: 'Staking & Rewards', Component: StakingTerminal },
+        { id: 4, label: 'Analytics & Info', Component: AnalyticsTerminal }
     ];
 
-    const currentPath = location.pathname.split('/').pop() || 'trade';
-    // Handle index route (/swap) by defaulting to trade tab
-    const effectivePath = currentPath === 'swap' && location.pathname === '/swap' ? 'trade' : currentPath;
-    const activeTab = tabs.find(tab => tab.path === effectivePath)?.id || 1;
-
     useEffect(() => {
-        if (localStorage.getItem("tab")) {
-            navigate('/swap/stake');
+        if (localStorage.getItem("tab") && poolId) {
             localStorage.removeItem("tab");
         }
-    }, []);
-
-    // Redirect index route to trade tab
-    useEffect(() => {
-        if (location.pathname === '/swap' && poolId) {
-            navigate(`/swap/trade?id=${poolId}`, { replace: true });
-        }
-    }, [poolId, navigate, location.pathname]);
+    }, [poolId]);
 
     // Show loading state while pool is initializing
     if (poolInitState === PoolInitState.LOADING_POOLS || poolInitState === PoolInitState.SETTING_POOL) {
@@ -94,64 +80,43 @@ const SwapMainConsolidated = () => {
 
     // Only render main content when pool is ready
     return (
-        <div className='tabs py-2 sm:py-3 md:py-4'>
-            <div className='container px-2 sm:px-3 md:px-4'>
+        <div className='py-2 sm:py-3 md:py-4'>
+            <div className='container px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8'>
                 {isPoolReady ? (
                     <>
-                        <ConsolidatedTerminal />
-                        <div className='tabs-content'>
-                            <div className='tabs-content'>
-                                {/* Consolidated Tab Navigation */}
-                                <div className="terminal-pure mb-4">
-                                    <pre className="terminal-ascii-header text-xs mb-3">
-{`╔════════════════════════════════════════════════════════════════════╗
-║                    CYPHERPUNK SWAP TERMINAL                        ║
-╚════════════════════════════════════════════════════════════════════╝`}
-                                    </pre>
-                                    <div className="flex mb-3 flex-wrap">
-                                        {tabs.map((tab, index) => (
-                                            <button
-                                                key={tab.id}
-                                                onClick={() => navigate(`/swap/${tab.path}?id=${poolId}`)}
-                                                className={`font-mono text-xs px-4 py-2 mr-2 mb-2 transition-all terminal-boot ${
-                                                    activeTab === tab.id
-                                                        ? 'bg-black border-2 border-lime-500 text-lime-500 shadow-lg shadow-lime-500/20 terminal-pulse'
-                                                        : 'bg-black border border-white/30 text-gray-400 hover:text-white hover:border-white/50'
-                                                }`}
-                                                style={{ animationDelay: `${index * 0.1}s` }}
-                                            >
-                                                [{tab.id}] {tab.label.toUpperCase()}
-                                            </button>
-                                        ))}
+                        {/* Terminal Grid - responsive: 1 column mobile, 2 columns desktop */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <SwapErrorBoundary>
+                                {terminals.map((terminal) => (
+                                    <div key={terminal.id}>
+                                        {terminal.id === 1 || terminal.id === 2 ? (
+                                            // Wallet and Trading terminals have their own styling
+                                            <Suspense fallback={<UnifiedSkeleton variant="terminal" />}>
+                                                <terminal.Component />
+                                            </Suspense>
+                                        ) : (
+                                            // Staking and Analytics terminals need wrapper
+                                            <div className="terminal-pure p-4 min-h-[400px]">
+                                                <h3 className="terminal-header mb-3">{terminal.label.toUpperCase()}</h3>
+                                                <div className="terminal-divider-single mb-3" />
+                                                <Suspense fallback={<UnifiedSkeleton variant="terminal" />}>
+                                                    <terminal.Component />
+                                                </Suspense>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="terminal-divider-single" />
-                                </div>
-
-                                <div className="mt-4">
-                                    <SwapErrorBoundary>
-                                        <Suspense fallback={<UnifiedSkeleton variant="terminal" />}>
-                                            {(() => {
-                                                const activeTabData = tabs.find(tab => tab.path === effectivePath);
-                                                if (activeTabData && activeTabData.Component) {
-                                                    const Component = activeTabData.Component;
-                                                    return <Component />;
-                                                }
-                                                return null;
-                                            })()}
-                                        </Suspense>
-                                    </SwapErrorBoundary>
-                                </div>
-                            </div>
+                                ))}
+                            </SwapErrorBoundary>
                         </div>
                     </>
                 ) : (
                     <>
-                        <ConsolidatedTerminal />
-                        <div className='tabs-content'>
-                            <div className="flex flex-col items-center justify-center min-h-[200px]">
-                                <LoaderCircle size={32} className="animate-spin text-primary" />
-                                <p className="mt-2 text-sm text-muted-foreground">Initializing...</p>
-                            </div>
+                        <div className="terminal-pure p-4 mb-4">
+                            <ConsolidatedTerminal />
+                        </div>
+                        <div className="flex flex-col items-center justify-center min-h-[200px]">
+                            <LoaderCircle size={32} className="animate-spin text-primary" />
+                            <p className="mt-2 text-sm text-muted-foreground">Initializing...</p>
                         </div>
                     </>
                 )}

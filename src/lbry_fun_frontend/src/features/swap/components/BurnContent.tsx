@@ -13,8 +13,8 @@ import { analyticsThunks } from "../thunks/analyticsThunks";
 import { flagHandler } from "../swapSlice";
 import { LoaderCircle } from "lucide-react";
 import getCanisterBal from "@/features/icp-ledger/thunks/getCanisterBal";
-import Modal from "./Modal";
-import { useModal } from "../hooks/useModal";
+import TerminalNotification from "./TerminalNotification";
+import { useTerminalNotification } from "../hooks/useTerminalNotification";
 import BurnInfo from "./BurnInfo";
 import calculateMaxBurnAllowed from "./calculateMaxBurnAllowed";
 import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
@@ -36,7 +36,7 @@ const BurnContent = () => {
     const [amountSecondary, setAmountSecondary] = useState(0);
     const [tentativeICP, setTentativeICP] = useState(0);
     const [tentativePrimary, setTentativePrimary] = useState(0);
-    const { modal, showLoading, showSuccess, showError, hide } = useModal();
+    const { notification, showLoading, showSuccess, showError, hide } = useTerminalNotification();
     
     // Memoize expensive calculation
     const maxBurnAllowed = useMemo(() => {
@@ -55,8 +55,8 @@ const BurnContent = () => {
         // Check if token is live
         if (!isTokenLive) {
             showError(
-                "Trading Not Yet Available",
-                "This token is still in its launch period. Burning will be enabled after the 24-hour launch window."
+                "TRADING NOT AVAILABLE",
+                "TOKEN IN LAUNCH PERIOD → BURNING STARTS IN 24H"
             );
             return;
         }
@@ -64,22 +64,22 @@ const BurnContent = () => {
         // Add frontend validation to prevent burns exceeding max allowed
         if (maxBurnAllowed === 0) {
             showError(
-                "Burning Not Available",
-                "The canister has insufficient ICP balance. Someone needs to mint secondary tokens first to add ICP to the pool."
+                "BURNING NOT AVAILABLE",
+                "INSUFFICIENT ICP BALANCE → MINT SECONDARY TOKENS FIRST"
             );
             return;
         }
         
         if (amountSecondary > maxBurnAllowed) {
             showError(
-                "Burn Amount Exceeds Maximum",
-                `Maximum burn allowed is ${maxBurnAllowed.toFixed(4)} based on available canister balance`
+                "BURN EXCEEDS MAXIMUM",
+                `MAX ALLOWED: ${maxBurnAllowed.toFixed(4)}`
             );
             return;
         }
         
         dispatch(burnSecondary({ amount: amountSecondary.toString(), userPrincipal: principal }));
-        showLoading("Burn in Progress", "Burn transaction is being processed. This may take a few moments.");
+        showLoading("BURN IN PROGRESS", "PROCESSING TRANSACTION...");
     }, [isAuthenticated, principal, isTokenLive, maxBurnAllowed, amountSecondary, dispatch, showError, showLoading]);
     const handleAmountSecondaryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (Number(e.target.value) >= 0) {
@@ -117,7 +117,7 @@ const BurnContent = () => {
             // Refresh transaction history after successful burn
             dispatch(fetchTransactionHistory({ userPrincipal: principal, startIndex: 0 }));
             hide();
-            showSuccess("Success!", "Transaction Submitted!");
+            showSuccess("SUCCESS", "TRANSACTION SUBMITTED");
             // maxBurnAllowed is now memoized
         }
         if (swap.error && swap.activeSwapPool) {
@@ -259,12 +259,12 @@ const BurnContent = () => {
                     <span className="terminal-label">* failed transactions can be redeemed below</span>
                 </div>
 
-                <Modal 
-                    type={modal.type}
-                    isOpen={modal.isOpen}
+                <TerminalNotification 
+                    type={notification.type}
+                    isOpen={notification.isOpen}
                     onClose={hide}
-                    title={modal.title}
-                    message={modal.message}
+                    title={notification.title}
+                    message={notification.message}
                 />
             </div>
         </AccessGuard>

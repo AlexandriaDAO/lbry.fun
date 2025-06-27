@@ -9,6 +9,9 @@ import UnifiedSkeleton from './UnifiedSkeleton';
 // Lazy load the Chart component
 const LineChart = lazy(() => import('./Chart'));
 
+// Lazy load the distribution tracker
+const DistributionTracker = lazy(() => import('./distribution/DistributionTracker'));
+
 // Destructure for easier access
 const { getAllLogs } = analyticsThunks;
 
@@ -206,6 +209,24 @@ const Insights: React.FC = () => {
                 </div>
             </div>
             </Suspense>
+            
+            {/* Add Distribution Tracking Section */}
+            {poolData?.[1]?.icp_swap_canister_id && (
+                <Suspense fallback={<UnifiedSkeleton variant="card" rows={10} />}>
+                    <div className="mt-12">
+                        <div className="terminal-pure mb-6">
+                            <div className="terminal-header">
+                                <span className="terminal-prompt">&gt;&gt;</span> distribution_tracking
+                            </div>
+                            <div className="terminal-row">
+                                <span className="terminal-label">protocol:</span>
+                                <span className="terminal-accent">1%_alexandria | 49.5%_lp_treasury | 49.5%_stakers</span>
+                            </div>
+                        </div>
+                        <DistributionTracker icpSwapCanisterId={poolData[1].icp_swap_canister_id} />
+                    </div>
+                </Suspense>
+            )}
         </div>
     );
 };

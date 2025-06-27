@@ -7,6 +7,7 @@ import previewTokenomics from '../thunk/previewTokenomics.thunk';
 import { RootState } from '@/store';
 import { TailSpin } from 'react-loader-spinner';
 import { GraphData, clearPreviewError } from '../lbryFunSlice';
+import { TokenomicsCurrentState } from '@/features/swap/thunks/tokenomicsThunks';
 
 interface UnifiedTokenomicsGraphsProps {
   // Direct parameters from form or tokenomics config
@@ -21,6 +22,9 @@ interface UnifiedTokenomicsGraphsProps {
     primary_mint_per_threshold: string[];
     secondary_burn_per_threshold: string[];
   } | null;
+  
+  // Optional: Current state for deployed tokens
+  currentState?: TokenomicsCurrentState | null;
 }
 
 const E8S = 100_000_000;
@@ -100,6 +104,7 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
   halvingStep,
   initialRewardPerBurnUnit,
   deployedSchedule,
+  currentState,
 }) => {
   const dispatch = useAppDispatch();
   const { previewGraphData, previewLoading, previewError } = useAppSelector((state: RootState) => state.lbryFun);
@@ -146,6 +151,16 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
 
   // Fetch preview data when parameters change
   useEffect(() => {
+    console.log('UnifiedTokenomicsGraphs input parameters:', {
+      primaryMaxSupply,
+      tgeAllocation,
+      initialSecondaryBurn,
+      halvingStep,
+      initialRewardPerBurnUnit,
+      deployedSchedule,
+      hasCurrentState: !!currentState
+    });
+    
     // Convert natural numbers to E8S for backend
     const E8S_MULTIPLIER = BigInt(100_000_000);
     
@@ -156,7 +171,16 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
     // Handle decimal values for initialRewardPerBurnUnit
     const initial_reward_per_burn_unit = BigInt(Math.floor(parseFloat(initialRewardPerBurnUnit || '0') * Number(E8S_MULTIPLIER)));
 
+    console.log('UnifiedTokenomicsGraphs converted values:', {
+      primary_max_supply: primary_max_supply.toString(),
+      tge_allocation: tge_allocation.toString(),
+      initial_secondary_burn: initial_secondary_burn.toString(),
+      halving_step: halving_step.toString(),
+      initial_reward_per_burn_unit: initial_reward_per_burn_unit.toString()
+    });
+
     if (primary_max_supply > 0 && initial_secondary_burn > 0 && halving_step > 0 && initial_reward_per_burn_unit > 0) {
+        console.log('UnifiedTokenomicsGraphs: Dispatching previewTokenomics');
         dispatch(previewTokenomics({args: {
             primary_max_supply: primary_max_supply.toString(),
             tge_allocation: tge_allocation.toString(),
@@ -166,6 +190,8 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
         }})).catch((error) => {
             console.error("Failed to dispatch previewTokenomics:", error);
         });
+    } else {
+        console.log('UnifiedTokenomicsGraphs: Skipping dispatch due to invalid params');
     }
   }, [primaryMaxSupply, tgeAllocation, initialSecondaryBurn, halvingStep, initialRewardPerBurnUnit, dispatch]);
 
@@ -176,19 +202,106 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
     cumulativeUsdCostData,
     cumulativePercentageSupplyData,
     summaryData
-  } = useMemo(() => formatGraphData(previewGraphData), [previewGraphData]);
+  } = useMemo(() => {
+    console.log('formatGraphData called with:', {
+      hasData: !!previewGraphData,
+      dataFields: previewGraphData ? Object.keys(previewGraphData) : [],
+      cumulativeSupplyLength: previewGraphData?.cumulative_supply_data_y?.length || 0
+    });
+    const result = formatGraphData(previewGraphData);
+    console.log('formatGraphData result:', {
+      cumulativeSupplyData: {
+        xLength: result.cumulativeSupplyData?.xAxis?.length || 0,
+        yLength: result.cumulativeSupplyData?.yAxis?.length || 0,
+        firstX: result.cumulativeSupplyData?.xAxis?.[0],
+        firstY: result.cumulativeSupplyData?.yAxis?.[0]
+      },
+      mintedPerEpochData: {
+        xLength: result.mintedPerEpochData?.xAxis?.length || 0,
+        yLength: result.mintedPerEpochData?.yAxis?.length || 0
+      }
+    });
+    return result;
+  }, [previewGraphData]);
   
-  // Add debug logging in development
+  // Debug log the actual data right before render
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && previewGraphData?.minted_per_epoch_data_y?.[0]) {
-      console.log('Graph Data Debug:', {
-        firstEpochE8s: previewGraphData.minted_per_epoch_data_y[0],
-        firstEpochTokens: mintedPerEpochData.yAxis[0],
-        conversionFactor: E8S,
-        isCorrect: Number(previewGraphData.minted_per_epoch_data_y[0]) / E8S === mintedPerEpochData.yAxis[0]
-      });
+    console.log('UnifiedTokenomicsGraphs render data check:', {
+      hasCumulativeData: !!cumulativeSupplyData,
+      cumulativeXLength: cumulativeSupplyData?.xAxis?.length || 0,
+      cumulativeYLength: cumulativeSupplyData?.yAxis?.length || 0,
+      cumulativeXType: Array.isArray(cumulativeSupplyData?.xAxis) ? 'array' : typeof cumulativeSupplyData?.xAxis,
+      cumulativeYType: Array.isArray(cumulativeSupplyData?.yAxis) ? 'array' : typeof cumulativeSupplyData?.yAxis,
+      firstThreeX: cumulativeSupplyData?.xAxis?.slice(0, 3),
+      firstThreeY: cumulativeSupplyData?.yAxis?.slice(0, 3),
+      lastThreeY: cumulativeSupplyData?.yAxis?.slice(-3),
+      mintedPerEpochFirstThree: mintedPerEpochData?.yAxis?.slice(0, 3)
+    });
+  }, [cumulativeSupplyData]);
+  
+  // Calculate current positions for "we are here" indicators
+  const currentPositions = useMemo(() => {
+    if (!currentState) {
+      return null;
     }
-  }, [previewGraphData, mintedPerEpochData]);
+    
+    
+    // IMPORTANT: totalSecondaryBurned is in raw units, NOT E8S
+    const totalBurned = Number(currentState.totalSecondaryBurned); // No division by E8S!
+    
+    // totalPrimaryMinted IS in E8S units
+    const totalMinted = Number(currentState.totalPrimaryMinted) / E8S;
+    const currentEpoch = currentState.currentThresholdIndex;
+    
+    // Use circulating supply if available, otherwise fall back to total minted
+    const circulatingSupply = currentState.circulatingSupply 
+      ? Number(currentState.circulatingSupply) / E8S 
+      : totalMinted;
+    
+    // For the cumulative supply vs burn graph, the x-axis is already in raw units
+    // (see line 47: data.cumulative_supply_data_x.map((v: string) => Number(v)))
+    // so we use totalBurned directly without conversion
+    const burnedPositionForGraph = totalBurned;
+    
+    const result = {
+      burnedPosition: burnedPositionForGraph,
+      burnedLabel: `▼ ${totalBurned.toLocaleString()} burned`,
+      mintedPosition: totalMinted,
+      mintedLabel: `▼ ${totalMinted.toLocaleString()} minted`,
+      circulatingPosition: circulatingSupply,
+      circulatingLabel: `▼ ${circulatingSupply.toLocaleString()} circulating`,
+      epochPosition: currentEpoch,
+      epochLabel: currentEpoch > 0 ? `▼ Epoch ${currentEpoch}` : '▼ TGE'
+    };
+    
+    console.log('Current positions calculated:', {
+      burnedPosition: result.burnedPosition,
+      mintedPosition: result.mintedPosition,
+      circulatingPosition: result.circulatingPosition,
+      epochPosition: result.epochPosition,
+      currentState: {
+        totalSecondaryBurned: currentState.totalSecondaryBurned,
+        totalPrimaryMinted: currentState.totalPrimaryMinted,
+        circulatingSupply: currentState.circulatingSupply,
+        currentThresholdIndex: currentState.currentThresholdIndex
+      },
+      dataRanges: {
+        cumulativeSupplyX: {
+          min: Math.min(...(cumulativeSupplyData?.xAxis || [0])),
+          max: Math.max(...(cumulativeSupplyData?.xAxis || [0])),
+          first: cumulativeSupplyData?.xAxis?.[0],
+          second: cumulativeSupplyData?.xAxis?.[1]
+        },
+        costToMintX: {
+          min: Math.min(...(costToMintData?.xAxis || [0])),
+          max: Math.max(...(costToMintData?.xAxis || [0])),
+          first: costToMintData?.xAxis?.[0]
+        }
+      }
+    });
+    
+    return result;
+  }, [currentState, cumulativeSupplyData, mintedPerEpochData, costToMintData, cumulativeUsdCostData]);
 
   const handleCopyData = () => {
     if (!previewGraphData) return;
@@ -244,6 +357,18 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
   if (!hasMeaningfulInput) {
     return <div className="text-center p-4 text-gray-500">Enter tokenomic parameters above to see the projected graphs.</div>;
   }
+  
+  // Check if we have actual graph data
+  const hasGraphData = cumulativeSupplyData?.xAxis?.length > 0 && cumulativeSupplyData?.yAxis?.length > 0;
+  
+  console.log('UnifiedTokenomicsGraphs final render check:', {
+    hasGraphData,
+    previewLoading,
+    hasMeaningfulInput,
+    cumulativeSupplyDataExists: !!cumulativeSupplyData,
+    xAxisLength: cumulativeSupplyData?.xAxis?.length,
+    yAxisLength: cumulativeSupplyData?.yAxis?.length
+  });
   
 
   return (
@@ -325,60 +450,100 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
             <span className="terminal-prompt">&gt;</span> cumulative_primary_supply_vs_burn
             <TooltipIcon text="This graph shows the total amount of Primary Token that will be minted as more Secondary Tokens are burned. Look for how quickly the supply hard cap is reached. A steeper curve means faster minting in early stages. The line flattens when the supply Hard Cap is hit." />
           </div>
-          <LineChart
-            dataXaxis={cumulativeSupplyData.xAxis}
-            dataYaxis={cumulativeSupplyData.yAxis}
-            xAxisLabel="Cumulative Secondary Tokens Burned"
-            yAxisLabel="Cumulative Primary Tokens Minted (tokens)"
-            lineColor="hsl(var(--color-chart-primary))"
-            gardientColor="hsl(var(--color-chart-primary) / 0.3)"
-          />
+          {cumulativeSupplyData && cumulativeSupplyData.xAxis && cumulativeSupplyData.yAxis && cumulativeSupplyData.xAxis.length > 0 && cumulativeSupplyData.yAxis.length > 0 ? (
+            <LineChart
+              dataXaxis={cumulativeSupplyData.xAxis}
+              dataYaxis={cumulativeSupplyData.yAxis}
+              xAxisLabel="Cumulative Secondary Tokens Burned"
+              yAxisLabel="Cumulative Primary Tokens Minted (tokens)"
+              lineColor="hsl(var(--color-chart-primary))"
+              gardientColor="hsl(var(--color-chart-primary) / 0.3)"
+              currentPositionX={currentPositions?.burnedPosition}
+              showCurrentPosition={!!currentPositions}
+              currentPositionLabel={currentPositions?.burnedLabel}
+            />
+          ) : (
+            <div className="terminal-row">
+              <span className="terminal-label">status:</span>
+              <span className="terminal-accent">awaiting_data</span>
+            </div>
+          )}
         </div>
         <div className="terminal-graph">
           <div className="terminal-section-header mb-4">
               <span className="terminal-prompt">&gt;</span> primary_tokens_minted_per_epoch
               <TooltipIcon text="This chart displays how many new Primary Tokens are created at each burn epoch. Typically, earlier epochs (left) will mint more tokens than later epochs (right), showing that early burners are rewarded more. A rapid decrease indicates a faster reduction in minting rewards per epoch." />
           </div>
-          <LineChart
-            dataXaxis={mintedPerEpochData.xAxis.length > 0 ? mintedPerEpochData.xAxis : ["N/A"]}
-            dataYaxis={mintedPerEpochData.yAxis.length > 0 ? mintedPerEpochData.yAxis : [0]}
-            xAxisLabel="Burn Epoch"
-            yAxisLabel="Primary Tokens Minted in Epoch (tokens)"
-            lineColor="hsl(var(--color-chart-secondary))"
-            gardientColor="hsl(var(--color-chart-secondary) / 0.3)"
-          />
+          {mintedPerEpochData && mintedPerEpochData.xAxis && mintedPerEpochData.yAxis && mintedPerEpochData.xAxis.length > 0 && mintedPerEpochData.yAxis.length > 0 ? (
+            <LineChart
+              dataXaxis={mintedPerEpochData.xAxis}
+              dataYaxis={mintedPerEpochData.yAxis}
+              xAxisLabel="Burn Epoch"
+              yAxisLabel="Primary Tokens Minted in Epoch (tokens)"
+              lineColor="hsl(var(--color-chart-secondary))"
+              gardientColor="hsl(var(--color-chart-secondary) / 0.3)"
+              currentPositionX={currentPositions?.epochPosition}
+              showCurrentPosition={!!currentPositions}
+              currentPositionLabel={currentPositions?.epochLabel}
+            />
+          ) : (
+            <div className="terminal-row">
+              <span className="terminal-label">status:</span>
+              <span className="terminal-accent">awaiting_data</span>
+            </div>
+          )}
         </div>
         <div className="terminal-graph">
           <div className="terminal-section-header mb-4">
               <span className="terminal-prompt">&gt;</span> cost_to_mint_vs_supply
               <TooltipIcon text="This graph shows the 'price' to create one new Primary Token by burning Secondary Tokens. Notice how the cost jumps up at each stage (or 'epoch'). This increasing cost is what makes it more rewarding for early participants to mint tokens." />
           </div>
-          <LineChart
-            dataXaxis={costToMintData?.xAxis}
-            dataYaxis={costToMintData?.yAxis}
-            xAxisLabel="Cumulative Primary Tokens Minted (tokens)"
-            yAxisLabel="USD Cost per Primary Token ($)"
-            lineColor="hsl(var(--color-chart-success))"
-            gardientColor="hsl(var(--color-chart-success) / 0.3)"
-          />
+          {costToMintData && costToMintData.xAxis && costToMintData.yAxis && costToMintData.xAxis.length > 0 && costToMintData.yAxis.length > 0 ? (
+            <LineChart
+              dataXaxis={costToMintData.xAxis}
+              dataYaxis={costToMintData.yAxis}
+              xAxisLabel="Cumulative Primary Tokens Minted (tokens)"
+              yAxisLabel="USD Cost per Primary Token ($)"
+              lineColor="hsl(var(--color-chart-success))"
+              gardientColor="hsl(var(--color-chart-success) / 0.3)"
+              currentPositionX={currentPositions?.circulatingPosition}
+              showCurrentPosition={!!currentPositions}
+              currentPositionLabel={currentPositions?.circulatingLabel}
+            />
+          ) : (
+            <div className="terminal-row">
+              <span className="terminal-label">status:</span>
+              <span className="terminal-accent">awaiting_data</span>
+            </div>
+          )}
         </div>
         <div className="terminal-graph">
           <div className="terminal-section-header mb-4">
               <span className="terminal-prompt">&gt;</span> minting_valuation_vs_primary
               <TooltipIcon text="Assuming each Secondary Token burned costs $0.005 (half a cent), this graph projects the total USD expenditure needed to mint a certain amount of Primary Tokens through the burning schedule. The cost of initially allocated Primary Tokens is considered $0 in this projection." />
           </div>
-          <LineChart
-            dataXaxis={cumulativeUsdCostData.xAxis}
-            dataYaxis={cumulativeUsdCostData.yAxis}
-            xAxisLabel="Cumulative Primary Tokens Minted (tokens)"
-            yAxisLabel="Minting Valuation ($)"
-            lineColor="hsl(var(--color-chart-warning))"
-            gardientColor="hsl(var(--color-chart-warning) / 0.3)"
-            dataYaxis2={cumulativePercentageSupplyData.yAxis}
-            yAxisLabel2="Supply Minted (%)"
-            lineColor2="hsl(var(--color-chart-accent))"
-            yAxis2format="percent"
+          {cumulativeUsdCostData && cumulativeUsdCostData.xAxis && cumulativeUsdCostData.yAxis && cumulativeUsdCostData.xAxis.length > 0 && cumulativeUsdCostData.yAxis.length > 0 ? (
+            <LineChart
+              dataXaxis={cumulativeUsdCostData.xAxis}
+              dataYaxis={cumulativeUsdCostData.yAxis}
+              xAxisLabel="Cumulative Primary Tokens Minted (tokens)"
+              yAxisLabel="Minting Valuation ($)"
+              lineColor="hsl(var(--color-chart-warning))"
+              gardientColor="hsl(var(--color-chart-warning) / 0.3)"
+              dataYaxis2={cumulativePercentageSupplyData.yAxis}
+              yAxisLabel2="Supply Minted (%)"
+              lineColor2="hsl(var(--color-chart-accent))"
+              yAxis2format="percent"
+            currentPositionX={currentPositions?.circulatingPosition}
+            showCurrentPosition={!!currentPositions}
+            currentPositionLabel={currentPositions?.circulatingLabel}
           />
+          ) : (
+            <div className="terminal-row">
+              <span className="terminal-label">status:</span>
+              <span className="terminal-accent">awaiting_data</span>
+            </div>
+          )}
         </div>
       </div>
       <div className="terminal-section p-4 font-mono text-center mt-8">

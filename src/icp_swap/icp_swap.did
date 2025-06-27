@@ -6,6 +6,36 @@ type Configs = record {
   tokenomics_cansiter_id : principal;
 };
 type DailyValues = record { values : vec record { nat32; nat } };
+type DistributionAllocations = record {
+  stakers_allocated : nat64;
+  lp_treasury_allocated : nat64;
+  alexandria_allocated : nat64;
+};
+type DistributionEvent = record {
+  results : DistributionResults;
+  total_available : nat64;
+  timestamp : nat64;
+  allocations : DistributionAllocations;
+  event_id : nat64;
+  distribution_cycle : nat32;
+};
+type DistributionResults = record {
+  lp_provision_status : LpProvisionStatus;
+  stakers_rollover : nat64;
+  alexandria_sent : opt nat64;
+  error_details : opt text;
+  lp_treasury_added : nat64;
+  stakers_distributed : opt nat64;
+};
+type DistributionSummary = record {
+  lifetime_totals : LifetimeDistributionTotals;
+  current_lp_provision_queue : nat64;
+  total_alexandria_sent : nat64;
+  total_lp_treasury_balance : nat64;
+  total_stakers_distributed : nat64;
+  last_distribution : opt DistributionEvent;
+  total_cycles : nat32;
+};
 type ExecutionError = variant {
   InvalidAmount : record { details : text; amount : nat64; reason : text };
   TradingNotEnabled : record { reason : text };
@@ -79,6 +109,12 @@ type InitArgs = record {
   distribution_interval_seconds : nat64;
   distribution_intervals : opt nat32;
 };
+type LifetimeDistributionTotals = record {
+  alexandria_total : nat64;
+  lp_treasury_total : nat64;
+  stakers_total : nat64;
+  total_distributed : nat64;
+};
 type Log = record {
   function : text;
   log_type : LogType;
@@ -89,6 +125,11 @@ type Log = record {
 type LogType = variant {
   Error : record { error : ExecutionError };
   Info : record { detail : text };
+};
+type LpProvisionStatus = variant {
+  Failed : record { reason : text };
+  Success : record { lp_tokens : nat };
+  Pending;
 };
 type PaginatedLogs = record {
   page_size : nat64;
@@ -113,8 +154,11 @@ service : (opt InitArgs) -> {
   get_config : () -> (Configs) query;
   get_current_secondary_ratio : () -> (nat64) query;
   get_current_staking_reward_percentage : () -> (text) query;
+  get_distribution_events : (nat64, nat32) -> (vec DistributionEvent) query;
   get_distribution_interval : () -> (nat32) query;
   get_distribution_interval_seconds : () -> (nat64) query;
+  get_distribution_summary : () -> (DistributionSummary) query;
+  get_latest_distribution_event : () -> (opt DistributionEvent) query;
   get_logs : (opt nat64, opt nat64) -> (PaginatedLogs) query;
   get_lp_treasury_balance : () -> (nat64) query;
   get_scaling_factor : () -> (nat) query;

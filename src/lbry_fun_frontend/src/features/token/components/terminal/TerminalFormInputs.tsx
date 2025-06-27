@@ -187,19 +187,86 @@ export const TerminalFileInput: React.FC<TerminalFileInputProps> = ({
   value,
   onChange,
   error,
-  accept = "image/*",
+  accept = "image/svg+xml",
   name,
   required = false
 }) => {
+  const [fileError, setFileError] = React.useState<string>('');
+  const [isValidating, setIsValidating] = React.useState<boolean>(false);
+  const [renderValid, setRenderValid] = React.useState<boolean>(false);
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target?.files?.[0];
     if (!file) return;
     
+    // Clear previous errors
+    setFileError('');
+    
+    // Validate file type
+    if (file.type !== 'image/svg+xml' && !file.name.toLowerCase().endsWith('.svg')) {
+      setFileError('Only SVG files are allowed. Please upload a .svg file.');
+      e.target.value = ''; // Clear the input
+      onChange(''); // Clear the value
+      return;
+    }
+    
+    // Validate file size (max 100KB for SVG)
+    const maxSize = 100 * 1024; // 100KB
+    if (file.size > maxSize) {
+      setFileError('SVG file is too large. Maximum size is 100KB.');
+      e.target.value = ''; // Clear the input
+      onChange(''); // Clear the value
+      return;
+    }
+    
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       if (typeof reader.result === 'string') {
-        onChange(reader.result);
+        // Extract base64 data without the data URL prefix
+        const base64Match = reader.result.match(/^data:image\/svg\+xml;base64,(.+)$/);
+        if (base64Match && base64Match[1]) {
+          setIsValidating(true);
+          
+          // Decode base64 to check SVG content
+          try {
+            const svgContent = atob(base64Match[1]);
+            
+            // Check for embedded images or external references
+            const hasEmbeddedImages = /<image/.test(svgContent) || /xlink:href/.test(svgContent);
+            const hasDataUri = /data:image\/(png|jpeg|jpg|gif|webp)/i.test(svgContent);
+            const hasExternalRefs = /href=["'](?!#|data:)/.test(svgContent);
+            
+            if (hasEmbeddedImages || hasDataUri) {
+              setFileError('SVG contains embedded images. Please use pure vector graphics only.');
+              onChange('');
+              setIsValidating(false);
+              return;
+            }
+            
+            if (hasExternalRefs) {
+              setFileError('SVG contains external references. Please use a self-contained SVG.');
+              onChange('');
+              setIsValidating(false);
+              return;
+            }
+            
+            // If content checks pass, set the value and wait for render validation
+            onChange(base64Match[1]);
+            setRenderValid(false); // Reset until image loads
+          } catch (e) {
+            setFileError('Invalid SVG file - could not decode.');
+            onChange('');
+            setIsValidating(false);
+          }
+        } else {
+          setFileError('Invalid SVG file format.');
+          onChange('');
+        }
       }
+    };
+    reader.onerror = () => {
+      setFileError('Failed to read file.');
+      onChange('');
     };
     reader.readAsDataURL(file);
   };
@@ -210,7 +277,7 @@ export const TerminalFileInput: React.FC<TerminalFileInputProps> = ({
         <span className="terminal-label">{label}{required && '*'}:</span>
         <label className="terminal-file-label">
           <span className="terminal-command">
-            &gt; select_file
+            &gt; select_svg_file
           </span>
           <input
             type="file"
@@ -222,11 +289,33 @@ export const TerminalFileInput: React.FC<TerminalFileInputProps> = ({
         </label>
         {value && (
           <div className="terminal-file-preview">
-            <img src={value} alt="preview" className="terminal-file-thumbnail" />
+            <img 
+              src={`data:image/svg+xml;base64,${value}`} 
+              alt="preview" 
+              className="terminal-file-thumbnail"
+              onLoad={() => {
+                setRenderValid(true);
+                setIsValidating(false);
+                setFileError(''); // Clear any errors if render succeeds
+              }}
+              onError={() => {
+                setRenderValid(false);
+                setIsValidating(false);
+                setFileError('SVG failed to render. Please use a simpler SVG format.');
+                onChange(''); // Clear the value if render fails
+              }}
+            />
+            {isValidating && (
+              <div className="terminal-helper">[VALIDATING...] Checking SVG compatibility</div>
+            )}
           </div>
         )}
       </div>
-      {error && <div className="terminal-error">[ERROR] {error}</div>}
+      {fileError && <div className="terminal-error">[ERROR] {fileError}</div>}
+      {error && !fileError && <div className="terminal-error">[ERROR] {error}</div>}
+      {value && renderValid && !fileError && (
+        <div className="terminal-success">[OK] SVG validated and ready</div>
+      )}
     </div>
   );
 };

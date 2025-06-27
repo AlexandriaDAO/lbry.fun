@@ -5,7 +5,7 @@ import { TokenRecordStringified } from "../../token/thunk/getTokenPools.thunk";
 // Define the initial state using the SwapState interface
 export const initialState: SwapState = {
   // Core data
-  secondaryRatio: "0",
+  secondaryRatio: null,
   secondaryFee: "0",
   secondaryBalance: "0",
   archivedBalance: "0",
@@ -42,7 +42,24 @@ export const initialState: SwapState = {
   
   // Global loading states
   isLoadingCriticalData: false,
-  isLoadingSecondaryData: false
+  isLoadingSecondaryData: false,
+  
+  // Tokenomics schedule data
+  tokenomicsSchedule: null,
+  tokenomicsScheduleLoading: false,
+  tokenomicsScheduleError: null,
+  
+  // Current tokenomics state
+  tokenomicsCurrentState: null,
+  tokenomicsCurrentStateLoading: false,
+  tokenomicsCurrentStateError: null,
+  
+  // Distribution tracking
+  distributionSummary: null,
+  distributionEvents: [],
+  latestDistributionEvent: null,
+  distributionLoading: false,
+  distributionError: null
 };
 
 // Action creators
@@ -83,6 +100,16 @@ export const swapActions = {
       state.canisterArchivedBal = null;
       state.averageAPY = null;
       state.logsData = null;
+      state.tokenomicsSchedule = null;
+      state.tokenomicsScheduleError = null;
+      state.tokenomicsCurrentState = null;
+      state.tokenomicsCurrentStateError = null;
+      
+      // Reset distribution data
+      state.distributionSummary = null;
+      state.distributionEvents = [];
+      state.latestDistributionEvent = null;
+      state.distributionError = null;
       
       // Reset transaction history
       state.transactionHistory.transactions = [];

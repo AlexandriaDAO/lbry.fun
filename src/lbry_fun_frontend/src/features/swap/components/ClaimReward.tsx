@@ -5,7 +5,7 @@ import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swap/icp_swap.did';
 import { stakingThunks } from "../thunks/stakingThunks";
 import { flagHandler } from "../swapSlice";
-import { useModal } from "../hooks/useModal";
+import { useTerminalNotification } from "../hooks/useTerminalNotification";
 
 // Destructure for easier access
 const { claimReward } = stakingThunks;
@@ -13,12 +13,12 @@ const { claimReward } = stakingThunks;
 const ClaimReward: React.FC = () => {
     const dispatch = useAppDispatch();
     const swap = useAppSelector((state) => state.swap);
-    const { showLoading } = useModal();
+    const { showLoading } = useTerminalNotification();
 
     const handleClaim = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         dispatch(claimReward({reward:swap.stakeInfo.rewardIcp}));
-        showLoading("Claiming ICP rewards", "Transaction is being processed. This may take a few moments.");
+        showLoading("CLAIMING REWARDS", "Processing ICP reward claim");
     }, [dispatch, swap.stakeInfo.rewardIcp, showLoading]);
 
     useEffect(() => {

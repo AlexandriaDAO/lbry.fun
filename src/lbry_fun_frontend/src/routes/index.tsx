@@ -24,12 +24,7 @@ const router = createBrowserRouter(
 
 
 				</Route>
-				<Route path="swap">
-					<Route index element={<Suspense key="swap" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="trade" element={<Suspense key="swap-trade" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="stake" element={<Suspense key="swap-stake" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-					<Route path="analytics" element={<Suspense key="swap-analytics" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
-				</Route>
+				<Route path="swap" element={<Suspense key="swap" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
 
 				<Route path={ROUTES.UNAUTHORIZED} element={<Suspense key="401" fallback={<TopProgressBar />}><UnauthorizedPage /></Suspense>} />
 				<Route path={ROUTES.NOT_FOUND} element={<Suspense key="404" fallback={<TopProgressBar />}><NotFoundPage /></Suspense>} />

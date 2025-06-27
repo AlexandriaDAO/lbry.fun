@@ -57,16 +57,18 @@ export const useCanisterLogs = (
       
       if (canisterType === 'icp_swap') {
         // ICP Swap uses get_logs method
+        // Pass optional values as arrays (Candid opt type)
         const result = await (actor as any).get_logs(
-          BigInt(page), 
-          BigInt(pageSize)
+          [BigInt(page)], 
+          [BigInt(pageSize)]
         ) as IcpSwapPaginatedLogs;
         paginatedLogs = result;
       } else {
         // Tokenomics uses get_token_logs method
+        // Pass optional values as arrays (Candid opt type)
         const result = await (actor as any).get_token_logs(
-          BigInt(page), 
-          BigInt(pageSize)
+          [BigInt(page)], 
+          [BigInt(pageSize)]
         ) as TokenomicsPaginatedLogs;
         paginatedLogs = result;
       }
