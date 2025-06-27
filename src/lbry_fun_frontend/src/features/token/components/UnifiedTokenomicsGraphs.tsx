@@ -258,17 +258,35 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
       ? Number(currentState.circulatingSupply) / E8S 
       : totalMinted;
     
-    // For the cumulative supply vs burn graph, the x-axis is already in raw units
-    // (see line 47: data.cumulative_supply_data_x.map((v: string) => Number(v)))
-    // so we use totalBurned directly without conversion
-    const burnedPositionForGraph = totalBurned;
+    // For charts with numeric x-axis data treated as categories, we need to find
+    // the closest x-axis value to our current position
+    
+    // Helper function to find closest value in array
+    const findClosestValue = (arr: number[], target: number): number => {
+      if (!arr || arr.length === 0) return target;
+      return arr.reduce((prev, curr) => 
+        Math.abs(curr - target) < Math.abs(prev - target) ? curr : prev
+      );
+    };
+    
+    // For cumulative supply chart - find closest x value
+    const burnedPositionForGraph = findClosestValue(
+      cumulativeSupplyData?.xAxis || [], 
+      totalBurned
+    );
+    
+    // For cost to mint charts - find closest x value
+    const mintedPositionForGraph = findClosestValue(
+      costToMintData?.xAxis || [], 
+      totalMinted
+    );
     
     const result = {
       burnedPosition: burnedPositionForGraph,
       burnedLabel: `▼ ${totalBurned.toLocaleString()} burned`,
-      mintedPosition: totalMinted,
+      mintedPosition: mintedPositionForGraph,
       mintedLabel: `▼ ${totalMinted.toLocaleString()} minted`,
-      circulatingPosition: circulatingSupply,
+      circulatingPosition: mintedPositionForGraph, // Same as minted for the 4th chart
       circulatingLabel: `▼ ${circulatingSupply.toLocaleString()} circulating`,
       epochPosition: currentEpoch,
       epochLabel: currentEpoch > 0 ? `▼ Epoch ${currentEpoch}` : '▼ TGE'

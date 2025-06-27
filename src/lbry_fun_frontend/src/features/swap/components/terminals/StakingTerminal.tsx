@@ -8,7 +8,6 @@ export const StakingTerminal: React.FC = React.memo(() => {
   const isAuthenticated = auth.isAuthenticated;
   const poolData = swap.activeSwapPool;
   const stakeInfo = swap.stakeInfo;
-  const [showCharts, setShowCharts] = useState(false);
   
   // Simple balance data
   const balances = {
@@ -29,40 +28,20 @@ export const StakingTerminal: React.FC = React.memo(() => {
     return '0.1';
   };
 
-  // Placeholder chart data - will implement with a lightweight charting solution later
-  const chartPlaceholder = "Chart visualization coming soon...";
 
   return (
-    <div className="terminal-container-lg">
-      <div className="terminal-pure terminal-flicker">
-        {/* ASCII Art Header */}
-        <pre className="terminal-ascii-header">
-{`╔══════════════════════════════════════╗
-║     STAKING TERMINAL v3.141          ║
-║     [YIELD OPTIMIZATION ENGINE]      ║
-╚══════════════════════════════════════╝`}
-        </pre>
-
+    <div className="terminal-pure terminal-flicker p-4 min-h-[400px]">
       {/* Terminal Header */}
-      <div className="terminal-header terminal-boot">
-        <span className="terminal-prompt">&gt;&gt;</span> staking_terminal
-        <span className="terminal-timestamp ml-2">
-          {new Date().toTimeString().slice(0, 8)}
-        </span>
+      <div className="terminal-header terminal-boot mb-3">
+        <span className="terminal-prompt">&gt;&gt;</span> STAKING_TERMINAL
       </div>
 
       <div className="terminal-divider-single" />
 
       {/* Stake Overview */}
       <div className="terminal-section terminal-boot" style={{ animationDelay: '0.1s' }}>
-        <span className="terminal-prompt">&gt;</span> stake_overview
         {isAuthenticated ? (
-          <div className="ml-4">
-            <pre className="text-gray-600 text-xs mb-2">
-{`┌─────────────────────────────────────┐
-│ STAKING METRICS - LIVE              │
-└─────────────────────────────────────┘`}
-            </pre>
+          <>
             <div className="terminal-row justify-between">
               <span className="terminal-label">staked_amount:</span>
               <span className="terminal-primary cyber-glow">
@@ -93,7 +72,7 @@ export const StakingTerminal: React.FC = React.memo(() => {
               <span className="terminal-label">stakers:</span>
               <span className="terminal-value">1</span>
             </div>
-          </div>
+          </>
         ) : (
           <div className="terminal-status ml-4">
             [NOT CONNECTED] - Connect wallet to view staking data
@@ -121,7 +100,6 @@ export const StakingTerminal: React.FC = React.memo(() => {
           )}
         </div>
         <StakeContent />
-      </div>
       </div>
     </div>
   );

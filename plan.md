@@ -1,8 +1,7 @@
 A1: Distribution tracking frontend plan -> Kongswap lp problem
-A2: "We are here on the live graphs."
+A2: 
 A3: Terminals splitscreen.
 A4: Status popups.
-
 
 
 

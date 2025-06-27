@@ -36,81 +36,37 @@ export const AnalyticsTerminal: React.FC = React.memo(() => {
   };
 
   return (
-    <div className="terminal-container-xl">
-      <div className="terminal-pure terminal-flicker">
-        {/* ASCII Art Header */}
-        <pre className="terminal-ascii-header">
-{`╔══════════════════════════════════════╗
-║    ANALYTICS TERMINAL v2.049         ║
-║    [REAL-TIME DATA MONITORING]       ║
-╚══════════════════════════════════════╝`}
-        </pre>
-
-      {/* Terminal Header */}
-      <div className="terminal-header terminal-boot">
-        <span className="terminal-prompt">&gt;&gt;</span> analytics_terminal
-        <span className="terminal-status-live ml-2">[LIVE]</span>
+    <div className="terminal-pure terminal-flicker p-4 min-h-[400px]">
+      {/* Terminal Header with view tabs */}
+      <div className="flex justify-between items-center mb-3">
+        <div className="terminal-header terminal-boot">
+          <span className="terminal-prompt">&gt;&gt;</span> ANALYTICS_TERMINAL
+        </div>
+        {/* View Navigation */}
+        <div className="flex gap-2">
+          {(['insights', 'tokenomics', 'technical'] as const).map(view => (
+            <button
+              key={view}
+              onClick={() => setActiveView(view)}
+              className={`
+                terminal-button text-xs px-2 py-1
+                ${activeView === view
+                  ? 'border-lime-500 text-lime-500'
+                  : 'border-white/30 text-gray-400'
+                }
+              `}
+            >
+              [{view.toUpperCase()}]
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="terminal-divider-double" />
-
-      {/* Quick Stats Summary */}
-      <div className="terminal-section terminal-boot" style={{ animationDelay: '0.1s' }}>
-        <span className="terminal-prompt">&gt;</span> quick_stats
-        {poolData ? (
-          <>
-            <pre className="text-gray-600 text-xs ml-4 mb-2">
-{`┌─────────────────────────────────────┐
-│ POOL METRICS - REAL TIME            │
-└─────────────────────────────────────┘`}
-            </pre>
-            <div className="ml-4 grid grid-cols-2 md:grid-cols-4 gap-x-4 text-xs">
-              <div className="terminal-row">
-                <span className="terminal-label">pool_name:</span>
-                <span className="terminal-value ml-1 terminal-typewriter">{poolData[1].pool_name}</span>
-              </div>
-              <div className="terminal-row">
-                <span className="terminal-label">primary_token:</span>
-                <span className="terminal-primary ml-1 cyber-glow">{poolData[1].primary_token_symbol}</span>
-              </div>
-              <div className="terminal-row">
-                <span className="terminal-label">secondary_token:</span>
-                <span className="terminal-value ml-1">{poolData[1].secondary_token_symbol}</span>
-              </div>
-              <div className="terminal-row">
-                <span className="terminal-label">status:</span>
-                <span className="terminal-status-live ml-1">[ACTIVE]</span>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="terminal-status-loading ml-4">Loading pool metrics</div>
-        )}
-      </div>
-
-      {/* View Navigation */}
-      <div className="flex gap-2 mt-2 mb-1">
-        {(['insights', 'tokenomics', 'technical'] as const).map(view => (
-          <button
-            key={view}
-            onClick={() => setActiveView(view)}
-            className={`
-              terminal-button text-xs px-2 py-0.5
-              ${activeView === view
-                ? 'border-lime-500 text-lime-500'
-                : 'border-white/30 text-gray-400 hover:text-white hover:border-white/50'
-              }
-            `}
-          >
-            [{view.toUpperCase()}]
-          </button>
-        ))}
-      </div>
+      <div className="terminal-divider-single" />
 
       {/* Active View Content */}
       <div className="terminal-section">
         {renderActiveView()}
-      </div>
       </div>
     </div>
   );

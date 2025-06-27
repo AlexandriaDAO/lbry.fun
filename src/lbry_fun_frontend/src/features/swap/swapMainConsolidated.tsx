@@ -89,21 +89,9 @@ const SwapMainConsolidated = () => {
                             <SwapErrorBoundary>
                                 {terminals.map((terminal) => (
                                     <div key={terminal.id}>
-                                        {terminal.id === 1 || terminal.id === 2 ? (
-                                            // Wallet and Trading terminals have their own styling
-                                            <Suspense fallback={<UnifiedSkeleton variant="terminal" />}>
-                                                <terminal.Component />
-                                            </Suspense>
-                                        ) : (
-                                            // Staking and Analytics terminals need wrapper
-                                            <div className="terminal-pure p-4 min-h-[400px]">
-                                                <h3 className="terminal-header mb-3">{terminal.label.toUpperCase()}</h3>
-                                                <div className="terminal-divider-single mb-3" />
-                                                <Suspense fallback={<UnifiedSkeleton variant="terminal" />}>
-                                                    <terminal.Component />
-                                                </Suspense>
-                                            </div>
-                                        )}
+                                        <Suspense fallback={<UnifiedSkeleton variant="terminal" />}>
+                                            <terminal.Component />
+                                        </Suspense>
                                     </div>
                                 ))}
                             </SwapErrorBoundary>

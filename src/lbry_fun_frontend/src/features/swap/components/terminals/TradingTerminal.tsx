@@ -49,33 +49,19 @@ export const TradingTerminal: React.FC = React.memo(() => {
 
   return (
     <div className="terminal-pure terminal-flicker p-4 min-h-[400px]">
-      {/* ASCII Art Header */}
-      <pre className="terminal-ascii-header">
-{`╔══════════════════════════════════════╗
-║     TRADING TERMINAL v1.337          ║
-╚══════════════════════════════════════╝`}
-      </pre>
-
-      {/* Terminal Header with timestamp */}
-      <div className="terminal-header terminal-boot">
-        <span className="terminal-prompt">&gt;&gt;</span> trading_terminal
-        <span className="terminal-timestamp ml-2">
-          {new Date().toTimeString().slice(0, 8)}
-        </span>
-      </div>
-
-      <div className="terminal-divider-single" />
-
-      {/* Operation Navigation */}
-      <div className="terminal-section terminal-boot" style={{ animationDelay: '0.1s' }}>
-        <span className="terminal-prompt">&gt;</span> active_operations
-        <div className="flex gap-2 mt-1">
+      {/* Terminal Header with tabs */}
+      <div className="flex justify-between items-center mb-3">
+        <div className="terminal-header terminal-boot">
+          <span className="terminal-prompt">&gt;&gt;</span> TRADING_TERMINAL
+        </div>
+        {/* Operation Tabs */}
+        <div className="flex gap-2">
           {(['swap', 'transfer', 'burn'] as const).map(op => (
             <button
               key={op}
               onClick={() => setActiveOperation(op)}
               className={`
-                terminal-button text-xs px-2 py-0.5
+                terminal-button text-xs px-2 py-1
                 ${activeOperation === op
                   ? 'border-lime-500 text-lime-500'
                   : 'border-white/30 text-gray-400 hover:text-white hover:border-white/50'
@@ -85,39 +71,29 @@ export const TradingTerminal: React.FC = React.memo(() => {
               [{op.toUpperCase()}]
             </button>
           ))}
+          <button
+            onClick={() => setShowTransactions(!showTransactions)}
+            className={`
+              terminal-button text-xs px-2 py-1
+              ${showTransactions ? 'border-lime-500 text-lime-500' : 'border-white/30 text-gray-400'}
+            `}
+          >
+            [HISTORY]
+          </button>
         </div>
       </div>
 
-      <div className="terminal-divider-dots" />
+      <div className="terminal-divider-single" />
 
       {/* Active Operation Interface */}
       <div className="terminal-section terminal-boot" style={{ animationDelay: '0.4s' }}>
-        <pre className="text-gray-600 text-xs mb-3">
-{`>>> EXECUTING: ${activeOperation.toUpperCase()}_PROTOCOL`}
-        </pre>
         {renderActiveOperation()}
       </div>
 
-      {/* Recent Transactions (Collapsible) */}
-      {isAuthenticated && (
+      {/* Recent Transactions */}
+      {isAuthenticated && showTransactions && (
         <div className="terminal-section terminal-boot" style={{ animationDelay: '0.5s' }}>
-          <div 
-            className="terminal-row cursor-pointer justify-between"
-            onClick={() => setShowTransactions(!showTransactions)}
-          >
-            <span>
-              <span className="terminal-prompt">&gt;</span> recent_transactions
-            </span>
-            <span className="terminal-accent text-xs">
-              [{showTransactions ? '-' : '+'}]
-            </span>
-          </div>
-          
-          {showTransactions && (
-            <div className="mt-1">
-              <UnifiedTransaction view="history" />
-            </div>
-          )}
+          <UnifiedTransaction view="history" />
         </div>
       )}
     </div>
