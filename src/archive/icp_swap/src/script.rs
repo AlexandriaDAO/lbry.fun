@@ -8,55 +8,30 @@ use crate::{
     get_icp_rate_in_cents,
     utils::register_info_log,
     ArchiveBalance,
-    Configs,
     DailyValues,
-    SecondaryRatio,
+    LbryRatio,
     Stake,
     APY,
     ARCHIVED_TRANSACTION_LOG,
-    CONFIGS,
     DISTRIBUTION_INTERVALS,
-    SECONDARY_RATIO,
+    LBRY_RATIO,
     STAKES,
     TOTAL_ARCHIVED_BALANCE,
     TOTAL_UNCLAIMED_ICP_REWARD,
 };
 
+pub const REWARD_DISTRIBUTION_INTERVAL: Duration = Duration::from_secs(60 * 60); // 1 hour.
 pub const PRICE_FETCH_INTERVAL: Duration = Duration::from_secs(1 * 24 * 60 * 60); // 1 days in seconds
 
-#[derive(CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone, Default)]
 pub struct InitArgs {
     pub stakes: Option<Vec<(Principal, Stake)>>,
     pub archived_transaction_log: Option<Vec<(Principal, ArchiveBalance)>>,
     pub total_unclaimed_icp_reward: Option<u64>,
-    pub secondary_ratio: Option<SecondaryRatio>,
+    pub lbry_ratio: Option<LbryRatio>,
     pub total_archived_balance: Option<u64>,
     pub apy: Option<Vec<(u32, DailyValues)>>,
     pub distribution_intervals: Option<u32>,
-    pub primary_token_id: Option<Principal>,
-    pub secondary_token_id: Option<Principal>,
-    pub tokenomics_canister_id: Option<Principal>,
-    pub icp_ledger_id: Option<Principal>,
-    pub distribution_interval_seconds: Option<u64>,
-}
-
-impl Default for InitArgs {
-    fn default() -> Self {
-        Self {
-            stakes: None,
-            archived_transaction_log: None,
-            total_unclaimed_icp_reward: None,
-            secondary_ratio: None,
-            total_archived_balance: None,
-            apy: None,
-            distribution_intervals: None,
-            primary_token_id: None,
-            secondary_token_id: None,
-            tokenomics_canister_id: None,
-            icp_ledger_id: None,
-            distribution_interval_seconds: None, // No default - must be explicitly set
-        }
-    }
 }
 
 // Function to initialize global states from InitArgs.
@@ -77,9 +52,9 @@ fn initialize_globals(args: InitArgs) {
         });
     }
 
-    if let Some(secondary_ratio) = args.secondary_ratio {
-        SECONDARY_RATIO.with(|m| {
-            m.borrow_mut().insert((), secondary_ratio);
+    if let Some(lbry_ratio) = args.lbry_ratio {
+        LBRY_RATIO.with(|m| {
+            m.borrow_mut().insert((), lbry_ratio);
         });
     }
 
@@ -110,25 +85,6 @@ fn initialize_globals(args: InitArgs) {
             for (principal, balance) in logs {
                 log_map.insert(principal, balance);
             }
-        });
-    }
-
-    // Initialize configs - all token IDs are required for new projects
-    let configs = Configs {
-        primary_token_id: args.primary_token_id.expect("Primary token ID is required"),
-        secondary_token_id: args.secondary_token_id.expect("Secondary token ID is required"),
-        tokenomics_canister_id: args.tokenomics_canister_id.expect("Tokenomics canister ID is required"),
-        icp_ledger_id: args.icp_ledger_id.unwrap_or(Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap()), // ICP ledger can use mainnet default
-    };
-    
-    CONFIGS.with(|m| {
-        m.borrow_mut().insert((), configs);
-    });
-
-    // Store distribution interval in DISTRIBUTION_INTERVALS if provided
-    if let Some(interval_seconds) = args.distribution_interval_seconds {
-        DISTRIBUTION_INTERVALS.with(|m| {
-            m.borrow_mut().insert((), interval_seconds as u32);
         });
     }
 }
@@ -162,46 +118,11 @@ fn init(args: Option<InitArgs>) {
                     &format!("Total unclaimed reward: {}", unclaimed_reward)
                 );
             }
-            if let Some(ref ratio) = init_args.secondary_ratio {
+            if let Some(ref ratio) = init_args.lbry_ratio {
                 register_info_log(
                     caller(),
                     "init",
-                    &format!("Secondary ratio provided: {}", ratio.ratio)
-                );
-            }
-            if init_args.primary_token_id.is_some() {
-                register_info_log(
-                    caller(),
-                    "init",
-                    "Primary token ID provided"
-                );
-            }
-            if init_args.secondary_token_id.is_some() {
-                register_info_log(
-                    caller(),
-                    "init",
-                    "Secondary token ID provided"
-                );
-            }
-            if init_args.tokenomics_canister_id.is_some() {
-                register_info_log(
-                    caller(),
-                    "init",
-                    "Tokenomics canister ID provided"
-                );
-            }
-            if init_args.icp_ledger_id.is_some() {
-                register_info_log(
-                    caller(),
-                    "init",
-                    "ICP ledger ID provided"
-                );
-            }
-            if let Some(interval) = init_args.distribution_interval_seconds {
-                register_info_log(
-                    caller(),
-                    "init",
-                    &format!("Distribution interval: {} seconds", interval)
+                    &format!("LBRY ratio provided: {}", ratio.ratio)
                 );
             }
 
@@ -215,33 +136,25 @@ fn init(args: Option<InitArgs>) {
         }
     }
 
-    let distribution_interval = init_args.as_ref()
-        .and_then(|args| args.distribution_interval_seconds)
-        .expect("Distribution interval seconds is required");
-    setup_timers(distribution_interval);
+    setup_timers();
     register_info_log(caller(), "init", "Initialization process completed");
 }
 
 #[post_upgrade]
 fn post_upgrade() {
-    // Get distribution interval from storage, default to 1 hour
-    let distribution_interval = DISTRIBUTION_INTERVALS.with(|m| {
-        m.borrow().get(&()).unwrap_or(3600) as u64
-    });
-    setup_timers(distribution_interval);
+    setup_timers();
     register_info_log(caller(), "post_upgrade", "Post-upgrade timer setup completed");
 }
 
-fn setup_timers(distribution_interval_seconds: u64) {
+fn setup_timers() {
     // Initial price fetch
     ic_cdk_timers::set_timer(Duration::from_secs(0), || {
         ic_cdk::spawn(get_icp_rate_cents_wrapper());
     });
 
-    // Periodic reward distribution with configurable interval
-    let distribution_interval = Duration::from_secs(distribution_interval_seconds);
+    // Periodic reward distribution
     let _reward_timer_id: ic_cdk_timers::TimerId = ic_cdk_timers::set_timer_interval(
-        distribution_interval,
+        REWARD_DISTRIBUTION_INTERVAL,
         || { ic_cdk::spawn(distribute_reward_wrapper()) }
     );
 

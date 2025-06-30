@@ -47,12 +47,12 @@ pub enum ExecutionError {
         method: String,
         details: String,
     },
-    MaxMintPrimaryReached {
+    MaxMintAlexReached {
         reason: String,
     },
-    MaxPrimaryPerTrnxReached {
+    MaxAlexPerTrnxReached {
         reason: String,
-    }, NoMorePrimaryCanBeMinted {
+    }, NoMoreAlexCanbeMinted {
         reason: String,
     },
 }

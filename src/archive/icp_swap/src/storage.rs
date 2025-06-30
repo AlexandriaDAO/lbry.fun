@@ -8,13 +8,13 @@ use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{ BTreeSet, HashMap };
 
-use crate::utils::DEFAULT_SECONDARY_RATIO;
+use crate::utils::DEFAULT_LBRY_RATIO;
 use crate::ExecutionError;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 // Memory identifiers for each variable
 pub const TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID: MemoryId = MemoryId::new(0);
-pub const SECONDARY_RATIO_MEM_ID: MemoryId = MemoryId::new(1);
+pub const LBRY_RATIO_MEM_ID: MemoryId = MemoryId::new(1);
 pub const TOTAL_ARCHIVED_BALANCE_MEM_ID: MemoryId = MemoryId::new(2);
 pub const APY_MEM_ID: MemoryId = MemoryId::new(3);
 pub const STAKES_MEM_ID: MemoryId = MemoryId::new(4);
@@ -23,7 +23,6 @@ pub const ARCHIVED_TRANSACTION_LOG_MEM_ID: MemoryId = MemoryId::new(6);
 pub const DISTRIBUTION_INTERVALS_MEM_ID: MemoryId = MemoryId::new(7);
 pub const LOGS_MEM_ID: MemoryId = MemoryId::new(8);
 pub const LOGS_COUNTER_ID: MemoryId = MemoryId::new(9);
-pub const CONFIGS_MEM_ID: MemoryId = MemoryId::new(10);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
@@ -50,8 +49,8 @@ thread_local! {
             MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID))
         )
     );
-    pub static SECONDARY_RATIO: RefCell<StableBTreeMap<(), SecondaryRatio, Memory>> = RefCell::new(
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(SECONDARY_RATIO_MEM_ID)))
+    pub static LBRY_RATIO: RefCell<StableBTreeMap<(), LbryRatio, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LBRY_RATIO_MEM_ID)))
     );
     pub static TOTAL_ARCHIVED_BALANCE: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_ARCHIVED_BALANCE_MEM_ID)))
@@ -63,10 +62,7 @@ thread_local! {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LOGS_MEM_ID)))
     );
     pub static LOG_COUNTER: RefCell<u64> = RefCell::new(0);
-    pub static PRIMARY_FEE: RefCell<u64> = RefCell::new(0);
-    pub static CONFIGS: RefCell<StableBTreeMap<(), Configs, Memory>> = RefCell::new(
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(CONFIGS_MEM_ID)))
-    );
+    pub static ALEX_FEE: RefCell<u64> = RefCell::new(0);
 }
 
 pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u64, Memory> {
@@ -77,9 +73,9 @@ pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u64, Memory> {
     })
 }
 
-pub fn get_secondary_ratio_mem() -> StableBTreeMap<(), SecondaryRatio, Memory> {
-    SECONDARY_RATIO.with(|ratio_map| {
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(SECONDARY_RATIO_MEM_ID)))
+pub fn get_lbry_ratio_mem() -> StableBTreeMap<(), LbryRatio, Memory> {
+    LBRY_RATIO.with(|ratio_map| {
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LBRY_RATIO_MEM_ID)))
     })
 }
 pub fn get_total_archived_balance_mem() -> StableBTreeMap<(), u64, Memory> {
@@ -94,12 +90,6 @@ pub fn get_distribution_interval_mem() -> StableBTreeMap<(), u32, Memory> {
     })
 }
 
-pub fn get_configs_mem() -> StableBTreeMap<(), Configs, Memory> {
-    CONFIGS.with(|configs_map| {
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(CONFIGS_MEM_ID)))
-    })
-}
-
 #[derive(CandidType, Deserialize, Clone)]
 pub struct Stake {
     pub amount: u64,
@@ -108,14 +98,14 @@ pub struct Stake {
 }
 
 #[derive(CandidType, Deserialize, Clone)]
-pub struct SecondaryRatio {
+pub struct LbryRatio {
     pub ratio: u64,
     pub time: u64,
 }
-impl Default for SecondaryRatio {
+impl Default for LbryRatio {
     fn default() -> Self {
-        SecondaryRatio {
-            ratio: DEFAULT_SECONDARY_RATIO, // Default value
+        LbryRatio {
+            ratio: DEFAULT_LBRY_RATIO, // Default value
             time: ic_cdk::api::time(), // Current timestamp
         }
     }
@@ -157,14 +147,6 @@ pub enum LogType {
     },
 }
 
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub struct Configs {
-    pub primary_token_id: Principal,
-    pub secondary_token_id: Principal,
-    pub tokenomics_canister_id: Principal,
-    pub icp_ledger_id: Principal,
-}
-
 impl Storable for Stake {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
@@ -188,7 +170,7 @@ impl Storable for ArchiveBalance {
 
     const BOUND: Bound = Bound::Unbounded;
 }
-impl Storable for SecondaryRatio {
+impl Storable for LbryRatio {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
@@ -212,18 +194,6 @@ impl Storable for DailyValues {
 }
 
 impl Storable for Log {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
-    }
-
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
-    }
-
-    const BOUND: Bound = Bound::Unbounded;
-}
-
-impl Storable for Configs {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }

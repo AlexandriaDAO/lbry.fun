@@ -1,23 +1,20 @@
 use crate::{
     storage::*,
     utils::{
-        principal_to_subaccount, DEFAULT_SECONDARY_RATIO, SCALING_FACTOR, STAKING_REWARD_PERCENTAGE,
+        principal_to_subaccount, DEFAULT_LBRY_RATIO, SCALING_FACTOR, STAKING_REWARD_PERCENTAGE,
     },
-    Configs,
-    CONFIGS,
 };
 use candid::{CandidType, Principal};
 use ic_cdk::{api::caller, query};
+use ic_ledger_types::AccountIdentifier;
 use serde::Deserialize;
 //swap
 #[query]
 pub async fn caller_subaccount() -> String {
-    // In ICRC-1, we return the subaccount as a hex string
-    let subaccount = principal_to_subaccount(&caller());
-    // Convert bytes to hex string manually
-    subaccount.iter()
-        .map(|byte| format!("{:02x}", byte))
-        .collect::<String>()
+    let canister_id: Principal = ic_cdk::api::id();
+    let account: AccountIdentifier =
+        AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller()));
+    return account.to_string();
 }
 //stake
 #[query]
@@ -56,16 +53,16 @@ pub fn get_total_unclaimed_icp_reward() -> u64 {
 
 #[query]
 pub fn get_current_staking_reward_percentage() -> String {
-    format!("Staking percentage {}%", STAKING_REWARD_PERCENTAGE / 100)
+    format!("Staking percentage {}", STAKING_REWARD_PERCENTAGE / 100)
 }
 
 #[query]
-pub fn get_current_secondary_ratio() -> u64 {
-    let secondary_ratio_map = get_secondary_ratio_mem();
+pub fn get_current_LBRY_ratio() -> u64 {
+    let lbry_ratio_map = get_lbry_ratio_mem();
 
-    match secondary_ratio_map.get(&()) {
-        Some(secondary_ratio) => return secondary_ratio.ratio, // Return the ratio if it exists
-        None => return DEFAULT_SECONDARY_RATIO,           //default case
+    match lbry_ratio_map.get(&()) {
+        Some(lbry_ratio) => return lbry_ratio.ratio, // Return the ratio if it exists
+        None => return DEFAULT_LBRY_RATIO,           //defult case
     }
 }
 
@@ -155,12 +152,5 @@ pub fn get_logs(page: Option<u64>, page_size: Option<u64>) -> PaginatedLogs {
             current_page: page,
             page_size,
         }
-    })
-}
-
-#[query]
-pub fn get_config() -> Option<Configs> {
-    CONFIGS.with(|configs| {
-        configs.borrow().get(&()).cloned()
     })
 }

@@ -1,0 +1,184 @@
+# ICP_SWAP Canister Change Log
+
+## Overview
+This file tracks all changes made to convert the audited icp_swap canister into a configurable launchpad canister.
+
+## Risk Levels
+- **LOW**: Safe conversions (renaming, read-only functions, organization)
+- **MEDIUM**: Bounded changes (configurability, events, initialization)
+- **HIGH**: Core logic modifications (fee distribution, staking→liquidity, algorithms)
+
+## Change Log
+
+### Token Renaming (ALEX/LBRY → primary/secondary)
+
+| Change ID | File | Risk | Description | Original | New | Justification | Security Impact | Test Status |
+|-----------|------|------|-------------|----------|-----|---------------|-----------------|-------------|
+| SWAP-001 | icp_swap.did | LOW | Rename type | `type LbryRatio` | `type SecondaryRatio` | Generic token naming | None | Pending |
+| SWAP-002 | icp_swap.did | LOW | Rename field | `lbry_ratio : opt LbryRatio` | `secondary_ratio : opt SecondaryRatio` | Generic token naming | None | Pending |
+| SWAP-003 | icp_swap.did | LOW | Rename function | `burn_LBRY : (nat64, opt blob) -> (Result)` | `burn_secondary : (nat64, opt blob) -> (Result)` | Generic token naming | None | Pending |
+| SWAP-004 | icp_swap.did | LOW | Rename function | `get_current_LBRY_ratio : () -> (nat64) query` | `get_current_secondary_ratio : () -> (nat64) query` | Generic token naming | None | Pending |
+| SWAP-005 | icp_swap.did | LOW | Rename function | `stake_ALEX : (nat64, opt blob) -> (Result)` | `stake_primary : (nat64, opt blob) -> (Result)` | Generic token naming | None | Pending |
+| SWAP-006 | icp_swap.did | LOW | Rename function | `un_stake_all_ALEX : (opt blob) -> (Result)` | `un_stake_all_primary : (opt blob) -> (Result)` | Generic token naming | None | Pending |
+| SWAP-007 | src/storage.rs | LOW | Rename import | `use crate::utils::DEFAULT_LBRY_RATIO` | `use crate::utils::DEFAULT_SECONDARY_RATIO` | Generic token naming | None | Pending |
+| SWAP-008 | src/storage.rs | LOW | Rename constant | `pub const LBRY_RATIO_MEM_ID` | `pub const SECONDARY_RATIO_MEM_ID` | Generic token naming | None | Pending |
+| SWAP-009 | src/storage.rs | LOW | Rename storage | `pub static LBRY_RATIO: RefCell<StableBTreeMap<(), LbryRatio, Memory>>` | `pub static SECONDARY_RATIO: RefCell<StableBTreeMap<(), SecondaryRatio, Memory>>` | Generic token naming | None | Pending |
+| SWAP-010 | src/storage.rs | LOW | Rename storage | `pub static ALEX_FEE: RefCell<u64>` | `pub static PRIMARY_FEE: RefCell<u64>` | Generic token naming | None | Pending |
+| SWAP-011 | src/storage.rs | LOW | Rename function | `pub fn get_lbry_ratio_mem()` | `pub fn get_secondary_ratio_mem()` | Generic token naming | None | Pending |
+| SWAP-012 | src/storage.rs | LOW | Rename struct | `pub struct LbryRatio` | `pub struct SecondaryRatio` | Generic token naming | None | Pending |
+| SWAP-013 | src/storage.rs | LOW | Update default | `ratio: DEFAULT_LBRY_RATIO` | `ratio: DEFAULT_SECONDARY_RATIO` | Generic token naming | None | Pending |
+| SWAP-014 | src/storage.rs | LOW | Rename impl | `impl Storable for LbryRatio` | `impl Storable for SecondaryRatio` | Generic token naming | None | Pending |
+| SWAP-015 | src/utils.rs | LOW | Rename import | `get_lbry_ratio_mem` | `get_secondary_ratio_mem` | Generic token naming | None | Pending |
+| SWAP-016 | src/utils.rs | LOW | Rename import | `LbryRatio` | `SecondaryRatio` | Generic token naming | None | Pending |
+| SWAP-017 | src/utils.rs | LOW | Rename import | `ALEX_FEE` | `PRIMARY_FEE` | Generic token naming | None | Pending |
+| SWAP-018 | src/utils.rs | LOW | Rename constant | `pub const ALEX_CANISTER_ID` | `pub const PRIMARY_TOKEN_CANISTER_ID` | Generic token naming | None | Pending |
+| SWAP-019 | src/utils.rs | LOW | Rename constant | `pub const LBRY_CANISTER_ID` | `pub const SECONDARY_TOKEN_CANISTER_ID` | Generic token naming | None | Pending |
+| SWAP-020 | src/utils.rs | LOW | Rename constant | `pub const DEFAULT_LBRY_RATIO` | `pub const DEFAULT_SECONDARY_RATIO` | Generic token naming | None | Pending |
+| SWAP-021 | src/utils.rs | LOW | Rename function | `pub async fn tokenomics_burn_LBRY_stats()` | `pub async fn tokenomics_burn_secondary_stats()` | Generic token naming | None | Pending |
+| SWAP-022 | src/utils.rs | LOW | Rename function | `pub(crate) fn update_current_LBRY_ratio()` | `pub(crate) fn update_current_secondary_ratio()` | Generic token naming | None | Pending |
+| SWAP-023 | src/utils.rs | LOW | Update comments | `// Get the StableBTreeMap for LBRY ratio` | `// Get the StableBTreeMap for secondary ratio` | Generic token naming | None | Pending |
+| SWAP-024 | src/utils.rs | LOW | Rename variable | `let lbry_ratio = LbryRatio` | `let secondary_ratio = SecondaryRatio` | Generic token naming | None | Pending |
+| SWAP-025 | src/utils.rs | LOW | Rename function | `pub(crate) fn update_ALEX_fee()` | `pub(crate) fn update_primary_fee()` | Generic token naming | None | Pending |
+| SWAP-026 | src/utils.rs | LOW | Update reference | `ALEX_FEE.with()` | `PRIMARY_FEE.with()` | Generic token naming | None | Pending |
+| SWAP-027 | src/utils.rs | LOW | Rename function | `pub(crate) async fn get_total_alex_staked()` | `pub(crate) async fn get_total_primary_staked()` | Generic token naming | None | Pending |
+| SWAP-028 | src/utils.rs | LOW | Update variable | `let alex_canister_id: Principal = get_principal(ALEX_CANISTER_ID)` | `let primary_canister_id: Principal = get_principal(PRIMARY_TOKEN_CANISTER_ID)` | Generic token naming | None | Pending |
+| SWAP-029 | src/utils.rs | LOW | Update string | `canister: "ALEX".to_string()` | `canister: "PRIMARY".to_string()` | Generic token naming | None | Pending |
+| SWAP-030 | src/utils.rs | LOW | Rename function | `pub(crate) async fn get_alex_fee()` | `pub(crate) async fn get_primary_fee()` | Generic token naming | None | Pending |
+| SWAP-031 | src/queries.rs | LOW | Update import | `DEFAULT_LBRY_RATIO` | `DEFAULT_SECONDARY_RATIO` | Generic token naming | None | Pending |
+| SWAP-032 | src/queries.rs | LOW | Add % symbol | `format!("Staking percentage {}", STAKING_REWARD_PERCENTAGE / 100)` | `format!("Staking percentage {}%", STAKING_REWARD_PERCENTAGE / 100)` | Bug fix from kongswap | None | Pending |
+| SWAP-033 | src/queries.rs | LOW | Rename function | `pub fn get_current_LBRY_ratio()` | `pub fn get_current_secondary_ratio()` | Generic token naming | None | Pending |
+| SWAP-034 | src/queries.rs | LOW | Update variable | `let lbry_ratio_map = get_lbry_ratio_mem()` | `let secondary_ratio_map = get_secondary_ratio_mem()` | Generic token naming | None | Pending |
+| SWAP-035 | src/queries.rs | LOW | Update variable | `Some(lbry_ratio) => return lbry_ratio.ratio` | `Some(secondary_ratio) => return secondary_ratio.ratio` | Generic token naming | None | Pending |
+| SWAP-036 | src/queries.rs | LOW | Update default | `None => return DEFAULT_LBRY_RATIO` | `None => return DEFAULT_SECONDARY_RATIO` | Generic token naming | None | Pending |
+| SWAP-037 | src/queries.rs | LOW | Fix typo | `//defult case` | `//default case` | Typo fix | None | Pending |
+| SWAP-038 | src/script.rs | LOW | Update import | `LbryRatio` | `SecondaryRatio` | Generic token naming | None | Pending |
+| SWAP-039 | src/script.rs | LOW | Update import | `LBRY_RATIO` | `SECONDARY_RATIO` | Generic token naming | None | Pending |
+| SWAP-040 | src/script.rs | LOW | Update field | `pub lbry_ratio: Option<LbryRatio>` | `pub secondary_ratio: Option<SecondaryRatio>` | Generic token naming | None | Pending |
+| SWAP-041 | src/script.rs | LOW | Update variable | `if let Some(lbry_ratio) = args.lbry_ratio` | `if let Some(secondary_ratio) = args.secondary_ratio` | Generic token naming | None | Pending |
+| SWAP-042 | src/script.rs | LOW | Update reference | `LBRY_RATIO.with()` | `SECONDARY_RATIO.with()` | Generic token naming | None | Pending |
+| SWAP-043 | src/script.rs | LOW | Update variable | `m.borrow_mut().insert((), lbry_ratio)` | `m.borrow_mut().insert((), secondary_ratio)` | Generic token naming | None | Pending |
+| SWAP-044 | src/script.rs | LOW | Update variable | `if let Some(ref ratio) = init_args.lbry_ratio` | `if let Some(ref ratio) = init_args.secondary_ratio` | Generic token naming | None | Pending |
+| SWAP-045 | src/script.rs | LOW | Update string | `"LBRY ratio provided: {}"` | `"Secondary ratio provided: {}"` | Generic token naming | None | Pending |
+| SWAP-046 | src/update.rs | LOW | Update import | `get_current_LBRY_ratio` | `get_current_secondary_ratio` | Generic token naming | None | Pending |
+| SWAP-047 | src/update.rs | LOW | Rename function | `pub async fn burn_LBRY()` | `pub async fn burn_secondary()` | Generic token naming | None | Pending |
+| SWAP-048 | src/update.rs | LOW | Rename function | `async fn stake_ALEX()` | `async fn stake_primary()` | Generic token naming | None | Pending |
+| SWAP-049 | src/update.rs | LOW | Rename function | `async fn un_stake_all_ALEX()` | `async fn un_stake_all_primary()` | Generic token naming | None | Pending |
+| SWAP-050 | src/update.rs | LOW | Update all ALEX/LBRY references | Multiple string literals, variable names, function calls | Updated to use primary/secondary | Generic token naming | None | Pending |
+
+## Summary Statistics
+- Total Changes: 50
+- Low Risk: 50
+- Medium Risk: 0
+- High Risk: 0
+- Tested: 0
+- Pending: 50
+
+## Notes
+- All changes in this batch are LOW RISK as they are simple renaming operations that don't change any logic
+- The renaming follows the pattern from the kongswap implementation to make tokens generic
+- Bug fix SWAP-032 adds the missing % symbol to the staking percentage display
+
+### Configurable Parameters Implementation
+
+| Change ID | File | Risk | Description | Original | New | Justification | Security Impact | Test Status |
+|-----------|------|------|-------------|----------|-----|---------------|-----------------|-------------|
+| SWAP-051 | src/storage.rs | MEDIUM | Add Configs memory ID | N/A | `pub const CONFIGS_MEM_ID: MemoryId = MemoryId::new(10);` | Store configurable parameters | None - new storage | Pending |
+| SWAP-052 | src/storage.rs | MEDIUM | Add Configs storage | N/A | `pub static CONFIGS: RefCell<StableBTreeMap<(), Configs, Memory>>` | Persistent config storage | None - follows existing pattern | Pending |
+| SWAP-053 | src/storage.rs | MEDIUM | Add Configs struct | N/A | `pub struct Configs { primary_token_id, secondary_token_id, tokenomics_canister_id, icp_ledger_id }` | Define configuration structure | None - data structure only | Pending |
+| SWAP-054 | src/storage.rs | MEDIUM | Add Configs Storable impl | N/A | `impl Storable for Configs` | Enable stable storage | None - follows existing pattern | Pending |
+| SWAP-055 | src/storage.rs | LOW | Add get_configs_mem | N/A | `pub fn get_configs_mem() -> StableBTreeMap<(), Configs, Memory>` | Access config storage | None - getter function | Pending |
+| SWAP-056 | src/script.rs | MEDIUM | Update InitArgs struct | 7 fields | 12 fields (added token IDs and interval) | Accept configurable parameters | None - initialization only | Pending |
+| SWAP-057 | src/script.rs | MEDIUM | Add InitArgs Default impl | N/A | `impl Default for InitArgs` with 3600s default interval | Provide sensible defaults | None - default values | Pending |
+| SWAP-058 | src/script.rs | MEDIUM | Initialize Configs in init | N/A | Store token IDs in CONFIGS if provided | Persist configuration | None - one-time setup | Pending |
+| SWAP-059 | src/script.rs | MEDIUM | Store distribution interval | N/A | Store interval in DISTRIBUTION_INTERVALS | Make interval configurable | None - existing storage | Pending |
+| SWAP-060 | src/script.rs | MEDIUM | Remove hardcoded interval | `const REWARD_DISTRIBUTION_INTERVAL: Duration` | Removed constant | Use configurable value | None - more flexible | Pending |
+| SWAP-061 | src/script.rs | MEDIUM | Update setup_timers | No parameters | Accept `distribution_interval_seconds: u64` | Use configurable interval | None - timer setup | Pending |
+| SWAP-062 | src/script.rs | MEDIUM | Update post_upgrade | Hardcoded interval | Read from DISTRIBUTION_INTERVALS | Persist interval across upgrades | None - existing pattern | Pending |
+
+### ICRC-1/ICRC-2 Standard Compliance
+
+| Change ID | File | Risk | Description | Original | New | Justification | Security Impact | Test Status |
+|-----------|------|------|-------------|----------|-----|---------------|-----------------|-------------|
+| SWAP-063 | src/update.rs | MEDIUM | Update send_icp to ICRC-1 | Uses old `ic_ledger_types::transfer` | Uses `icrc1_transfer` | ICRC-1 compliance | None - same functionality | Pending |
+| SWAP-064 | src/update.rs | MEDIUM | Use configurable ICP ledger | Hardcoded `MAINNET_LEDGER_CANISTER_ID` | Get from CONFIGS or default | Support different ledgers | None - fallback to default | Pending |
+| SWAP-065 | src/update.rs | LOW | Remove old ledger imports | Multiple ic_ledger_types imports | Only `MAINNET_LEDGER_CANISTER_ID` | Clean up unused imports | None - import cleanup | Pending |
+| SWAP-066 | src/update.rs | MEDIUM | Update deposit_icp_in_canister | Hardcoded ledger ID | Get from CONFIGS or default | Configurable ledger | None - same pattern | Pending |
+| SWAP-067 | src/utils.rs | MEDIUM | Add icrc2_approve function | N/A | `pub async fn icrc2_approve()` | DEX integration support | None - standard function | Pending |
+| SWAP-068 | src/utils.rs | MEDIUM | Add icrc2_allowance function | N/A | `pub async fn icrc2_allowance()` | Check DEX allowances | None - read-only | Pending |
+| SWAP-069 | src/utils.rs | MEDIUM | Update balance checking | Old `account_balance` API | Use `icrc1_balance_of` | ICRC-1 compliance | None - same functionality | Pending |
+| SWAP-070 | src/utils.rs | LOW | Update imports for ICRC | Old ledger types | ICRC ledger types | Use modern standards | None - import change | Pending |
+| SWAP-071 | src/utils.rs | LOW | Update principal_to_subaccount | Returns `Subaccount` type | Returns `[u8; 32]` | Remove old type dependency | None - same data | Pending |
+| SWAP-072 | src/error.rs | LOW | Add ConversionError | N/A | `ConversionError { details: String }` | Handle Nat to u64 conversion | None - error handling | Pending |
+| SWAP-073 | src/queries.rs | LOW | Update caller_subaccount | Uses `AccountIdentifier` | Manual hex encoding | Remove old dependency | None - display only | Pending |
+| SWAP-074 | src/queries.rs | LOW | Add get_config function | N/A | `pub fn get_config() -> Option<Configs>` | Query configuration | None - read-only | Pending |
+
+## Summary Statistics
+- Total Changes: 74
+- Low Risk: 55
+- Medium Risk: 19
+- High Risk: 0
+- Tested: 0
+- Pending: 74
+
+## Implementation Notes
+- All configurable parameters have sensible defaults matching the original hardcoded values
+- ICRC-1/ICRC-2 compliance improves interoperability without changing core functionality
+- Configuration is stored in stable memory and persists across upgrades
+- The distribution interval is now configurable (default 1 hour) as requested
+
+### Additional Changes Found and Fixed
+
+| Change ID | File | Risk | Description | Original | New | Justification | Security Impact | Test Status |
+|-----------|------|------|-------------|----------|-----|---------------|-----------------|-------------|
+| SWAP-075 | src/update.rs | MEDIUM | Fix withdraw_token PRIMARY_CANISTER_ID | Hardcoded `PRIMARY_CANISTER_ID` | Get from CONFIGS | Use configurable value | None - same behavior | Pending |
+| SWAP-076 | src/update.rs | MEDIUM | Fix deposit_token PRIMARY_CANISTER_ID | Hardcoded `PRIMARY_CANISTER_ID` | Get from CONFIGS | Use configurable value | None - same behavior | Pending |
+| SWAP-077 | src/update.rs | MEDIUM | Fix mint_secondary SECONDARY_CANISTER_ID | Hardcoded `SECONDARY_CANISTER_ID` | Get from CONFIGS | Use configurable value | None - same behavior | Pending |
+| SWAP-078 | src/update.rs | MEDIUM | Fix burn_token SECONDARY_CANISTER_ID | Hardcoded `SECONDARY_CANISTER_ID` | Get from CONFIGS | Use configurable value | None - same behavior | Pending |
+| SWAP-079 | src/update.rs | MEDIUM | Fix mint_primary TOKENOMICS_CANISTER_ID | Hardcoded `TOKENOMICS_CANISTER_ID` | Get from CONFIGS | Use configurable value | None - same behavior | Pending |
+| SWAP-080 | src/update.rs | LOW | Fix function name case | `update_PRIMARY_fee` calls | `update_primary_fee` | Consistent naming | None - cosmetic | Pending |
+| SWAP-081 | src/utils.rs | LOW | Fix error log function name | `"get_total_alex_staked"` | `"get_total_primary_staked"` | Match renamed function | None - logging only | Pending |
+| SWAP-082 | src/script.rs | HIGH | Remove backward compatibility | Optional configs with Alexandria defaults | Required configs (except ICP ledger) | New projects need explicit config | Fail-fast on misconfiguration | Pending |
+| SWAP-083 | src/script.rs | HIGH | Require distribution interval | Default 3600 seconds | Required parameter | Explicit configuration | Fail-fast on misconfiguration | Pending |
+| SWAP-084 | src/update.rs | MEDIUM | Document within_max_limit removal | Function was commented out | Added explanatory comment | Known bug in logic | Prevents incorrect limit checks | Pending |
+
+## Summary Statistics
+- Total Changes: 84
+- Low Risk: 57
+- Medium Risk: 25
+- High Risk: 2
+- Tested: 0
+- Pending: 84
+
+## Key Decisions
+- All token canister IDs must be explicitly configured for new projects (no defaults)
+- Distribution interval must be explicitly set (no default)
+- ICP ledger ID can default to mainnet ledger for convenience
+- The within_max_limit logic was removed due to a known bug where failed burns still increase burn_amount
+- All hardcoded canister references have been replaced with configurable values
+
+## Pending Implementation
+- Event tracking enhancement - See ICP_SWAP_REMAINING_TASKS.md
+- Comprehensive minimum amount checks - See ICP_SWAP_REMAINING_TASKS.md
+- Created comprehensive task document for remaining implementation items (SWAP-085)
+
+### Error Type Synchronization Fix
+
+| Change ID | File | Risk | Description | Original | New | Justification | Security Impact | Test Status |
+|-----------|------|------|-------------|----------|-----|---------------|-----------------|-------------|
+| SWAP-086 | src/update.rs | MEDIUM | Add TokenomicsExecutionError type | N/A | Added enum matching tokenomics error type | Proper error decoding | None - error handling only | Pending |
+| SWAP-087 | src/update.rs | MEDIUM | Update mint_primary error handling | Decode as Result<String, String> | Decode as Result<String, TokenomicsExecutionError> | Fix error message display | None - improves UX | Pending |
+
+## Summary Statistics
+- Total Changes: 87
+- Low Risk: 57
+- Medium Risk: 28
+- High Risk: 2
+- Tested: 0
+- Pending: 87
+
+## Implementation Notes
+- All configurable parameters have sensible defaults matching the original hardcoded values
+- ICRC-1/ICRC-2 compliance improves interoperability without changing core functionality
+- Configuration is stored in stable memory and persists across upgrades
+- The distribution interval is now configurable (default 1 hour) as requested
+- Error type synchronization ensures users see meaningful error messages from tokenomics
