@@ -69,7 +69,7 @@ const getTokenPools = createAsyncThunk<
 
     return safeResult;
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching token pools:', error instanceof Error ? error.message : 'Unknown error');
     return rejectWithValue({
       title: "Unknown Error",
       message: "An unknown error occurred",

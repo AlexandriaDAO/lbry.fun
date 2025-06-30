@@ -63,12 +63,13 @@ const TokenomicsTab: React.FC = () => {
             initialRewardPerBurnUnit
         };
         
-        console.log('TokenomicsTab calculated values:', {
-            ...result,
-            poolId: poolData?.[0],
-            hasSchedule: !!tokenomicsSchedule,
-            scheduleLength: tokenomicsSchedule?.primary_mint_per_threshold?.length || 0
-        });
+        // Debug logging commented out to avoid potential serialization issues
+        // console.log('TokenomicsTab calculated values:', {
+        //     ...result,
+        //     poolId: poolData?.[0],
+        //     hasSchedule: !!tokenomicsSchedule,
+        //     scheduleLength: tokenomicsSchedule?.primary_mint_per_threshold?.length || 0
+        // });
         
         return result;
     }, [poolData, tokenomicsSchedule]);

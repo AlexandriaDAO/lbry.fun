@@ -35,7 +35,7 @@ const fetchTokenLogosForPool = createAsyncThunk<
 
     return { poolId, primaryTokenLogo, secondaryTokenLogo };
   } catch (error) {
-    console.error("Error fetching token logos for pool:", poolId, error);
+    console.error("Error fetching token logos for pool:", poolId, error instanceof Error ? error.message : 'Unknown error');
     return rejectWithValue(`Failed to fetch logos for pool ${poolId}`);
   }
 });

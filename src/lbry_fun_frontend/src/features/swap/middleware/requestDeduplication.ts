@@ -79,6 +79,24 @@ interface AsyncThunkActionMeta {
   };
 }
 
+/**
+ * Safely stringify values that might contain BigInt
+ */
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value, (key, val) => {
+      // Convert BigInt to string to avoid serialization errors
+      if (typeof val === 'bigint') {
+        return val.toString();
+      }
+      return val;
+    });
+  } catch (error) {
+    // Fallback for any other serialization issues
+    return String(value);
+  }
+}
+
 function generateRequestKey(action: AsyncThunkActionMeta): string {
   const baseKey = action.type.replace('/pending', '');
   
@@ -100,8 +118,8 @@ function generateRequestKey(action: AsyncThunkActionMeta): string {
       return `${baseKey}:${arg.userPrincipal}`;
     }
     
-    // Default: stringify the argument
-    return `${baseKey}:${JSON.stringify(arg)}`;
+    // Default: safely stringify the argument
+    return `${baseKey}:${safeStringify(arg)}`;
   }
   
   return baseKey;

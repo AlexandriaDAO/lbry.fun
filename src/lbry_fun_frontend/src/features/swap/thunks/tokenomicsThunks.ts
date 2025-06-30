@@ -33,7 +33,7 @@ export const fetchTokenomicsSchedule = createAsyncThunk<
     
     return result;
   } catch (error) {
-    console.error("Failed to fetch tokenomics schedule:", error);
+    console.error("Failed to fetch tokenomics schedule:", error instanceof Error ? error.message : "Unknown error");
     return rejectWithValue({
       title: "Failed to Load Tokenomics",
       message: "Unable to fetch tokenomics schedule data"
@@ -76,7 +76,7 @@ export const fetchTokenomicsCurrentState = createAsyncThunk<
         const totalSupply = await primaryTokenActor.icrc1_total_supply();
         circulatingSupply = totalSupply.toString();
       } catch (error) {
-        console.warn("Failed to fetch circulating supply:", error);
+        console.warn("Failed to fetch circulating supply:", error instanceof Error ? error.message : "Unknown error");
       }
     }
     
@@ -89,7 +89,7 @@ export const fetchTokenomicsCurrentState = createAsyncThunk<
     
     return result;
   } catch (error) {
-    console.error("Failed to fetch tokenomics current state:", error);
+    console.error("Failed to fetch tokenomics current state:", error instanceof Error ? error.message : "Unknown error");
     return rejectWithValue({
       title: "Failed to Load Current State",
       message: "Unable to fetch current tokenomics progress"

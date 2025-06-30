@@ -1,49 +1,11 @@
 type ArchiveBalance = record { icp : nat64 };
-type Configs = record {
-  secondary_token_id : principal;
-  icp_ledger_id : principal;
-  primary_token_id : principal;
-  tokenomics_cansiter_id : principal;
-};
 type DailyValues = record { values : vec record { nat32; nat } };
-type DistributionAllocations = record {
-  stakers_allocated : nat64;
-  lp_treasury_allocated : nat64;
-  alexandria_allocated : nat64;
-};
-type DistributionEvent = record {
-  results : DistributionResults;
-  total_available : nat64;
-  timestamp : nat64;
-  allocations : DistributionAllocations;
-  event_id : nat64;
-  distribution_cycle : nat32;
-};
-type DistributionResults = record {
-  lp_provision_status : LpProvisionStatus;
-  stakers_rollover : nat64;
-  alexandria_sent : opt nat64;
-  error_details : opt text;
-  lp_treasury_added : nat64;
-  stakers_distributed : opt nat64;
-};
-type DistributionSummary = record {
-  lifetime_totals : LifetimeDistributionTotals;
-  current_lp_provision_queue : nat64;
-  total_alexandria_sent : nat64;
-  total_lp_treasury_balance : nat64;
-  total_stakers_distributed : nat64;
-  last_distribution : opt DistributionEvent;
-  total_cycles : nat32;
-};
 type ExecutionError = variant {
   InvalidAmount : record { details : text; amount : nat64; reason : text };
-  TradingNotEnabled : record { reason : text };
   Underflow : record { operation : text; details : text };
   DivisionFailed : record { operation : text; details : text };
   MultiplicationOverflow : record { operation : text; details : text };
   AdditionOverflow : record { operation : text; details : text };
-  InsufficientAllowance : record { available : nat; required : nat };
   RewardDistributionError : record { reason : text };
   RateLookupFailed : record { details : text };
   InsufficientBalance : record {
@@ -98,23 +60,13 @@ type ExecutionError = variant {
 type InitArgs = record {
   apy : opt vec record { nat32; DailyValues };
   stakes : opt vec record { principal; Stake };
-  secondary_token_id : opt principal;
-  tokenomics_canister_id : opt principal;
-  icp_ledger_id : opt principal;
   total_archived_balance : opt nat64;
-  secondary_ratio : opt SecondaryRatio;
-  primary_token_id : opt principal;
   archived_transaction_log : opt vec record { principal; ArchiveBalance };
   total_unclaimed_icp_reward : opt nat64;
-  distribution_interval_seconds : nat64;
+  lbry_ratio : opt LbryRatio;
   distribution_intervals : opt nat32;
 };
-type LifetimeDistributionTotals = record {
-  alexandria_total : nat64;
-  lp_treasury_total : nat64;
-  stakers_total : nat64;
-  total_distributed : nat64;
-};
+type LbryRatio = record { time : nat64; ratio : nat64 };
 type Log = record {
   function : text;
   log_type : LogType;
@@ -126,11 +78,6 @@ type LogType = variant {
   Error : record { error : ExecutionError };
   Info : record { detail : text };
 };
-type LpProvisionStatus = variant {
-  Failed : record { reason : text };
-  Success : record { lp_tokens : nat };
-  Pending;
-};
 type PaginatedLogs = record {
   page_size : nat64;
   logs : vec Log;
@@ -138,29 +85,20 @@ type PaginatedLogs = record {
   current_page : nat64;
 };
 type Result = variant { Ok : text; Err : ExecutionError };
-type Result_1 = variant { Ok : text; Err : text };
-type SecondaryRatio = record { time : nat64; ratio : nat64 };
 type Stake = record { time : nat64; reward_icp : nat64; amount : nat64 };
 service : (opt InitArgs) -> {
-  burn_secondary : (nat64, opt blob) -> (Result);
+  burn_LBRY : (nat64, opt blob) -> (Result);
   caller_subaccount : () -> (text) query;
   claim_icp_reward : (opt blob) -> (Result);
-  dev_trigger_distribution : () -> (Result_1);
   get_all_apy_values : () -> (vec record { nat32; nat }) query;
   get_all_archive_balances : () -> (
       vec record { principal; ArchiveBalance },
     ) query;
   get_all_stakes : () -> (vec record { principal; Stake }) query;
-  get_config : () -> (Configs) query;
-  get_current_secondary_ratio : () -> (nat64) query;
+  get_current_LBRY_ratio : () -> (nat64) query;
   get_current_staking_reward_percentage : () -> (text) query;
-  get_distribution_events : (nat64, nat32) -> (vec DistributionEvent) query;
   get_distribution_interval : () -> (nat32) query;
-  get_distribution_interval_seconds : () -> (nat64) query;
-  get_distribution_summary : () -> (DistributionSummary) query;
-  get_latest_distribution_event : () -> (opt DistributionEvent) query;
   get_logs : (opt nat64, opt nat64) -> (PaginatedLogs) query;
-  get_lp_treasury_balance : () -> (nat64) query;
   get_scaling_factor : () -> (nat) query;
   get_stake : (principal) -> (opt Stake) query;
   get_stakers_count : () -> (nat64) query;
@@ -168,7 +106,7 @@ service : (opt InitArgs) -> {
   get_total_unclaimed_icp_reward : () -> (nat64) query;
   get_user_archive_balance : (principal) -> (opt ArchiveBalance) query;
   redeem : (opt blob) -> (Result);
-  stake_primary : (nat64, opt blob) -> (Result);
+  stake_ALEX : (nat64, opt blob) -> (Result);
   swap : (nat64, opt blob) -> (Result);
-  un_stake_all_primary : (opt blob) -> (Result);
+  un_stake_all_ALEX : (opt blob) -> (Result);
 }

@@ -68,7 +68,9 @@ export function getLogMessage(logType: CanisterLogType): string {
     
     if (typeof errorValue === 'object' && errorValue !== null) {
       // For complex error types with nested data
-      return `${errorKey}: ${JSON.stringify(errorValue)}`;
+      return `${errorKey}: ${JSON.stringify(errorValue, (key, value) => 
+        typeof value === 'bigint' ? value.toString() : value
+      )}`;
     } else if (errorValue !== undefined && errorValue !== null) {
       // For errors with simple values
       return `${errorKey}: ${errorValue}`;

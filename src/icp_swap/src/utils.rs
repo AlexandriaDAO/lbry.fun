@@ -1,23 +1,43 @@
 use crate::{
-    get_config, get_distribution_interval, get_distribution_interval_mem, get_secondary_ratio_mem, get_stake, get_total_archived_balance, get_total_archived_balance_mem, get_total_unclaimed_icp_reward, get_total_unclaimed_icp_reward_mem, ArchiveBalance, ExecutionError, SecondaryRatio, Log, LogType, ARCHIVED_TRANSACTION_LOG, CONFIGS, DEFAULT_ADDITION_OVERFLOW_ERROR, DEFAULT_MULTIPLICATION_OVERFLOW_ERROR, DEFAULT_UNDERFLOW_ERROR, LOGS, LOG_COUNTER, PRIMARY_FEE
+    get_distribution_interval,
+    get_distribution_interval_mem,
+    get_lbry_ratio_mem,
+    get_stake,
+    get_total_archived_balance,
+    get_total_archived_balance_mem,
+    get_total_unclaimed_icp_reward,
+    get_total_unclaimed_icp_reward_mem,
+    ArchiveBalance,
+    ExecutionError,
+    LbryRatio,
+    Log,
+    LogType,
+    ALEX_FEE,
+    ARCHIVED_TRANSACTION_LOG,
+    DEFAULT_ADDITION_OVERFLOW_ERROR,
+    DEFAULT_MULTIPLICATION_OVERFLOW_ERROR,
+    DEFAULT_UNDERFLOW_ERROR,
+    LOGS,
+    LOG_COUNTER,
 };
 use candid::{ CandidType, Nat, Principal };
 use ic_cdk::api::call::RejectionCode;
 use ic_cdk::{ self, caller };
 use ic_ledger_types::AccountIdentifier;
 use ic_ledger_types::Subaccount;
-use ic_ledger_types::{ AccountBalanceArgs, DEFAULT_SUBACCOUNT };
+use ic_ledger_types::{ AccountBalanceArgs, Tokens, DEFAULT_SUBACCOUNT, MAINNET_LEDGER_CANISTER_ID };
 use serde::Deserialize;
 
-pub const STAKING_REWARD_PERCENTAGE: u64 = 100; // 1% (in basis points, 100 = 1%)
+pub const STAKING_REWARD_PERCENTAGE: u64 = 100; // 1%
+pub const ALEX_CANISTER_ID: &str = "ysy5f-2qaaa-aaaap-qkmmq-cai";
+pub const LBRY_CANISTER_ID: &str = "y33wz-myaaa-aaaap-qkmna-cai";
+pub const TOKENOMICS_CANISTER_ID: &str = "5abki-kiaaa-aaaap-qkmsa-cai";
 pub const XRC_CANISTER_ID: &str = "uf6dk-hyaaa-aaaaq-qaaaq-cai";
-pub const ICP_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
-
 pub const ICP_TRANSFER_FEE: u64 = 10_000;
 pub const MAX_DAYS: u32 = 30;
 pub const SCALING_FACTOR: u128 = 1_000_000_000_000; // Adjust based on your precision needs
 pub const BURN_CYCLE_FEE: u64 = 10_000_000_000;
-pub const DEFAULT_SECONDARY_RATIO: u64 = 400;
+pub const DEFAULT_LBRY_RATIO: u64 = 400;
 pub const E8S: u64 = 100_000_000;
 pub const LOGS_LIMIT: u64 = 100_000;
 
@@ -94,11 +114,10 @@ pub fn principal_to_subaccount(principal_id: &Principal) -> Subaccount {
 // }
 
 //remove
-pub async fn tokenomics_burn_secondary_stats() -> Result<(u64, u64), String> {
-    let tokenomics_canister_id=get_config().tokenomics_cansiter_id;
+pub async fn tokenomics_burn_LBRY_stats() -> Result<(u64, u64), String> {
     let result: Result<(u64, u64), String> = ic_cdk
         ::call::<(), (u64, u64)>(
-            tokenomics_canister_id,
+            Principal::from_text(TOKENOMICS_CANISTER_ID).expect("Could not decode the principal."),
             "get_max_stats",
             ()
         ).await
@@ -198,25 +217,25 @@ pub(crate) fn sub_to_unclaimed_amount(amount: u64) -> Result<(), ExecutionError>
     Ok(())
 }
 
-pub(crate) fn update_current_secondary_ratio(
+pub(crate) fn update_current_LBRY_ratio(
     new_ratio: u64,
     current_time: u64
 ) -> Result<(), ExecutionError> {
-    // Get the StableBTreeMap for secondary ratio
-    let mut secondary_ratio_map = get_secondary_ratio_mem();
+    // Get the StableBTreeMap for LBRY ratio
+    let mut lbry_ratio_map = get_lbry_ratio_mem();
 
-    // Create a new SecondaryRatio instance with the provided values
-    let secondary_ratio = SecondaryRatio {
+    // Create a new LbryRatio instance with the provided values
+    let lbry_ratio = LbryRatio {
         ratio: new_ratio,
         time: current_time,
     };
 
-    // Insert or update the SecondaryRatio value at the key `()`
-    secondary_ratio_map.insert((), secondary_ratio);
+    // Insert or update the LbryRatio value at the key `()`
+    lbry_ratio_map.insert((), lbry_ratio);
     Ok(())
 }
-pub(crate) fn update_primary_fee(fee: u64) -> Result<(), ExecutionError> {
-    PRIMARY_FEE.with(|fee_cell| {
+pub(crate) fn update_ALEX_fee(fee: u64) -> Result<(), ExecutionError> {
+    ALEX_FEE.with(|fee_cell| {
         *fee_cell.borrow_mut() = fee;
     });
     Ok(())
@@ -259,8 +278,8 @@ pub(crate) fn archive_user_transaction(amount: u64) -> Result<String, ExecutionE
     Ok("Transaction added successfully!".to_string())
 }
 
-pub(crate) async fn get_total_primary_staked() -> Result<u64, ExecutionError> {
-    let primary_token_id=get_config().primary_token_id;
+pub(crate) async fn get_total_alex_staked() -> Result<u64, ExecutionError> {
+    let alex_canister_id: Principal = get_principal(ALEX_CANISTER_ID);
     let canister_id = ic_cdk::api::id();
     let args = BalanceOfArgs {
         owner: canister_id,
@@ -268,7 +287,7 @@ pub(crate) async fn get_total_primary_staked() -> Result<u64, ExecutionError> {
     };
 
     let result: Result<(Nat,), (RejectionCode, String)> = ic_cdk::call(
-        primary_token_id,
+        alex_canister_id,
         "icrc1_balance_of",
         (args,)
     ).await;
@@ -280,7 +299,7 @@ pub(crate) async fn get_total_primary_staked() -> Result<u64, ExecutionError> {
                 .map_err(|_|
                     ExecutionError::new_with_log(
                         caller(),
-                        "get_total_primary_staked",
+                        "get_total_alex_staked",
                         ExecutionError::StateError("Balance exceeds u64 max value".to_string())
                     )
                 ),
@@ -288,9 +307,9 @@ pub(crate) async fn get_total_primary_staked() -> Result<u64, ExecutionError> {
             Err(
                 ExecutionError::new_with_log(
                     caller(),
-                    "get_total_primary_staked",
+                    "get_total_alex_staked",
                     ExecutionError::CanisterCallFailed {
-                        canister: "primary".to_string(),
+                        canister: "ALEX".to_string(),
                         method: "icrc1_balance_of".to_string(),
                         details: format!("Rejection code: {:?}, Message: {}", code, msg),
                     }
@@ -300,52 +319,33 @@ pub(crate) async fn get_total_primary_staked() -> Result<u64, ExecutionError> {
 }
 pub(crate) async fn fetch_canister_icp_balance() -> Result<u64, ExecutionError> {
     let canister_id = ic_cdk::api::id();
-    let icp_ledger_id = get_config().icp_ledger_id;
-    
-    // Use ICRC-1 standard balance query
-    let account = Account {
-        owner: canister_id,
-        subaccount: None,
+    let account_identifier = AccountIdentifier::new(&canister_id, &DEFAULT_SUBACCOUNT);
+    let balance_args = AccountBalanceArgs {
+        account: account_identifier,
     };
-    
-    let result: Result<(Nat,), (RejectionCode, String)> = ic_cdk::call(
-        icp_ledger_id,
-        "icrc1_balance_of",
-        (account,)
-    ).await;
-    
-    match result {
-        Ok((balance,)) => {
-            // Convert Nat to u64
-            balance.0.try_into().map_err(|_| 
-                ExecutionError::new_with_log(
-                    caller(),
-                    "fetch_canister_icp_balance",
-                    ExecutionError::MultiplicationOverflow {
-                        operation: "fetch_canister_icp_balance".to_string(),
-                        details: "Balance exceeds u64 maximum".to_string(),
-                    }
-                )
-            )
-        },
-        Err((code, msg)) => {
-            Err(ExecutionError::new_with_log(
+
+    // Call the ledger canister's `account_balance` method and extract the balance in e8s (u64)
+    let result = ic_ledger_types
+        ::account_balance(MAINNET_LEDGER_CANISTER_ID, balance_args).await
+        .map_err(|e|
+            ExecutionError::new_with_log(
                 caller(),
                 "fetch_canister_icp_balance",
                 ExecutionError::CanisterCallFailed {
-                    canister: icp_ledger_id.to_string(),
-                    method: "icrc1_balance_of".to_string(),
-                    details: format!("Call failed with code {:?}: {}", code, msg),
+                    canister: MAINNET_LEDGER_CANISTER_ID.to_string(),
+                    method: "account_balance".to_string(),
+                    details: format!("Rejection call failed: {:?}", e),
                 }
-            ))
-        }
-    }
+            )
+        );
+    // Convert the Tokens to u64 (in e8s) and return
+    result.map(|tokens| tokens.e8s())
 }
 
-pub(crate) async fn get_primary_fee() -> Result<u64, ExecutionError> {
-    let primary_token_id=get_config().primary_token_id;
+pub(crate) async fn get_alex_fee() -> Result<u64, ExecutionError> {
+    let alex_canister_id: Principal = get_principal(ALEX_CANISTER_ID);
     let result: Result<(Nat,), (RejectionCode, String)> = ic_cdk::call(
-        primary_token_id,
+        alex_canister_id,
         "icrc1_fee",
         ()
     ).await;
@@ -360,9 +360,9 @@ pub(crate) async fn get_primary_fee() -> Result<u64, ExecutionError> {
             Err(
                 ExecutionError::new_with_log(
                     caller(),
-                    "get_primary_fee",
+                    "get_alex_fee",
                     ExecutionError::CanisterCallFailed {
-                        canister: primary_token_id.to_string(),
+                        canister: ALEX_CANISTER_ID.to_string(),
                         method: "icrc1_fee".to_string(),
                         details: format!("Rejection code: {:?}, Message: {}", code, msg),
                     }
@@ -440,183 +440,4 @@ pub enum ExchangeRateError {
     ForexQuoteAssetNotFound,
     StablecoinRateNotFound,
     Pending,
-}
-
-#[derive(CandidType, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Account {
-    pub owner: Principal,
-    pub subaccount: Option<[u8; 32]>,
-}
-
-#[derive(CandidType, Deserialize, Debug)]
-pub struct ApproveArgs {
-    pub from_subaccount: Option<[u8; 32]>,
-    pub spender: Account,
-    pub amount: Nat,
-    pub expected_allowance: Option<Nat>,
-    pub expires_at: Option<u64>,
-    pub fee: Option<Nat>,
-    pub memo: Option<Vec<u8>>,
-    pub created_at_time: Option<u64>,
-}
-
-#[derive(CandidType, Deserialize, Debug)]
-pub enum ApproveError {
-    BadFee { expected_fee: Nat },
-    BadMemo,
-    Duplicate,
-    TemporarilyUnavailable,
-    InsufficientFunds { balance: Nat },
-    AllowanceChanged { current_allowance: Nat },
-    Expired { ledger_time: u64 },
-    TooOld,
-    CreatedInFuture { ledger_time: u64 },
-    GenericError{ error_code: Nat, message: String},
-    Throttled,
-    Unauthorized{ tokens: Nat },
-}
-
-pub(crate) fn get_primary_canister_id() -> Principal {
-    get_config().primary_token_id
-}
-
-pub(crate) async fn icrc2_approve(
-    token_canister_id: Principal,
-    spender: Principal,
-    amount: Nat,
-) -> Result<Nat, String> {
-    let args = ApproveArgs {
-        from_subaccount: None,
-        spender: Account {
-            owner: spender,
-            subaccount: None,
-        },
-        amount,
-        expected_allowance: None,
-        expires_at: None,
-        fee: None,
-        memo: None,
-        created_at_time: None,
-    };
-
-    let result: Result<(Result<Nat, ApproveError>,), (RejectionCode, String)> =
-        ic_cdk::call(token_canister_id, "icrc2_approve", (args,)).await;
-
-    match result {
-        Ok((Ok(value),)) => Ok(value),
-        Ok((Err(err),)) => Err(format!("ICRC-2 approve failed: {:?}", err)),
-        Err((code, msg)) => Err(format!(
-            "ICRC-2 approve call failed: rejection code {:?}, message: {}",
-            code, msg
-        )),
-    }
-}
-
-#[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct AllowanceArgs {
-    pub account: Account,
-    pub spender: Account,
-}
-
-#[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct Allowance {
-    pub allowance: Nat,
-    pub expires_at: Option<u64>,
-}
-
-#[derive(CandidType, Deserialize, Debug)]
-pub enum AllowanceError {
-    BadSpender,
-    BadSubaccount,
-    TemporarilyUnavailable,
-    GenericError {
-        error_code: Nat,
-        message: String,
-    },
-    Throttled,
-}
-
-pub(crate) async fn icrc2_allowance(
-    token_canister_id: Principal,
-    owner: Principal,
-    spender: Principal,
-) -> Result<Allowance, String> {
-    let args = AllowanceArgs {
-        account: Account {
-            owner,
-            subaccount: None,
-        },
-        spender: Account {
-            owner: spender,
-            subaccount: None,
-        },
-    };
-
-    let result: Result<(Result<Allowance, AllowanceError>,), (RejectionCode, String)> =
-        ic_cdk::call(token_canister_id, "icrc2_allowance", (args,)).await;
-
-    match result {
-        Ok((Ok(allowance),)) => Ok(allowance),
-        Ok((Err(err),)) => Err(format!("ICRC-2 allowance failed: {:?}", err)),
-        Err((code, msg)) => Err(format!(
-            "ICRC-2 allowance call failed: rejection code {:?}, message: {}",
-            code, msg
-        )),
-    }
-}
-
-pub(crate) async fn get_primary_token_symbol() -> Result<String, String> {
-    let primary_token_id = get_config().primary_token_id;
-    let result: Result<(String,), (RejectionCode, String)> =
-        ic_cdk::call(primary_token_id, "icrc1_symbol", ()).await;
-
-    result
-        .map(|(symbol,)| symbol)
-        .map_err(|(code, msg)| format!("Failed to get symbol: {} {:?}", msg, code))
-}
-
-// Token status structure for querying parent canister
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub struct TokenStatus {
-    pub created_time: u64,
-    pub pool_creation_failed: bool,
-    pub pool_created_at: u64,
-    pub launch_delay_seconds: u64,
-}
-
-pub async fn is_live() -> Result<bool, String> {
-    // The parent canister (lbry_fun) is the one that created this canister
-    // We need to hardcode this for now since it's not stored in config
-    // In production, this should be passed during initialization
-    let parent_canister = Principal::from_text("oni4e-oyaaa-aaaap-qp2pq-cai")
-        .unwrap_or_else(|_| ic_cdk::api::caller()); // Fallback to caller if parsing fails
-    
-    // Call the parent canister to get token status
-    let result: Result<(Option<TokenStatus>,), _> = ic_cdk::call(
-        parent_canister,
-        "get_token_status_by_swap_canister",
-        (ic_cdk::api::id(),)
-    ).await;
-    
-    match result {
-        Ok((Some(status),)) => {
-            // Check if pool creation failed
-            if status.pool_creation_failed {
-                return Ok(false);
-            }
-            
-            // Check if pool was created
-            if status.pool_created_at == 0 {
-                return Ok(false);
-            }
-            
-            // Check if launch delay has passed since creation
-            let current_time = ic_cdk::api::time();
-            let launch_delay_nanos = status.launch_delay_seconds * 1_000_000_000;
-   
-            Ok(current_time >= status.created_time + launch_delay_nanos)
-        },
-        Ok((None,)) => Err("Token not found in parent canister".to_string()),
-        Err((code, msg)) => Err(format!("Failed to get token status: {:?} - {}", code, msg)),
-    }
 }

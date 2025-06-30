@@ -20,7 +20,7 @@ export class SwapErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Swap error boundary caught error:', error, errorInfo);
+    console.error('Swap error boundary caught error:', error.message, errorInfo.componentStack);
   }
 
   handleReset = () => {

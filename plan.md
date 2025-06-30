@@ -1,8 +1,6 @@
 A1: Distribution tracking frontend plan -> Kongswap lp problem
-A2: 
-A3: Terminals splitscreen.
-A4: Status popups.
-
+A2: Error log getting error logs.
+A3: backend status button handlings.
 
 
 
@@ -153,3 +151,4 @@ NVkSolD-1AJcJ0BMfEASJjIuak3Y6CvDJZ4XOIUbU9g
 93mQRQG7zpvKQj3sUaDlNu_dOWFmb3-vp2Myu8sw03I 09/2022
 QXvFGeh4LaqKQD7pxNOjs48FmFEjSAhhzxgvBairAFc
 bqQgrxMXYFJXTqS5EF_XgmHUYyLNPXUv5Ze_c0RlW18 
+- USDC version for the professional DAO builder.

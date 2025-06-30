@@ -64,7 +64,7 @@ export const fetchTransactionHistory = createAsyncThunk<
       };
       
     } catch (error) {
-      console.error("Failed to fetch transaction history:", error);
+      console.error("Failed to fetch transaction history:", error instanceof Error ? error.message : "Unknown error");
       return rejectWithValue(error instanceof Error ? error.message : "Unknown error");
     }
   }
@@ -201,7 +201,7 @@ export const getTokenomicsInfo = createAsyncThunk<
         maxSecondaryThreshold: maxStats[0].toString()
       };
     } catch (error) {
-      console.error("Error fetching tokenomics info:", error);
+      console.error("Error fetching tokenomics info:", error instanceof Error ? error.message : "Unknown error");
       return rejectWithValue({
         title: "Failed to fetch tokenomics info",
         message: "Unable to retrieve the tokenomics information",
@@ -223,7 +223,7 @@ export const getTotalPrimarySupply = createAsyncThunk<
       const totalSupply = await actor.icrc1_total_supply();
       return totalSupply.toString();
     } catch (error) {
-      console.error("Error fetching total primary supply:", error);
+      console.error("Error fetching total primary supply:", error instanceof Error ? error.message : "Unknown error");
       return rejectWithValue({
         title: "Failed to fetch total supply",
         message: "Unable to retrieve the total primary token supply",

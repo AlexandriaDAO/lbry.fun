@@ -5,7 +5,12 @@ export interface ErrorMessage {
   message: string;
 }
 export const getErrorMessage = (error: ExecutionError): ErrorMessage => {
-  console.log("Error received:", error);
+  // Safely log error without BigInt serialization issues
+  if (process.env.NODE_ENV === 'development') {
+    console.log("Error received:", JSON.stringify(error, (key, value) => 
+      typeof value === 'bigint' ? value.toString() : value
+    ));
+  }
 
   const getMessage = (reason?: string, operation?: string, details?: string): string => {
     return reason || operation || details || "Unknown error occurred.";
@@ -38,7 +43,11 @@ export const getErrorMessage = (error: ExecutionError): ErrorMessage => {
   }
 
   if ("MintFailed" in error) {
-    console.log("ok?",error);
+    if (process.env.NODE_ENV === 'development') {
+      console.log("MintFailed error:", JSON.stringify(error, (key, value) => 
+        typeof value === 'bigint' ? value.toString() : value
+      ));
+    }
     return { title: "Mint Failed", message: getMessage(error.MintFailed!.reason, undefined, error.MintFailed!.details) };
   }
 
