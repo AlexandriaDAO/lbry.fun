@@ -28,7 +28,7 @@ pub struct GraphData {
     pub cumulative_usd_cost_data_y: Vec<f64>,
 }
 
-const SECONDARY_BURN_USD_COST: f64 = 0.01; // Full cost, not half
+const SECONDARY_BURN_USD_COST: f64 = 0.005; // Effective cost after 50% ICP return (matches tokenomics_simple.rs)
 
 /// Convert the clean tokenomics schedule to the legacy GraphData format
 pub fn preview_tokenomics(args: PreviewArgs) -> GraphData {

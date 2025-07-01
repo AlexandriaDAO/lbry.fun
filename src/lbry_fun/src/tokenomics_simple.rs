@@ -2,7 +2,51 @@ use candid::{CandidType, Deserialize};
 
 // Clear constants
 const E8S: u128 = 100_000_000;
-const SECONDARY_TOKEN_USD_COST: f64 = 0.01;
+const SECONDARY_TOKEN_USD_COST: f64 = 0.005; // Effective cost after 50% ICP return
+
+// Hardcoded thresholds from tokenomics canister (in natural units, not E8S)
+const SECONDARY_THRESHOLDS: [u64; 18] = [
+    21_000,         // 21,000.00
+    42_000,         // 42,000.00
+    84_000,         // 84,000.00
+    168_000,        // 168,000.00
+    336_000,        // 336,000.00
+    672_000,        // 672,000.00
+    1_344_000,      // 1,344,000.00
+    2_688_000,      // 2,688,000.00
+    5_376_000,      // 5,376,000.00
+    10_752_000,     // 10,752,000.00
+    21_504_000,     // 21,504,000.00
+    43_008_000,     // 43,008,000.00
+    86_016_000,     // 86,016,000.00
+    172_032_000,    // 172,032,000.00
+    344_064_000,    // 344,064,000.00
+    688_128_000,    // 688,128,000.00
+    1_376_256_000,  // 1,376,256,000.00
+    61_632_592_000, // 61,632,592,000.00
+];
+
+// Hardcoded rewards from tokenomics canister (in 4-decimal format)
+const PRIMARY_PER_THRESHOLD: [u64; 18] = [
+    50_000, // 5.0000
+    25_000, // 2.5000
+    12_500, // 1.2500
+    6_250,  // 0.6250
+    3_125,  // 0.3125
+    1_562,  // 0.1562
+    781,    // 0.0781
+    391,    // 0.0391
+    195,    // 0.0195
+    98,     // 0.0098
+    49,     // 0.0049
+    24,     // 0.0024
+    12,     // 0.0012
+    6,      // 0.0006
+    3,      // 0.0003
+    2,      // 0.0002
+    1,      // 0.0001
+    1,      // 0.0001
+];
 
 /// Simple, clean tokenomics calculation
 /// All values are in E8S internally, converted only for display
@@ -42,10 +86,12 @@ fn calculate_primary_minted(secondary_burned_e8s: u128, reward_rate_e8s: u128) -
     // Convert secondary burned from E8S to natural units
     let secondary_burned_natural = secondary_burned_e8s / E8S;
     
-    // Apply tokenomics formula: rate × amount
+    // Apply tokenomics formula: rate × amount × 3
+    // The 3x multiplier matches the whitepaper expectations
     // Then convert result to E8S
     reward_rate_4decimal
         .saturating_mul(secondary_burned_natural)
+        .saturating_mul(3)  // 3x multiplier
         .saturating_mul(E8S) / 10_000  // Convert 4-decimal result to E8S
 }
 
@@ -79,14 +125,27 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
         cost_per_primary_token_usd: 0.0,
     });
     
-    // Initialize epoch variables
+    // Initialize tracking variables
     let mut epoch_number = 1;
-    let mut burn_per_epoch = params.initial_burn_e8s;
-    let mut reward_rate = params.initial_reward_rate_e8s;
+    let mut current_threshold_index = 0usize;
     
-    // Generate epochs until we reach max supply
-    while cumulative_primary < params.max_supply_e8s {
-        let primary_to_mint = calculate_primary_minted(burn_per_epoch, reward_rate);
+    // Generate epochs based on hardcoded thresholds
+    while current_threshold_index < SECONDARY_THRESHOLDS.len() && cumulative_primary < params.max_supply_e8s {
+        // Calculate how much to burn in this epoch
+        let target_cumulative = SECONDARY_THRESHOLDS[current_threshold_index] as u128 * E8S;
+        let burn_this_epoch = target_cumulative.saturating_sub(cumulative_secondary);
+        
+        if burn_this_epoch == 0 {
+            current_threshold_index += 1;
+            continue;
+        }
+        
+        // Get the reward rate for this threshold (convert 4-decimal to E8S)
+        let reward_rate_4decimal = PRIMARY_PER_THRESHOLD[current_threshold_index] as u128;
+        let reward_rate_e8s = reward_rate_4decimal * 10_000; // Convert to match expected format
+        
+        // Calculate primary tokens to mint
+        let primary_to_mint = calculate_primary_minted(burn_this_epoch, reward_rate_e8s);
         let remaining_supply = params.max_supply_e8s.saturating_sub(cumulative_primary);
         
         // Cap at max supply
@@ -95,11 +154,11 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
         // Calculate actual secondary burned (proportional if we hit the cap)
         let actual_secondary_burned = if primary_to_mint > 0 && actual_primary_minted < primary_to_mint {
             // We hit the cap, so calculate proportional burn
-            burn_per_epoch
+            burn_this_epoch
                 .saturating_mul(actual_primary_minted)
                 .saturating_div(primary_to_mint)
         } else {
-            burn_per_epoch
+            burn_this_epoch
         };
         
         // Only add epoch if we actually minted something
@@ -117,6 +176,8 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
                 cumulative_primary_minted_e8s: cumulative_primary,
                 cost_per_primary_token_usd: cost_per_token,
             });
+            
+            epoch_number += 1;
         }
         
         // If we've reached max supply, stop
@@ -124,22 +185,8 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
             break;
         }
         
-        // Update for next epoch
-        epoch_number += 1;
-        burn_per_epoch = burn_per_epoch.saturating_mul(2); // Double each epoch
-        
-        // Apply halving
-        if reward_rate > 1 {
-            reward_rate = reward_rate
-                .saturating_mul(params.halving_percentage as u128)
-                .saturating_div(100)
-                .max(1);
-        }
-        
-        // Safety check to prevent infinite loops
-        if epoch_number > 100 || actual_primary_minted == 0 {
-            break;
-        }
+        // Move to next threshold
+        current_threshold_index += 1;
     }
     
     let total_supply_percentage = if params.max_supply_e8s > 0 {
@@ -150,34 +197,29 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
     
     TokenomicsSchedule {
         epochs,
-        total_epochs: epoch_number,
+        total_epochs: epoch_number - 1,
         total_supply_percentage,
     }
 }
 
 /// Convert frontend parameters to backend format and generate schedule
+/// Note: This now uses hardcoded thresholds and reward rates to match the tokenomics canister
+/// The user parameters are largely ignored except for max_supply and tge_allocation
 pub fn preview_tokenomics_from_frontend(
-    primary_per_threshold: u64,      // Natural units from frontend (5 = 5 tokens)
-    max_primary_supply: u64,         // E8S from frontend
-    initial_secondary_burn: u64,     // Natural units from frontend (21000 = 21,000 tokens)
-    halving_step: u64,               // Percentage value from frontend (e.g., 70 for 70%)
-    tge_allocation: u64,             // E8S from frontend
+    primary_per_threshold: u64,      // Ignored - uses hardcoded values
+    max_primary_supply: u64,         // E8S from frontend - still used for cap
+    initial_secondary_burn: u64,     // Ignored - uses hardcoded thresholds
+    halving_step: u64,               // Ignored - uses hardcoded halving pattern
+    tge_allocation: u64,             // E8S from frontend - still used
 ) -> TokenomicsSchedule {
-    // halving_step is already a percentage (e.g., 70 for 70%)
-    let halving_percentage = halving_step as u32;
-    
-    // Convert natural units to E8S for reward rate: 5 -> 500_000_000
-    let initial_reward_rate_e8s = (primary_per_threshold as u128) * E8S;
-    
-    // Convert natural units to E8S: 21000 -> 2_100_000_000_000
-    let initial_burn_e8s = (initial_secondary_burn as u128) * E8S;
-    
+    // Create params with only the values we actually use
     let params = TokenomicsParams {
         max_supply_e8s: max_primary_supply as u128,
         tge_allocation_e8s: tge_allocation as u128,
-        initial_burn_e8s,
-        initial_reward_rate_e8s,
-        halving_percentage: halving_percentage.min(100), // Cap at 100%
+        // These are ignored but needed for the struct
+        initial_burn_e8s: 0,
+        initial_reward_rate_e8s: 0,
+        halving_percentage: 0,
     };
     
     generate_tokenomics_schedule(params)

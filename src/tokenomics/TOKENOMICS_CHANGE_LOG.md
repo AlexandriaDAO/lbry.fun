@@ -139,6 +139,49 @@ This file tracks all changes made to convert the audited tokenomics canister int
 - Only token canister IDs are configurable
 - Full configurability deferred to future enhancement to minimize risk
 
+#### Critical Bug Fix: Restore Original Emission Schedule (2025-01-01)
+
+| Change ID | File | Risk | Description | Details | Test Status |
+|-----------|------|------|-------------|---------|-------------|
+| FIX-007 | src/update.rs | HIGH | Restored 3x multiplication in minting | When removing NFT distribution, the 3x multiplier was accidentally removed, reducing emissions by 67%. Now multiply by 3 to maintain original schedule while giving 100% to burner | Pending |
+
+**Code Change for FIX-007:**
+```rust
+// BEFORE (line 331-332):
+// SIMPLIFIED DISTRIBUTION: 100% to burner (no NFT splitting)
+let primary_to_mint = phase_mint_primary.min(remaining_primary);
+
+// AFTER (line 331-344):
+// SIMPLIFIED DISTRIBUTION: 100% to burner (no NFT splitting)
+// Multiply by 3 to maintain original emission schedule (was split 3 ways, now all to burner)
+let primary_to_mint = phase_mint_primary
+    .checked_mul(3)
+    .ok_or_else(|| {
+        ExecutionError::new_with_log(
+            actual_caller,
+            "mint_primary",
+            ExecutionError::MultiplicationOverflow {
+                operation: "phase_mint_primary * 3".to_string(),
+                details: "Overflow during 3x multiplication for emission schedule".to_string(),
+            }
+        )
+    })?
+    .min(remaining_primary);
+```
+
+**Explanation**: The original code multiplied `phase_mint_primary` by 3 because it was designed to mint tokens for 3 recipients (burner + 2 NFT holders). When simplifying to 100% burner distribution, this multiplication was accidentally removed, causing only 1/3 of the intended tokens to be minted. This fix restores the 3x multiplication to maintain the original emission schedule.
+
+## Summary Statistics
+- Total Implemented Changes: 28
+- Low Risk: 21
+- Medium Risk: 3
+- High Risk: 2 (1 required for launchpad + 1 critical fix)
+- Avoided High Risk: 1
+- Deferred: 4 (full configurability)
+- Tested: 0
+- Pending: 22
+- Completed Bug Fixes: 7
+
 ## Related Changes
 - **ICP_SWAP Error Synchronization**: The ICP_SWAP canister has been updated to properly decode ExecutionError responses from this tokenomics canister (SWAP-086, SWAP-087)
 - This ensures users see meaningful error messages when tokenomics operations fail (e.g., "Maximum primary token supply reached" instead of "Failed to decode successful response")

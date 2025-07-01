@@ -69,7 +69,7 @@ const TerminalCreateToken: React.FC = () => {
     secondary_token_description: '',
     secondary_token_logo_base64: '',
     primary_max_supply: '21000000',
-    tge_allocation: '315000',
+    tge_allocation: '0',
     initial_secondary_burn: '21000',
     primary_token_logo_base64: '',
     halving_step: '50',
