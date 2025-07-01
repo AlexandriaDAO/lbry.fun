@@ -104,15 +104,27 @@ This file tracks all changes made to convert the audited tokenomics canister int
 | TOK-ADD-2 | src/storage.rs | LOW | Added config storage | CONFIG memory and accessors | Pending |
 | TOK-ADD-3 | src/queries.rs | LOW | Added get_tokenomics_schedule | Returns hardcoded thresholds/rewards | Pending |
 
+#### Bug Fixes and Code Cleanup (2025-06-30)
+
+| Change ID | File | Risk | Description | Details | Test Status |
+|-----------|------|------|-------------|---------|-------------|
+| FIX-001 | src/update.rs | LOW | Fixed unsafe static access | Replaced `get_principal(PRIMARY_TOKEN_CANISTER_ID)` with `get_config().primary_token_ledger` to avoid unsafe static access | Completed |
+| FIX-002 | src/queries.rs | LOW | Removed unused imports | Removed `get_principal`, `PRIMARY_TOKEN_CANISTER_ID`, and `CallResult` imports | Completed |
+| FIX-003 | src/update.rs | LOW | Removed unused imports | Removed `update_log`, `PRIMARY_TOKEN_CANISTER_ID`, `DEFAULT_DIVISION_ERROR`, and `get_principal` imports | Completed |
+| FIX-004 | src/lib.rs | LOW | Removed unused import | Removed `CallResult` import | Completed |
+| FIX-005 | src/storage.rs | LOW | Fixed unused variable warnings | Prefixed unused closure parameters with underscore | Completed |
+| FIX-006 | src/update.rs | LOW | Fixed unused assignment warnings | Changed `minted_primary` and `total_primary_minted` from mutable with default values to immutable without defaults | Completed |
+
 ## Summary Statistics
-- Total Implemented Changes: 21
-- Low Risk: 15
+- Total Implemented Changes: 27
+- Low Risk: 21
 - Medium Risk: 3
 - High Risk: 1 (required for launchpad)
 - Avoided High Risk: 1
 - Deferred: 4 (full configurability)
 - Tested: 0
 - Pending: 21
+- Completed Bug Fixes: 6
 
 ## Implementation Order
 1. First: Token renaming (TOK-001 to TOK-005) - Low risk

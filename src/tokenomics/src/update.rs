@@ -2,10 +2,7 @@ use crate::guard::*;
 use crate::error::ExecutionError;
 use crate::register_info_log;
 use crate::storage::*;
-use crate::update_log;
-use crate::PRIMARY_TOKEN_CANISTER_ID;
 use crate::DEFAULT_ADDITION_OVERFLOW_ERROR;
-use crate::DEFAULT_DIVISION_ERROR;
 use crate::DEFAULT_MINT_FAILED;
 use crate::DEFAULT_MULTIPLICATION_OVERFLOW_ERROR;
 use crate::DEFAULT_UNDERFLOW_ERROR;
@@ -14,9 +11,9 @@ use crate::{
     add_to_total_secondary_burned,
     fetch_total_minted_primary,
     get_current_threshold_index,
-    get_principal,
     get_total_secondary_burn,
     update_to_current_threshold,
+    get_config,
 };
 use candid::Principal;
 use ic_ledger_types::Subaccount;
@@ -29,7 +26,7 @@ pub async fn mint_primary(
     actual_caller: Principal,
     to_subaccount: Option<Subaccount>
 ) -> Result<String, ExecutionError> {
-    let mut minted_primary: u64 = 0;
+    let minted_primary: u64;
     let mut phase_mint_primary: u64 = 0;
     let mut total_burned_secondary: u64 = get_total_secondary_burn();
     register_info_log(
@@ -304,12 +301,8 @@ pub async fn mint_primary(
         );
     }
 
-    let mut total_primary_minted = 0;
-
-    match fetch_total_minted_primary().await {
-        Ok(result) => {
-            total_primary_minted = result;
-        }
+    let total_primary_minted = match fetch_total_minted_primary().await {
+        Ok(result) => result,
         Err(e) => {
             return Err(
                 ExecutionError::new_with_log(
@@ -323,7 +316,7 @@ pub async fn mint_primary(
                 )
             );
         }
-    }
+    };
     let remaining_primary = MAX_PRIMARY.checked_sub(total_primary_minted).ok_or_else(|| {
         ExecutionError::new_with_log(actual_caller, "mint_primary", ExecutionError::Underflow {
             operation: DEFAULT_UNDERFLOW_ERROR.to_string(),
@@ -403,9 +396,10 @@ async fn mint_primary_internal(
         created_at_time: None,
         memo: None,
     };
+    let config = get_config().ok_or("Config not initialized")?;
     ic_cdk
         ::call::<(TransferArg,), (Result<BlockIndex, TransferError>,)>(
-            get_principal(PRIMARY_TOKEN_CANISTER_ID),
+            config.primary_token_ledger,
             "icrc1_transfer",
             (transfer_args,)
         ).await

@@ -6,46 +6,47 @@ Implementing ONLY the good changes from @TOKENOMICS_DIFFERENCES.md into the orig
 **Key Decision**: Keep economic parameters (thresholds/rewards) hardcoded to preserve the audited economic model. Only token canister IDs will be configurable.
 
 ## Completed Tasks ✓
-- [ ] None yet - starting fresh implementation
+
+### High Priority
+- [x] Simplify distribution model to 100% burner
+  - [x] Remove NFT-related code and dependencies
+  - [x] Remove get_two_random_nfts function
+  - [x] Update mint_primary to send 100% to burner
+  - [x] Remove nft_canister_id from configuration
+
+- [x] Generic token naming (primary/secondary instead of ALEX/LBRY)
+  - [x] Rename all ALEX references to primary_token
+  - [x] Rename all LBRY references to secondary_token
+  - [x] Update function names and parameters
+  - [x] Update comments and documentation
+
+### Medium Priority (Minimal Configuration)
+- [x] Minimal configurable parameters (store in stable memory)
+  - [x] Add simple Configs storage type for token canister IDs only
+  - [x] IMPORTANT: Keep all economic parameters (thresholds/rewards) hardcoded
+  - [x] Create get_configs() query function
+  - [x] IMPORTANT: Keep 10,000 multiplication with clear comment explaining why
+
+- [x] Update InitArgs to accept minimal configuration
+  - [x] primary_token_ledger (required)
+  - [x] secondary_token_ledger (required)
+  - [x] Note: Economic parameters remain hardcoded for safety
+
+### Low Priority
+- [x] ICRC standard compliance
+  - [x] Update ic-ledger-types dependency if needed
+  - [x] Ensure using latest ICRC interfaces
+
+- [x] Error handling improvements
+  - [x] Add better error messages
+  - [x] Add new error types as needed
+
+- [x] Query function additions
+  - [x] get_tokenomics_schedule() - returns thresholds and rewards
 
 ## Remaining Tasks from @TOKENOMICS_DIFFERENCES.md
 
-### High Priority
-- [ ] Simplify distribution model to 100% burner
-  - [ ] Remove NFT-related code and dependencies
-  - [ ] Remove get_two_random_nfts function
-  - [ ] Update mint_primary to send 100% to burner
-  - [ ] Remove nft_canister_id from configuration
-
-- [ ] Generic token naming (primary/secondary instead of ALEX/LBRY)
-  - [ ] Rename all ALEX references to primary_token
-  - [ ] Rename all LBRY references to secondary_token
-  - [ ] Update function names and parameters
-  - [ ] Update comments and documentation
-
-### Medium Priority (Minimal Configuration)
-- [ ] Minimal configurable parameters (store in stable memory)
-  - [ ] Add simple Configs storage type for token canister IDs only
-  - [ ] IMPORTANT: Keep all economic parameters (thresholds/rewards) hardcoded
-  - [ ] Create get_configs() query function
-  - [ ] IMPORTANT: Keep 10,000 multiplication with clear comment explaining why
-
-- [ ] Update InitArgs to accept minimal configuration
-  - [ ] primary_token_ledger (required)
-  - [ ] secondary_token_ledger (required)
-  - [ ] Note: Economic parameters remain hardcoded for safety
-
-### Low Priority
-- [ ] ICRC standard compliance
-  - [ ] Update ic-ledger-types dependency if needed
-  - [ ] Ensure using latest ICRC interfaces
-
-- [ ] Error handling improvements
-  - [ ] Add better error messages
-  - [ ] Add new error types as needed
-
-- [ ] Query function additions
-  - [ ] get_tokenomics_schedule() - returns thresholds and rewards
+All primary tasks have been completed!
 
 ## CRITICAL - Changes to AVOID ❌
 - ❌ DO NOT remove the 10,000 multiplication (lines 348-358)

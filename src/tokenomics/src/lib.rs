@@ -11,7 +11,6 @@ pub use update::*;
 mod guard;
 pub use guard::*;
 mod utils;
-use ic_cdk::api::call::CallResult;
 pub use utils::*;
 mod error;
 pub use error::*;

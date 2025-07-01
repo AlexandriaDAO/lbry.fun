@@ -161,6 +161,6 @@ pub fn get_logs(page: Option<u64>, page_size: Option<u64>) -> PaginatedLogs {
 #[query]
 pub fn get_config() -> Option<Configs> {
     CONFIGS.with(|configs| {
-        configs.borrow().get(&()).cloned()
+        configs.borrow().get(&()).map(|c| c.clone())
     })
 }

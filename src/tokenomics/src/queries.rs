@@ -1,12 +1,11 @@
 use crate::{
-    get_current_threshold_index_mem, get_principal, get_total_secondary_burned_mem, 
+    get_current_threshold_index_mem, get_total_secondary_burned_mem, 
     Logs, TokenLogs, Config, TokenomicsSchedule,
-    PRIMARY_TOKEN_CANISTER_ID, PRIMARY_PER_THRESHOLD, SECONDARY_THRESHOLDS, 
+    PRIMARY_PER_THRESHOLD, SECONDARY_THRESHOLDS, 
     LOGS, TOKEN_LOGS, get_config
 };
 use candid::{CandidType, Nat, Principal};
 use ic_cdk::{
-    api::call::CallResult,
     caller, query, update,
 };
 use serde::Deserialize;

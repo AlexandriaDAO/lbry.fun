@@ -1,5 +1,5 @@
 use candid::{ CandidType, Principal };
-use ic_cdk::{ self, caller, init, post_upgrade, update };
+use ic_cdk::{ self, caller, init, post_upgrade };
 use serde::Deserialize;
 use std::time::Duration;
 
@@ -137,8 +137,8 @@ fn initialize_globals(args: InitArgs) {
 fn init(args: Option<InitArgs>) {
     register_info_log(caller(), "init", "Starting initialization...");
 
-    match args {
-        Some(init_args) => {
+    match &args {
+        Some(ref init_args) => {
             register_info_log(caller(), "init", "Received init arguments!");
 
             if let Some(ref stakes) = init_args.stakes {
@@ -205,7 +205,7 @@ fn init(args: Option<InitArgs>) {
                 );
             }
 
-            initialize_globals(init_args);
+            initialize_globals(init_args.clone());
             register_info_log(caller(), "init", "Initialization with provided args complete");
         }
         None => {
@@ -215,7 +215,7 @@ fn init(args: Option<InitArgs>) {
         }
     }
 
-    let distribution_interval = init_args.as_ref()
+    let distribution_interval = args.as_ref()
         .and_then(|args| args.distribution_interval_seconds)
         .expect("Distribution interval seconds is required");
     setup_timers(distribution_interval);
@@ -261,7 +261,7 @@ async fn distribute_reward_wrapper() {
 }
 async fn get_icp_rate_cents_wrapper() {
     match get_icp_rate_in_cents().await {
-        Ok(price) => {
+        Ok(_price) => {
             register_info_log(caller(), "get_icp_rate_cents_wrapper", "Price fetch completed without errors");
         }
         Err(e) => {

@@ -154,13 +154,13 @@ impl ExecutionError {
 impl fmt::Display for ExecutionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ExecutionError::MinimumRequired { required, provided, token, details } => {
+            ExecutionError::MinimumRequired { required, provided, token, details: _ } => {
                 write!(f, "Minimum {} {} required, got {}", required, token, provided)
             }
-            ExecutionError::InvalidAmount { reason, amount, details } => {
+            ExecutionError::InvalidAmount { reason, amount, details: _ } => {
                 write!(f, "Invalid amount {}: {}", amount, reason)
             }
-            ExecutionError::InsufficientBalance { required, available, token, details } => {
+            ExecutionError::InsufficientBalance { required, available, token, details: _ } => {
                 write!(
                     f,
                     "Insufficient {} balance. Required: {}, Available: {}",
@@ -169,7 +169,7 @@ impl fmt::Display for ExecutionError {
                     available
                 )
             }
-            ExecutionError::InsufficientCanisterBalance { required, available, details } => {
+            ExecutionError::InsufficientCanisterBalance { required, available, details: _ } => {
                 write!(
                     f,
                     "Insufficient canister balance. Required: {}, available: {}",
@@ -177,14 +177,14 @@ impl fmt::Display for ExecutionError {
                     available
                 )
             }
-            ExecutionError::InsufficientBalanceRewardDistribution { available, details } => {
+            ExecutionError::InsufficientBalanceRewardDistribution { available, details: _ } => {
                 write!(f, "Insufficient balance for reward distribution, available: {}", available)
             }
             ExecutionError::RewardDistributionError { reason } => {
                 write!(f, "Reward distribution failed: {}", reason)
             }
 
-            ExecutionError::TransferFailed { source, dest, token, amount, details, reason } => {
+            ExecutionError::TransferFailed { source, dest, token, amount, details, reason: _ } => {
                 write!(
                     f,
                     "Transfer of {}  {} from {} to {} failed: {}",
@@ -195,11 +195,11 @@ impl fmt::Display for ExecutionError {
                     details
                 )
             }
-            ExecutionError::MintFailed { token, amount, reason, details } => {
+            ExecutionError::MintFailed { token, amount, reason, details: _ } => {
                 let reason = if reason.is_empty() { "something went wrong" } else { &reason };
                 write!(f, "Failed to mint {} {}: {}", amount, token, reason)
             }
-            ExecutionError::BurnFailed { token, amount, reason, details } => {
+            ExecutionError::BurnFailed { token, amount, reason, details: _ } => {
                 write!(f, "Failed to burn {} {}: {}", amount, token, reason)
             }
 

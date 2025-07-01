@@ -17,7 +17,6 @@ TokenRecord:
   tokenomics_canister_id: "canister_id"
   swap_canister_id: "canister_id"
   logs_canister_id: "canister_id"
-  frontend_canister_id: "canister_id"
   
   # Economic parameters
   max_supply: "number (in e8s units)"
@@ -52,7 +51,6 @@ Steps:
   2. Create infrastructure canisters:
      - Deploy swap canister (handles minting/burning)
      - Deploy tokenomics canister (controls supply dynamics)
-     - Deploy frontend canister
      - Deploy logs canister (collects statistics)
   
   3. Create the actual tokens:

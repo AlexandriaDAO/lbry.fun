@@ -19,7 +19,6 @@ pub struct Configs {
     pub primary_token_id: Principal,
     pub secondary_token_id: Principal,
     pub swap_canister_id: Principal,
-    pub frontend_canister_id: Principal,
     pub max_primary_supply: u64,
     pub initial_primary_mint: u64,
     pub initial_secondary_burn: u64,
@@ -62,7 +61,6 @@ async fn deploy_preview_tokenomics(args: PreviewArgs) -> Result<Principal, Strin
         primary_token_id: Some(Principal::anonymous()), // Use dummy values for preview
         secondary_token_id: Some(Principal::anonymous()),
         swap_canister_id: Some(Principal::anonymous()),
-        frontend_canister_id: Some(Principal::anonymous()),
         max_primary_supply: args.primary_max_supply,
         initial_primary_mint: args.tge_allocation,
         initial_secondary_burn: args.initial_secondary_burn,

@@ -52,30 +52,12 @@ This is a React TypeScript frontend for a crypto token launchpad built on the In
 - `IcpSwapActor` - Token swapping operations  
 - `TokenomicsActor` - Supply dynamics and mint rates
 
-**Token Value Conversions**: 
+### Token Value Conversions
 
-ALWAYS use `TokenConversionService` for ALL conversions. Never hardcode E8S values.
-
-**Quick Reference**:
-```typescript
-// User input → Backend (most methods)
-const e8sAmount = TokenConversionService.naturalToE8s(userInput);
-
-// Backend → Display
-const display = TokenConversionService.e8sToNatural(backendValue);
-
-// Direct formatting with decimals
-const formatted = TokenConversionService.formatE8sDisplay(e8sValue, 4);
-
-// ICP-specific formatting (2 decimals + " ICP")
-const icpDisplay = TokenConversionService.displayE8sAsIcp(e8sValue);
-```
-
-**Critical Exception**: `burn_secondary` expects natural units:
-```typescript
-const burnAmount = BigInt(amount); // NO conversion!
-await icpSwapActor.burn_secondary(burnAmount);
-```
+**Standard Pattern** (follows core repository):
+- Convert to E8S in thunks: `BigInt(amount * 10**8)`
+- Exception: `burn_secondary` - send natural units
+- Tokenomics preview has mixed handling (see `UnifiedTokenomicsGraphs.tsx`)
 
 **State Management Flow**:
 1. Components dispatch thunks

@@ -164,12 +164,12 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
     // Convert natural numbers to E8S for backend
     const E8S_MULTIPLIER = BigInt(100_000_000);
     
-    const primary_max_supply = BigInt(primaryMaxSupply || '0') * E8S_MULTIPLIER;
-    const tge_allocation = BigInt(tgeAllocation || '0') * E8S_MULTIPLIER;
-    const initial_secondary_burn = BigInt(initialSecondaryBurn || '0') * E8S_MULTIPLIER;
-    const halving_step = BigInt(halvingStep || '0');
-    // Handle decimal values for initialRewardPerBurnUnit
-    const initial_reward_per_burn_unit = BigInt(Math.floor(parseFloat(initialRewardPerBurnUnit || '0') * Number(E8S_MULTIPLIER)));
+    // Frontend uses whole numbers, convert to what backend expects
+    const primary_max_supply = BigInt(primaryMaxSupply || '0') * E8S_MULTIPLIER; // Backend expects E8S
+    const tge_allocation = BigInt(tgeAllocation || '0') * E8S_MULTIPLIER; // Backend expects E8S
+    const initial_secondary_burn = BigInt(initialSecondaryBurn || '0'); // Backend expects natural units (no conversion)
+    const halving_step = BigInt(halvingStep || '0'); // Backend expects percentage (no conversion)
+    const initial_reward_per_burn_unit = BigInt(initialRewardPerBurnUnit || '0'); // Backend expects natural units (no conversion)
 
     console.log('UnifiedTokenomicsGraphs converted values:', {
       primary_max_supply: primary_max_supply.toString(),
@@ -340,7 +340,7 @@ const UnifiedTokenomicsGraphs: React.FC<UnifiedTokenomicsGraphsProps> = ({
     for (let i = 0; i < numEpochs; i++) {
         const epochLabel = previewGraphData.minted_per_epoch_data_x[i];
         
-        const cumulativeSecondary = Number(previewGraphData.cumulative_supply_data_x[i + 1] || '0');
+        const cumulativeSecondary = Number(previewGraphData.cumulative_supply_data_x[i + 1] || '0') / E8S;
         const cumulativePrimary = Number(previewGraphData.cumulative_supply_data_y[i + 1] || '0') / E8S;
         const mintedThisEpoch = Number(previewGraphData.minted_per_epoch_data_y[i] || '0') / E8S;
         

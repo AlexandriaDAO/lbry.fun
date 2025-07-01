@@ -1,15 +1,18 @@
+type Config = record {
+  secondary_token_ledger : principal;
+  primary_token_ledger : principal;
+};
 type ExecutionError = variant {
   Underflow : record { operation : text; details : text };
   DivisionFailed : record { operation : text; details : text };
   MultiplicationOverflow : record { operation : text; details : text };
   AdditionOverflow : record { operation : text; details : text };
-  MaxPrimaryPerTrnxReached : record { reason : text };
-  NoMorePrimaryCanBeMinted : record { reason : text };
   CanisterCallFailed : record {
     method : text;
     canister : text;
     details : text;
   };
+  NoMorePrimaryCanBeMinted : record { reason : text };
   MaxMintPrimaryReached : record { reason : text };
   MintFailed : record {
     token : text;
@@ -17,6 +20,11 @@ type ExecutionError = variant {
     amount : nat64;
     reason : text;
   };
+  MaxPrimaryPerTrnxReached : record { reason : text };
+};
+type InitArgs = record {
+  secondary_token_ledger : principal;
+  primary_token_ledger : principal;
 };
 type Logs = record { log : text; time : nat64 };
 type PaginatedTokenLogs = record {
@@ -25,18 +33,9 @@ type PaginatedTokenLogs = record {
   total_pages : nat64;
   current_page : nat64;
 };
-type RejectionCode = variant {
-  NoError;
-  CanisterError;
-  SysTransient;
-  DestinationInvalid;
-  Unknown;
-  SysFatal;
-  CanisterReject;
-};
-type ResultNat = variant { Ok : nat64; Err : text };
-type MintPrimary = variant { Ok : text; Err : ExecutionError };
-type Result = variant { Ok : text; Err : text };
+type Result = variant { Ok : nat64; Err : text };
+type Result_1 = variant { Ok : text; Err : ExecutionError };
+type Result_2 = variant { Ok : text; Err : text };
 type TokenLogType = variant {
   Error : record { error : ExecutionError };
   Info : record { detail : text };
@@ -48,32 +47,21 @@ type TokenLogs = record {
   timestamp : nat64;
   caller : principal;
 };
-type Config = record {
-  primary_token_ledger : principal;
-  secondary_token_ledger : principal;
-};
-
 type TokenomicsSchedule = record {
-  thresholds : vec nat64;
   rewards : vec nat64;
+  thresholds : vec nat64;
 };
-
-type InitArgs = record {
-  primary_token_ledger : principal;
-  secondary_token_ledger : principal;
-};
-
 service : (InitArgs) -> {
-  fetch_total_minted_primary : () -> (ResultNat) query;
+  fetch_total_minted_primary : () -> (Result);
+  get_configs : () -> (Config) query;
   get_current_primary_rate : () -> (nat64) query;
   get_current_secondary_threshold : () -> (nat64) query;
   get_current_threshold_index : () -> (nat32) query;
   get_logs : () -> (vec Logs) query;
   get_max_stats : () -> (nat64, nat64) query;
   get_token_logs : (opt nat64, opt nat64) -> (PaginatedTokenLogs) query;
-  get_total_secondary_burn : () -> (nat64) query;
-  mint_primary : (nat64, principal, opt blob) -> (MintPrimary);
-  your_principal : () -> (Result) query;
-  get_configs : () -> (Config) query;
   get_tokenomics_schedule : () -> (TokenomicsSchedule) query;
+  get_total_secondary_burn : () -> (nat64) query;
+  mint_primary : (nat64, principal, opt blob) -> (Result_1);
+  your_principal : () -> (Result_2) query;
 }

@@ -70,7 +70,7 @@ thread_local! {
 }
 
 pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u64, Memory> {
-    TOTAL_UNCLAIMED_ICP_REWARD.with(|reward_map| {
+    TOTAL_UNCLAIMED_ICP_REWARD.with(|_reward_map| {
         StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID))
         )
@@ -78,24 +78,24 @@ pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u64, Memory> {
 }
 
 pub fn get_secondary_ratio_mem() -> StableBTreeMap<(), SecondaryRatio, Memory> {
-    SECONDARY_RATIO.with(|ratio_map| {
+    SECONDARY_RATIO.with(|_ratio_map| {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(SECONDARY_RATIO_MEM_ID)))
     })
 }
 pub fn get_total_archived_balance_mem() -> StableBTreeMap<(), u64, Memory> {
-    TOTAL_ARCHIVED_BALANCE.with(|balance_map| {
+    TOTAL_ARCHIVED_BALANCE.with(|_balance_map| {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_ARCHIVED_BALANCE_MEM_ID)))
     })
 }
 
 pub fn get_distribution_interval_mem() -> StableBTreeMap<(), u32, Memory> {
-    DISTRIBUTION_INTERVALS.with(|interval_map| {
+    DISTRIBUTION_INTERVALS.with(|_interval_map| {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(DISTRIBUTION_INTERVALS_MEM_ID)))
     })
 }
 
 pub fn get_configs_mem() -> StableBTreeMap<(), Configs, Memory> {
-    CONFIGS.with(|configs_map| {
+    CONFIGS.with(|_configs_map| {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(CONFIGS_MEM_ID)))
     })
 }

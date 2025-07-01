@@ -107,19 +107,19 @@ thread_local! {
 }
 
 pub fn get_total_secondary_burned_mem() -> StableBTreeMap<(), u64, Memory> {
-    TOTAL_SECONDARY_BURNED.with(|burned_map| {
+    TOTAL_SECONDARY_BURNED.with(|_burned_map| {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_SECONDARY_BURNED_MEM_ID)))
     })
 }
 
 pub fn get_current_threshold_index_mem() -> StableBTreeMap<(), u32, Memory> {
-    CURRENT_THRESHOLD_INDEX.with(|threshold_map| {
+    CURRENT_THRESHOLD_INDEX.with(|_threshold_map| {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(CURRENT_THRESHOLD_MEM_ID)))
     })
 }
 
 pub fn get_config_mem() -> StableBTreeMap<(), Config, Memory> {
-    CONFIG.with(|config| {
+    CONFIG.with(|_config| {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(CONFIG_MEM_ID)))
     })
 }

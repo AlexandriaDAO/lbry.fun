@@ -156,7 +156,6 @@ pub struct TokenomicsInitArgs {
     pub primary_token_id: Option<Principal>,
     pub secondary_token_id: Option<Principal>,
     pub swap_canister_id: Option<Principal>,
-    pub frontend_canister_id: Option<Principal>,
     pub max_primary_supply: u64,
     pub initial_primary_mint: u64,
     pub initial_secondary_burn: u64,

@@ -67,9 +67,6 @@ async fn create_token(
     let tokenomics_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
     ic_cdk::println!("[CREATE_TOKEN] Tokenomics canister created: {}", tokenomics_canister_id);
     
-    let frontend_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
-    ic_cdk::println!("[CREATE_TOKEN] Frontend canister created: {}", frontend_canister_id);
-    
     let logs_canister_id = create_a_canister(CANISTER_CREATION_CYCLES).await?;
     ic_cdk::println!("[CREATE_TOKEN] Logs canister created: {}", logs_canister_id);
 
@@ -128,7 +125,6 @@ async fn create_token(
         Some(get_principal(&primary_token_id)),
         Some(get_principal(&secondary_token_id)),
         Some(swap_canister_id),
-        Some(frontend_canister_id),
         primary_max_supply.into(),
         initial_primary_mint,
         initial_secondary_burn,
@@ -345,7 +341,6 @@ async fn install_tokenomics_wasm_on_existing_canister(
     primary_token_id: Option<Principal>,
     secondary_token_id: Option<Principal>,
     swap_canister_id: Option<Principal>,
-    frontend_canister_id: Option<Principal>,
     max_primary_supply: u64,
     initial_primary_mint: u64,
     initial_secondary_burn: u64,
@@ -356,7 +351,6 @@ async fn install_tokenomics_wasm_on_existing_canister(
         primary_token_id,
         secondary_token_id,
         swap_canister_id,
-        frontend_canister_id,
         max_primary_supply,
         initial_primary_mint,
         initial_secondary_burn,

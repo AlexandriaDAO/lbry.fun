@@ -264,15 +264,12 @@ pub async fn burn_secondary(
         );
     }
 
-    let mut total_icp_available: u64 = 0;
-    match fetch_canister_icp_balance().await {
-        Ok(bal) => {
-            total_icp_available = bal;
-        }
+    let total_icp_available: u64 = match fetch_canister_icp_balance().await {
+        Ok(bal) => bal,
         Err(e) => {
             return Err(e);
         }
-    }
+    };
     let total_archived_bal: u64 = get_total_archived_balance();
 
     let total_unclaimed_icp: u64 = get_total_unclaimed_icp_reward();
@@ -851,16 +848,12 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
     register_info_log(caller(), "distribute_reward", "distribute_reward initiated.");
     let intervals = get_distribution_interval();
     let staking_percentage = STAKING_REWARD_PERCENTAGE;
-    let mut total_icp_available: u64 = 0;
-
-    match fetch_canister_icp_balance().await {
-        Ok(bal) => {
-            total_icp_available = bal;
-        }
+    let total_icp_available: u64 = match fetch_canister_icp_balance().await {
+        Ok(bal) => bal,
         Err(e) => {
             return Err(e);
         }
-    }
+    };
 
     let total_unclaimed_icp_reward: u64 = get_total_unclaimed_icp_reward();
     let total_archived_bal: u64 = get_total_archived_balance();
@@ -956,7 +949,7 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
             )
         );
     }
-    let mut icp_reward_per_primary = total_icp_allocated
+    let icp_reward_per_primary = total_icp_allocated
         .checked_mul(SCALING_FACTOR)
         .ok_or_else(||
             ExecutionError::new_with_log(
@@ -1112,16 +1105,12 @@ async fn claim_icp_reward(from_subaccount: Option<[u8; 32]>) -> Result<String, E
                     )
                 );
             }
-            let mut total_icp_available: u64 = 0;
-
-            match fetch_canister_icp_balance().await {
-                Ok(bal) => {
-                    total_icp_available = bal;
-                }
+            let total_icp_available: u64 = match fetch_canister_icp_balance().await {
+                Ok(bal) => bal,
                 Err(e) => {
                     return Err(e);
                 }
-            }
+            };
 
             if stake.reward_icp > total_icp_available {
                 return Err(
@@ -1293,7 +1282,7 @@ pub async fn get_icp_rate_in_cents() -> Result<u64, ExecutionError> {
 
                             Ok(price_in_cents)
                         }
-                        XRCResponse::Err(err) =>
+                        XRCResponse::Err(_err) =>
                             Err(
                                 ExecutionError::new_with_log(
                                     caller(),
@@ -1312,7 +1301,7 @@ pub async fn get_icp_rate_in_cents() -> Result<u64, ExecutionError> {
                         )
                     ),
             }
-        Err((_rejection_code, msg)) =>
+        Err((_rejection_code, _msg)) =>
             Err(
                 ExecutionError::new_with_log(
                     caller(),
@@ -1346,16 +1335,12 @@ async fn redeem(from_subaccount: Option<[u8; 32]>) -> Result<String, ExecutionEr
                     )
                 );
             }
-            let mut total_icp_available: u64 = 0;
-
-            match fetch_canister_icp_balance().await {
-                Ok(bal) => {
-                    total_icp_available = bal;
-                }
+            let total_icp_available: u64 = match fetch_canister_icp_balance().await {
+                Ok(bal) => bal,
                 Err(e) => {
                     return Err(e);
                 }
-            }
+            };
 
             if trx.icp > total_icp_available {
                 return Err(
