@@ -1,7 +1,7 @@
 use crate::{
     get_current_threshold_index_mem, get_total_secondary_burned_mem, 
     Logs, TokenLogs, Config, TokenomicsSchedule,
-    PRIMARY_PER_THRESHOLD, SECONDARY_THRESHOLDS, 
+    get_thresholds, get_rewards,  // Use dynamic getters instead of constants
     LOGS, TOKEN_LOGS, get_config
 };
 use candid::{CandidType, Nat, Principal};
@@ -100,18 +100,21 @@ pub fn get_current_threshold_index() -> u32 {
 #[query]
 pub fn get_current_primary_rate() -> u64 {
     let current_threshold = get_current_threshold_index();
-    PRIMARY_PER_THRESHOLD[current_threshold as usize]
+    let rewards = get_rewards();
+    rewards[current_threshold as usize]
 }
 
 #[query]
 pub fn get_current_secondary_threshold() -> u64 {
     let current_threshold = get_current_threshold_index();
-    SECONDARY_THRESHOLDS[current_threshold as usize]
+    let thresholds = get_thresholds();
+    thresholds[current_threshold as usize]
 }
 
 #[query]
 pub fn get_max_stats() -> (u64, u64) {
-    let max_threshold = SECONDARY_THRESHOLDS[SECONDARY_THRESHOLDS.len() - 1];
+    let thresholds = get_thresholds();
+    let max_threshold = thresholds[thresholds.len() - 1];
     let total_burned = get_total_secondary_burn();
     (max_threshold, total_burned)
 }
@@ -154,8 +157,8 @@ pub fn get_configs() -> Config {
 #[query]
 pub fn get_tokenomics_schedule() -> TokenomicsSchedule {
     TokenomicsSchedule {
-        thresholds: SECONDARY_THRESHOLDS.to_vec(),
-        rewards: PRIMARY_PER_THRESHOLD.to_vec(),
+        thresholds: get_thresholds(),
+        rewards: get_rewards(),
     }
 }
 

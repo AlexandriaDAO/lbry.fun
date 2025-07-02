@@ -3,7 +3,6 @@ import { getLbryFunActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage } from "@/features/swap/utils/errors";
 import { TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
 import fetchTokenLogosForPool from "./fetchTokenLogosForPoolThunk";
-import { LAUNCH_PERIOD_NANOS } from "@/constants/launchPeriod";
 
 const getTokenPools = createAsyncThunk<
   [string, TokenRecordStringified][],
@@ -41,6 +40,7 @@ const getTokenPools = createAsyncThunk<
             primary_token_max_supply: record.primary_token_max_supply.toString(),
             initial_primary_mint: record.initial_primary_mint.toString(),
             initial_secondary_burn: record.initial_secondary_burn.toString(),
+            initial_reward_per_burn_unit: (BigInt(record.initial_reward_per_burn_unit) / BigInt(100_000_000)).toString(),
             created_time: record.created_time.toString(),
             pool_created_at: record.pool_created_at.toString(),
             pool_creation_failed: record.pool_creation_failed,
@@ -97,6 +97,7 @@ export type TokenRecordStringified = {
   primary_token_id: string;
   caller: string;
   initial_secondary_burn: string;
+  initial_reward_per_burn_unit: string;
   created_time: string;
   pool_created_at: string;
   pool_creation_failed: boolean;

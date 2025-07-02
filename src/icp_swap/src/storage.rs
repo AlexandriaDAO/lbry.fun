@@ -24,6 +24,7 @@ pub const DISTRIBUTION_INTERVALS_MEM_ID: MemoryId = MemoryId::new(7);
 pub const LOGS_MEM_ID: MemoryId = MemoryId::new(8);
 pub const LOGS_COUNTER_ID: MemoryId = MemoryId::new(9);
 pub const CONFIGS_MEM_ID: MemoryId = MemoryId::new(10);
+pub const LAUNCH_TIME_MEM_ID: MemoryId = MemoryId::new(11);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
@@ -67,6 +68,9 @@ thread_local! {
     pub static CONFIGS: RefCell<StableBTreeMap<(), Configs, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(CONFIGS_MEM_ID)))
     );
+    pub static LAUNCH_TIME: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LAUNCH_TIME_MEM_ID)))
+    );
 }
 
 pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u64, Memory> {
@@ -97,6 +101,12 @@ pub fn get_distribution_interval_mem() -> StableBTreeMap<(), u32, Memory> {
 pub fn get_configs_mem() -> StableBTreeMap<(), Configs, Memory> {
     CONFIGS.with(|_configs_map| {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(CONFIGS_MEM_ID)))
+    })
+}
+
+pub fn get_launch_time_mem() -> StableBTreeMap<(), u64, Memory> {
+    LAUNCH_TIME.with(|_launch_time_map| {
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LAUNCH_TIME_MEM_ID)))
     })
 }
 

@@ -3,6 +3,7 @@ use candid::{CandidType, Principal};
 use serde::Deserialize;
 use crate::{TokenRecord, TOKENS, get_self_icp_balance};
 use crate::simulation_new::{GraphData, PreviewArgs};
+use crate::tokenomics_simple::{preview_tokenomics_from_frontend, TokenomicsSchedule};
 
 #[query]
 pub fn get_all_token_record() -> Vec<(u64, TokenRecord)> {
@@ -21,7 +22,6 @@ pub fn get_all_token_record() -> Vec<(u64, TokenRecord)> {
 #[query]
 pub fn get_upcomming() -> Vec<(u64, TokenRecord)> {
     let current_time = ic_cdk::api::time();
-    let twenty_four_hours_nanos = crate::constants::LAUNCH_PERIOD_NANOS;
     
     TOKENS.with(|tokens| {
         let tokens_map = tokens.borrow();
@@ -29,10 +29,11 @@ pub fn get_upcomming() -> Vec<(u64, TokenRecord)> {
         tokens_map
             .iter()
             .filter(|(_, token)| {
-                // Not live if: pool creation failed, pool not created yet, or still within 24 hour window
+                // Not live if: pool creation failed, pool not created yet, or still within launch delay
+                let launch_delay_nanos = token.launch_delay_seconds * 1_000_000_000;
                 token.pool_creation_failed || 
                 token.pool_created_at == 0 || 
-                current_time < token.created_time + twenty_four_hours_nanos
+                current_time < token.created_time + launch_delay_nanos
             })
             .map(|(id, token)| (id.clone(), token.clone()))
             .collect()
@@ -73,6 +74,23 @@ async fn preview_tokenomics_graphs(args: PreviewArgs) -> GraphData {
     preview_tokenomics(args)
 }
 
+#[update]
+async fn preview_tokenomics_schedule(
+    primary_per_threshold: u64,      // Natural units (e.g., 5 tokens)
+    max_primary_supply: u64,         // E8S (e.g., 21_000_000 * 10^8)
+    initial_secondary_burn: u64,     // Natural units (e.g., 21000 tokens)
+    halving_step: u64,               // Percentage (e.g., 50 for 50%)
+    tge_allocation: u64,             // E8S
+) -> TokenomicsSchedule {
+    preview_tokenomics_from_frontend(
+        primary_per_threshold,
+        max_primary_supply,
+        initial_secondary_burn,
+        halving_step,
+        tge_allocation,
+    )
+}
+
 // Token status structure for icp_swap canister
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct TokenStatus {
@@ -109,13 +127,13 @@ pub fn get_token_status(token_id: u64) -> Option<TokenStatusDetail> {
         let tokens_map = tokens.borrow();
         tokens_map.get(&token_id).map(|token| {
             let current_time = ic_cdk::api::time();
-            let twenty_four_hours_nanos = crate::constants::LAUNCH_PERIOD_NANOS;
+            let launch_delay_nanos = token.launch_delay_seconds * 1_000_000_000;
             let time_until_live = if token.pool_creation_failed || token.pool_created_at == 0 {
                 0 // Not applicable if pool creation failed or hasn't been created
-            } else if current_time >= token.created_time + twenty_four_hours_nanos {
+            } else if current_time >= token.created_time + launch_delay_nanos {
                 0 // Already live
             } else {
-                (token.created_time + twenty_four_hours_nanos) - current_time
+                (token.created_time + launch_delay_nanos) - current_time
             };
             
             TokenStatusDetail {
@@ -125,7 +143,7 @@ pub fn get_token_status(token_id: u64) -> Option<TokenStatusDetail> {
                 pool_created_at: token.pool_created_at,
                 is_live: !token.pool_creation_failed && 
                         token.pool_created_at > 0 && 
-                        current_time >= token.created_time + twenty_four_hours_nanos,
+                        current_time >= token.created_time + launch_delay_nanos,
                 time_until_live_nanos: time_until_live,
                 primary_token_symbol: token.primary_token_symbol.clone(),
                 secondary_token_symbol: token.secondary_token_symbol.clone(),

@@ -1,4 +1,4 @@
-use candid::{CandidType, Deserialize, Encode, Nat, Principal};
+use candid::{Encode, Nat, Principal};
 use ic_cdk::{
     api::management_canister::main::{
         canister_status, create_canister, install_code, CanisterInstallMode, CreateCanisterArgument,
@@ -11,7 +11,6 @@ use icrc_ledger_types::{
     icrc1::account::Account,
     icrc2::transfer_from::{TransferFromArgs, TransferFromError},
 };
-use num_bigint::BigUint;
 use icrc_ledger_types::icrc1::transfer::BlockIndex;
 use std::time::Duration;
 
@@ -19,8 +18,9 @@ use crate::{
     get_principal, get_self_icp_balance, AddPoolArgs, AddPoolReply, AddPoolResult, AddTokenArgs,
     AddTokenReply, AddTokenResponse, AddTokenResult, ApproveArgs, ApproveResult, ArchiveOptions,
     FeatureFlags, IcpSwapInitArgs, InitArgs, LedgerArg, LogsInitArgs, MetadataValue, TokenDetail,
-    TokenInfo, TokenRecord, TokenomicsInitArgs, TxId, CHAIN_ID, E8S, ICP_CANISTER_ID, ICP_TRANSFER_FEE,
+    TokenInfo, TokenRecord, TokenomicsCanisterInitArgs, TxId, CHAIN_ID, E8S, ICP_CANISTER_ID, ICP_TRANSFER_FEE,
     INTITAL_PRIMARY_MINT, KONG_BACKEND_CANISTER, TOKENS,
+    tokenomics_simple::preview_tokenomics_from_frontend,
 };
 
 const CANISTER_CREATION_CYCLES: u128 = 2_000_000_000_000u128;
@@ -49,6 +49,80 @@ async fn create_token(
     ic_cdk::println!("[CREATE_TOKEN] Starting token creation for user: {}", user_principal);
     ic_cdk::println!("[CREATE_TOKEN] Primary: {} ({}), Secondary: {} ({})", 
         primary_token_name, primary_token_symbol, secondary_token_name, secondary_token_symbol);
+    
+    // Generate the full tokenomics schedule
+    ic_cdk::println!("[CREATE_TOKEN] Generating tokenomics schedule...");
+    let schedule = preview_tokenomics_from_frontend(
+        initial_reward_per_burn_unit,
+        primary_max_supply,
+        initial_secondary_burn,
+        halving_step,
+        initial_primary_mint, // TGE amount (usually 0)
+    );
+    
+    // Extract arrays from the generated schedule
+    let mut secondary_thresholds = Vec::new();
+    let mut primary_rewards = Vec::new();
+    
+    // Skip epoch 0 if TGE exists (initial_primary_mint > 0)
+    let start_index = if initial_primary_mint > 0 { 1 } else { 0 };
+    
+    for (i, epoch) in schedule.epochs.iter().enumerate().skip(start_index) {
+        // Convert cumulative burned from E8S to natural units
+        let threshold_natural = (epoch.cumulative_secondary_burned_e8s / E8S as u128) as u64;
+        secondary_thresholds.push(threshold_natural);
+        
+        // Calculate the reward rate for this epoch
+        if epoch.secondary_burned_this_epoch_e8s > 0 {
+            // Reverse engineer the reward rate from minted/burned ratio
+            // The tokenomics canister expects: rate × burned × 3 = minted
+            // The schedule already includes the 3x in primary_minted_this_epoch_e8s
+            // So we need to divide by 3 to get the base rate
+            // rate_e8s = primary_minted_e8s / (secondary_burned_e8s × 3)
+            
+            let rate_e8s = epoch.primary_minted_this_epoch_e8s
+                .checked_div(epoch.secondary_burned_this_epoch_e8s)
+                .and_then(|r| r.checked_div(3))  // Remove the 3x multiplier
+                .unwrap_or(0);
+            
+            // Convert from E8S rate to 4-decimal format
+            // rate_e8s represents tokens per token in E8S units
+            // To get 4-decimal: (rate_e8s * 10_000) / E8S
+            let reward_4decimal = ((rate_e8s * 10_000) / E8S as u128) as u64;
+            primary_rewards.push(reward_4decimal);
+        } else {
+            // For epoch 0 (TGE) or if no burning, calculate from previous epoch
+            if i > 0 {
+                // Halve the previous reward based on halving_percentage
+                let prev_reward = primary_rewards.last().copied().unwrap_or(50_000);
+                let new_reward = (prev_reward * halving_step as u64) / 100;
+                primary_rewards.push(new_reward);
+            } else {
+                // First mining epoch - use initial reward rate
+                // Convert initial_reward_per_burn_unit from natural to 4-decimal
+                let reward_4decimal = initial_reward_per_burn_unit * 10_000;
+                primary_rewards.push(reward_4decimal as u64);
+            }
+        }
+    }
+    
+    // Validate the arrays
+    if secondary_thresholds.is_empty() || primary_rewards.is_empty() {
+        return Err("Failed to generate tokenomics schedule arrays".to_string());
+    }
+    
+    if secondary_thresholds.len() != primary_rewards.len() {
+        return Err("Threshold and reward arrays must have the same length".to_string());
+    }
+    
+    // Log for debugging
+    ic_cdk::println!("[CREATE_TOKEN] Generated {} epochs with thresholds: {:?}", 
+        secondary_thresholds.len(), 
+        secondary_thresholds.iter().take(5).collect::<Vec<_>>()
+    );
+    ic_cdk::println!("[CREATE_TOKEN] Rewards (4-decimal): {:?}", 
+        primary_rewards.iter().take(5).collect::<Vec<_>>()
+    );
     
     // payment
     ic_cdk::println!("[CREATE_TOKEN] Depositing 5 ICP from user...");
@@ -130,6 +204,8 @@ async fn create_token(
         initial_secondary_burn,
         halving_step,
         initial_reward_per_burn_unit,
+        secondary_thresholds.clone(),
+        primary_rewards.clone(),
     )
     .await?;
     install_icp_swap_wasm_on_existing_canister(
@@ -138,6 +214,7 @@ async fn create_token(
         Some(get_principal(&secondary_token_id)),
         Some(tokenomics_canister_id),
         distribution_interval_seconds,
+        launch_delay_seconds,  // ADD THIS LINE
     )
     .await?;
 
@@ -195,6 +272,7 @@ async fn create_token(
         initial_primary_mint,
         initial_secondary_burn,
         halving_step,
+        initial_reward_per_burn_unit: initial_reward_per_burn_unit * E8S,
         distribution_interval_seconds,
         launch_delay_seconds,
         caller: user_principal,
@@ -340,25 +418,25 @@ async fn install_tokenomics_wasm_on_existing_canister(
     canister_id: Principal,
     primary_token_id: Option<Principal>,
     secondary_token_id: Option<Principal>,
-    swap_canister_id: Option<Principal>,
-    max_primary_supply: u64,
-    initial_primary_mint: u64,
-    initial_secondary_burn: u64,
-    halving_step: u64,
-    initial_reward_per_burn_unit: u64,
+    _swap_canister_id: Option<Principal>,
+    _max_primary_supply: u64,
+    _initial_primary_mint: u64,
+    _initial_secondary_burn: u64,
+    _halving_step: u64,
+    _initial_reward_per_burn_unit: u64,
+    secondary_thresholds: Vec<u64>,
+    primary_rewards: Vec<u64>,
 ) -> Result<(), String> {
-    let args = TokenomicsInitArgs {
-        primary_token_id,
-        secondary_token_id,
-        swap_canister_id,
-        max_primary_supply,
-        initial_primary_mint,
-        initial_secondary_burn,
-        halving_step,
-        initial_reward_per_burn_unit,
+    // Create the init args for the tokenomics canister
+    let init_args = TokenomicsCanisterInitArgs {
+        primary_token_ledger: primary_token_id.ok_or("Primary token ID required")?,
+        secondary_token_ledger: secondary_token_id.ok_or("Secondary token ID required")?,
+        secondary_thresholds,
+        primary_rewards,
     };
-    let encoded_args = Encode!(&Some(args))
-        .map_err(|e: candid::Error| format!("Failed to encode args: {:?}", e))?;
+    
+    let encoded_args = Encode!(&init_args)
+        .map_err(|e: candid::Error| format!("Failed to encode init args: {:?}", e))?;
 
     let wasm_module = include_bytes!("tokenomics.wasm").to_vec(); // Path must be valid in your project
 
@@ -382,13 +460,22 @@ async fn install_icp_swap_wasm_on_existing_canister(
     secondary_token_id: Option<Principal>,
     tokenomics_canister_id: Option<Principal>,
     distribution_interval_seconds: u64,
+    launch_delay_seconds: u64,  // ADD THIS PARAMETER
 ) -> Result<(), String> {
+    // Calculate launch_time from current time + delay
+    let launch_time = if launch_delay_seconds > 0 {
+        Some(ic_cdk::api::time() / 1_000_000_000 + launch_delay_seconds)
+    } else {
+        None
+    };
+
     let args = IcpSwapInitArgs {
         primary_token_id,
         secondary_token_id,
         tokenomics_canister_id,
         icp_ledger_id: None, // None means use default (our standard ICP ledger)
         distribution_interval_seconds,
+        launch_time,  // ADD THIS LINE
     };
 
     let encoded_args =
@@ -589,7 +676,7 @@ async fn retry_pool_creation(token_id: u64) -> Result<String, String> {
                     reply.pool_id
                 ))
             } else {
-                let remaining_seconds = ((token_record.created_time + launch_delay_nanos - current_time) / 1_000_000_000);
+                let remaining_seconds = (token_record.created_time + launch_delay_nanos - current_time) / 1_000_000_000;
                 let hours_remaining = remaining_seconds / 3600;
                 let minutes_remaining = (remaining_seconds % 3600) / 60;
                 Ok(format!(
@@ -729,52 +816,6 @@ async fn deposit_icp_in_canister(
     result // Return the inner Result<BlockIndex, TransferFromError>
 }
 
-async fn deposit_ksicp_in_canister(
-    amount: u64,
-    from_subaccount: Option<[u8; 32]>
-) -> Result<BlockIndex, TransferFromError> {
-    let canister_id: Principal = ic_cdk::api::id();
-
-    let big_int_amount: BigUint = BigUint::from(amount);
-    let amount: Nat = Nat(big_int_amount);
-
-    let transfer_from_args = TransferFromArgs {
-        from: Account {
-            owner: ic_cdk::caller(),
-            subaccount: from_subaccount,
-        },
-        // can be used to distinguish between transactions
-        memo: None,
-        // the amount we want to transfer
-        amount,
-        // the subaccount we want to spend the tokens from (in this case we assume the default subaccount has been approved)
-        spender_subaccount: None,
-        // if not specified, the default fee for the canister is used
-        fee: None,
-        // the account we want to transfer tokens to
-        to: canister_id.into(),
-        // a timestamp indicating when the transaction was created by the caller; if it is not specified by the caller then this is set to the current ICP time
-        created_at_time: None,
-    };
-
-    // 1. Asynchronously call another canister function using `ic_cdk::call`.
-    let (result,) = ic_cdk
-        ::call::<(TransferFromArgs,), (Result<BlockIndex, TransferFromError>,)>(
-            // 2. Convert a textual representation of a Principal into an actual `Principal` object. The principal is the one we specified in `dfx.json`.
-            //    `expect` will panic if the conversion fails, ensuring the code does not proceed with an invalid principal.
-            Principal::from_text(ICP_CANISTER_ID).expect("Could not decode the principal."),
-            // 3. Specify the method name on the target canister to be called, in this case, "icrc1_transfer".
-            "icrc2_transfer_from",
-            // 4. Provide the arguments for the call in a tuple, here `transfer_args` is encapsulated as a single-element tuple.
-            (transfer_from_args,)
-        ).await
-        .map_err(|_| TransferFromError::GenericError {
-            message: "Call failed".to_string(),
-            error_code: Nat::from(0 as u32),
-        })?;
-
-    result // Return the inner Result<BlockIndex, TransferFromError>
-}
 
 
 async fn _process_fee_treasury() -> Result<String, String> {

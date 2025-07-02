@@ -1,3 +1,11 @@
+type EpochData = record {
+  primary_minted_this_epoch_e8s : nat;
+  cumulative_primary_minted_e8s : nat;
+  cost_per_primary_token_usd : float64;
+  epoch_number : nat32;
+  secondary_burned_this_epoch_e8s : nat;
+  cumulative_secondary_burned_e8s : nat;
+};
 type GraphData = record {
   cost_to_mint_data_x : vec nat64;
   cost_to_mint_data_y : vec float64;
@@ -32,6 +40,7 @@ type TokenRecord = record {
   halving_step : nat64;
   primary_token_max_supply : nat64;
   pool_creation_failed : bool;
+  initial_reward_per_burn_unit : nat64;
   initial_primary_mint : nat64;
   primary_token_id : principal;
   caller : principal;
@@ -56,6 +65,11 @@ type TokenStatusDetail = record {
   pool_created_at : nat64;
   created_time : nat64;
   time_until_live_nanos : nat64;
+};
+type TokenomicsSchedule = record {
+  epochs : vec EpochData;
+  total_supply_percentage : float64;
+  total_epochs : nat32;
 };
 type TransferFromError = variant {
   GenericError : record { message : text; error_code : nat };
@@ -95,5 +109,8 @@ service : () -> {
   get_treasury_balance : () -> (Result_3) query;
   get_upcomming : () -> (vec record { nat64; TokenRecord }) query;
   preview_tokenomics_graphs : (PreviewArgs) -> (GraphData);
+  preview_tokenomics_schedule : (nat64, nat64, nat64, nat64, nat64) -> (
+      TokenomicsSchedule,
+    );
   retry_pool_creation : (nat64) -> (Result);
 }

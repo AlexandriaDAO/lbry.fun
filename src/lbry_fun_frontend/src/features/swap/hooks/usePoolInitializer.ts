@@ -6,7 +6,7 @@ import { RootState } from '@/store';
 import { setActiveSwapPool } from '../store/swapSlice';
 import getTokenPools from '@/features/token/thunk/getTokenPools.thunk';
 import fetchTokenLogosForPool from '@/features/token/thunk/fetchTokenLogosForPoolThunk';
-import { fetchTokenomicsSchedule, fetchTokenomicsCurrentState } from '../thunks/tokenomicsThunks';
+import { fetchTokenomicsCurrentState } from '../thunks/tokenomicsThunks';
 
 export enum PoolInitState {
   IDLE = 'IDLE',
@@ -92,9 +92,8 @@ export const usePoolInitializer = (): UsePoolInitializerReturn => {
           }));
         }
         
-        // Fetch tokenomics schedule and current state for the pool
+        // Fetch tokenomics current state for the pool
         if (poolData.tokenomics_canister_id) {
-          dispatch(fetchTokenomicsSchedule(poolData.tokenomics_canister_id));
           dispatch(fetchTokenomicsCurrentState(poolData.tokenomics_canister_id));
         }
       }

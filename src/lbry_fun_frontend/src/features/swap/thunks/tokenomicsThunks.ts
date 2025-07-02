@@ -3,43 +3,12 @@ import { getTokenomicsActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage } from "@/features/swap/utils/errors";
 import { Principal } from "@dfinity/principal";
 
-export interface TokenomicsSchedule {
-  primary_mint_per_threshold: string[];
-  secondary_burn_per_threshold: string[];
-}
-
 export interface TokenomicsCurrentState {
   totalSecondaryBurned: string;
   totalPrimaryMinted: string;
   currentThresholdIndex: number;
   circulatingSupply?: string;
 }
-
-export const fetchTokenomicsSchedule = createAsyncThunk<
-  TokenomicsSchedule,
-  string, // tokenomics_canister_id
-  { rejectValue: ErrorMessage }
->("swap/fetchTokenomicsSchedule", async (tokenomicsCanisterId, { rejectWithValue }) => {
-  try {
-    const actor = await getTokenomicsActor(Principal.fromText(tokenomicsCanisterId));
-    const schedule = await actor.get_tokenomics_schedule();
-    
-    // Convert BigInt arrays to string arrays (map field name to match UnifiedTokenomicsGraphs)
-    // Use Array.from to ensure we get a regular array, not BigUint64Array
-    const result = {
-      primary_mint_per_threshold: Array.from(schedule.primary_mint_per_threshold).map(val => val.toString()),
-      secondary_burn_per_threshold: Array.from(schedule.secondary_burn_thresholds).map(val => val.toString())
-    };
-    
-    return result;
-  } catch (error) {
-    console.error("Failed to fetch tokenomics schedule:", error instanceof Error ? error.message : "Unknown error");
-    return rejectWithValue({
-      title: "Failed to Load Tokenomics",
-      message: "Unable to fetch tokenomics schedule data"
-    });
-  }
-});
 
 export const fetchTokenomicsCurrentState = createAsyncThunk<
   TokenomicsCurrentState,

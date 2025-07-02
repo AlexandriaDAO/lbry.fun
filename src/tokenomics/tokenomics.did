@@ -23,6 +23,8 @@ type ExecutionError = variant {
   MaxPrimaryPerTrnxReached : record { reason : text };
 };
 type InitArgs = record {
+  secondary_thresholds : vec nat64;
+  primary_rewards : vec nat64;
   secondary_token_ledger : principal;
   primary_token_ledger : principal;
 };

@@ -7,19 +7,7 @@ import getUpcomming from "./thunk/getUpcommingTokens.thunk";
 import getLiveTokens from "./thunk/getLiveTokens.thunk";
 import fetchTokenLogosForPool from "./thunk/fetchTokenLogosForPoolThunk";
 import { ErrorMessage } from "@/features/swap/utils/errors";
-import previewTokenomics from "./thunk/previewTokenomics.thunk";
 import getPoolsTvl, { TokenTvlMap } from "./thunk/getPoolsTvl.thunk";
-
-export interface GraphData {
-  cumulative_supply_data_x: string[];
-  cumulative_supply_data_y: string[];
-  minted_per_epoch_data_x: string[];
-  minted_per_epoch_data_y: string[];
-  cost_to_mint_data_x: string[];
-  cost_to_mint_data_y: number[];
-  cumulative_usd_cost_data_x: string[];
-  cumulative_usd_cost_data_y: number[];
-}
 
 // Define the interface for our node state
 export interface LbryFunState {
@@ -29,9 +17,6 @@ export interface LbryFunState {
   liveTokens: [string, TokenRecordStringified][];
   upcommingTokens: [string, TokenRecordStringified][];
   error: ErrorMessage | null;
-  previewGraphData: GraphData | null;
-  previewLoading: boolean;
-  previewError: string | null;
   tvlData: TokenTvlMap;
   tvlLoading: boolean;
 }
@@ -44,9 +29,6 @@ const initialState: LbryFunState = {
   tokenPools: [],
   liveTokens: [],
   upcommingTokens: [],
-  previewGraphData: null,
-  previewLoading: false,
-  previewError: null,
   tvlData: {},
   tvlLoading: false,
 };
@@ -58,9 +40,6 @@ const lbryFunSlice = createSlice({
     lbryFunFlagHandler: (state) => {
       state.success = false;
       state.error = null;
-    },
-    clearPreviewError: (state) => {
-      state.previewError = null;
     },
   },
   extraReducers: (builder: ActionReducerMapBuilder<LbryFunState>) => {
@@ -156,18 +135,6 @@ const lbryFunSlice = createSlice({
         // Failed to fetch token logos - background task, no user-facing error
         // No user-facing error toast or loading state for now as it's a background task
       })
-      .addCase(previewTokenomics.pending, (state) => {
-        state.previewLoading = true;
-        state.previewError = null;
-      })
-      .addCase(previewTokenomics.fulfilled, (state, action) => {
-        state.previewLoading = false;
-        state.previewGraphData = action.payload;
-      })
-      .addCase(previewTokenomics.rejected, (state, action) => {
-        state.previewLoading = false;
-        state.previewError = action.payload?.message ?? 'An unknown error occurred';
-      })
       .addCase(getPoolsTvl.pending, (state) => {
         state.tvlLoading = true;
       })
@@ -182,5 +149,5 @@ const lbryFunSlice = createSlice({
       });
   },
 });
-export const { lbryFunFlagHandler, clearPreviewError } = lbryFunSlice.actions;
+export const { lbryFunFlagHandler } = lbryFunSlice.actions;
 export default lbryFunSlice.reducer;

@@ -5,6 +5,7 @@ use ic_cdk::api::management_canister::main::{
 };
 use crate::{TokenomicsInitArgs, E8S};
 use crate::simulation_new::{PreviewArgs, GraphData};
+use crate::tokenomics_simple::preview_tokenomics_from_frontend;
 
 const TEMP_CANISTER_CYCLES: u128 = 500_000_000_000; // 0.5T cycles for temporary canister
 
@@ -56,6 +57,50 @@ async fn deploy_preview_tokenomics(args: PreviewArgs) -> Result<Principal, Strin
     
     let canister_principal = canister_id.canister_id;
     
+    // Generate the tokenomics schedule
+    let schedule = preview_tokenomics_from_frontend(
+        args.initial_reward_per_burn_unit,
+        args.primary_max_supply,
+        args.initial_secondary_burn,
+        args.halving_step,
+        args.tge_allocation,
+    );
+    
+    // Extract arrays from the generated schedule
+    let mut secondary_thresholds = Vec::new();
+    let mut primary_rewards = Vec::new();
+    
+    // Skip epoch 0 if TGE exists
+    let start_index = if args.tge_allocation > 0 { 1 } else { 0 };
+    
+    for (i, epoch) in schedule.epochs.iter().enumerate().skip(start_index) {
+        // Convert cumulative burned from E8S to natural units
+        let threshold_natural = (epoch.cumulative_secondary_burned_e8s / E8S as u128) as u64;
+        secondary_thresholds.push(threshold_natural);
+        
+        // Calculate the reward rate for this epoch
+        if epoch.secondary_burned_this_epoch_e8s > 0 {
+            let rate_e8s = epoch.primary_minted_this_epoch_e8s
+                .checked_div(epoch.secondary_burned_this_epoch_e8s)
+                .and_then(|r| r.checked_div(3))  // Remove the 3x multiplier
+                .unwrap_or(0);
+            
+            // Convert from E8S rate to 4-decimal format
+            let reward_4decimal = ((rate_e8s * 10_000) / E8S as u128) as u64;
+            primary_rewards.push(reward_4decimal);
+        } else {
+            // For epoch 0 or if no burning
+            if i > 0 {
+                let prev_reward = primary_rewards.last().copied().unwrap_or(50_000);
+                let new_reward = (prev_reward * args.halving_step as u64) / 100;
+                primary_rewards.push(new_reward);
+            } else {
+                let reward_4decimal = args.initial_reward_per_burn_unit * 10_000;
+                primary_rewards.push(reward_4decimal as u64);
+            }
+        }
+    }
+    
     // Install tokenomics wasm
     let init_args = TokenomicsInitArgs {
         primary_token_id: Some(Principal::anonymous()), // Use dummy values for preview
@@ -66,6 +111,8 @@ async fn deploy_preview_tokenomics(args: PreviewArgs) -> Result<Principal, Strin
         initial_secondary_burn: args.initial_secondary_burn,
         halving_step: args.halving_step,
         initial_reward_per_burn_unit: args.initial_reward_per_burn_unit,
+        secondary_thresholds,
+        primary_rewards,
     };
     
     let encoded_args = Encode!(&Some(init_args))
@@ -145,7 +192,7 @@ fn schedule_to_graph_data(schedule: TokenomicsSchedule, _config: Configs, args: 
         
         // Calculate primary minted in this epoch
         // Using the actual tokenomics formula from the canister (script.rs line 144)
-        let reward_e8s = (reward_per_threshold * secondary_in_epoch * 10000);
+        let reward_e8s = reward_per_threshold * secondary_in_epoch * 10000;
         let primary_in_epoch = reward_e8s / E8S;
         
         cumulative_primary += primary_in_epoch;

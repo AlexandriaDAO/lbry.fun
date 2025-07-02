@@ -43,6 +43,18 @@ pub const DEFAULT_SECONDARY_RATIO: u64 = 400;
 pub const E8S: u64 = 100_000_000;
 pub const LOGS_LIMIT: u64 = 100_000;
 
+use crate::storage::LAUNCH_TIME;
+
+pub fn is_token_live() -> bool {
+    let now = ic_cdk::api::time() / 1_000_000_000; // Convert nanos to seconds
+    LAUNCH_TIME.with(|m| {
+        match m.borrow().get(&()) {
+            Some(launch_time) => now >= launch_time,
+            None => true, // No launch time means token is already live
+        }
+    })
+}
+
 pub fn verify_caller_balance(amount: u64) -> bool {
     let caller_stake = get_stake(caller());
     match caller_stake {

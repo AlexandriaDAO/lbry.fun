@@ -62,6 +62,8 @@ pub const CURRENT_THRESHOLD_MEM_ID: MemoryId = MemoryId::new(1);
 pub const TOKEN_LOGS_MEM_ID: MemoryId = MemoryId::new(2);
 pub const LOGS_COUNTER_ID: MemoryId = MemoryId::new(3);
 pub const CONFIG_MEM_ID: MemoryId = MemoryId::new(4);
+pub const THRESHOLDS_MEM_ID: MemoryId = MemoryId::new(5);  // NEW: Dynamic thresholds storage
+pub const REWARDS_MEM_ID: MemoryId = MemoryId::new(6);     // NEW: Dynamic rewards storage
 
 // Configuration struct for minimal configurability
 #[derive(CandidType, Deserialize, Clone)]
@@ -104,6 +106,10 @@ thread_local! {
     pub static CONFIG: RefCell<StableBTreeMap<(), Config, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(CONFIG_MEM_ID)))
     );
+    
+    // NEW: Dynamic arrays for configurable tokenomics
+    pub static DYNAMIC_THRESHOLDS: RefCell<Vec<u64>> = RefCell::new(Vec::new());
+    pub static DYNAMIC_REWARDS: RefCell<Vec<u64>> = RefCell::new(Vec::new());
 }
 
 pub fn get_total_secondary_burned_mem() -> StableBTreeMap<(), u64, Memory> {
@@ -159,4 +165,37 @@ impl Storable for TokenLogs {
     }
 
     const BOUND: Bound = Bound::Unbounded;
+}
+
+// NEW: Helper functions for dynamic arrays
+pub fn get_thresholds() -> Vec<u64> {
+    DYNAMIC_THRESHOLDS.with(|t| {
+        let thresholds = t.borrow();
+        if thresholds.is_empty() {
+            // Fallback to hardcoded values if not initialized
+            SECONDARY_THRESHOLDS.to_vec()
+        } else {
+            thresholds.clone()
+        }
+    })
+}
+
+pub fn get_rewards() -> Vec<u64> {
+    DYNAMIC_REWARDS.with(|r| {
+        let rewards = r.borrow();
+        if rewards.is_empty() {
+            // Fallback to hardcoded values if not initialized
+            PRIMARY_PER_THRESHOLD.to_vec()
+        } else {
+            rewards.clone()
+        }
+    })
+}
+
+pub fn set_thresholds(thresholds: Vec<u64>) {
+    DYNAMIC_THRESHOLDS.with(|t| *t.borrow_mut() = thresholds);
+}
+
+pub fn set_rewards(rewards: Vec<u64>) {
+    DYNAMIC_REWARDS.with(|r| *r.borrow_mut() = rewards);
 }

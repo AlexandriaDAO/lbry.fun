@@ -4,7 +4,7 @@ import { stakingThunks } from "../thunks/stakingThunks";
 import { tradingThunks } from "../thunks/tradingThunks";
 import { balanceThunks } from "../thunks/balanceThunks";
 import { analyticsThunks } from "../thunks/analyticsThunks";
-import { fetchTokenomicsSchedule, fetchTokenomicsCurrentState } from "../thunks/tokenomicsThunks";
+import { fetchTokenomicsCurrentState } from "../thunks/tokenomicsThunks";
 import { distributionThunks } from "../thunks/distributionThunks";
 import fetchTokenLogosForPool from "../../token/thunk/fetchTokenLogosForPoolThunk";
 import { SwapState } from "./swapTypes";
@@ -190,21 +190,6 @@ const swapSlice = createSlice({
           }
           state.activeSwapPool = [state.activeSwapPool[0], updatedRecord];
         }
-      })
-      
-      // Tokenomics Schedule
-      .addCase(fetchTokenomicsSchedule.pending, (state) => {
-        state.tokenomicsScheduleLoading = true;
-        state.tokenomicsScheduleError = null;
-      })
-      .addCase(fetchTokenomicsSchedule.fulfilled, (state, action) => {
-        state.tokenomicsSchedule = action.payload;
-        state.tokenomicsScheduleLoading = false;
-        state.tokenomicsScheduleError = null;
-      })
-      .addCase(fetchTokenomicsSchedule.rejected, (state, action) => {
-        state.tokenomicsScheduleLoading = false;
-        state.tokenomicsScheduleError = action.payload?.message || "Failed to fetch tokenomics schedule";
       })
       
       // Tokenomics Current State

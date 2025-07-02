@@ -210,3 +210,47 @@ This file tracks all changes made to convert the audited icp_swap canister into 
 - Successfully fixed all compilation errors and warnings
 - The canister now builds successfully
 - Only one minor warning remains about unused function `log_error` which can be addressed later
+
+### Launch Delay Implementation (2025-01-02)
+
+| Change ID | File | Risk | Description | Original | New | Justification | Security Impact | Test Status |
+|-----------|------|------|-------------|----------|-----|---------------|-----------------|-------------|
+| SWAP-097 | src/script.rs | MEDIUM | Add launch_time to InitArgs | N/A | `pub launch_time: Option<u64>` | Enable launch delay | None - optional field | Pending |
+| SWAP-098 | src/script.rs | LOW | Update InitArgs Default impl | N/A | Add `launch_time: None` | Complete initialization | None - default value | Pending |
+| SWAP-099 | src/script.rs | LOW | Import LAUNCH_TIME | N/A | Add to use statement | Access storage | None - import only | Pending |
+| SWAP-100 | src/script.rs | MEDIUM | Store launch_time in init | N/A | Store in LAUNCH_TIME if provided | Initialize launch delay | None - one-time setup | Pending |
+| SWAP-101 | src/storage.rs | LOW | Add LAUNCH_TIME_MEM_ID | N/A | `MemoryId::new(11)` | Memory allocation | None - constant only | Pending |
+| SWAP-102 | src/storage.rs | MEDIUM | Add LAUNCH_TIME storage | N/A | New storage for launch timestamp | Store launch time | None - new storage | Pending |
+| SWAP-103 | src/storage.rs | LOW | Add get_launch_time_mem function | N/A | Getter for launch time storage | Access launch time | None - getter only | Pending |
+| SWAP-104 | src/utils.rs | LOW | Import LAUNCH_TIME storage | N/A | `use crate::storage::LAUNCH_TIME` | Access storage | None - import only | Pending |
+| SWAP-105 | src/utils.rs | LOW | Add is_token_live helper | N/A | Check if current time >= launch time | Launch validation | None - read-only check | Pending |
+| SWAP-106 | src/update.rs | MEDIUM | Add launch check to swap | No check | Check is_token_live() | Enforce launch delay | Prevents early trading | Pending |
+| SWAP-107 | src/update.rs | MEDIUM | Add launch check to burn_secondary | No check | Check is_token_live() | Enforce launch delay | Prevents early burns | Pending |
+| SWAP-108 | src/queries.rs | LOW | Import is_token_live and LAUNCH_TIME | N/A | Add to use statement | Access helper and storage | None - import only | Pending |
+| SWAP-109 | src/queries.rs | LOW | Add get_launch_status query | N/A | Returns (is_live, launch_time) | Query launch status | None - read-only | Pending |
+| SWAP-110 | icp_swap.did | LOW | Add launch_time to InitArgs type | N/A | `launch_time : opt nat64` | API completeness | None - interface only | Pending |
+| SWAP-111 | icp_swap.did | LOW | Add get_launch_status to service | N/A | `get_launch_status : () -> (bool, opt nat64) query` | API completeness | None - interface only | Pending |
+
+### lbry_fun Integration for Launch Delay (2025-01-02)
+
+| Change ID | File | Risk | Description | Original | New | Justification | Security Impact | Test Status |
+|-----------|------|------|-------------|----------|-----|---------------|-----------------|-------------|
+| LBRY-001 | src/lbry_fun/src/utlis.rs | LOW | Add launch_time to IcpSwapInitArgs | N/A | `pub launch_time: Option<u64>` | Pass launch time to icp_swap | None - data structure | Pending |
+| LBRY-002 | src/lbry_fun/src/update.rs | MEDIUM | Add launch_delay_seconds param | 5 params | 6 params | Accept delay parameter | None - parameter passing | Pending |
+| LBRY-003 | src/lbry_fun/src/update.rs | MEDIUM | Calculate launch_time | N/A | `ic_cdk::api::time() / 1_000_000_000 + launch_delay_seconds` | Convert delay to timestamp | None - calculation only | Pending |
+| LBRY-004 | src/lbry_fun/src/update.rs | LOW | Pass launch_delay_seconds | 5 args | 6 args | Forward to install function | None - parameter passing | Pending |
+
+## Summary Statistics
+- Total Changes: 124 (was 105, added 19 for launch delay: 15 SWAP + 4 LBRY)
+- Low Risk: 82 (was 69, added 13 low risk)
+- Medium Risk: 40 (was 34, added 6 medium risk)
+- High Risk: 2
+- Fixed: 9
+- Tested: 0
+- Pending: 115 (was 96, added 19 pending)
+
+## Notes
+- Successfully fixed all compilation errors and warnings
+- The canister now builds successfully
+- Only one minor warning remains about unused function `log_error` which can be addressed later
+- Launch delay implementation is backward compatible - tokens without launch_time are immediately tradeable

@@ -48,7 +48,10 @@ pub async fn mint_primary(
                     ),
                 }
             )
-        })? > SECONDARY_THRESHOLDS[SECONDARY_THRESHOLDS.len() - 1]
+        })? > {
+            let thresholds = get_thresholds();
+            thresholds[thresholds.len() - 1]
+        }
     {
         return Err(
             ExecutionError::new_with_log(
@@ -73,14 +76,16 @@ pub async fn mint_primary(
         })
     })?;
 
-    if tentative_total > SECONDARY_THRESHOLDS[current_threshold_index as usize] {
+    let thresholds = get_thresholds();
+    let rewards = get_rewards();
+    if tentative_total > thresholds[current_threshold_index as usize] {
         let mut secondary_processed: u64 = 0;
 
-        while tentative_total > SECONDARY_THRESHOLDS[current_threshold_index as usize] {
+        while tentative_total > thresholds[current_threshold_index as usize] {
             let secondary_mint_primary_with_current_threshold: u64 = if
-                total_burned_secondary < SECONDARY_THRESHOLDS[current_threshold_index as usize]
+                total_burned_secondary < thresholds[current_threshold_index as usize]
             {
-                SECONDARY_THRESHOLDS[current_threshold_index as usize] - total_burned_secondary
+                thresholds[current_threshold_index as usize] - total_burned_secondary
             } else {
                 secondary_burn.checked_sub(secondary_processed).ok_or_else(|| {
                     ExecutionError::new_with_log(
@@ -98,7 +103,7 @@ pub async fn mint_primary(
                 })?
             };
 
-            let mut slot_mint = PRIMARY_PER_THRESHOLD[current_threshold_index as usize].checked_mul(
+            let mut slot_mint = rewards[current_threshold_index as usize].checked_mul(
                 secondary_mint_primary_with_current_threshold
             ).ok_or_else(||
                 ExecutionError::new_with_log(
@@ -108,7 +113,7 @@ pub async fn mint_primary(
                         operation: DEFAULT_MULTIPLICATION_OVERFLOW_ERROR.to_string(),
                         details: format!(
                             "PRIMARY_PER_THRESHOLD[current_threshold_index]: {} with secondary_mint_primary_with_current_threshold: {}",
-                            PRIMARY_PER_THRESHOLD[current_threshold_index as usize],
+                            rewards[current_threshold_index as usize],
                             secondary_mint_primary_with_current_threshold
                         ),
                     }
@@ -174,8 +179,8 @@ pub async fn mint_primary(
                     )
                 )?;
             current_threshold_index += 1;
-            if current_threshold_index > (SECONDARY_THRESHOLDS.len() as u32) - 1 {
-                current_threshold_index = (SECONDARY_THRESHOLDS.len() as u32) - 1;
+            if current_threshold_index > (thresholds.len() as u32) - 1 {
+                current_threshold_index = (thresholds.len() as u32) - 1;
             }
         }
 
@@ -197,7 +202,7 @@ pub async fn mint_primary(
                     )
                 })?;
 
-            let mut slot_mint = PRIMARY_PER_THRESHOLD[current_threshold_index as usize].checked_mul(
+            let mut slot_mint = rewards[current_threshold_index as usize].checked_mul(
                 secondary_mint_primary_with_current_threshold
             ).ok_or_else(||
                 ExecutionError::new_with_log(
@@ -207,7 +212,7 @@ pub async fn mint_primary(
                         operation: DEFAULT_MULTIPLICATION_OVERFLOW_ERROR.to_string(),
                         details: format!(
                             "PRIMARY_PER_THRESHOLD[current_threshold_index]: {} with secondary_mint_primary_with_current_threshold:{}",
-                            PRIMARY_PER_THRESHOLD[current_threshold_index as usize],
+                            rewards[current_threshold_index as usize],
                             secondary_mint_primary_with_current_threshold
                         ),
                     }
@@ -256,7 +261,7 @@ pub async fn mint_primary(
             })?;
         }
     } else {
-        phase_mint_primary = PRIMARY_PER_THRESHOLD[current_threshold_index as usize].checked_mul(
+        phase_mint_primary = rewards[current_threshold_index as usize].checked_mul(
             secondary_burn
         ).ok_or_else(|| {
             ExecutionError::new_with_log(

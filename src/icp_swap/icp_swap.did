@@ -75,6 +75,7 @@ type InitArgs = record {
   primary_token_id : opt principal;
   archived_transaction_log : opt vec record { principal; ArchiveBalance };
   total_unclaimed_icp_reward : opt nat64;
+  launch_time : opt nat64;
   distribution_interval_seconds : opt nat64;
   distribution_intervals : opt nat32;
 };
@@ -111,6 +112,7 @@ service : (opt InitArgs) -> {
   get_current_secondary_ratio : () -> (nat64) query;
   get_current_staking_reward_percentage : () -> (text) query;
   get_distribution_interval : () -> (nat32) query;
+  get_launch_status : () -> (bool, opt nat64) query;
   get_logs : (opt nat64, opt nat64) -> (PaginatedLogs) query;
   get_scaling_factor : () -> (nat) query;
   get_stake : (principal) -> (opt Stake) query;

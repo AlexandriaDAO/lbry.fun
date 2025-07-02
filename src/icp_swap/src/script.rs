@@ -16,6 +16,7 @@ use crate::{
     ARCHIVED_TRANSACTION_LOG,
     CONFIGS,
     DISTRIBUTION_INTERVALS,
+    LAUNCH_TIME,
     SECONDARY_RATIO,
     STAKES,
     TOTAL_ARCHIVED_BALANCE,
@@ -38,6 +39,7 @@ pub struct InitArgs {
     pub tokenomics_canister_id: Option<Principal>,
     pub icp_ledger_id: Option<Principal>,
     pub distribution_interval_seconds: Option<u64>,
+    pub launch_time: Option<u64>,  // ADD THIS LINE
 }
 
 impl Default for InitArgs {
@@ -55,6 +57,7 @@ impl Default for InitArgs {
             tokenomics_canister_id: None,
             icp_ledger_id: None,
             distribution_interval_seconds: None, // No default - must be explicitly set
+            launch_time: None,
         }
     }
 }
@@ -203,6 +206,12 @@ fn init(args: Option<InitArgs>) {
                     "init",
                     &format!("Distribution interval: {} seconds", interval)
                 );
+            }
+            
+            // Store launch_time if provided
+            if let Some(launch_time) = init_args.launch_time {
+                LAUNCH_TIME.with(|m| m.borrow_mut().insert((), launch_time));
+                ic_cdk::println!("Launch time set to: {}", launch_time);
             }
 
             initialize_globals(init_args.clone());

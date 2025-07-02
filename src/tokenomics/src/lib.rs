@@ -19,6 +19,8 @@ pub use error::*;
 pub struct InitArgs {
     pub primary_token_ledger: Principal,
     pub secondary_token_ledger: Principal,
+    pub secondary_thresholds: Vec<u64>,      // NEW: Dynamic thresholds array
+    pub primary_rewards: Vec<u64>,           // NEW: Dynamic rewards array
 }
 
 #[derive(CandidType, Deserialize)]
@@ -43,6 +45,10 @@ fn init(args: InitArgs) {
         PRIMARY_TOKEN_CANISTER_ID = Box::leak(args.primary_token_ledger.to_string().into_boxed_str());
         SECONDARY_TOKEN_CANISTER_ID = Box::leak(args.secondary_token_ledger.to_string().into_boxed_str());
     }
+    
+    // Store dynamic arrays for configurable tokenomics
+    set_thresholds(args.secondary_thresholds);
+    set_rewards(args.primary_rewards);
     
     // Initialize threshold index to 0
     let mut threshold_store = get_current_threshold_index_mem();

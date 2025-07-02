@@ -1,10 +1,11 @@
 use crate::{
     storage::*,
     utils::{
-        principal_to_subaccount, DEFAULT_SECONDARY_RATIO, SCALING_FACTOR, STAKING_REWARD_PERCENTAGE,
+        principal_to_subaccount, is_token_live, DEFAULT_SECONDARY_RATIO, SCALING_FACTOR, STAKING_REWARD_PERCENTAGE,
     },
     Configs,
     CONFIGS,
+    LAUNCH_TIME,
 };
 use candid::{CandidType, Principal};
 use ic_cdk::{api::caller, query};
@@ -163,4 +164,11 @@ pub fn get_config() -> Option<Configs> {
     CONFIGS.with(|configs| {
         configs.borrow().get(&()).map(|c| c.clone())
     })
+}
+
+#[query]
+pub fn get_launch_status() -> (bool, Option<u64>) {
+    let is_live = is_token_live();
+    let launch_time = LAUNCH_TIME.with(|m| m.borrow().get(&()));
+    (is_live, launch_time)
 }

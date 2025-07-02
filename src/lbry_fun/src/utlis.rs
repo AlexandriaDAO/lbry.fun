@@ -161,6 +161,17 @@ pub struct TokenomicsInitArgs {
     pub initial_secondary_burn: u64,
     pub halving_step: u64,
     pub initial_reward_per_burn_unit: u64,
+    // NEW FIELDS:
+    pub secondary_thresholds: Vec<u64>,
+    pub primary_rewards: Vec<u64>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct TokenomicsCanisterInitArgs {
+    pub primary_token_ledger: Principal,
+    pub secondary_token_ledger: Principal,
+    pub secondary_thresholds: Vec<u64>,
+    pub primary_rewards: Vec<u64>,
 }
 
 #[derive(CandidType)]
@@ -170,6 +181,7 @@ pub struct IcpSwapInitArgs {
     pub tokenomics_canister_id: Option<Principal>,
     pub icp_ledger_id: Option<Principal>,
     pub distribution_interval_seconds: u64,
+    pub launch_time: Option<u64>,  // ADD THIS LINE
 }
 
 

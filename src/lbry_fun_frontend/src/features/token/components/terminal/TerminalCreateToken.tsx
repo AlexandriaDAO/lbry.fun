@@ -7,7 +7,7 @@ import createToken from '../../thunk/createToken.thunk';
 import { lbryFunFlagHandler } from '../../lbryFunSlice';
 import { setActiveTokenView } from '@/store/slices/uiSlice';
 import { TokenConversionService } from '@/utils/TokenConversionService';
-import UnifiedTokenomicsGraphs from '../UnifiedTokenomicsGraphs';
+import UnifiedTokenomicsGraphsV2 from '../UnifiedTokenomicsGraphsV2';
 import UserICPBalance from '../userICPBalance';
 import TooltipIcon from '../TooltipIcon';
 
@@ -604,7 +604,7 @@ const TerminalCreateToken: React.FC = () => {
           <div className="terminal-section-header">
             <span className="terminal-prompt">&gt;</span> tokenomics_preview
           </div>
-          <UnifiedTokenomicsGraphs
+          <UnifiedTokenomicsGraphsV2
             primaryMaxSupply={form.primary_max_supply}
             tgeAllocation={form.tge_allocation}
             initialSecondaryBurn={form.initial_secondary_burn}

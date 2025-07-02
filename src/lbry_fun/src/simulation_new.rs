@@ -82,37 +82,3 @@ pub fn preview_tokenomics(args: PreviewArgs) -> GraphData {
     graph_data
 }
 
-/// Generate tokenomics schedule for token creation (legacy format)
-pub fn generate_tokenomics_schedule(
-    initial_secondary_burn: u64,
-    initial_reward_per_burn_unit: u64,
-    max_primary_supply: u64,
-    halving_step: u64,
-) -> TokenomicsSchedule {
-    let schedule = preview_tokenomics_from_frontend(
-        initial_reward_per_burn_unit,
-        max_primary_supply,
-        initial_secondary_burn,
-        halving_step,
-        0, // No TGE for schedule generation
-    );
-    
-    let mut secondary_thresholds = Vec::new();
-    let mut primary_rewards = Vec::new();
-    
-    // Convert to legacy format (cumulative thresholds and reward rates)
-    for epoch in schedule.epochs.iter().skip(1) { // Skip TGE
-        secondary_thresholds.push(epoch.cumulative_secondary_burned_e8s as u64);
-        
-        // Calculate the reward rate for this epoch
-        if epoch.secondary_burned_this_epoch_e8s > 0 {
-            let rate = (epoch.primary_minted_this_epoch_e8s * 10000) / epoch.secondary_burned_this_epoch_e8s;
-            primary_rewards.push(rate as u64);
-        }
-    }
-    
-    TokenomicsSchedule {
-        secondary_burn_thresholds: secondary_thresholds,
-        primary_mint_per_threshold: primary_rewards,
-    }
-}

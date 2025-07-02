@@ -1,6 +1,3 @@
-A1: Distribution tracking frontend plan -> Kongswap lp problem
-A2: Error log getting error logs.
-A3: backend status button handlings.
 
 
 
@@ -13,7 +10,6 @@ A3: backend status button handlings.
 - Get launch pending to update the state when time runs out.
 - Success page should update state with the new token page.
 - Definitely going to need to display the price chart.
-- "We are here" on all the live graphs.
 - Upload a non-svg cover image (an nft?) and a real project description (optional)
 - Dynamic price feeds from kongswap.
 - y-axis label on graphs 1, 2 and 4
@@ -48,7 +44,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "pautb-aqko4-cwwhr-ntlsx-wqu54-6t6uo-44pe3-myj3t-xj3uy-n7cj4-uqe"; subaccount = null }; amount = (9_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "k3fih-cn2bz-iem3l-npsm2-752yv-uuyps-jtf2u-7joq6-oqrlf-b7eub-nae"; subaccount = null }; amount = (999_900_000_000 : nat) })'
 
 dfx identity use default
 

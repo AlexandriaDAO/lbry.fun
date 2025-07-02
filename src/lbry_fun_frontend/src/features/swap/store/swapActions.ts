@@ -44,11 +44,6 @@ export const initialState: SwapState = {
   isLoadingCriticalData: false,
   isLoadingSecondaryData: false,
   
-  // Tokenomics schedule data
-  tokenomicsSchedule: null,
-  tokenomicsScheduleLoading: false,
-  tokenomicsScheduleError: null,
-  
   // Current tokenomics state
   tokenomicsCurrentState: null,
   tokenomicsCurrentStateLoading: false,
@@ -100,8 +95,6 @@ export const swapActions = {
       state.canisterArchivedBal = null;
       state.averageAPY = null;
       state.logsData = null;
-      state.tokenomicsSchedule = null;
-      state.tokenomicsScheduleError = null;
       state.tokenomicsCurrentState = null;
       state.tokenomicsCurrentStateError = null;
       

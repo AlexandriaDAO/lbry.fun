@@ -1,0 +1,1 @@
+This canister has been adited. Don't make any edits without asking first, and every single change must be recorded in the   ICP_SWAP_CHANGE_LOG.md file.

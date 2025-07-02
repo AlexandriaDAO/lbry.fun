@@ -1,26 +1,20 @@
-import React, { useMemo, lazy, Suspense } from 'react';
+import React, { useMemo, lazy, Suspense, useEffect, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
+import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import UnifiedSkeleton from './UnifiedSkeleton';
+import previewTokenomicsSchedule, { TokenomicsSchedule } from '@/features/token/thunk/previewTokenomicsSchedule.thunk';
 
 // Lazy load the tokenomics graphs
-const UnifiedTokenomicsGraphs = lazy(() => import('@/features/token/components/UnifiedTokenomicsGraphs'));
+const UnifiedTokenomicsGraphsV2 = lazy(() => import('@/features/token/components/UnifiedTokenomicsGraphsV2'));
 
 const TokenomicsTab: React.FC = () => {
+    const dispatch = useAppDispatch();
     const { swap } = useAppSelector(state => state);
     const poolData = swap.activeSwapPool;
-    const rawTokenomicsSchedule = swap.tokenomicsSchedule;
     const tokenomicsCurrentState = swap.tokenomicsCurrentState;
-    
-    // Convert BigUint64Array to regular array if needed
-    const tokenomicsSchedule = rawTokenomicsSchedule ? {
-        primary_mint_per_threshold: Array.isArray(rawTokenomicsSchedule.primary_mint_per_threshold) 
-            ? rawTokenomicsSchedule.primary_mint_per_threshold 
-            : Array.from(rawTokenomicsSchedule.primary_mint_per_threshold).map(v => v.toString()),
-        secondary_burn_per_threshold: Array.isArray(rawTokenomicsSchedule.secondary_burn_per_threshold)
-            ? rawTokenomicsSchedule.secondary_burn_per_threshold
-            : Array.from(rawTokenomicsSchedule.secondary_burn_per_threshold).map(v => v.toString())
-    } : null;
+    const [preCalculatedSchedule, setPreCalculatedSchedule] = useState<TokenomicsSchedule | null>(null);
+    const [scheduleLoading, setScheduleLoading] = useState(false);
 
     // Calculate tokenomics values using useMemo to avoid recalculation
     const tokenomicsValues = useMemo(() => {
@@ -35,25 +29,8 @@ const TokenomicsTab: React.FC = () => {
         const initialSecondaryBurn = (BigInt(poolTokenomics.initial_secondary_burn || "0") / E8S).toString();
         const halvingStep = poolTokenomics.halving_step?.toString() || "0";
         
-        // Get initial reward per burn unit from the fetched schedule or calculate it
-        let initialRewardPerBurnUnit = "1";
-        if (tokenomicsSchedule && tokenomicsSchedule.primary_mint_per_threshold && tokenomicsSchedule.primary_mint_per_threshold.length > 0) {
-            // Handle both string and BigUint64Array types
-            const firstValue = tokenomicsSchedule.primary_mint_per_threshold[0];
-            const firstRewardE8s = BigInt(firstValue.toString());
-            initialRewardPerBurnUnit = (firstRewardE8s / E8S).toString();
-        } else {
-            // Calculate it based on the formula if schedule not available yet
-            const tgeE8s = BigInt(poolTokenomics.initial_primary_mint || "0");
-            const maxSupplyE8s = BigInt(poolTokenomics.primary_token_max_supply || "0");
-            const initialBurnE8s = BigInt(poolTokenomics.initial_secondary_burn || "0");
-            
-            if (maxSupplyE8s > tgeE8s && initialBurnE8s > 0n) {
-                const availableSupply = maxSupplyE8s - tgeE8s;
-                const firstEpochReward = availableSupply / 2n; // First epoch gets 50% of available
-                initialRewardPerBurnUnit = (firstEpochReward / initialBurnE8s).toString();
-            }
-        }
+        // Use the actual initial_reward_per_burn_unit from the pool data
+        const initialRewardPerBurnUnit = poolTokenomics.initial_reward_per_burn_unit;
 
         const result = {
             primaryMaxSupply,
@@ -72,7 +49,33 @@ const TokenomicsTab: React.FC = () => {
         // });
         
         return result;
-    }, [poolData, tokenomicsSchedule]);
+    }, [poolData]);
+
+    // Fetch pre-calculated schedule when tokenomics values are available
+    useEffect(() => {
+        if (tokenomicsValues && !scheduleLoading) {
+            setScheduleLoading(true);
+            
+            const E8S_MULTIPLIER = BigInt(100_000_000);
+            
+            dispatch(previewTokenomicsSchedule({
+                primary_per_threshold: parseInt(tokenomicsValues.initialRewardPerBurnUnit),
+                max_primary_supply: BigInt(tokenomicsValues.primaryMaxSupply) * E8S_MULTIPLIER,
+                initial_secondary_burn: parseInt(tokenomicsValues.initialSecondaryBurn),
+                halving_step: parseInt(tokenomicsValues.halvingStep),
+                tge_allocation: BigInt(tokenomicsValues.tgeAllocation) * E8S_MULTIPLIER,
+            }))
+            .unwrap()
+            .then((result) => {
+                setPreCalculatedSchedule(result);
+                setScheduleLoading(false);
+            })
+            .catch((error) => {
+                console.error("Failed to fetch tokenomics schedule:", error);
+                setScheduleLoading(false);
+            });
+        }
+    }, [tokenomicsValues, dispatch]);
 
     // Render states
     if (!poolData) {
@@ -123,15 +126,16 @@ const TokenomicsTab: React.FC = () => {
             </div>
             
             <Suspense fallback={<UnifiedSkeleton variant="card" rows={5} />}>
-                <UnifiedTokenomicsGraphs
+                <UnifiedTokenomicsGraphsV2
                     key={poolData?.[0] || 'default'} // Force re-render when pool changes
                     primaryMaxSupply={tokenomicsValues.primaryMaxSupply}
                     tgeAllocation={tokenomicsValues.tgeAllocation}
                     initialSecondaryBurn={tokenomicsValues.initialSecondaryBurn}
                     halvingStep={tokenomicsValues.halvingStep}
                     initialRewardPerBurnUnit={tokenomicsValues.initialRewardPerBurnUnit}
-                    deployedSchedule={tokenomicsSchedule}
+                    deployedSchedule={null} // Don't use deployed schedule - calculate everything fresh
                     currentState={tokenomicsCurrentState}
+                    preCalculatedSchedule={preCalculatedSchedule}
                 />
             </Suspense>
         </div>
