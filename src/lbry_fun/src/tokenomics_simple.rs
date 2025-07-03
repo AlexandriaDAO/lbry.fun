@@ -228,18 +228,18 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
 /// Convert frontend parameters to backend format and generate schedule
 /// Now uses dynamic parameters to allow user experimentation
 pub fn preview_tokenomics_from_frontend(
-    primary_per_threshold: u64,      // Natural units from frontend (e.g., 5 tokens)
+    primary_per_threshold: u64,      // E8S from frontend (already converted)
     max_primary_supply: u64,         // E8S from frontend
-    initial_secondary_burn: u64,     // Natural units from frontend (e.g., 21000 tokens)
+    initial_secondary_burn: u64,     // E8S from frontend (already converted)
     halving_step: u64,               // Percentage as natural number (e.g., 50 for 50%)
     tge_allocation: u64,             // E8S from frontend
 ) -> TokenomicsSchedule {
-    // Convert frontend parameters to E8S
+    // Frontend already sends values in E8S, no conversion needed
     let params = TokenomicsParams {
         max_supply_e8s: max_primary_supply as u128,
         tge_allocation_e8s: tge_allocation as u128,
-        initial_burn_e8s: (initial_secondary_burn as u128) * E8S,
-        initial_reward_rate_e8s: (primary_per_threshold as u128) * E8S,
+        initial_burn_e8s: initial_secondary_burn as u128,  // Already in E8S
+        initial_reward_rate_e8s: primary_per_threshold as u128,  // Already in E8S
         halving_percentage: halving_step as u32,
     };
     
@@ -252,13 +252,13 @@ mod tests {
     
     #[test]
     fn test_simple_tokenomics_debug() {
-        // Test with very simple values to debug the issue
+        // Test with values that match frontend behavior (already in E8S)
         let schedule = preview_tokenomics_from_frontend(
-            1,      // 1 token reward per burn (frontend sends natural units)
-            1000 * E8S as u64,  // 1000 max supply (frontend sends E8S)
-            10,     // 10 secondary tokens to burn (frontend sends natural units)
-            50,     // 50% halving
-            0,      // No TGE
+            1 * E8S as u64,      // 1 token reward per burn (frontend sends E8S)
+            1000 * E8S as u64,   // 1000 max supply (frontend sends E8S)
+            10 * E8S as u64,     // 10 secondary tokens to burn (frontend sends E8S)
+            50,                  // 50% halving
+            0,                   // No TGE
         );
         
         println!("DEBUG: Simple tokenomics test");
@@ -308,6 +308,42 @@ mod tests {
         println!("  Expected: {} tokens", expected2 / E8S);
         println!("  Got: {} tokens", result2 / E8S);
         assert_eq!(result2, expected2, "2.5 tokens × 21k burns × 3 = 157.5k tokens");
+    }
+
+    #[test]
+    fn test_user_scenario_fix() {
+        // Test the exact scenario from the user report
+        // Frontend sends: initial_reward = 5 tokens (already as 5 * E8S)
+        let schedule = preview_tokenomics_from_frontend(
+            5 * E8S as u64,          // 5 tokens reward (frontend sends E8S)
+            21_000_000 * E8S as u64, // 21M max supply (frontend sends E8S)
+            21_000 * E8S as u64,     // 21k secondary to burn (frontend sends E8S)
+            50,                      // 50% halving
+            0,                       // No TGE
+        );
+        
+        // First epoch calculations:
+        // - Burns 21,000 secondary tokens
+        // - Mints: 21,000 × 5 × 3 = 315,000 primary tokens
+        let first_epoch = &schedule.epochs[1];
+        println!("User scenario test - First epoch:");
+        println!("  Secondary burned: {} tokens", first_epoch.secondary_burned_this_epoch_e8s / E8S);
+        println!("  Primary minted: {} tokens", first_epoch.primary_minted_this_epoch_e8s / E8S);
+        
+        assert_eq!(first_epoch.secondary_burned_this_epoch_e8s, 21_000 * E8S);
+        assert_eq!(first_epoch.primary_minted_this_epoch_e8s, 315_000 * E8S);
+        
+        // When user burns just 1 secondary token:
+        // Expected: 1 × 5 × 3 = 15 primary tokens (not 21+ million!)
+        let single_burn_mint = calculate_primary_minted(1 * E8S, 5 * E8S);
+        let single_burn_mint_natural = single_burn_mint / E8S;
+        println!("\nSingle token burn:");
+        println!("  Burning 1 secondary token mints: {} primary tokens", single_burn_mint_natural);
+        
+        assert_eq!(single_burn_mint_natural, 15, "Burning 1 secondary should mint 15 primary tokens");
+        
+        // Verify it's nowhere near 21 million
+        assert!(single_burn_mint_natural < 100, "Should be much less than 21 million!");
     }
     
     #[test]
@@ -557,9 +593,9 @@ mod tests {
         
         // Let's also check what the hardcoded version produces
         println!("\nComparing with hardcoded version:");
-        let hardcoded = preview_tokenomics_from_frontend_hardcoded(5, 21_000_000 * E8S as u64, 21_000, 50, 0);
-        println!("Hardcoded epochs: {}", hardcoded.epochs.len());
-        println!("Hardcoded total primary: {}", hardcoded.epochs.last().unwrap().cumulative_primary_minted_e8s / E8S);
+        // let hardcoded = preview_tokenomics_from_frontend_hardcoded(5, 21_000_000 * E8S as u64, 21_000, 50, 0);
+        // println!("Hardcoded epochs: {}", hardcoded.epochs.len());
+        // println!("Hardcoded total primary: {}", hardcoded.epochs.last().unwrap().cumulative_primary_minted_e8s / E8S);
         
         // Debug first few hardcoded epochs
         for i in 0..5.min(hardcoded.epochs.len()) {

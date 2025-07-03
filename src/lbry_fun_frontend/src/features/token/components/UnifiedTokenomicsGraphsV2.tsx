@@ -91,10 +91,10 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
     // Convert natural numbers to E8S for backend
     const E8S_MULTIPLIER = BigInt(100_000_000);
     
-    // Frontend uses whole numbers, convert to what backend expects
-    const primary_per_threshold = parseInt(initialRewardPerBurnUnit || '0');
+    // Frontend uses whole numbers, convert to E8S for backend
+    const primary_per_threshold = BigInt(initialRewardPerBurnUnit || '0') * E8S_MULTIPLIER;
     const max_primary_supply = BigInt(primaryMaxSupply || '0') * E8S_MULTIPLIER;
-    const initial_secondary_burn = parseInt(initialSecondaryBurn || '0');
+    const initial_secondary_burn = BigInt(initialSecondaryBurn || '0') * E8S_MULTIPLIER;
     const halving_step = parseInt(halvingStep || '0');
     const tge_allocation = BigInt(tgeAllocation || '0') * E8S_MULTIPLIER;
 
@@ -409,6 +409,7 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
       <div className="terminal-section bg-black border border-white/30 p-3 font-mono mt-8">
         <div className="terminal-row justify-end">
           <button 
+            type="button"
             onClick={copyToClipboard}
             className="terminal-button text-xs hover:bg-white/10 px-3 py-1 border border-white/30"
           >

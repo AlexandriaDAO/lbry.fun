@@ -254,3 +254,23 @@ This file tracks all changes made to convert the audited icp_swap canister into 
 - The canister now builds successfully
 - Only one minor warning remains about unused function `log_error` which can be addressed later
 - Launch delay implementation is backward compatible - tokens without launch_time are immediately tradeable
+
+### Tokenomics Authorization Fix (2025-01-02)
+
+| Change ID | File | Risk | Description | Original | New | Justification | Security Impact | Test Status |
+|-----------|------|------|-------------|----------|-----|---------------|-----------------|-------------|
+| SWAP-112 | src/update.rs | HIGH | Fix tokenomics authorization | Tokenomics rejects icp_swap calls | Pass icp_swap_canister_id to tokenomics | Enable proper authorization | Critical - fixes execute_burn | Pending |
+
+## Summary Statistics
+- Total Changes: 125 (was 124, added 1 for tokenomics fix)
+- Low Risk: 82
+- Medium Risk: 40
+- High Risk: 3 (was 2, added 1 high risk)
+- Fixed: 9
+- Tested: 0
+- Pending: 116 (was 115, added 1 pending)
+
+## Notes
+- The tokenomics canister was rejecting calls from icp_swap because it checks against a hardcoded canister ID
+- This fix requires changes to both icp_swap and tokenomics canisters to pass the correct authorization
+- The change is marked HIGH risk because it affects core functionality (execute_burn/mint_primary flow)

@@ -5,6 +5,7 @@ members = [
     "src/tokenomics",
     "src/xrc",
     "src/logs",
+    "src/bot1",
     "tests",
 ]
 resolver = "2"

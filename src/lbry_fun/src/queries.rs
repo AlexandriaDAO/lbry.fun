@@ -4,6 +4,7 @@ use serde::Deserialize;
 use crate::{TokenRecord, TOKENS, get_self_icp_balance};
 use crate::simulation_new::{GraphData, PreviewArgs};
 use crate::tokenomics_simple::{preview_tokenomics_from_frontend, TokenomicsSchedule};
+use crate::utlis::E8S;
 
 #[query]
 pub fn get_all_token_record() -> Vec<(u64, TokenRecord)> {
@@ -150,6 +151,28 @@ pub fn get_token_status(token_id: u64) -> Option<TokenStatusDetail> {
             }
         })
     })
+}
+
+#[query]
+pub fn get_tokenomics_graphs(pool_id: u64) -> Result<GraphData, String> {
+    // 1. Look up the token record
+    let token_record = TOKENS.with(|tokens| {
+        tokens.borrow().get(&pool_id)
+    }).ok_or_else(|| format!("Token with ID {} not found", pool_id))?;
+    
+    // 2. Convert stored E8S values to natural units for the preview function
+    let args = PreviewArgs {
+        primary_max_supply: token_record.primary_token_max_supply,
+        tge_allocation: token_record.initial_primary_mint,
+        initial_secondary_burn: token_record.initial_secondary_burn,
+        halving_step: token_record.halving_step,
+        // Convert from E8S to natural units
+        initial_reward_per_burn_unit: token_record.initial_reward_per_burn_unit / E8S,
+    };
+    
+    // 3. Use the existing preview logic
+    use crate::simulation_new::preview_tokenomics;
+    Ok(preview_tokenomics(args))
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]

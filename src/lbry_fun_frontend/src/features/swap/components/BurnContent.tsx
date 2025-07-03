@@ -140,123 +140,136 @@ const BurnContent = () => {
 
     return (
         <AccessGuard accessState={accessState} countdown={countdown} launchTime={launchTime}>
-            <div className="terminal-pure">
-                {/* Input Section */}
-                <div className="mb-4">
-                    
-                    <div className={`terminal-input-container mb-3 ${amountSecondary > maxBurnAllowed ? 'border-red-500' : ''}`}>
-                        <div className="terminal-row">
-                            <span className="terminal-label">{secondarySymbol.toLowerCase()}_amount:</span>
-                            <input 
-                                className="terminal-input text-right" 
-                                type="number" 
-                                value={amountSecondary} 
-                                min={0} 
-                                onChange={handleAmountSecondaryChange}
-                                placeholder="0"
-                            />
-                        </div>
-                    </div>
-                    
-                    <div className="terminal-row mb-2">
-                        <span className="terminal-label">balance:</span>
-                        <span className="terminal-value">{swap.secondaryBalance} {secondarySymbol}</span>
-                    </div>
-                    
-                    <button
-                        className="terminal-button text-xs"
-                        onClick={handleMaxLbry}
-                    >
-                        [max]
-                    </button>
-                </div>
+            <div className="w-full">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Left Column - Burn Form */}
+                    <div>
+                        {/* Input Section */}
+                        <div className="space-y-3 mb-6">
+                            <div className={`border ${amountSecondary > maxBurnAllowed ? 'border-red-500' : 'border-white/20'} bg-background-secondary p-4 rounded-lg transition-colors`}>
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="terminal-label text-xs">BURN {secondarySymbol}</span>
+                                    <button
+                                        className="text-xs text-gray-400 hover:text-white transition-colors"
+                                        onClick={handleMaxLbry}
+                                    >
+                                        MAX
+                                    </button>
+                                </div>
+                                <input 
+                                    className="bg-transparent text-white font-mono text-lg w-full focus:outline-none caret-lime-500" 
+                                    type="number" 
+                                    value={amountSecondary} 
+                                    min={0} 
+                                    onChange={handleAmountSecondaryChange}
+                                    placeholder="0"
+                                />
+                                <div className="flex justify-between items-center mt-2">
+                                    <span className="terminal-label text-xs">balance:</span>
+                                    <span className="terminal-value text-xs">{swap.secondaryBalance} {secondarySymbol}</span>
+                                </div>
+                            </div>
 
-                {/* Output Section */}
-                <div className="mb-4">
-                    <div className="terminal-info">
-                        <div className="terminal-row mb-2">
-                            <span className="terminal-label">receive:</span>
-                            <span className={`terminal-primary ${amountSecondary > maxBurnAllowed ? 'text-red-500' : ''}`}>
-                                {tentativeICP.toFixed(4)} ICP
-                            </span>
+                            {/* Output Section */}
+                            <div className="space-y-3">
+                                <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="terminal-label text-xs">RECEIVE ICP</span>
+                                    </div>
+                                    <div className={`font-mono text-lg mb-2 ${amountSecondary > maxBurnAllowed ? 'text-red-500' : 'text-lime-500'}`}>
+                                        {tentativeICP.toFixed(4)}
+                                    </div>
+                                    <div className="text-xs text-gray-400">50% of original mint value</div>
+                                </div>
+                                
+                                <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="terminal-label text-xs">RECEIVE {primarySymbol}</span>
+                                    </div>
+                                    <div className="text-lime-500 font-mono text-lg">
+                                        {tentativePrimary.toFixed(4)}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div className="terminal-row">
-                            <span className="terminal-label">receive:</span>
-                            <span className="terminal-primary">
-                                {tentativePrimary.toFixed(4)} {primarySymbol}
-                            </span>
-                        </div>
-                    </div>
 
-                    {/* Execute Button */}
-                    {isAuthenticated ? (
-                        <button
-                            type="button"
-                            className={`terminal-button w-full ${
-                                amountSecondary === 0 || swap.loading || amountSecondary > maxBurnAllowed || !isTokenLive
-                                    ? ''
-                                    : 'terminal-button-primary'
-                            }`}
-                            disabled={
-                                amountSecondary === 0 ||
-                                swap.loading === true ||
-                                amountSecondary > maxBurnAllowed ||
-                                !isTokenLive
-                            }
-                            onClick={handleSubmit}
-                            title={!isTokenLive ? "Trading will be enabled after the launch period" : ""}
-                        >
-                            {swap.loading ? (
-                                <LoaderCircle size={14} className="animate-spin mx-auto" />
-                            ) : !isTokenLive ? (
-                                <span className="terminal-status">[awaiting_launch]</span>
+                        {/* Status Messages */}
+                        {amountSecondary > maxBurnAllowed && (
+                            <div className="mb-4 p-3 border border-red-500/50 bg-red-500/10 rounded text-sm">
+                                <span className="text-red-400">Maximum allowed: {maxBurnAllowed.toFixed(4)} {secondarySymbol}</span>
+                            </div>
+                        )}
+
+                        {/* Execute Button */}
+                        <div className="mt-6">
+                            {isAuthenticated ? (
+                                <button
+                                    type="button"
+                                    className={`w-full font-mono text-sm px-4 py-3 rounded transition-all ${
+                                        amountSecondary === 0 || swap.loading || amountSecondary > maxBurnAllowed || !isTokenLive
+                                            ? 'bg-gray-800 text-gray-400 cursor-not-allowed'
+                                            : 'bg-lime-500 text-black font-bold hover:bg-lime-400 cursor-pointer'
+                                    }`}
+                                    disabled={
+                                        amountSecondary === 0 ||
+                                        swap.loading === true ||
+                                        amountSecondary > maxBurnAllowed ||
+                                        !isTokenLive
+                                    }
+                                    onClick={handleSubmit}
+                                    title={!isTokenLive ? "Trading will be enabled after the launch period" : ""}
+                                >
+                                    {swap.loading ? (
+                                        <LoaderCircle size={14} className="animate-spin mx-auto" />
+                                    ) : !isTokenLive ? (
+                                        <span>AWAITING LAUNCH</span>
+                                    ) : (
+                                        <span>EXECUTE BURN</span>
+                                    )}
+                                </button>
                             ) : (
-                                <span>execute_burn</span>
+                                <div className="bg-gray-800 text-white font-mono text-sm px-4 py-3 rounded flex items-center justify-center">
+                                    <TerminalAuthMenu />
+                                </div>
                             )}
-                        </button>
-                    ) : (
-                        <div className="terminal-button w-full flex items-center justify-center">
-                            <TerminalAuthMenu />
+                            
+                            <div className="mt-3 space-y-1">
+                                <span className="text-xs text-gray-400">* Burns are irreversible</span>
+                                <br />
+                                <span className="text-xs text-gray-400">* Failed transactions can be redeemed in swap tab</span>
+                            </div>
                         </div>
-                    )}
-                </div>
-
-                {/* Transaction Details Section */}
-                <div className="border-t border-white/30 mt-4 pt-3">
-                    
-                    <div className="terminal-row">
-                        <span className="terminal-label">network_fee:</span>
-                        <span className="terminal-value">{swap.secondaryFee} {secondarySymbol}</span>
-                    </div>
-                    
-                    <div className="terminal-row">
-                        <span className="terminal-label">max_burn:</span>
-                        <span className="terminal-primary">{maxBurnAllowed.toFixed(4)} {secondarySymbol}</span>
-                    </div>
-                    
-                    <div className="terminal-row">
-                        <span className="terminal-label">exchange_rate:</span>
-                        <span className="terminal-value">1 {secondarySymbol} = {Number(tokenomics.primaryMintRate).toFixed(4)} {primarySymbol}</span>
                     </div>
 
-                    <div className="terminal-row">
-                        <span className="terminal-label">icp_rate:</span>
-                        <span className="terminal-value">{Number(swap.secondaryRatio).toFixed(4)} {secondarySymbol} = 0.5 ICP</span>
+                    {/* Right Column - Transaction Details */}
+                    <div>
+                        <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+                            <h3 className="text-sm font-semibold mb-4">Burn Details</h3>
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="terminal-label text-xs">Network Fee:</span>
+                                    <span className="terminal-value text-xs">{swap.secondaryFee} {secondarySymbol}</span>
+                                </div>
+                                
+                                <div className="flex justify-between items-center">
+                                    <span className="terminal-label text-xs">Max Burn Allowed:</span>
+                                    <span className="terminal-primary text-xs">{maxBurnAllowed.toFixed(4)} {secondarySymbol}</span>
+                                </div>
+                                
+                                <div className="border-t border-white/10 pt-3">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="terminal-label text-xs">Exchange Rate:</span>
+                                        <span className="terminal-value text-xs">1 {secondarySymbol} = {Number(tokenomics.primaryMintRate).toFixed(4)} {primarySymbol}</span>
+                                    </div>
+                                    
+                                    <div className="flex justify-between items-center">
+                                        <span className="terminal-label text-xs">ICP Return Rate:</span>
+                                        <span className="terminal-value text-xs">{Number(swap.secondaryRatio).toFixed(4)} {secondarySymbol} = 0.5 ICP</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                {/* Status Messages */}
-                {amountSecondary > maxBurnAllowed && (
-                    <div className="terminal-alert mt-3">
-                        <span className="terminal-status">[error]</span> max_allowed: {maxBurnAllowed.toFixed(4)}
-                    </div>
-                )}
-
-                <div className="mt-3 space-y-1">
-                    <span className="terminal-label">* burns are irreversible</span>
-                    <br />
-                    <span className="terminal-label">* failed transactions can be redeemed below</span>
                 </div>
 
                 <TerminalNotification 

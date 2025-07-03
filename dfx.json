@@ -55,6 +55,12 @@
       "type": "rust",
       "package": "icp_swap",
       "candid": "src/icp_swap/icp_swap.did"
+    },
+    "bot1": {
+      "type": "rust",
+      "package": "bot1",
+      "candid": "src/bot1/bot1.did",
+      "specified_id": "ucwa4-rx777-77774-qaada-cai"
     }
     
   },

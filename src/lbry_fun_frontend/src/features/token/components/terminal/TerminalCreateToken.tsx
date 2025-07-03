@@ -46,7 +46,6 @@ const TerminalCreateToken: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const lbryFun = useAppSelector((state: RootState) => state.lbryFun);
-  const { previewGraphData } = useAppSelector((state: RootState) => state.lbryFun);
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -58,6 +57,7 @@ const TerminalCreateToken: React.FC = () => {
     message?: string;
   }>({ type: 'idle' });
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state with LBRY/ALEX reference parameters
   const [form, setForm] = useState<TokenFormValues>({
@@ -202,16 +202,25 @@ const TerminalCreateToken: React.FC = () => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (isSubmitting) {
+      console.log('Submission already in progress, ignoring duplicate attempt');
+      return;
+    }
+    
     setSubmitAttempted(true);
     
     if (Object.keys(errors).length > 0) {
       return;
     }
     
+    setIsSubmitting(true);
     setStatus({ type: 'loading', message: 'Creating tokens...' });
     
     if (!isAuthenticated || !principal) {
       setStatus({ type: 'error', message: 'Please log in to create a token.' });
+      setIsSubmitting(false);
       return;
     }
     
@@ -235,12 +244,14 @@ const TerminalCreateToken: React.FC = () => {
     if (lbryFun.success === true) {
       dispatch(lbryFunFlagHandler());
       setStatus({ type: 'success', message: 'Token created successfully!' });
+      setIsSubmitting(false);
       setTimeout(() => {
         navigate('/token/success');
       }, 1500);
     } 
     if (lbryFun.error !== null) {
       setStatus({ type: 'error', message: lbryFun.error.message });
+      setIsSubmitting(false);
     }
   }, [lbryFun.success, lbryFun.error, dispatch, navigate]);
 
@@ -582,22 +593,6 @@ const TerminalCreateToken: React.FC = () => {
             [WARN] High reward exceeds 10% of remaining supply - enables unfair launches where bots can monopolize early epochs. Reduce initial reward to ensure at least 3 meaningful distribution epochs.
           </div>
         )}
-        
-        {previewGraphData && previewGraphData.minted_per_epoch_data_y && (
-          <>
-            {previewGraphData.minted_per_epoch_data_y.length < 3 && (
-              <div className="terminal-error">
-                [CRITICAL] UNFAIR LAUNCH: Only {previewGraphData.minted_per_epoch_data_y.length} epochs - insufficient time for community participation. Minimum 3 epochs required to prevent bot monopolization.
-              </div>
-            )}
-            
-            {previewGraphData.minted_per_epoch_data_y.length > 30 && (
-              <div className="terminal-warning">
-                [WARN] Extended distribution ({previewGraphData.minted_per_epoch_data_y.length} epochs) may reduce liquidity - consider adjusting parameters
-              </div>
-            )}
-          </>
-        )}
 
         {/* Tokenomics Preview */}
         <div className="terminal-section">
@@ -618,7 +613,7 @@ const TerminalCreateToken: React.FC = () => {
           <button
             type="submit"
             className="terminal-command"
-            disabled={Object.keys(errors).length > 0 || status.type === 'loading'}
+            disabled={Object.keys(errors).length > 0 || status.type === 'loading' || isSubmitting}
           >
             &gt; execute_token_creation
           </button>

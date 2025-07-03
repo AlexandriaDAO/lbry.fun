@@ -1,81 +1,37 @@
-import React, { useMemo, lazy, Suspense, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
-import UnifiedSkeleton from './UnifiedSkeleton';
-import previewTokenomicsSchedule, { TokenomicsSchedule } from '@/features/token/thunk/previewTokenomicsSchedule.thunk';
-
-// Lazy load the tokenomics graphs
-const UnifiedTokenomicsGraphsV2 = lazy(() => import('@/features/token/components/UnifiedTokenomicsGraphsV2'));
+import getTokenomicsGraphs, { ProcessedGraphData } from '@/features/token/thunk/getTokenomicsGraphs.thunk';
+import LineChart from './Chart';
 
 const TokenomicsTab: React.FC = () => {
     const dispatch = useAppDispatch();
     const { swap } = useAppSelector(state => state);
     const poolData = swap.activeSwapPool;
-    const tokenomicsCurrentState = swap.tokenomicsCurrentState;
-    const [preCalculatedSchedule, setPreCalculatedSchedule] = useState<TokenomicsSchedule | null>(null);
-    const [scheduleLoading, setScheduleLoading] = useState(false);
+    const [graphData, setGraphData] = useState<ProcessedGraphData | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [copySuccess, setCopySuccess] = useState(false);
 
-    // Calculate tokenomics values using useMemo to avoid recalculation
-    const tokenomicsValues = useMemo(() => {
-        const poolTokenomics = poolData?.[1];
-        if (!poolTokenomics) {
-            return null;
-        }
-
-        const E8S = 100_000_000n;
-        const primaryMaxSupply = (BigInt(poolTokenomics.primary_token_max_supply || "0") / E8S).toString();
-        const tgeAllocation = (BigInt(poolTokenomics.initial_primary_mint || "0") / E8S).toString();
-        const initialSecondaryBurn = (BigInt(poolTokenomics.initial_secondary_burn || "0") / E8S).toString();
-        const halvingStep = poolTokenomics.halving_step?.toString() || "0";
-        
-        // Use the actual initial_reward_per_burn_unit from the pool data
-        const initialRewardPerBurnUnit = poolTokenomics.initial_reward_per_burn_unit;
-
-        const result = {
-            primaryMaxSupply,
-            tgeAllocation,
-            initialSecondaryBurn,
-            halvingStep,
-            initialRewardPerBurnUnit
-        };
-        
-        // Debug logging commented out to avoid potential serialization issues
-        // console.log('TokenomicsTab calculated values:', {
-        //     ...result,
-        //     poolId: poolData?.[0],
-        //     hasSchedule: !!tokenomicsSchedule,
-        //     scheduleLength: tokenomicsSchedule?.primary_mint_per_threshold?.length || 0
-        // });
-        
-        return result;
-    }, [poolData]);
-
-    // Fetch pre-calculated schedule when tokenomics values are available
     useEffect(() => {
-        if (tokenomicsValues && !scheduleLoading) {
-            setScheduleLoading(true);
+        if (poolData && poolData[0]) {
+            setLoading(true);
+            setError(null);
             
-            const E8S_MULTIPLIER = BigInt(100_000_000);
-            
-            dispatch(previewTokenomicsSchedule({
-                primary_per_threshold: parseInt(tokenomicsValues.initialRewardPerBurnUnit),
-                max_primary_supply: BigInt(tokenomicsValues.primaryMaxSupply) * E8S_MULTIPLIER,
-                initial_secondary_burn: parseInt(tokenomicsValues.initialSecondaryBurn),
-                halving_step: parseInt(tokenomicsValues.halvingStep),
-                tge_allocation: BigInt(tokenomicsValues.tgeAllocation) * E8S_MULTIPLIER,
-            }))
-            .unwrap()
-            .then((result) => {
-                setPreCalculatedSchedule(result);
-                setScheduleLoading(false);
-            })
-            .catch((error) => {
-                console.error("Failed to fetch tokenomics schedule:", error);
-                setScheduleLoading(false);
-            });
+            dispatch(getTokenomicsGraphs(poolData[0].toString()))
+                .unwrap()
+                .then(data => {
+                    setGraphData(data);
+                    setLoading(false);
+                })
+                .catch(error => {
+                    console.error("Failed to fetch tokenomics graphs:", error);
+                    setError(error.message || "Failed to fetch tokenomics data");
+                    setLoading(false);
+                });
         }
-    }, [tokenomicsValues, dispatch]);
+    }, [poolData, dispatch]);
 
     // Render states
     if (!poolData) {
@@ -92,8 +48,36 @@ const TokenomicsTab: React.FC = () => {
         );
     }
 
+    if (loading) {
+        return (
+            <div className="terminal-pure">
+                <div className="terminal-header">
+                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics
+                </div>
+                <div className="terminal-row">
+                    <span className="terminal-label">status:</span>
+                    <span className="terminal-primary">loading...</span>
+                    <LoaderCircle className="w-4 h-4 animate-spin inline-block ml-2" />
+                </div>
+            </div>
+        );
+    }
 
-    if (!tokenomicsValues) {
+    if (error) {
+        return (
+            <div className="terminal-pure">
+                <div className="terminal-header">
+                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics
+                </div>
+                <div className="terminal-row">
+                    <span className="terminal-label">error:</span>
+                    <span className="terminal-error">{error}</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (!graphData) {
         return (
             <div className="terminal-pure">
                 <div className="terminal-header">
@@ -103,41 +87,115 @@ const TokenomicsTab: React.FC = () => {
                     <span className="terminal-label">status:</span>
                     <span className="terminal-accent">no_data_available</span>
                 </div>
-                {swap.tokenomicsScheduleError && (
-                    <div className="terminal-row">
-                        <span className="terminal-label">error:</span>
-                        <span className="terminal-error">{swap.tokenomicsScheduleError}</span>
-                    </div>
-                )}
             </div>
         );
     }
 
+    // Prepare data for charts - converting from backend format to chart format
+    const cumulativeSupplyData = {
+        xAxis: graphData.cumulative_supply_data_x.map(x => x / 100_000_000), // Convert from E8S
+        yAxis: graphData.cumulative_supply_data_y.map(y => y / 100_000_000)
+    };
+
+    const mintedPerEpochData = {
+        xAxis: graphData.minted_per_epoch_data_x,
+        yAxis: graphData.minted_per_epoch_data_y.map(y => y / 100_000_000)
+    };
+
+    const costToMintData = {
+        xAxis: graphData.cost_to_mint_data_x.map(x => x / 100_000_000),
+        yAxis: graphData.cost_to_mint_data_y
+    };
+
+    const cumulativeUsdCostData = {
+        xAxis: graphData.cumulative_usd_cost_data_x.map(x => x / 100_000_000),
+        yAxis: graphData.cumulative_usd_cost_data_y
+    };
+
+    const copyToClipboard = () => {
+        const chartData = {
+            poolId: poolData?.[0]?.toString(),
+            graphs: {
+                cumulativeSupply: cumulativeSupplyData,
+                mintedPerEpoch: mintedPerEpochData,
+                costToMint: costToMintData,
+                cumulativeUsdCost: cumulativeUsdCostData
+            }
+        };
+        
+        navigator.clipboard.writeText(JSON.stringify(chartData, null, 2));
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+    };
+
     return (
         <div className="w-full">
-            <div className="terminal-pure mb-4">
-                <div className="terminal-header mb-2">
-                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics_visualization
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Cumulative Supply Chart */}
+                <div className="bg-background-secondary p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Cumulative Supply</h3>
+                    <LineChart
+                        dataXaxis={cumulativeSupplyData.xAxis}
+                        dataYaxis={cumulativeSupplyData.yAxis}
+                        xAxisLabel="Secondary Burned"
+                        yAxisLabel="Primary Minted"
+                        lineColor="hsl(var(--color-chart-primary))"
+                        gardientColor="hsl(var(--color-chart-primary) / 0.3)"
+                    />
                 </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">status:</span>
-                    <span className="terminal-primary">[LOADED]</span>
+
+                {/* Minted Per Epoch Chart */}
+                <div className="bg-background-secondary p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Minted Per Epoch</h3>
+                    <LineChart
+                        dataXaxis={mintedPerEpochData.xAxis}
+                        dataYaxis={mintedPerEpochData.yAxis}
+                        xAxisLabel="Epoch"
+                        yAxisLabel="Tokens Minted"
+                        lineColor="hsl(var(--color-chart-secondary))"
+                        gardientColor="hsl(var(--color-chart-secondary) / 0.3)"
+                    />
+                </div>
+
+                {/* Cost to Mint Chart */}
+                <div className="bg-background-secondary p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Cost to Mint</h3>
+                    <LineChart
+                        dataXaxis={costToMintData.xAxis}
+                        dataYaxis={costToMintData.yAxis}
+                        xAxisLabel="Primary Supply"
+                        yAxisLabel="Cost (USD)"
+                        lineColor="hsl(var(--color-chart-success))"
+                        gardientColor="hsl(var(--color-chart-success) / 0.3)"
+                    />
+                </div>
+
+                {/* Cumulative USD Cost Chart */}
+                <div className="bg-background-secondary p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Cumulative USD Cost</h3>
+                    <LineChart
+                        dataXaxis={cumulativeUsdCostData.xAxis}
+                        dataYaxis={cumulativeUsdCostData.yAxis}
+                        xAxisLabel="Primary Supply"
+                        yAxisLabel="Total Cost (USD)"
+                        lineColor="hsl(var(--color-chart-warning))"
+                        gardientColor="hsl(var(--color-chart-warning) / 0.3)"
+                    />
                 </div>
             </div>
             
-            <Suspense fallback={<UnifiedSkeleton variant="card" rows={5} />}>
-                <UnifiedTokenomicsGraphsV2
-                    key={poolData?.[0] || 'default'} // Force re-render when pool changes
-                    primaryMaxSupply={tokenomicsValues.primaryMaxSupply}
-                    tgeAllocation={tokenomicsValues.tgeAllocation}
-                    initialSecondaryBurn={tokenomicsValues.initialSecondaryBurn}
-                    halvingStep={tokenomicsValues.halvingStep}
-                    initialRewardPerBurnUnit={tokenomicsValues.initialRewardPerBurnUnit}
-                    deployedSchedule={null} // Don't use deployed schedule - calculate everything fresh
-                    currentState={tokenomicsCurrentState}
-                    preCalculatedSchedule={preCalculatedSchedule}
-                />
-            </Suspense>
+            {/* Copy Graph Data Button */}
+            <div className="terminal-section bg-black border border-white/30 p-3 font-mono mt-8">
+                <div className="terminal-row justify-end">
+                    <button 
+                        type="button"
+                        onClick={copyToClipboard}
+                        className="terminal-button text-xs hover:bg-white/10 px-3 py-1 border border-white/30"
+                    >
+                        <span className="terminal-prompt">&gt;</span> {copySuccess ? 'copied_to_clipboard' : 'copy_graph_data'}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };

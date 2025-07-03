@@ -43,20 +43,20 @@ export const AnalyticsTerminal: React.FC = React.memo(() => {
           <span className="terminal-prompt">&gt;&gt;</span> ANALYTICS_TERMINAL
         </div>
         {/* View Navigation */}
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {(['insights', 'tokenomics', 'technical'] as const).map(view => (
             <button
               key={view}
               onClick={() => setActiveView(view)}
               className={`
-                terminal-button text-xs px-2 py-1
+                text-xs px-3 py-1 transition-all
                 ${activeView === view
-                  ? 'border-lime-500 text-lime-500'
-                  : 'border-white/30 text-gray-400'
+                  ? 'bg-lime-500 text-black font-bold'
+                  : 'bg-transparent text-gray-400 hover:text-white'
                 }
               `}
             >
-              [{view.toUpperCase()}]
+              {view.toUpperCase()}
             </button>
           ))}
         </div>

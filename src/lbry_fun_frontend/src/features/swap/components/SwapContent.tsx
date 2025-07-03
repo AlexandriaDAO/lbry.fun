@@ -148,61 +148,55 @@ const SwapContent: React.FC = () => {
 
   return (
     <AccessGuard accessState={accessState} countdown={countdown} launchTime={launchTime}>
-      <div className="terminal-pure">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Swap Form */}
           <div>
             {/* Input Section */}
-            <div className="mb-3">
-              
-              <div className={`bg-black border ${inputState === 'error' ? 'border-red-500' : inputState === 'focus' ? 'border-lime-500' : 'border-white/30'} p-3 mb-2`}>
-                <div className="flex justify-between items-center">
-                  <span className="terminal-label">icp_amount:</span>
-                  <input
-                    className="bg-transparent text-white font-mono text-sm text-right focus:outline-none w-full ml-4 caret-lime-500"
-                    type="text"
-                    value={amount}
-                    min="0"
-                    onChange={handleAmountChange}
-                    placeholder="0.0000"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex justify-between items-center mb-2">
-                <span className="terminal-label">balance:</span>
-                <span className="terminal-value">{icpLedger.accountBalance} icp</span>
-              </div>
-              
-              <button
-                className="bg-black border border-white/30 text-white font-mono text-xs px-3 py-1 hover:bg-white/10 transition-colors"
-                onClick={handleMaxIcp}
-              >
-                [max]
-              </button>
-            </div>
-
-            {/* Output Section */}
-            <div className="mb-4">
-              <div className="bg-black border border-white/30 p-3">
+            <div className="space-y-3 mb-6">
+              <div className={`border ${inputState === 'error' ? 'border-red-500' : inputState === 'focus' ? 'border-lime-500' : 'border-white/20'} bg-background-secondary p-4 rounded-lg transition-colors`}>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="terminal-label">receive:</span>
-                  <span className="terminal-primary">{(tentativeSecondary || 0).toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                  <span className="terminal-label text-xs">SEND ICP</span>
+                  <button
+                    className="text-xs text-gray-400 hover:text-white transition-colors"
+                    onClick={handleMaxIcp}
+                  >
+                    MAX
+                  </button>
                 </div>
-                
+                <input
+                  className="bg-transparent text-white font-mono text-lg w-full focus:outline-none caret-lime-500"
+                  type="text"
+                  value={amount}
+                  min="0"
+                  onChange={handleAmountChange}
+                  placeholder="0.0000"
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <span className="terminal-label text-xs">balance:</span>
+                  <span className="terminal-value text-xs">{icpLedger.accountBalance} ICP</span>
+                </div>
+              </div>
+
+              {/* Output Section */}
+              <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="terminal-label text-xs">RECEIVE {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                </div>
+                <div className="text-lime-500 font-mono text-lg mb-2">
+                  {(tentativeSecondary || 0).toFixed(4)}
+                </div>
                 <div className="flex justify-between items-center">
-                  <span className="terminal-label">balance:</span>
-                  <span className="terminal-value">{swap.secondaryBalance} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                  <span className="terminal-label text-xs">balance:</span>
+                  <span className="terminal-value text-xs">{swap.secondaryBalance} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
                 </div>
               </div>
             </div>
 
             {/* Status Messages */}
             {parseFloat(amount) < minimum_icp && amount !== "" && (
-              <div className="mb-4">
-                <div className="bg-black border border-pink-500/50 p-3">
-                  <span className="terminal-status">[error]</span> minimum_amount: {minimum_icp} icp
-                </div>
+              <div className="mb-4 p-3 border border-red-500/50 bg-red-500/10 rounded text-sm">
+                <span className="text-red-400">Minimum amount: {minimum_icp} ICP</span>
               </div>
             )}
 
@@ -211,9 +205,9 @@ const SwapContent: React.FC = () => {
               {isAuthenticated ? (
                 <button
                   type="button"
-                  className={`w-full font-mono text-sm px-4 py-3 transition-colors ${
+                  className={`w-full font-mono text-sm px-4 py-3 rounded transition-all ${
                     parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading || !isTokenLive 
-                      ? 'bg-black border border-white/30 text-white opacity-50 cursor-not-allowed' 
+                      ? 'bg-gray-800 text-gray-400 cursor-not-allowed' 
                       : 'bg-lime-500 text-black font-bold hover:bg-lime-400 cursor-pointer'
                   }`}
                   disabled={parseFloat(amount) === 0 || swap.loading || parseFloat(amount) < minimum_icp || amount === "" || !isTokenLive}
@@ -223,51 +217,52 @@ const SwapContent: React.FC = () => {
                   {swap.loading ? (
                     <LoaderCircle size={14} className="animate-spin mx-auto" />
                   ) : !isTokenLive ? (
-                    <span className="terminal-status">[awaiting_launch]</span>
+                    <span>AWAITING LAUNCH</span>
                   ) : (
-                    <span>execute_swap</span>
+                    <span>EXECUTE SWAP</span>
                   )}
                 </button>
               ) : (
-                <div className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-3 flex items-center justify-center">
+                <div className="bg-gray-800 text-white font-mono text-sm px-4 py-3 rounded flex items-center justify-center">
                   <TerminalAuthMenu />
                 </div>
               )}
               
               <div className="mt-3">
-                <span className="terminal-label">* failed transactions can be redeemed below</span>
+                <span className="text-xs text-gray-400">* Failed transactions can be redeemed below</span>
               </div>
             </div>
           </div>
 
           {/* Right Column - Transaction Details */}
           <div>
-            <div className="bg-black border border-white/30 p-3">
-              <div className="space-y-2">
+            <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+              <h3 className="text-sm font-semibold mb-4">Transaction Details</h3>
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="terminal-label">network_fee:</span>
-                  <span className="terminal-value">{icp_fee} icp</span>
+                  <span className="terminal-label text-xs">Network Fee:</span>
+                  <span className="terminal-value text-xs">{icp_fee} ICP</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="terminal-label">send:</span>
-                  <span className="terminal-value">{amount || "0"} icp</span>
+                  <span className="terminal-label text-xs">Send:</span>
+                  <span className="terminal-value text-xs">{amount || "0"} ICP</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="terminal-label">receive:</span>
-                  <span className="terminal-primary">{(tentativeSecondary || 0).toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                  <span className="terminal-label text-xs">Receive:</span>
+                  <span className="terminal-primary text-xs">{(tentativeSecondary || 0).toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
                 </div>
                 
-                <div className="border-t border-white/30 mt-3 pt-3">
+                <div className="border-t border-white/10 pt-3">
                   <div className="flex justify-between items-center">
-                    <span className="terminal-label">exchange_rate:</span>
-                    <span className="terminal-value">1 icp = {secondaryRatio.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                    <span className="terminal-label text-xs">Exchange Rate:</span>
+                    <span className="terminal-value text-xs">1 ICP = {secondaryRatio.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
                   </div>
                 </div>
                 
-                <div className="border-t border-white/30 mt-3 pt-3">
-                  <span className="terminal-label">* swaps are irreversible</span>
+                <div className="pt-3">
+                  <span className="text-xs text-gray-400">* Swaps are irreversible</span>
                 </div>
               </div>
             </div>
@@ -276,34 +271,35 @@ const SwapContent: React.FC = () => {
 
         {/* Redeem Section */}
         {isAuthenticated && swap.archivedBalance && Number(swap.archivedBalance) > 0 && (
-          <div className="border-t border-white/30 mt-6 pt-4">
+          <div className="mt-6 border-t border-white/10 pt-6">
             <button
               onClick={handleToggleRedeemSection}
-              className="bg-black border border-white/30 text-white font-mono text-xs px-3 py-2 hover:bg-white/10 transition-colors mb-3"
+              className="text-sm text-gray-400 hover:text-white transition-colors mb-3 flex items-center gap-2"
             >
-              <span className="terminal-prompt">▶</span> archived_balance: {swap.archivedBalance} icp {showRedeemSection ? '[-]' : '[+]'}
+              <span className="text-xs">{showRedeemSection ? '▼' : '▶'}</span>
+              Archived Balance: {swap.archivedBalance} ICP
             </button>
 
             {showRedeemSection && (
-              <div className="bg-black border border-white/30 p-3 mt-2">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="terminal-label">recoverable:</span>
-                  <span className="terminal-primary">{swap.archivedBalance} icp</span>
+              <div className="border border-white/20 bg-background-secondary p-4 rounded-lg mt-3">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="terminal-label text-sm">Recoverable Amount:</span>
+                  <span className="terminal-primary text-sm">{swap.archivedBalance} ICP</span>
                 </div>
                 
                 <button
                   onClick={handleRedeem}
                   disabled={redeemLoading || swap.loading}
-                  className={`w-full font-mono text-sm px-4 py-2 transition-colors ${
+                  className={`w-full font-mono text-sm px-4 py-2 rounded transition-all ${
                     redeemLoading || swap.loading 
-                      ? 'bg-black border border-white/30 text-white opacity-50 cursor-not-allowed' 
+                      ? 'bg-gray-800 text-gray-400 cursor-not-allowed' 
                       : 'bg-lime-500 text-black font-bold hover:bg-lime-400 cursor-pointer'
                   }`}
                 >
                   {redeemLoading ? (
                     <LoaderCircle size={14} className="animate-spin mx-auto" />
                   ) : (
-                    'execute_redeem'
+                    'REDEEM FUNDS'
                   )}
                 </button>
               </div>

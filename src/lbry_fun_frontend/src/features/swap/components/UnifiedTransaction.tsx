@@ -79,55 +79,45 @@ const UnifiedTransaction: React.FC<UnifiedTransactionProps> = ({
 
         if (error) {
             return (
-                <div className="terminal-pure">
-                    <div className="terminal-header">
-                        <span className="terminal-prompt">&gt;&gt;</span> transaction_error
+                <div className="w-full">
+                    <div className="border border-red-500/50 bg-red-500/10 p-4 rounded-lg">
+                        <div className="text-red-400 mb-3">{error}</div>
+                        <button 
+                            className="text-xs px-3 py-1 bg-red-500 text-black font-bold rounded hover:bg-red-400 transition-all" 
+                            onClick={refreshTransactions}
+                        >
+                            RETRY
+                        </button>
                     </div>
-                    <div className="terminal-row">
-                        <span className="terminal-status">[ERROR]</span>
-                        <span className="terminal-accent">{error}</span>
-                    </div>
-                    <button 
-                        className="terminal-button mt-2" 
-                        onClick={refreshTransactions}
-                    >
-                        [RETRY]
-                    </button>
                 </div>
             );
         }
 
         return (
-            <div className="terminal-pure">
-                <div className="terminal-header mb-2">
-                    <span className="terminal-prompt">&gt;&gt;</span> transaction_history
+            <div className="w-full">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-sm font-semibold">Transaction History</h3>
                     <button 
-                        className="terminal-button text-xs ml-4"
+                        className="text-xs px-3 py-1 bg-transparent text-gray-400 hover:text-white transition-all"
                         onClick={refreshTransactions}
                         disabled={loading}
                     >
                         {loading ? (
-                            <LoaderCircle size={10} className="animate animate-spin inline" />
+                            <LoaderCircle size={12} className="animate-spin inline" />
                         ) : (
-                            "[REFRESH]"
+                            "REFRESH"
                         )}
                     </button>
                 </div>
 
                 {isEmpty && !loading ? (
-                    <div className="terminal-section-minimal">
-                        <div className="terminal-row">
-                            <span className="terminal-label">status:</span>
-                            <span className="terminal-accent">no_transactions_found</span>
-                        </div>
-                        <div className="terminal-row">
-                            <span className="terminal-label">info:</span>
-                            <span className="terminal-accent text-xs">transaction history will appear here</span>
-                        </div>
+                    <div className="border border-white/20 bg-background-secondary p-6 rounded-lg text-center">
+                        <div className="text-gray-400 mb-2">No transactions found</div>
+                        <div className="text-xs text-gray-500">Transaction history will appear here</div>
                     </div>
                 ) : (
                     <>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                             {transactions.map((txn) => (
                                 <UnifiedTransaction
                                     key={txn.id}
@@ -139,16 +129,16 @@ const UnifiedTransaction: React.FC<UnifiedTransactionProps> = ({
                         </div>
                         
                         {hasMore && (
-                            <div className="terminal-section mt-2">
+                            <div className="mt-4">
                                 <button 
                                     onClick={loadMoreTransactions}
                                     disabled={loading}
-                                    className="terminal-button w-full"
+                                    className="w-full font-mono text-sm px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-all disabled:opacity-50"
                                 >
                                     {loading ? (
-                                        <LoaderCircle size={12} className="animate animate-spin mx-auto" />
+                                        <LoaderCircle size={12} className="animate-spin mx-auto" />
                                     ) : (
-                                        "[LOAD_MORE]"
+                                        "LOAD MORE"
                                     )}
                                 </button>
                             </div>
@@ -163,34 +153,38 @@ const UnifiedTransaction: React.FC<UnifiedTransactionProps> = ({
     if (view === 'list' && transaction) {
         return (
             <div 
-                className="terminal-info cursor-pointer hover:bg-white/5 transition-colors"
+                className="border border-white/20 bg-background-secondary p-4 rounded-lg cursor-pointer hover:bg-background-secondary/80 transition-all"
                 onClick={() => onViewDetails?.(transaction)}
             >
-                <div className="terminal-row">
-                    <span className="terminal-label">tx_id:</span>
-                    <span className="hex-address">{shortenAddress(transaction.id)}</span>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-gray-400">Type:</span>
+                        <span className="text-white">
+                            {getKindSymbol(transaction.kind)} {transaction.kind}
+                        </span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-400">Status:</span>
+                        <span className={transaction.status === 'completed' ? 'text-lime-500' : 
+                                        transaction.status === 'failed' ? 'text-red-500' : 
+                                        'text-white'}>
+                            {transaction.status}
+                        </span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-400">Amount:</span>
+                        <span className="text-white">{transaction.amount} {transaction.token}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-400">ID:</span>
+                        <span className="text-blue-400">{shortenAddress(transaction.id)}</span>
+                    </div>
                 </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">type:</span>
-                    <span className="terminal-value">
-                        {getKindSymbol(transaction.kind)} {transaction.kind}
-                    </span>
-                </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">status:</span>
-                    <span className={transaction.status === 'completed' ? 'terminal-primary' : 
-                                    transaction.status === 'failed' ? 'terminal-status' : 
-                                    'terminal-value'}>
-                        {transaction.status}
-                    </span>
-                </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">amount:</span>
-                    <span className="terminal-value">{transaction.amount} {transaction.token}</span>
-                </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">time:</span>
-                    <span className="terminal-value">{formatTimestamp(transaction.timestamp)}</span>
+                <div className="mt-2 pt-2 border-t border-white/10">
+                    <div className="flex justify-between text-xs">
+                        <span className="text-gray-500">Time:</span>
+                        <span className="text-gray-400">{formatTimestamp(transaction.timestamp)}</span>
+                    </div>
                 </div>
             </div>
         );

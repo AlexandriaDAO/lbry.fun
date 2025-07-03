@@ -98,25 +98,25 @@ pub fn get_current_threshold_index() -> u32 {
 }
 
 #[query]
-pub fn get_current_primary_rate() -> u64 {
+pub fn get_current_primary_rate() -> Result<u64, String> {
     let current_threshold = get_current_threshold_index();
-    let rewards = get_rewards();
-    rewards[current_threshold as usize]
+    let rewards = get_rewards()?;
+    Ok(rewards[current_threshold as usize])
 }
 
 #[query]
-pub fn get_current_secondary_threshold() -> u64 {
+pub fn get_current_secondary_threshold() -> Result<u64, String> {
     let current_threshold = get_current_threshold_index();
-    let thresholds = get_thresholds();
-    thresholds[current_threshold as usize]
+    let thresholds = get_thresholds()?;
+    Ok(thresholds[current_threshold as usize])
 }
 
 #[query]
-pub fn get_max_stats() -> (u64, u64) {
-    let thresholds = get_thresholds();
+pub fn get_max_stats() -> Result<(u64, u64), String> {
+    let thresholds = get_thresholds()?;
     let max_threshold = thresholds[thresholds.len() - 1];
     let total_burned = get_total_secondary_burn();
-    (max_threshold, total_burned)
+    Ok((max_threshold, total_burned))
 }
 
 #[update]
@@ -151,15 +151,17 @@ pub fn get_configs() -> Config {
     get_config().unwrap_or(Config {
         primary_token_ledger: Principal::anonymous(),
         secondary_token_ledger: Principal::anonymous(),
+        icp_swap_canister_id: Principal::anonymous(),
+        max_primary_supply: 0,
     })
 }
 
 #[query]
-pub fn get_tokenomics_schedule() -> TokenomicsSchedule {
-    TokenomicsSchedule {
-        thresholds: get_thresholds(),
-        rewards: get_rewards(),
-    }
+pub fn get_tokenomics_schedule() -> Result<TokenomicsSchedule, String> {
+    Ok(TokenomicsSchedule {
+        thresholds: get_thresholds()?,
+        rewards: get_rewards()?,
+    })
 }
 
 #[query]

@@ -6,7 +6,6 @@ use crate::DEFAULT_ADDITION_OVERFLOW_ERROR;
 use crate::DEFAULT_MINT_FAILED;
 use crate::DEFAULT_MULTIPLICATION_OVERFLOW_ERROR;
 use crate::DEFAULT_UNDERFLOW_ERROR;
-use crate::MAX_PRIMARY;
 use crate::{
     add_to_total_secondary_burned,
     fetch_total_minted_primary,
@@ -34,25 +33,55 @@ pub async fn mint_primary(
         "mint_primary",
         &format!("Processing primary minting against {} secondary ", secondary_burn)
     );
-    if
-        total_burned_secondary.checked_add(secondary_burn).ok_or_else(|| {
-            ExecutionError::new_with_log(
-                actual_caller,
-                "mint_primary",
-                ExecutionError::AdditionOverflow {
-                    operation: DEFAULT_ADDITION_OVERFLOW_ERROR.to_string(),
-                    details: format!(
-                        "total_burned_secondary: {} with secondary_burn: {}",
-                        total_burned_secondary,
-                        secondary_burn
-                    ),
-                }
-            )
-        })? > {
-            let thresholds = get_thresholds();
-            thresholds[thresholds.len() - 1]
-        }
-    {
+    
+    // Early debug log
+    register_info_log(
+        actual_caller,
+        "mint_primary",
+        &format!("DEBUG: total_burned_secondary={}, secondary_burn={}", total_burned_secondary, secondary_burn)
+    );
+    // Check if we've exceeded the last threshold
+    let early_check_total = total_burned_secondary.checked_add(secondary_burn).ok_or_else(|| {
+        ExecutionError::new_with_log(
+            actual_caller,
+            "mint_primary",
+            ExecutionError::AdditionOverflow {
+                operation: DEFAULT_ADDITION_OVERFLOW_ERROR.to_string(),
+                details: format!(
+                    "total_burned_secondary: {} with secondary_burn: {}",
+                    total_burned_secondary,
+                    secondary_burn
+                ),
+            }
+        )
+    })?;
+    
+    let thresholds_for_check = get_thresholds().map_err(|e| {
+        ExecutionError::new_with_log(
+            actual_caller,
+            "mint_primary",
+            ExecutionError::CanisterCallFailed {
+                canister: "tokenomics".to_string(),
+                method: "get_thresholds".to_string(),
+                details: e,
+            }
+        )
+    })?;
+    
+    let last_threshold = thresholds_for_check[thresholds_for_check.len() - 1];
+    
+    register_info_log(
+        actual_caller,
+        "mint_primary",
+        &format!("Early threshold check: total_after_burn={} vs last_threshold={}", early_check_total, last_threshold)
+    );
+    
+    if early_check_total > last_threshold {
+        register_info_log(
+            actual_caller,
+            "mint_primary",
+            &format!("EXCEEDED last threshold - stopping minting")
+        );
         return Err(
             ExecutionError::new_with_log(
                 actual_caller,
@@ -76,8 +105,44 @@ pub async fn mint_primary(
         })
     })?;
 
-    let thresholds = get_thresholds();
-    let rewards = get_rewards();
+    let thresholds = get_thresholds().map_err(|e| {
+        ExecutionError::new_with_log(
+            actual_caller,
+            "mint_primary",
+            ExecutionError::CanisterCallFailed {
+                canister: "tokenomics".to_string(),
+                method: "get_thresholds".to_string(),
+                details: e,
+            }
+        )
+    })?;
+    let rewards = get_rewards().map_err(|e| {
+        ExecutionError::new_with_log(
+            actual_caller,
+            "mint_primary",
+            ExecutionError::CanisterCallFailed {
+                canister: "tokenomics".to_string(),
+                method: "get_rewards".to_string(),
+                details: e,
+            }
+        )
+    })?;
+    
+    // Log current threshold state
+    let current_reward = rewards.get(current_threshold_index as usize).copied().unwrap_or(0);
+    register_info_log(actual_caller, "mint_primary", &format!(
+        "Threshold state: current_index={}, current_threshold={}, current_reward={}, total_burned={}",
+        current_threshold_index,
+        thresholds.get(current_threshold_index as usize).unwrap_or(&0),
+        current_reward,
+        total_burned_secondary
+    ));
+    
+    // Critical check: if reward is 0, we can't mint anything
+    if current_reward == 0 {
+        register_info_log(actual_caller, "mint_primary", 
+            "CRITICAL: Current reward rate is 0 - no primary tokens can be minted!");
+    }
     if tentative_total > thresholds[current_threshold_index as usize] {
         let mut secondary_processed: u64 = 0;
 
@@ -146,6 +211,15 @@ pub async fn mint_primary(
                     }
                 )
             })?;
+            
+            // Log calculation details
+            register_info_log(actual_caller, "mint_primary", &format!(
+                "Threshold loop: secondary_for_threshold={}, reward_rate={}, slot_mint={}, phase_total={}",
+                secondary_mint_primary_with_current_threshold,
+                rewards[current_threshold_index as usize],
+                slot_mint,
+                phase_mint_primary
+            ));
             secondary_processed = secondary_processed
                 .checked_add(secondary_mint_primary_with_current_threshold)
                 .ok_or_else(|| {
@@ -261,6 +335,15 @@ pub async fn mint_primary(
             })?;
         }
     } else {
+        // Log when not crossing threshold
+        register_info_log(actual_caller, "mint_primary", &format!(
+            "Not crossing threshold: secondary_burn={}, current_reward={}, tentative_total={} < threshold={}",
+            secondary_burn,
+            rewards[current_threshold_index as usize],
+            tentative_total,
+            thresholds[current_threshold_index as usize]
+        ));
+        
         phase_mint_primary = rewards[current_threshold_index as usize].checked_mul(
             secondary_burn
         ).ok_or_else(|| {
@@ -290,21 +373,7 @@ pub async fn mint_primary(
         })?;
     }
 
-    // Check for maximum primary per transaction (50 primary = 500_000_0000 after multiplication by 10000)
-    if phase_mint_primary > 500_000_0000 {
-        return Err(
-            ExecutionError::new_with_log(
-                actual_caller,
-                "mint_primary",
-                ExecutionError::MaxPrimaryPerTrnxReached {
-                    reason: format!(
-                        "This would mint {} primary which exceeds the maximum of 50 primary per transaction",
-                        (phase_mint_primary as f64) / 10000.0
-                    ),
-                }
-            )
-        );
-    }
+    // Per-transaction limit removed - supply cap provides sufficient protection
 
     let total_primary_minted = match fetch_total_minted_primary().await {
         Ok(result) => result,
@@ -322,12 +391,24 @@ pub async fn mint_primary(
             );
         }
     };
-    let remaining_primary = MAX_PRIMARY.checked_sub(total_primary_minted).ok_or_else(|| {
+    let config = get_config().ok_or_else(|| {
+        ExecutionError::new_with_log(
+            actual_caller,
+            "mint_primary",
+            ExecutionError::CanisterCallFailed {
+                canister: "tokenomics".to_string(),
+                method: "get_config".to_string(),
+                details: "Tokenomics configuration missing. Canister not properly initialized.".to_string(),
+            }
+        )
+    })?;
+    let max_primary_supply = config.max_primary_supply;
+    let remaining_primary = max_primary_supply.checked_sub(total_primary_minted).ok_or_else(|| {
         ExecutionError::new_with_log(actual_caller, "mint_primary", ExecutionError::Underflow {
             operation: DEFAULT_UNDERFLOW_ERROR.to_string(),
             details: format!(
-                "MAX_PRIMARY: {} with total_primary_minted: {}",
-                MAX_PRIMARY,
+                "max_primary_supply: {} with total_primary_minted: {}",
+                max_primary_supply,
                 total_primary_minted
             ),
         })
@@ -349,7 +430,29 @@ pub async fn mint_primary(
         })?
         .min(remaining_primary);
 
+    // Add detailed logging before the zero check
+    register_info_log(actual_caller, "mint_primary", &format!(
+        "mint_primary calculation: phase_mint_primary={}, after 3x={}, remaining_primary={}, final primary_to_mint={}",
+        phase_mint_primary,
+        phase_mint_primary.saturating_mul(3),
+        remaining_primary,
+        primary_to_mint
+    ));
+    
+    register_info_log(actual_caller, "mint_primary", &format!(
+        "mint_primary supply check: total_minted={}, max_supply={}, secondary_burn={}",
+        total_primary_minted,
+        max_primary_supply,
+        secondary_burn
+    ));
+
     if primary_to_mint == 0 {
+        register_info_log(actual_caller, "mint_primary", &format!(
+            "Zero primary tokens: phase_mint_primary={}, total_minted={}/{} max",
+            phase_mint_primary,
+            total_primary_minted,
+            max_primary_supply
+        ));
         return Err(
             ExecutionError::new_with_log(
                 actual_caller,
@@ -395,6 +498,13 @@ pub async fn mint_primary(
 
     update_to_current_threshold(current_threshold_index);
     add_to_total_secondary_burned(secondary_burn)?;
+    
+    // Final success log
+    register_info_log(actual_caller, "mint_primary", &format!(
+        "SUCCESS: Minted {} primary tokens for {} secondary burned", 
+        minted_primary, secondary_burn
+    ));
+    
     Ok("Minted primary ".to_string() + &minted_primary.to_string())
 }
 

@@ -48,6 +48,14 @@ dfx deploy lbry_fun --specified-id oni4e-oyaaa-aaaap-qp2pq-cai
 export LBRY_FUN_PRINCIPAL=$(dfx canister id lbry_fun)
 dfx ledger fabricate-cycles --canister "$LBRY_FUN_PRINCIPAL" --cycles 10000000000000000
 
+# For bot1
+cargo build --release --target wasm32-unknown-unknown --package bot1
+candid-extractor target/wasm32-unknown-unknown/release/bot1.wasm > src/bot1/bot1.did
+dfx deploy bot1 --specified-id ucwa4-rx777-77774-qaada-cai
+
+export BOT1_PRINCIPAL=$(dfx canister id bot1)
+dfx ledger fabricate-cycles --canister "$BOT1_PRINCIPAL" --cycles 1000000000000000
+
 cargo update
 
 # Define account IDs for ledger deployment
@@ -63,7 +71,7 @@ export DEFAULT_PRINCIPAL=$(dfx identity get-principal)
 
 # Generate frontend actors BEFORE deploying the ledger canister
 echo "Generating type declarations..."
-for canister in lbry_fun tokenomics logs xrc icp_ledger_canister icp_swap; do
+for canister in lbry_fun tokenomics logs xrc icp_ledger_canister icp_swap bot1; do
   dfx generate "$canister"
 done
 
@@ -116,6 +124,10 @@ dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argu
 # # How we get the icrc1 ledger wasm:
 # curl -L -o src/lbry_fun/src/ic-icrc1-ledger.wasm.gz "https://download.dfinity.systems/ic/d87954601e4b22972899e9957e800406a0a6b929/canisters/ic-icrc1-ledger.wasm.gz" && gunzip -f src/lbry_fun/src/ic-icrc1-ledger.wasm.gz
 
+
+# Send ICP to the bot1 canister: 
+
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer "(record { to = record { owner = principal \"$BOT1_PRINCIPAL\"; subaccount = null }; amount = 999900000000 })"
 
 
 npm i

@@ -170,6 +170,8 @@ pub struct TokenomicsInitArgs {
 pub struct TokenomicsCanisterInitArgs {
     pub primary_token_ledger: Principal,
     pub secondary_token_ledger: Principal,
+    pub icp_swap_canister_id: Principal,  // Added for authorization
+    pub max_primary_supply: u64,  // Added to fix hardcoded max supply issue
     pub secondary_thresholds: Vec<u64>,
     pub primary_rewards: Vec<u64>,
 }

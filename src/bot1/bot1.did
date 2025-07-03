@@ -1,0 +1,201 @@
+type CostData = record { y_axis : vec float64; x_axis : vec nat64 };
+type EpochData = record { y_axis : vec nat64; x_axis : vec text };
+type ExecutionError = variant {
+  InvalidAmount : record { details : text; amount : nat64; reason : text };
+  Underflow : record { operation : text; details : text };
+  DivisionFailed : record { operation : text; details : text };
+  MultiplicationOverflow : record { operation : text; details : text };
+  AdditionOverflow : record { operation : text; details : text };
+  RewardDistributionError : record { reason : text };
+  RateLookupFailed : record { details : text };
+  InsufficientBalance : record {
+    token : text;
+    available : nat64;
+    details : text;
+    required : nat64;
+  };
+  ConversionError : record { details : text };
+  BurnFailed : record {
+    token : text;
+    details : text;
+    amount : nat64;
+    reason : text;
+  };
+  CanisterCallFailed : record {
+    method : text;
+    canister : text;
+    details : text;
+  };
+  Unauthorized : text;
+  InsufficientCanisterBalance : record {
+    available : nat64;
+    details : text;
+    required : nat64;
+  };
+  MinimumRequired : record {
+    token : text;
+    provided : nat64;
+    details : text;
+    required : nat64;
+  };
+  TransferFailed : record {
+    token : text;
+    source : text;
+    dest : text;
+    details : text;
+    amount : nat64;
+    reason : text;
+  };
+  StateError : text;
+  MintFailed : record {
+    token : text;
+    details : text;
+    amount : nat64;
+    reason : text;
+  };
+  InsufficientBalanceRewardDistribution : record {
+    available : nat;
+    details : text;
+  };
+};
+type GraphData = record { y_axis : vec nat64; x_axis : vec nat64 };
+type Log = record {
+  function : text;
+  log_type : LogType;
+  log_id : nat64;
+  timestamp : nat64;
+  caller : principal;
+};
+type LogType = variant {
+  Error : record { error : ExecutionError };
+  Info : record { detail : text };
+};
+type LoopSnapshot = record {
+  cost_per_primary : float64;
+  cumulative_secondary_burned : nat64;
+  loop_number : nat32;
+  icp_spent : nat64;
+  actual_mint_rate : float64;
+  primary_received : nat64;
+  cumulative_primary_minted : nat64;
+  secondary_burned : nat64;
+  timestamp : nat64;
+  cumulative_icp_spent : nat64;
+  secondary_total_supply : nat64;
+  secondary_received : nat64;
+  secondary_dust : nat64;
+  primary_total_supply : nat64;
+};
+type PaginatedLogs = record {
+  page_size : nat64;
+  logs : vec Log;
+  total_pages : nat64;
+  current_page : nat64;
+};
+type PaginatedTokenLogs = record {
+  page_size : nat64;
+  logs : vec TokenLogs;
+  total_pages : nat64;
+  current_page : nat64;
+};
+type PoolLogs = record {
+  tokenomics_logs : opt PaginatedTokenLogs;
+  icp_swap_logs : opt PaginatedLogs;
+};
+type PoolValidation = record {
+  is_live : bool;
+  estimated_cost_per_loop : nat64;
+  token_record : opt TokenRecord;
+  bot_icp_balance : nat64;
+  pool_exists : bool;
+  canisters_accessible : bool;
+  launch_time : nat64;
+};
+type Result = variant { Ok : text; Err : text };
+type Result_1 = variant { Ok : PoolLogs; Err : text };
+type Result_2 = variant { Ok : ValidationTable; Err : text };
+type Result_3 = variant { Ok : PoolValidation; Err : text };
+type TokenInfo = record {
+  secondary_token_id : text;
+  tokenomics_canister_id : text;
+  icp_swap_canister_id : text;
+  primary_token_id : text;
+};
+type TokenLogType = variant {
+  Error : record { error : TokenomicsExecutionError };
+  Info : record { detail : text };
+};
+type TokenLogs = record {
+  function : text;
+  log_type : TokenLogType;
+  log_id : nat64;
+  timestamp : nat64;
+  caller : principal;
+};
+type TokenRecord = record {
+  id : nat64;
+  secondary_token_symbol : text;
+  secondary_token_id : principal;
+  primary_token_name : text;
+  tokenomics_canister_id : principal;
+  secondary_token_name : text;
+  primary_token_symbol : text;
+  launch_delay_seconds : nat64;
+  icp_swap_canister_id : principal;
+  halving_step : nat64;
+  primary_token_max_supply : nat64;
+  pool_creation_failed : bool;
+  initial_reward_per_burn_unit : nat64;
+  initial_primary_mint : nat64;
+  primary_token_id : principal;
+  caller : principal;
+  pool_created_at : nat64;
+  distribution_interval_seconds : nat64;
+  created_time : nat64;
+  initial_secondary_burn : nat64;
+  logs_canister_id : principal;
+};
+type TokenomicsExecutionError = variant {
+  Underflow : record { operation : text; details : text };
+  DivisionFailed : record { operation : text; details : text };
+  MultiplicationOverflow : record { operation : text; details : text };
+  AdditionOverflow : record { operation : text; details : text };
+  CanisterCallFailed : record {
+    method : text;
+    canister : text;
+    details : text;
+  };
+  NoMorePrimaryCanBeMinted : record { reason : text };
+  MaxMintPrimaryReached : record { reason : text };
+  MintFailed : record {
+    token : text;
+    details : text;
+    amount : nat64;
+    reason : text;
+  };
+  MaxPrimaryPerTrnxReached : record { reason : text };
+};
+type ValidationTable = record {
+  total_loops : nat32;
+  total_usd_cost : float64;
+  total_dust_accumulated : nat64;
+  snapshots : vec LoopSnapshot;
+  cumulative_supply_data : GraphData;
+  total_icp_spent : nat64;
+  average_mint_rate : float64;
+  total_primary_minted : nat64;
+  cost_to_mint_data : CostData;
+  total_secondary_burned : nat64;
+  pool_id : nat64;
+  minted_per_epoch_data : EpochData;
+  token_info : TokenInfo;
+};
+service : () -> {
+  clear_pool_data : (nat64) -> (Result);
+  execute_loops : (nat64, nat64, nat32) -> (Result);
+  get_bot_principal : () -> (text) query;
+  get_pool_logs : (nat64, opt nat64, opt nat64) -> (Result_1);
+  get_pool_summary : (nat64) -> (Result) query;
+  get_table : (nat64) -> (Result_2) query;
+  validate_pool : (nat64) -> (Result_3);
+}

@@ -137,21 +137,21 @@ const TransferContent: React.FC = () => {
   };
 
   const renderSendTab = () => (
-    <div className="terminal-pure p-4">
-      <div className="terminal-section mb-4">
-        <div className="terminal-label mb-2">token:</div>
+    <div className="space-y-4">
+      <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+        <label className="terminal-label text-xs mb-2 block">SELECT TOKEN</label>
         <select 
           value={selectedToken} 
           onChange={handleTokenChange}
-          className="terminal-select w-full"
+          className="bg-transparent border border-white/20 text-white font-mono text-sm w-full p-2 rounded focus:outline-none focus:border-lime-500"
         >
-          <option value="ICP">ICP</option>
+          <option value="ICP" className="bg-black">ICP</option>
           {swap.activeSwapPool && (
             <>
-              <option value={swap.activeSwapPool[1].primary_token_symbol}>
+              <option value={swap.activeSwapPool[1].primary_token_symbol} className="bg-black">
                 {swap.activeSwapPool[1].primary_token_symbol}
               </option>
-              <option value={swap.activeSwapPool[1].secondary_token_symbol}>
+              <option value={swap.activeSwapPool[1].secondary_token_symbol} className="bg-black">
                 {swap.activeSwapPool[1].secondary_token_symbol}
               </option>
             </>
@@ -159,89 +159,93 @@ const TransferContent: React.FC = () => {
         </select>
       </div>
 
-      <div className="terminal-section mb-4">
-        <div className="terminal-label mb-2">recipient_principal:</div>
+      <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+        <label className="terminal-label text-xs mb-2 block">RECIPIENT PRINCIPAL</label>
         <input
           type="text"
           value={destinationPrincipal}
           onChange={handlePrincipalChange}
           placeholder="Enter principal ID"
-          className="terminal-input w-full"
+          className="bg-transparent text-white font-mono text-sm w-full focus:outline-none"
         />
         {principalError && (
-          <div className="terminal-error mt-1">{principalError}</div>
+          <div className="text-red-400 text-xs mt-2">{principalError}</div>
         )}
       </div>
 
-      <div className="terminal-section mb-4">
-        <div className="terminal-label mb-2">amount:</div>
+      <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+        <label className="terminal-label text-xs mb-2 block">AMOUNT</label>
         <input
           type="number"
           value={amount}
           onChange={handleAmountChange}
           placeholder="0"
-          className="terminal-input w-full"
+          className="bg-transparent text-white font-mono text-lg w-full focus:outline-none mb-3"
         />
-        <div className="terminal-row mt-2">
-          <span className="terminal-label">balance:</span>
-          <span className="terminal-value">{getBalance()} {selectedToken}</span>
-        </div>
-        <div className="terminal-row">
-          <span className="terminal-label">fee:</span>
-          <span className="terminal-value">{getFee()} {selectedToken}</span>
+        <div className="space-y-1">
+          <div className="flex justify-between items-center">
+            <span className="terminal-label text-xs">Balance:</span>
+            <span className="terminal-value text-xs">{getBalance()} {selectedToken}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="terminal-label text-xs">Fee:</span>
+            <span className="terminal-value text-xs">{getFee()} {selectedToken}</span>
+          </div>
         </div>
       </div>
 
       <button
         onClick={handleSend}
         disabled={!isAuthenticated || !amount || Number(amount) <= 0 || !!principalError}
-        className="terminal-button terminal-button-primary w-full"
+        className={`w-full font-mono text-sm px-4 py-3 rounded transition-all ${
+          !isAuthenticated || !amount || Number(amount) <= 0 || !!principalError
+            ? 'bg-gray-800 text-gray-400 cursor-not-allowed'
+            : 'bg-lime-500 text-black font-bold hover:bg-lime-400 cursor-pointer'
+        }`}
       >
-        {isAuthenticated ? 'SEND' : 'CONNECT WALLET'}
+        {isAuthenticated ? 'SEND TOKENS' : 'CONNECT WALLET'}
       </button>
     </div>
   );
 
   const renderReceiveTab = () => (
-    <div className="terminal-pure p-4">
-      <div className="terminal-section mb-4">
-        <div className="terminal-label mb-2">your_principal_id:</div>
-        <div className="terminal-info p-3">
-          <div className="break-all mb-2 text-sm">{principal || "Not connected"}</div>
-          {principal && <CopyHelper text={principal} />}
+    <div className="space-y-4">
+      <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+        <label className="terminal-label text-xs mb-2 block">YOUR PRINCIPAL ID</label>
+        <div className="break-all text-sm font-mono text-white mb-3">
+          {principal || "Not connected"}
         </div>
+        {principal && <CopyHelper text={principal} />}
       </div>
 
       {principal && (
-        <div className="terminal-section">
-          <div className="terminal-label mb-2">qr_code:</div>
-          <div className="flex justify-center p-4 bg-white">
-            <QRCode value={principal} size={200} />
+        <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+          <label className="terminal-label text-xs mb-3 block">QR CODE</label>
+          <div className="flex justify-center p-4 bg-white rounded">
+            <QRCode value={principal} size={180} />
           </div>
         </div>
       )}
 
-      <div className="terminal-section mt-4">
-        <div className="terminal-info">
-          <div className="terminal-label mb-2">supported_tokens:</div>
-          <div className="space-y-1">
-            <div className="terminal-row">
-              <span className="terminal-label">ICP:</span>
-              <span className="terminal-status">[ACTIVE]</span>
-            </div>
-            {swap.activeSwapPool && (
-              <>
-                <div className="terminal-row">
-                  <span className="terminal-label">{swap.activeSwapPool[1].primary_token_symbol}:</span>
-                  <span className="terminal-status">[ACTIVE]</span>
-                </div>
-                <div className="terminal-row">
-                  <span className="terminal-label">{swap.activeSwapPool[1].secondary_token_symbol}:</span>
-                  <span className="terminal-status">[ACTIVE]</span>
-                </div>
-              </>
-            )}
+      <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+        <label className="terminal-label text-xs mb-3 block">SUPPORTED TOKENS</label>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm">ICP</span>
+            <span className="text-lime-500 text-xs">ACTIVE</span>
           </div>
+          {swap.activeSwapPool && (
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">{swap.activeSwapPool[1].primary_token_symbol}</span>
+                <span className="text-lime-500 text-xs">ACTIVE</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">{swap.activeSwapPool[1].secondary_token_symbol}</span>
+                <span className="text-lime-500 text-xs">ACTIVE</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -249,27 +253,31 @@ const TransferContent: React.FC = () => {
 
   return (
     <>
-      <div className="terminal-section">
-        <div className="flex mb-3">
+      <div className="w-full">
+        <div className="flex gap-1 mb-4">
           <button
             onClick={() => handleTabChange("send")}
-            className={`terminal-button mr-2 ${
-              activeTab === "send" ? "terminal-button-active" : "terminal-button-inactive"
+            className={`text-xs px-3 py-1 transition-all ${
+              activeTab === "send" 
+                ? "bg-lime-500 text-black font-bold" 
+                : "bg-transparent text-gray-400 hover:text-white"
             }`}
           >
-            [SEND]
+            SEND
           </button>
           <button
             onClick={() => handleTabChange("receive")}
-            className={`terminal-button ${
-              activeTab === "receive" ? "terminal-button-active" : "terminal-button-inactive"
+            className={`text-xs px-3 py-1 transition-all ${
+              activeTab === "receive" 
+                ? "bg-lime-500 text-black font-bold" 
+                : "bg-transparent text-gray-400 hover:text-white"
             }`}
           >
-            [RECEIVE]
+            RECEIVE
           </button>
         </div>
         
-        <div className="mt-2">
+        <div className="mt-4">
           {activeTab === "send" ? renderSendTab() : renderReceiveTab()}
         </div>
       </div>

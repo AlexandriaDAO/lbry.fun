@@ -64,8 +64,9 @@ async fn create_token(
     let mut secondary_thresholds = Vec::new();
     let mut primary_rewards = Vec::new();
     
-    // Skip epoch 0 if TGE exists (initial_primary_mint > 0)
-    let start_index = if initial_primary_mint > 0 { 1 } else { 0 };
+    // Always skip epoch 0 as it's only for TGE and has no mining rewards
+    let start_index = 1;
+    let mut is_first_mining_epoch = true;
     
     for (i, epoch) in schedule.epochs.iter().enumerate().skip(start_index) {
         // Convert cumulative burned from E8S to natural units
@@ -91,17 +92,18 @@ async fn create_token(
             let reward_4decimal = ((rate_e8s * 10_000) / E8S as u128) as u64;
             primary_rewards.push(reward_4decimal);
         } else {
-            // For epoch 0 (TGE) or if no burning, calculate from previous epoch
-            if i > 0 {
-                // Halve the previous reward based on halving_percentage
+            // For epochs with no burning data, calculate reward
+            if is_first_mining_epoch {
+                // First mining epoch - use initial reward rate
+                // Convert initial_reward_per_burn_unit from E8S to 4-decimal
+                let reward_4decimal = (initial_reward_per_burn_unit * 10_000) / E8S;
+                primary_rewards.push(reward_4decimal as u64);
+                is_first_mining_epoch = false;
+            } else {
+                // Subsequent epochs - apply halving
                 let prev_reward = primary_rewards.last().copied().unwrap_or(50_000);
                 let new_reward = (prev_reward * halving_step as u64) / 100;
                 primary_rewards.push(new_reward);
-            } else {
-                // First mining epoch - use initial reward rate
-                // Convert initial_reward_per_burn_unit from natural to 4-decimal
-                let reward_4decimal = initial_reward_per_burn_unit * 10_000;
-                primary_rewards.push(reward_4decimal as u64);
             }
         }
     }
@@ -272,7 +274,7 @@ async fn create_token(
         initial_primary_mint,
         initial_secondary_burn,
         halving_step,
-        initial_reward_per_burn_unit: initial_reward_per_burn_unit * E8S,
+        initial_reward_per_burn_unit,
         distribution_interval_seconds,
         launch_delay_seconds,
         caller: user_principal,
@@ -431,6 +433,8 @@ async fn install_tokenomics_wasm_on_existing_canister(
     let init_args = TokenomicsCanisterInitArgs {
         primary_token_ledger: primary_token_id.ok_or("Primary token ID required")?,
         secondary_token_ledger: secondary_token_id.ok_or("Secondary token ID required")?,
+        icp_swap_canister_id: _swap_canister_id.ok_or("ICP swap canister ID required")?,
+        max_primary_supply: _max_primary_supply,
         secondary_thresholds,
         primary_rewards,
     };

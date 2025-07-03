@@ -28,7 +28,6 @@ pub static mut SECONDARY_TOKEN_CANISTER_ID: &str = "";
 pub const ICP_SWAP_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";
 pub const LIBRARIAN: &str = "xswc6-jimwj-wnqog-3gmkv-hglw4-aedfy-bqmr2-5uyut-cnbbg-4wvsk-bqe";
 pub const FRONTEND_CANISTER_ID: &str = "yj5ba-aiaaa-aaaap-qkmoa-cai";
-pub const MAX_PRIMARY: u64 = 2100000000000000; // 21 million
 pub const TOKEN_LOGS_LIMIT: u64 = 100_000;
 
 pub fn get_principal(id: &str) -> Principal {

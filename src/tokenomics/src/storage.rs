@@ -12,50 +12,18 @@ use std::cell::RefCell;
 use crate::ExecutionError;
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
-// Hardcoded thresholds - preserved for audited economic model
-pub const SECONDARY_THRESHOLDS: [u64; 18] = [
-    21_000,         // 21,000.00
-    42_000,         // 42,000.00
-    84_000,         // 84,000.00
-    168_000,        // 168,000.00
-    336_000,        // 336,000.00
-    672_000,        // 672,000.00
-    1_344_000,      // 1,344,000.00
-    2_688_000,      // 2,688,000.00
-    5_376_000,      // 5,376,000.00
-    10_752_000,     // 10,752,000.00
-    21_504_000,     // 21,504,000.00
-    43_008_000,     // 43,008,000.00
-    86_016_000,     // 86,016,000.00
-    172_032_000,    // 172,032,000.00
-    344_064_000,    // 344,064,000.00
-    688_128_000,    // 688,128,000.00
-    1_376_256_000,  // 1,376,256,000.00
-    61_632_592_000, // 61,632,592,000.00  61632592000
-];
-
-// Hardcoded rewards - preserved for audited economic model
-pub const PRIMARY_PER_THRESHOLD: [u64; 18] = [
-    //upto 4 decimals
-    50_000, // 5.0000
-    25_000, // 2.5000
-    12_500, // 1.2500
-    6_250,  // 0.6250
-    3_125,  // 0.3125
-    1_562,  // 0.1562
-    781,    // 0.0781
-    391,    // 0.0391
-    195,    // 0.0195
-    98,     // 0.0098
-    49,     // 0.0049
-    24,     // 0.0024
-    12,     // 0.0012
-    6,      // 0.0006
-    3,      // 0.0003
-    2,      // 0.0002
-    1,      // 0.0001
-    1,      // 0.0001
-];
+// Original audited values for historical reference:
+// These were the hardcoded values used before dynamic configuration was implemented.
+// All new tokens (since January 2025) use dynamic arrays passed during initialization.
+//
+// SECONDARY_THRESHOLDS (natural units):
+// [21_000, 42_000, 84_000, 168_000, 336_000, 672_000, 1_344_000, 2_688_000,
+//  5_376_000, 10_752_000, 21_504_000, 43_008_000, 86_016_000, 172_032_000,
+//  344_064_000, 688_128_000, 1_376_256_000, 61_632_592_000]
+//
+// PRIMARY_PER_THRESHOLD (4-decimal format, e.g., 50_000 = 5.0 tokens):
+// [50_000, 25_000, 12_500, 6_250, 3_125, 1_562, 781, 391, 195, 98, 49, 24,
+//  12, 6, 3, 2, 1, 1]
 
 pub const TOTAL_SECONDARY_BURNED_MEM_ID: MemoryId = MemoryId::new(0);
 pub const CURRENT_THRESHOLD_MEM_ID: MemoryId = MemoryId::new(1);
@@ -70,6 +38,8 @@ pub const REWARDS_MEM_ID: MemoryId = MemoryId::new(6);     // NEW: Dynamic rewar
 pub struct Config {
     pub primary_token_ledger: Principal,
     pub secondary_token_ledger: Principal,
+    pub icp_swap_canister_id: Principal,  // Added to fix authorization
+    pub max_primary_supply: u64,  // Added to use actual max supply instead of hardcoded
 }
 
 impl Storable for Config {
@@ -167,27 +137,25 @@ impl Storable for TokenLogs {
     const BOUND: Bound = Bound::Unbounded;
 }
 
-// NEW: Helper functions for dynamic arrays
-pub fn get_thresholds() -> Vec<u64> {
+// Helper functions for dynamic arrays
+pub fn get_thresholds() -> Result<Vec<u64>, String> {
     DYNAMIC_THRESHOLDS.with(|t| {
         let thresholds = t.borrow();
         if thresholds.is_empty() {
-            // Fallback to hardcoded values if not initialized
-            SECONDARY_THRESHOLDS.to_vec()
+            Err("Tokenomics thresholds not initialized. Canister not properly configured.".to_string())
         } else {
-            thresholds.clone()
+            Ok(thresholds.clone())
         }
     })
 }
 
-pub fn get_rewards() -> Vec<u64> {
+pub fn get_rewards() -> Result<Vec<u64>, String> {
     DYNAMIC_REWARDS.with(|r| {
         let rewards = r.borrow();
         if rewards.is_empty() {
-            // Fallback to hardcoded values if not initialized
-            PRIMARY_PER_THRESHOLD.to_vec()
+            Err("Tokenomics rewards not initialized. Canister not properly configured.".to_string())
         } else {
-            rewards.clone()
+            Ok(rewards.clone())
         }
     })
 }

@@ -51,34 +51,34 @@ export const TradingTerminal: React.FC = React.memo(() => {
     <div className="terminal-pure terminal-flicker p-4 min-h-[400px]">
       {/* Terminal Header with tabs */}
       <div className="flex justify-between items-center mb-3">
-        <div className="terminal-header terminal-boot">
+        <div className="terminal-header">
           <span className="terminal-prompt">&gt;&gt;</span> TRADING_TERMINAL
         </div>
         {/* Operation Tabs */}
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {(['swap', 'transfer', 'burn'] as const).map(op => (
             <button
               key={op}
               onClick={() => setActiveOperation(op)}
               className={`
-                terminal-button text-xs px-2 py-1
+                text-xs px-3 py-1 transition-all
                 ${activeOperation === op
-                  ? 'border-lime-500 text-lime-500'
-                  : 'border-white/30 text-gray-400 hover:text-white hover:border-white/50'
+                  ? 'bg-lime-500 text-black font-bold'
+                  : 'bg-transparent text-gray-400 hover:text-white'
                 }
               `}
             >
-              [{op.toUpperCase()}]
+              {op.toUpperCase()}
             </button>
           ))}
           <button
             onClick={() => setShowTransactions(!showTransactions)}
             className={`
-              terminal-button text-xs px-2 py-1
-              ${showTransactions ? 'border-lime-500 text-lime-500' : 'border-white/30 text-gray-400'}
+              text-xs px-3 py-1 transition-all
+              ${showTransactions ? 'bg-lime-500 text-black font-bold' : 'bg-transparent text-gray-400 hover:text-white'}
             `}
           >
-            [HISTORY]
+            HISTORY
           </button>
         </div>
       </div>
@@ -86,13 +86,13 @@ export const TradingTerminal: React.FC = React.memo(() => {
       <div className="terminal-divider-single" />
 
       {/* Active Operation Interface */}
-      <div className="terminal-section terminal-boot" style={{ animationDelay: '0.4s' }}>
+      <div className="terminal-section">
         {renderActiveOperation()}
       </div>
 
       {/* Recent Transactions */}
       {isAuthenticated && showTransactions && (
-        <div className="terminal-section terminal-boot" style={{ animationDelay: '0.5s' }}>
+        <div className="terminal-section mt-4">
           <UnifiedTransaction view="history" />
         </div>
       )}

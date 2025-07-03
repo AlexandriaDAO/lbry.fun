@@ -124,19 +124,13 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
     // Developer variant - full developer info (replaces InfoCard component)
     if (variant === 'developer') {
         return (
-            <div className="terminal-pure">
-                <div className="terminal-header mb-2">
-                    <span className="terminal-prompt">&gt;&gt;</span> developer_info
-                </div>
-
+            <div className="w-full p-4">
                 {activeSwapPoolFromRedux ? (
                     <>
-                        <div className="terminal-section-minimal">
-                            <div className="terminal-header mb-2">
-                                <span className="terminal-prompt">&gt;</span> canister_registry
-                            </div>
-                            
-                            <div className="terminal-info mb-2">
+                        <h3 className="text-lg font-semibold mb-6">Canister Registry</h3>
+                        
+                        <div className="space-y-6">
+                            <div className="space-y-1">
                                 <div className="terminal-row">
                                     <span className="terminal-label">icp_swap:</span>
                                     <span className="hex-address" title={activeSwapPoolFromRedux[1].icp_swap_canister_id}>
@@ -147,7 +141,7 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                     variant="cycles" 
                                     canisterId={activeSwapPoolFromRedux[1].icp_swap_canister_id} 
                                 />
-                                <div className="terminal-row pl-4 mt-1">
+                                <div className="terminal-row pl-4">
                                     <CanisterLogs 
                                         canisterId={activeSwapPoolFromRedux[1].icp_swap_canister_id}
                                         canisterName="ICP Swap"
@@ -156,7 +150,7 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                 </div>
                             </div>
 
-                            <div className="terminal-info mb-2">
+                            <div className="space-y-1">
                                 <div className="terminal-row">
                                     <span className="terminal-label">tokenomics:</span>
                                     <span className="hex-address" title={activeSwapPoolFromRedux[1].tokenomics_canister_id}>
@@ -167,7 +161,7 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                     variant="cycles" 
                                     canisterId={activeSwapPoolFromRedux[1].tokenomics_canister_id} 
                                 />
-                                <div className="terminal-row pl-4 mt-1">
+                                <div className="terminal-row pl-4">
                                     <CanisterLogs 
                                         canisterId={activeSwapPoolFromRedux[1].tokenomics_canister_id}
                                         canisterName="Tokenomics"
@@ -176,7 +170,7 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                 </div>
                             </div>
 
-                            <div className="terminal-info mb-2">
+                            <div className="space-y-1">
                                 <div className="terminal-row">
                                     <span className="terminal-label">logs:</span>
                                     <span className="hex-address" title={activeSwapPoolFromRedux[1].logs_canister_id}>
@@ -189,7 +183,7 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                 />
                             </div>
 
-                            <div className="terminal-info mb-2">
+                            <div className="space-y-1">
                                 <div className="terminal-row">
                                     <span className="terminal-label">primary_token:</span>
                                     <span className="hex-address" title={activeSwapPoolFromRedux[1].primary_token_id}>
@@ -202,7 +196,7 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                 />
                             </div>
 
-                            <div className="terminal-info">
+                            <div className="space-y-1">
                                 <div className="terminal-row">
                                     <span className="terminal-label">secondary_token:</span>
                                     <span className="hex-address" title={activeSwapPoolFromRedux[1].secondary_token_id}>
@@ -216,21 +210,22 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                             </div>
                         </div>
 
-                        <div className="terminal-section mt-4">
-                            <div className="terminal-row">
-                                <span className="terminal-label">status:</span>
-                                <span className="terminal-primary">[ACTIVE]</span>
-                            </div>
-                            <div className="terminal-row">
-                                <span className="terminal-label">network:</span>
-                                <span className="terminal-value">internet_computer</span>
+                        <div className="mt-8 pt-6 border-t border-white/10">
+                            <div className="space-y-1">
+                                <div className="terminal-row">
+                                    <span className="terminal-label">status:</span>
+                                    <span className="terminal-primary">[ACTIVE]</span>
+                                </div>
+                                <div className="terminal-row">
+                                    <span className="terminal-label">network:</span>
+                                    <span className="terminal-value">internet_computer</span>
+                                </div>
                             </div>
                         </div>
                     </>
                 ) : (
-                    <div className="terminal-row">
-                        <span className="terminal-label">status:</span>
-                        <span className="terminal-accent">no_active_pool_selected</span>
+                    <div className="text-center text-muted-foreground">
+                        <p>No active pool selected. Select a pool to view technical details.</p>
                     </div>
                 )}
             </div>

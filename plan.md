@@ -38,13 +38,13 @@
 
 
 // Test deploymenbt of ksICP.
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner = principal "q5tir-zikyg-44in4-6txuu-vuya3-pmuy6-5kjev-fgvua-4njnq-qmtph-pqe" })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner = principal "yo4wh-4iihj-wmxgq-tcelx-2h4l2-5oiwe-guow3-yn6qx-l2jtl-bpocb-dae" })'
 
 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "k3fih-cn2bz-iem3l-npsm2-752yv-uuyps-jtf2u-7joq6-oqrlf-b7eub-nae"; subaccount = null }; amount = (999_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "yo4wh-4iihj-wmxgq-tcelx-2h4l2-5oiwe-guow3-yn6qx-l2jtl-bpocb-dae"; subaccount = null }; amount = (999_900_000_000 : nat) })'
 
 dfx identity use default
 

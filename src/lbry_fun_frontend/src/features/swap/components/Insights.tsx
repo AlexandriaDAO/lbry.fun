@@ -84,13 +84,9 @@ const Insights: React.FC = () => {
 
     if (!insights || insights.time.length === 0) {
         return (
-            <div className="terminal-pure">
-                <div className="terminal-header">
-                    <span className="terminal-prompt">&gt;&gt;</span> insights
-                </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">status:</span>
-                    <span className="terminal-accent">no_data_available</span>
+            <div className="container mx-auto px-4 py-8">
+                <div className="text-center text-muted-foreground">
+                    <p>No insights data available yet. Data will appear once the pool has some activity.</p>
                 </div>
             </div>
         );
@@ -100,15 +96,6 @@ const Insights: React.FC = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <div className="terminal-pure mb-8">
-                <div className="terminal-header mb-2">
-                    <span className="terminal-prompt">&gt;&gt;</span> swap_pool_insights
-                </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">source:</span>
-                    <span className="terminal-accent">on_chain_logs_canister</span>
-                </div>
-            </div>
 
             {summaryData && (
                 <div className="terminal-pure mb-8">

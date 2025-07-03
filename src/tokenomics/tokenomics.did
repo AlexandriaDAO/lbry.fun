@@ -1,4 +1,6 @@
 type Config = record {
+  max_primary_supply : nat64;
+  icp_swap_canister_id : principal;
   secondary_token_ledger : principal;
   primary_token_ledger : principal;
 };
@@ -23,7 +25,9 @@ type ExecutionError = variant {
   MaxPrimaryPerTrnxReached : record { reason : text };
 };
 type InitArgs = record {
+  max_primary_supply : nat64;
   secondary_thresholds : vec nat64;
+  icp_swap_canister_id : principal;
   primary_rewards : vec nat64;
   secondary_token_ledger : principal;
   primary_token_ledger : principal;
@@ -36,8 +40,10 @@ type PaginatedTokenLogs = record {
   current_page : nat64;
 };
 type Result = variant { Ok : nat64; Err : text };
-type Result_1 = variant { Ok : text; Err : ExecutionError };
-type Result_2 = variant { Ok : text; Err : text };
+type Result_1 = variant { Ok : record { nat64; nat64 }; Err : text };
+type Result_2 = variant { Ok : TokenomicsSchedule; Err : text };
+type Result_3 = variant { Ok : text; Err : ExecutionError };
+type Result_4 = variant { Ok : text; Err : text };
 type TokenLogType = variant {
   Error : record { error : ExecutionError };
   Info : record { detail : text };
@@ -56,14 +62,14 @@ type TokenomicsSchedule = record {
 service : (InitArgs) -> {
   fetch_total_minted_primary : () -> (Result);
   get_configs : () -> (Config) query;
-  get_current_primary_rate : () -> (nat64) query;
-  get_current_secondary_threshold : () -> (nat64) query;
+  get_current_primary_rate : () -> (Result) query;
+  get_current_secondary_threshold : () -> (Result) query;
   get_current_threshold_index : () -> (nat32) query;
   get_logs : () -> (vec Logs) query;
-  get_max_stats : () -> (nat64, nat64) query;
+  get_max_stats : () -> (Result_1) query;
   get_token_logs : (opt nat64, opt nat64) -> (PaginatedTokenLogs) query;
-  get_tokenomics_schedule : () -> (TokenomicsSchedule) query;
+  get_tokenomics_schedule : () -> (Result_2) query;
   get_total_secondary_burn : () -> (nat64) query;
-  mint_primary : (nat64, principal, opt blob) -> (Result_1);
-  your_principal : () -> (Result_2) query;
+  mint_primary : (nat64, principal, opt blob) -> (Result_3);
+  your_principal : () -> (Result_4) query;
 }
