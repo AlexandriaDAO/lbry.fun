@@ -15,4 +15,5 @@ serde = "1.0.203"
 serde_bytes = "0.11.12"
 num-traits = "0.2"
 icrc-ledger-types = "0.1.5"
-rand = "0.8" 
+rand = "0.8"
+lbry_fun = { path = "../src/lbry_fun" } 

@@ -40,47 +40,48 @@ pub async fn mint_primary(
         "mint_primary",
         &format!("DEBUG: total_burned_secondary={}, secondary_burn={}", total_burned_secondary, secondary_burn)
     );
-    // Check if we've exceeded the last threshold
-    let early_check_total = total_burned_secondary.checked_add(secondary_burn).ok_or_else(|| {
-        ExecutionError::new_with_log(
-            actual_caller,
-            "mint_primary",
-            ExecutionError::AdditionOverflow {
-                operation: DEFAULT_ADDITION_OVERFLOW_ERROR.to_string(),
-                details: format!(
-                    "total_burned_secondary: {} with secondary_burn: {}",
-                    total_burned_secondary,
-                    secondary_burn
-                ),
-            }
-        )
-    })?;
-    
-    let thresholds_for_check = get_thresholds().map_err(|e| {
-        ExecutionError::new_with_log(
-            actual_caller,
-            "mint_primary",
-            ExecutionError::CanisterCallFailed {
-                canister: "tokenomics".to_string(),
-                method: "get_thresholds".to_string(),
-                details: e,
-            }
-        )
-    })?;
-    
-    let last_threshold = thresholds_for_check[thresholds_for_check.len() - 1];
-    
-    register_info_log(
-        actual_caller,
-        "mint_primary",
-        &format!("Early threshold check: total_after_burn={} vs last_threshold={}", early_check_total, last_threshold)
-    );
-    
-    if early_check_total > last_threshold {
+    if
+        total_burned_secondary.checked_add(secondary_burn).ok_or_else(|| {
+            ExecutionError::new_with_log(
+                actual_caller,
+                "mint_primary",
+                ExecutionError::AdditionOverflow {
+                    operation: DEFAULT_ADDITION_OVERFLOW_ERROR.to_string(),
+                    details: format!(
+                        "total_burned_secondary: {} with secondary_burn: {}",
+                        total_burned_secondary,
+                        secondary_burn
+                    ),
+                }
+            )
+        })? > {
+            let thresholds = get_thresholds().map_err(|e| {
+                ExecutionError::new_with_log(
+                    actual_caller,
+                    "mint_primary",
+                    ExecutionError::CanisterCallFailed {
+                        canister: "tokenomics".to_string(),
+                        method: "get_thresholds".to_string(),
+                        details: e,
+                    }
+                )
+            })?;
+            // Log the threshold check
+            let last_threshold = thresholds[thresholds.len() - 1];
+            // Note: We already know this won't overflow because checked_add succeeded above
+            let total_after_burn = total_burned_secondary.saturating_add(secondary_burn);
+            register_info_log(
+                actual_caller,
+                "mint_primary",
+                &format!("Early threshold check: total_after_burn={} vs last_threshold={}", total_after_burn, last_threshold)
+            );
+            thresholds[thresholds.len() - 1]
+        }
+    {
         register_info_log(
             actual_caller,
             "mint_primary",
-            &format!("EXCEEDED last threshold - stopping minting")
+            "EXCEEDED last threshold - stopping minting"
         );
         return Err(
             ExecutionError::new_with_log(

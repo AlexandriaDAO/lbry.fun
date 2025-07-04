@@ -81,15 +81,31 @@ async fn create_token(
             // So we need to divide by 3 to get the base rate
             // rate_e8s = primary_minted_e8s / (secondary_burned_e8s × 3)
             
-            let rate_e8s = epoch.primary_minted_this_epoch_e8s
-                .checked_div(epoch.secondary_burned_this_epoch_e8s)
-                .and_then(|r| r.checked_div(3))  // Remove the 3x multiplier
-                .unwrap_or(0);
+            // Calculate rate preserving precision:
+            // The tokenomics schedule already has values in E8S
+            // We need to convert the rate to 4-decimal format
+            // rate = primary_minted / (secondary_burned × 3)
+            // Since both values are in E8S, they cancel out in the division
+            // Then multiply by 10_000 to get 4-decimal format
             
-            // Convert from E8S rate to 4-decimal format
-            // rate_e8s represents tokens per token in E8S units
-            // To get 4-decimal: (rate_e8s * 10_000) / E8S
-            let reward_4decimal = ((rate_e8s * 10_000) / E8S as u128) as u64;
+            // Step-by-step calculation for debugging
+            let step1 = epoch.primary_minted_this_epoch_e8s.checked_mul(10_000);
+            let step2 = step1.and_then(|p| p.checked_div(epoch.secondary_burned_this_epoch_e8s));
+            let step3 = step2.and_then(|r| r.checked_div(3));
+            // Remove the E8S division - the E8S units already cancelled out in step2
+            let reward_4decimal = step3.unwrap_or(0) as u64;
+            
+            // Debug logging with intermediate steps
+            if i <= 3 {  // Log first few epochs
+                ic_cdk::println!("[CREATE_TOKEN] Epoch {} calculation steps:", i);
+                ic_cdk::println!("  primary_minted_e8s = {}", epoch.primary_minted_this_epoch_e8s);
+                ic_cdk::println!("  secondary_burned_e8s = {}", epoch.secondary_burned_this_epoch_e8s);
+                ic_cdk::println!("  step1 (primary * 10_000) = {:?}", step1);
+                ic_cdk::println!("  step2 (step1 / secondary) = {:?}", step2);
+                ic_cdk::println!("  step3 (step2 / 3) = {:?}", step3);
+                ic_cdk::println!("  final reward_4decimal = {}", reward_4decimal);
+            }
+            
             primary_rewards.push(reward_4decimal);
         } else {
             // For epochs with no burning data, calculate reward
@@ -97,6 +113,11 @@ async fn create_token(
                 // First mining epoch - use initial reward rate
                 // Convert initial_reward_per_burn_unit from E8S to 4-decimal
                 let reward_4decimal = (initial_reward_per_burn_unit * 10_000) / E8S;
+                
+                // Debug logging
+                ic_cdk::println!("[CREATE_TOKEN] First mining epoch: initial_reward_per_burn_unit={}, reward_4decimal={}", 
+                    initial_reward_per_burn_unit, reward_4decimal);
+                
                 primary_rewards.push(reward_4decimal as u64);
                 is_first_mining_epoch = false;
             } else {

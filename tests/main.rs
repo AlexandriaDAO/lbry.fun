@@ -104,6 +104,9 @@ mod test_tokenomics_schedule_generation;
 #[path = "tests/unit/test_tokenomics_bug_simple_demo.rs"]
 mod test_tokenomics_bug_simple_demo;
 
+#[path = "tests/unit/test_tokenomics_simple.rs"]
+mod test_tokenomics_simple;
+
 #[path = "tests/integration/integrated_token_tests.rs"]
 mod integrated_token_tests;
 

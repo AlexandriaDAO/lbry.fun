@@ -1,4 +1,8 @@
-
+When you come back: 
+- Do some stress integrationtesting with the bot1 canister and make sure the graphs align.
+- Audit the existing code based on the changelogs.
+- Remove the changelogs and declare things safe before moving on to switching staking for locked liquidity.
+- Done.
 
 
 
@@ -44,7 +48,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "yo4wh-4iihj-wmxgq-tcelx-2h4l2-5oiwe-guow3-yn6qx-l2jtl-bpocb-dae"; subaccount = null }; amount = (999_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "ebonj-26ttl-oubal-a5j6o-5fpbs-uk5b5-to7c2-uwttl-icxwd-aaorh-zqe"; subaccount = null }; amount = (999_900_000_000 : nat) })'
 
 dfx identity use default
 

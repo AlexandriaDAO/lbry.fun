@@ -121,9 +121,8 @@ async fn execute_single_loop(
         .map_err(|e| format!("Failed to approve secondary tokens: {}", e))?;
     
     // 7. Convert to natural units for burn (icp_swap expects natural units)
-    // Be conservative to account for fees and rounding
-    // When we convert natural units back to E8S, we need to ensure we have enough
-    let burn_amount_natural = (secondary_balance / E8S).saturating_sub(1); // Subtract 1 full token to be safe
+    // Use the full balance to avoid dust accumulation
+    let burn_amount_natural = secondary_balance / E8S;
     
     ic_cdk::println!("[BOT1] Loop {}: Secondary balance: {} e8s, burn amount: {} natural units", 
         loop_number, secondary_balance, burn_amount_natural);
@@ -148,8 +147,8 @@ async fn execute_single_loop(
     let primary_total_supply = icrc1_total_supply(token_record.primary_token_id).await?;
     
     // 11. Calculate metrics
-    let secondary_burned = secondary_balance.saturating_sub(final_secondary);
-    let secondary_dust = final_secondary.saturating_sub(initial_secondary);
+    let secondary_burned = burn_amount_natural * E8S; // Convert back to E8S for consistent reporting
+    let secondary_dust = secondary_balance.saturating_sub(secondary_burned); // Any remainder that couldn't be burned
     
     let actual_mint_rate = if secondary_burned > 0 {
         primary_received as f64 / secondary_burned as f64

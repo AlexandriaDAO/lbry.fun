@@ -19,12 +19,18 @@ This file tracks all changes made to convert the audited tokenomics canister int
 - **Change**: Added comprehensive logging to debug "No more primary can be minted" errors
 - **Timestamp**: 2025-01-03
 - **Details**: 
-  - Log threshold state at start of function
+  - Added early debug log showing total_burned_secondary and secondary_burn values
+  - Added logging inside early threshold check (total_after_burn vs last_threshold)
+  - Log threshold state at start of function (current index, threshold, reward, total burned)
+  - Added critical check logging when current reward rate is 0
   - Log calculation details in threshold crossing loop
-  - Log when not crossing threshold
-  - Log final calculation results before zero check
-  - Log supply check details
-- **Security Impact**: Read-only logging, no logic changes
+  - Log when not crossing threshold with all relevant values
+  - Log final calculation results before zero check (phase_mint_primary, remaining_primary, etc)
+  - Log supply check details (total_minted, max_supply)
+  - Added zero primary tokens detailed log
+  - Added final success log showing minted amount
+- **Security Impact**: Read-only logging only, no functional changes to logic
+- **Important Note**: Temporarily refactored early threshold check for clarity but reverted to original structure
 - **Test Status**: Pending
 
 #### TOK-011: Distribution Model Change (HIGH RISK)
