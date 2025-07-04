@@ -9,6 +9,12 @@ When you come back:
 
 
 
+Good test: Conservation analysis: (start with a set amount of ICP, mint, burn, lock lp, collect, sell, and repeat). Add up the locations of all the ICP at the end and ensure that all is conserved.
+
+
+
+
+
 
 - Could we make all the terminals into expanders?
 - Get launch pending to update the state when time runs out.

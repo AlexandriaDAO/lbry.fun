@@ -160,14 +160,14 @@ pub fn get_tokenomics_graphs(pool_id: u64) -> Result<GraphData, String> {
         tokens.borrow().get(&pool_id)
     }).ok_or_else(|| format!("Token with ID {} not found", pool_id))?;
     
-    // 2. Convert stored E8S values to natural units for the preview function
+    // 2. For old tokens, values are stored as natural units, not E8S
+    // The comments in preview_tokenomics_from_frontend are incorrect
     let args = PreviewArgs {
         primary_max_supply: token_record.primary_token_max_supply,
         tge_allocation: token_record.initial_primary_mint,
         initial_secondary_burn: token_record.initial_secondary_burn,
         halving_step: token_record.halving_step,
-        // Convert from E8S to natural units
-        initial_reward_per_burn_unit: token_record.initial_reward_per_burn_unit / E8S,
+        initial_reward_per_burn_unit: token_record.initial_reward_per_burn_unit,
     };
     
     // 3. Use the existing preview logic

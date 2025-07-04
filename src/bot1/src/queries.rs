@@ -5,7 +5,7 @@ use crate::{
 };
 use ic_cdk::api::call::call;
 
-pub fn get_table_impl(pool_id: u64) -> Result<ValidationTable, String> {
+pub async fn get_table_impl(pool_id: u64) -> Result<ValidationTable, String> {
     // Get snapshots for this pool
     let snapshots = get_snapshots(pool_id);
     if snapshots.is_empty() {
@@ -15,6 +15,19 @@ pub fn get_table_impl(pool_id: u64) -> Result<ValidationTable, String> {
     // Get cached token info
     let token_info = get_cached_token_info(pool_id)
         .ok_or_else(|| format!("Token info not found for pool {}", pool_id))?;
+    
+    // Get token record for pool parameters
+    let lbry_fun = get_lbry_fun_principal();
+    let token_record = get_token_record(lbry_fun, pool_id).await
+        .map_err(|e| format!("Failed to get token record: {}", e))?;
+    
+    // Extract pool parameters
+    let pool_parameters = PoolParameters {
+        primary_max_supply: token_record.primary_token_max_supply,
+        initial_secondary_burn: token_record.initial_secondary_burn,
+        halving_step: token_record.halving_step,
+        initial_reward_per_burn_unit: token_record.initial_reward_per_burn_unit,
+    };
     
     // Get cumulative state
     let cumulative_state = get_cumulative_state(pool_id);
@@ -35,7 +48,19 @@ pub fn get_table_impl(pool_id: u64) -> Result<ValidationTable, String> {
         y_axis: vec![0.0], // Start with 0
     };
     
+    let mut cumulative_usd_cost_data = GraphData {
+        x_axis: vec![0], // Start with 0
+        y_axis: vec![0], // Start with 0
+    };
+    
+    let mut cumulative_percentage_supply_data = PercentageGraphData {
+        x_axis: vec![0], // Start with 0
+        y_axis: vec![0.0], // Start with 0
+    };
+    
     // Process snapshots to build graph data
+    let mut cumulative_usd_cost = 0.0;
+    
     for snapshot in &snapshots {
         // Cumulative supply data
         cumulative_supply_data.x_axis.push(snapshot.cumulative_secondary_burned);
@@ -48,6 +73,17 @@ pub fn get_table_impl(pool_id: u64) -> Result<ValidationTable, String> {
         // Cost to mint data
         cost_to_mint_data.x_axis.push(snapshot.cumulative_primary_minted);
         cost_to_mint_data.y_axis.push(snapshot.cost_per_primary);
+        
+        // Cumulative USD cost
+        let loop_usd_cost = (snapshot.icp_spent as f64 / E8S as f64) * ICP_USD_RATE * EFFECTIVE_SECONDARY_COST;
+        cumulative_usd_cost += loop_usd_cost;
+        cumulative_usd_cost_data.x_axis.push(snapshot.cumulative_primary_minted);
+        cumulative_usd_cost_data.y_axis.push((cumulative_usd_cost * E8S as f64) as u64); // Store as E8S for consistency
+        
+        // Percentage of max supply
+        let percentage = (snapshot.cumulative_primary_minted as f64 / pool_parameters.primary_max_supply as f64) * 100.0;
+        cumulative_percentage_supply_data.x_axis.push(snapshot.cumulative_primary_minted);
+        cumulative_percentage_supply_data.y_axis.push(percentage);
     }
     
     // Calculate summary metrics
@@ -65,13 +101,54 @@ pub fn get_table_impl(pool_id: u64) -> Result<ValidationTable, String> {
     
     let total_dust_accumulated = cumulative_state.total_dust;
     
+    // Calculate summary data
+    let initial_mint_cost = if !snapshots.is_empty() {
+        snapshots[0].cost_per_primary
+    } else {
+        0.0
+    };
+    
+    let final_mint_cost = if !snapshots.is_empty() {
+        snapshots[snapshots.len() - 1].cost_per_primary
+    } else {
+        0.0
+    };
+    
+    let percentage_of_max_supply = (total_primary_minted as f64 / pool_parameters.primary_max_supply as f64) * 100.0;
+    let average_cost_per_token = if total_primary_minted > 0 {
+        total_usd_cost / (total_primary_minted as f64 / E8S as f64)
+    } else {
+        0.0
+    };
+    
+    // Count unique epochs reached (based on different mint rates)
+    let mut unique_mint_rates = std::collections::HashSet::new();
+    for snapshot in &snapshots {
+        unique_mint_rates.insert((snapshot.actual_mint_rate * 10000.0) as u64); // Round to 4 decimals
+    }
+    let epochs_reached = unique_mint_rates.len() as u32;
+    
+    let summary_data = SummaryData {
+        epochs_reached,
+        total_minting_valuation: total_usd_cost,
+        initial_mint_cost,
+        final_mint_cost,
+        actual_total_minted: total_primary_minted,
+        percentage_of_max_supply,
+        average_cost_per_token,
+    };
+    
     Ok(ValidationTable {
         pool_id,
         token_info,
+        pool_parameters,
         snapshots,
         cumulative_supply_data,
         minted_per_epoch_data,
         cost_to_mint_data,
+        cumulative_usd_cost_data,
+        cumulative_percentage_supply_data,
+        summary_data,
         total_loops,
         total_icp_spent,
         total_usd_cost,

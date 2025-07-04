@@ -102,6 +102,12 @@ type PoolLogs = record {
   tokenomics_logs : opt PaginatedTokenLogs;
   icp_swap_logs : opt PaginatedLogs;
 };
+type PoolParameters = record {
+  halving_step : nat64;
+  initial_reward_per_burn_unit : nat64;
+  primary_max_supply : nat64;
+  initial_secondary_burn : nat64;
+};
 type PoolValidation = record {
   is_live : bool;
   estimated_cost_per_loop : nat64;
@@ -115,6 +121,15 @@ type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok : PoolLogs; Err : text };
 type Result_2 = variant { Ok : ValidationTable; Err : text };
 type Result_3 = variant { Ok : PoolValidation; Err : text };
+type SummaryData = record {
+  total_minting_valuation : float64;
+  percentage_of_max_supply : float64;
+  average_cost_per_token : float64;
+  final_mint_cost : float64;
+  initial_mint_cost : float64;
+  actual_total_minted : nat64;
+  epochs_reached : nat32;
+};
 type TokenInfo = record {
   secondary_token_id : text;
   tokenomics_canister_id : text;
@@ -181,11 +196,15 @@ type ValidationTable = record {
   total_dust_accumulated : nat64;
   snapshots : vec LoopSnapshot;
   cumulative_supply_data : GraphData;
+  cumulative_percentage_supply_data : CostData;
+  cumulative_usd_cost_data : GraphData;
   total_icp_spent : nat64;
   average_mint_rate : float64;
   total_primary_minted : nat64;
   cost_to_mint_data : CostData;
   total_secondary_burned : nat64;
+  summary_data : SummaryData;
+  pool_parameters : PoolParameters;
   pool_id : nat64;
   minted_per_epoch_data : EpochData;
   token_info : TokenInfo;
@@ -196,6 +215,6 @@ service : () -> {
   get_bot_principal : () -> (text) query;
   get_pool_logs : (nat64, opt nat64, opt nat64) -> (Result_1);
   get_pool_summary : (nat64) -> (Result) query;
-  get_table : (nat64) -> (Result_2) query;
+  get_table : (nat64) -> (Result_2);
   validate_pool : (nat64) -> (Result_3);
 }

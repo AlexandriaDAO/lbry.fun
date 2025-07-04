@@ -127,7 +127,7 @@ dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argu
 
 # Send ICP to the bot1 canister: 
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer "(record { to = record { owner = principal \"$BOT1_PRINCIPAL\"; subaccount = null }; amount = 999900000000 })"
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer "(record { to = record { owner = principal \"$BOT1_PRINCIPAL\"; subaccount = null }; amount = 99999999900000000 })"
 
 
 npm i

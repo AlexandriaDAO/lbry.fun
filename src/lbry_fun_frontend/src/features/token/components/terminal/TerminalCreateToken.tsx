@@ -70,10 +70,10 @@ const TerminalCreateToken: React.FC = () => {
     secondary_token_logo_base64: '',
     primary_max_supply: '21000000',
     tge_allocation: '0',
-    initial_secondary_burn: '21000',
+    initial_secondary_burn: '1000000',
     primary_token_logo_base64: '',
     halving_step: '50',
-    initial_reward_per_burn_unit: '5',
+    initial_reward_per_burn_unit: '0.105',
     distribution_interval_seconds: '3600',
     launch_delay_seconds: '86400',
   });
@@ -122,14 +122,14 @@ const TerminalCreateToken: React.FC = () => {
 
     // Validate hard cap minimum
     const hardCap = parseInt(form.primary_max_supply);
-    if (!newErrors.primary_max_supply && hardCap > 0 && hardCap < 100000) {
-      newErrors.primary_max_supply = 'Hard cap must be at least 100,000 tokens (vulnerable to manipulation below this threshold)';
+    if (!newErrors.primary_max_supply && hardCap > 0 && hardCap < 1000000) {
+      newErrors.primary_max_supply = 'Hard cap must be at least 1,000,000 tokens (prevents dust issues)';
     }
 
     const initialBurn = parseFloat(form.initial_secondary_burn);
     const secondaryTokenPrice = 0.005;
-    if (!newErrors.initial_secondary_burn && initialBurn > 0 && (initialBurn * secondaryTokenPrice) < 100) {
-      newErrors.initial_secondary_burn = `Initial valuation must be at least $100 to prevent bot attacks. Current: $${(initialBurn * secondaryTokenPrice).toLocaleString()}`;
+    if (!newErrors.initial_secondary_burn && initialBurn > 0 && (initialBurn * secondaryTokenPrice) < 5000) {
+      newErrors.initial_secondary_burn = `Initial valuation must be at least $5,000 to prevent bot attacks. Current: $${(initialBurn * secondaryTokenPrice).toLocaleString()}`;
     }
 
     // Calculate theoretical first epoch
@@ -174,17 +174,21 @@ const TerminalCreateToken: React.FC = () => {
   };
 
   const updateForm = (field: keyof TokenFormValues, value: string) => {
-    const numericFieldNames: Array<keyof TokenFormValues> = [
+    const integerFieldNames: Array<keyof TokenFormValues> = [
       'primary_max_supply',
       'initial_secondary_burn',
-      'halving_step',
-      'initial_reward_per_burn_unit'
+      'halving_step'
     ];
     
     if (field === 'tge_allocation') return;
 
-    if (numericFieldNames.includes(field)) {
+    if (integerFieldNames.includes(field)) {
       if (value === '' || /^[0-9]+$/.test(value)) {
+        setForm(prev => ({ ...prev, [field]: value }));
+      }
+    } else if (field === 'initial_reward_per_burn_unit') {
+      // Allow decimals for initial reward
+      if (value === '' || /^\d*\.?\d*$/.test(value)) {
         setForm(prev => ({ ...prev, [field]: value }));
       }
     } else {
@@ -449,9 +453,9 @@ const TerminalCreateToken: React.FC = () => {
                 label=""
                 value={form.primary_max_supply}
                 onChange={(v) => updateForm('primary_max_supply', v)}
-                min={100000}
-                max={10000000}
-                step={1000}
+                min={1000000}
+                max={1000000000000}
+                step={1000000}
               />
             </div>
 
@@ -469,16 +473,18 @@ const TerminalCreateToken: React.FC = () => {
                 value={form.initial_reward_per_burn_unit}
                 onChange={(v) => updateForm('initial_reward_per_burn_unit', v)}
                 error={shouldShowError('initial_reward_per_burn_unit') ? errors.initial_reward_per_burn_unit : undefined}
-                placeholder="e.g. 20000"
+                placeholder="e.g. 0.105"
               />
               <TerminalRange
                 label=""
                 value={form.initial_reward_per_burn_unit}
                 onChange={(v) => updateForm('initial_reward_per_burn_unit', v)}
-                min={10}
-                max={Math.min(100000, Math.floor((parseInt(form.primary_max_supply || '0') - parseInt(form.tge_allocation || '1')) * 0.1)) || 100000}
-                step={10}
-                helperText={form.primary_max_supply ? `max: ${Math.floor((parseInt(form.primary_max_supply) - parseInt(form.tge_allocation || '1')) * 0.1).toLocaleString()} (10% of remaining supply)` : ''}
+                min={0.001}
+                max={20}
+                step={0.001}
+                helperText={form.primary_max_supply && form.initial_secondary_burn ? 
+                  `First epoch will mint: ${(parseFloat(form.initial_reward_per_burn_unit || '0') * parseInt(form.initial_secondary_burn || '0')).toLocaleString()} tokens (${((parseFloat(form.initial_reward_per_burn_unit || '0') * parseInt(form.initial_secondary_burn || '0') / parseInt(form.primary_max_supply)) * 100).toFixed(2)}% of supply)` 
+                  : 'Set supply and burn unit first'}
               />
             </div>
 
@@ -496,19 +502,19 @@ const TerminalCreateToken: React.FC = () => {
                 value={form.initial_secondary_burn}
                 onChange={(v) => updateForm('initial_secondary_burn', v)}
                 error={shouldShowError('initial_secondary_burn') ? errors.initial_secondary_burn : undefined}
-                placeholder="e.g. 50000 tokens"
+                placeholder="e.g. 1000000 tokens"
               />
               <TerminalRange
                 label=""
                 value={form.initial_secondary_burn}
                 onChange={(v) => updateForm('initial_secondary_burn', v)}
-                min={20000}
-                max={10000000}
-                step={10000}
+                min={1000000}
+                max={100000000}
+                step={100000}
                 helperText={form.initial_secondary_burn ? `initial_valuation: $${(parseInt(form.initial_secondary_burn) * 0.005).toLocaleString()} USD` : ''}
               />
-              {form.initial_secondary_burn && parseInt(form.initial_secondary_burn) * 0.005 < 100 && (
-                <div className="terminal-warning">[WARN] Initial valuation below $100 threshold - vulnerable to bot attacks</div>
+              {form.initial_secondary_burn && parseInt(form.initial_secondary_burn) * 0.005 < 5000 && (
+                <div className="terminal-warning">[WARN] Initial valuation below $5,000 threshold - vulnerable to bot attacks</div>
               )}
             </div>
 

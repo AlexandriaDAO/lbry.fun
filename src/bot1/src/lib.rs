@@ -32,10 +32,10 @@ async fn execute_loops(pool_id: u64, icp_amount: u64, number_of_loops: u32) -> R
     execute::execute_loops_impl(pool_id, icp_amount_e8s, number_of_loops).await
 }
 
-// Get validation table query call
-#[query]
-fn get_table(pool_id: u64) -> Result<ValidationTable, String> {
-    queries::get_table_impl(pool_id)
+// Get validation table update call (now async due to token record fetch)
+#[update]
+async fn get_table(pool_id: u64) -> Result<ValidationTable, String> {
+    queries::get_table_impl(pool_id).await
 }
 
 // Validate pool before execution

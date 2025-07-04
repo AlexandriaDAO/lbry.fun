@@ -38,14 +38,18 @@ pub struct LoopSnapshot {
 pub struct ValidationTable {
     pub pool_id: u64,
     pub token_info: TokenInfo,
+    pub pool_parameters: PoolParameters,
     pub snapshots: Vec<LoopSnapshot>,
     
     // Graph-ready data (matching frontend format)
     pub cumulative_supply_data: GraphData,
     pub minted_per_epoch_data: EpochData,
     pub cost_to_mint_data: CostData,
+    pub cumulative_usd_cost_data: GraphData,
+    pub cumulative_percentage_supply_data: PercentageGraphData,
     
     // Summary metrics
+    pub summary_data: SummaryData,
     pub total_loops: u32,
     pub total_icp_spent: u64,
     pub total_usd_cost: f64,
@@ -71,6 +75,31 @@ pub struct EpochData {
 pub struct CostData {
     pub x_axis: Vec<u64>,  // cumulative primary minted
     pub y_axis: Vec<f64>,  // cost per token USD
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct PercentageGraphData {
+    pub x_axis: Vec<u64>,  // cumulative primary minted (in E8S)
+    pub y_axis: Vec<f64>,  // percentage of max supply
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct SummaryData {
+    pub epochs_reached: u32,
+    pub total_minting_valuation: f64,  // Total USD cost
+    pub initial_mint_cost: f64,        // First primary token cost
+    pub final_mint_cost: f64,          // Last primary token cost
+    pub actual_total_minted: u64,      // Total primary minted (E8S)
+    pub percentage_of_max_supply: f64, // % of max supply reached
+    pub average_cost_per_token: f64,   // Total USD / tokens
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct PoolParameters {
+    pub primary_max_supply: u64,        // In E8S
+    pub initial_secondary_burn: u64,    // In E8S
+    pub halving_step: u64,              // Percentage
+    pub initial_reward_per_burn_unit: u64, // Primary tokens per secondary
 }
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
