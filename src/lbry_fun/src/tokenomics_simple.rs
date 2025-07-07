@@ -61,8 +61,8 @@ fn calculate_cost_per_token(secondary_burned: u128, primary_minted: u128) -> f64
 pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSchedule {
     let mut epochs = Vec::new();
     
-    // Minimum reward rate (0.0001 tokens in E8S)
-    const MIN_REWARD_RATE_E8S: u128 = 10_000;
+    // Minimum reward rate (0.01 tokens in E8S)
+    const MIN_REWARD_RATE_E8S: u128 = 1_000_000;
     
     // Start with TGE allocation
     let mut cumulative_primary = params.tge_allocation_e8s;
@@ -82,11 +82,6 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
     let mut epoch_number = 1;
     let mut burn_amount = params.initial_burn_e8s;
     let mut reward_rate = params.initial_reward_rate_e8s;
-    
-    // For default parameters, match hardcoded behavior (18 epochs)
-    let is_default_params = params.initial_reward_rate_e8s == 5 * E8S && 
-                           params.halving_percentage == 50 && 
-                           params.initial_burn_e8s == 21_000 * E8S;
     
     // Generate epochs dynamically until natural termination
     loop {
@@ -158,38 +153,6 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
         
         // Natural termination if max supply reached
         if cumulative_primary >= params.max_supply_e8s {
-            break;
-        }
-        
-        // Remove the artificial 18 epoch limit - let it run naturally
-        
-        // For default parameters, we need special handling to match hardcoded behavior
-        // The hardcoded version continues the doubling pattern through epoch 17, then adds a final sweep
-        if is_default_params && reward_rate == MIN_REWARD_RATE_E8S && epoch_number >= 18 {
-            // Add a final epoch that mints all remaining tokens
-            let remaining = params.max_supply_e8s.saturating_sub(cumulative_primary);
-            if remaining > E8S {
-                // Calculate how much secondary we need to burn to get the remaining primary
-                // Using the minimum reward rate (0.0001) with 3x multiplier
-                let required_burn = remaining
-                    .saturating_mul(E8S)
-                    .saturating_div(MIN_REWARD_RATE_E8S)
-                    .saturating_div(3);
-                
-                cumulative_primary = params.max_supply_e8s;
-                cumulative_secondary = cumulative_secondary.saturating_add(required_burn);
-                
-                let cost_per_token = calculate_cost_per_token(required_burn, remaining);
-                
-                epochs.push(EpochData {
-                    epoch_number,  // Use current epoch number, not +1
-                    secondary_burned_this_epoch_e8s: required_burn,
-                    primary_minted_this_epoch_e8s: remaining,
-                    cumulative_secondary_burned_e8s: cumulative_secondary,
-                    cumulative_primary_minted_e8s: cumulative_primary,
-                    cost_per_primary_token_usd: cost_per_token,
-                });
-            }
             break;
         }
         

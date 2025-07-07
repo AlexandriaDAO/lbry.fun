@@ -106,7 +106,7 @@ async fn create_token(
                 ic_cdk::println!("  final reward_4decimal = {}", reward_4decimal);
             }
             
-            primary_rewards.push(reward_4decimal);
+            primary_rewards.push(reward_4decimal.max(100));  // 100 = 0.01 tokens
         } else {
             // For epochs with no burning data, calculate reward
             if is_first_mining_epoch {
@@ -118,12 +118,12 @@ async fn create_token(
                 ic_cdk::println!("[CREATE_TOKEN] First mining epoch: initial_reward_per_burn_unit={}, reward_4decimal={}", 
                     initial_reward_per_burn_unit, reward_4decimal);
                 
-                primary_rewards.push(reward_4decimal as u64);
+                primary_rewards.push((reward_4decimal as u64).max(100));  // 100 = 0.01 tokens
                 is_first_mining_epoch = false;
             } else {
                 // Subsequent epochs - apply halving
                 let prev_reward = primary_rewards.last().copied().unwrap_or(50_000);
-                let new_reward = (prev_reward * halving_step as u64) / 100;
+                let new_reward = ((prev_reward * halving_step as u64) / 100).max(100);
                 primary_rewards.push(new_reward);
             }
         }
@@ -136,6 +136,13 @@ async fn create_token(
     
     if secondary_thresholds.len() != primary_rewards.len() {
         return Err("Threshold and reward arrays must have the same length".to_string());
+    }
+    
+    // Validate no values slipped through below minimum
+    for (i, reward) in primary_rewards.iter().enumerate() {
+        if *reward < 100 {
+            return Err(format!("Invalid reward at index {}: {} is below minimum of 100 (0.01 tokens)", i, reward));
+        }
     }
     
     // Log for debugging

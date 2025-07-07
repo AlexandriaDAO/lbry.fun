@@ -86,35 +86,63 @@ All tests are done with a 'mock' canister using the pocket-ic library in the pro
 - Testing: pocket-ic for canister testing, Jest for frontend
 - Build: Webpack, cargo, dfx
 
+## E8S Token Value Conversions (Critical)
+
+### Overview
+E8S is the smallest unit for tokens on the Internet Computer (1 token = 100,000,000 E8S).
+
+### Standard Frontend → Backend Flow
+1. **Most Operations**: Frontend sends E8S format
+   ```typescript
+   const e8sAmount = TokenConversionService.naturalToE8s(amount); // 1 → 100,000,000
+   ```
+2. **Display**: Backend returns E8S, frontend converts for display
+   ```typescript
+   const natural = TokenConversionService.e8sToNatural(e8s); // 100,000,000 → 1
+   ```
+
+### Critical Exceptions
+1. **`burn_secondary`**: Frontend sends natural units (backend multiplies by 100,000,000)
+2. **Token Creation**: All parameters sent as BigInt without E8S conversion
+3. **Halving Step**: Plain percentage (70 = 70%, NOT 70 × 10^8)
+
+### Special Cases
+- **ICP Transfer Fee**: Always 10,000 E8S (0.0001 ICP)
+- **Tokenomics Internal**: 4-decimal format (50,000 = 5.0 tokens), multiply by 10,000 for E8S
+- **E8S × E8S = E16S**: When multiplying E8S values, divide by E8S to correct units
+
+## Dual Token System Mechanics
+
+### Overview
+Each token launch creates two tokens: Primary (reward) and Secondary (mining).
+
+### Token Flow
+1. **Mint Secondary**: ICP → Secondary tokens at fixed rate ($0.01 worth of ICP)
+2. **Burn Secondary**: Secondary tokens → Primary tokens at varying rates (with 50% ICP refund)
+3. **Halving**: Primary reward rate decreases at thresholds (e.g., 70% of previous rate)
+
+### ICP Distribution (1% of pool hourly)
+- 1% → Buy/burn $LBRY (parent project token)
+- 49.5% → Primary token stakers
+- 49.5% → Kongswap liquidity (locked)
+
+## Common Error Patterns & Solutions
+
+### Frontend Errors
+- **"Insufficient balance"**: Check approval amounts include fees
+- **BigInt conversion errors**: Ensure proper string conversion before BigInt()
+- **Display showing scientific notation**: Use TokenConversionService.formatE8sDisplay()
+
+### Backend Errors
+- **Overflow in calculations**: Check for E8S × E8S multiplication
+- **"Transfer failed"**: Verify approval includes transfer fee (10,000 E8S)
+- **Archive errors**: Ensure timer intervals don't overlap
+
 ## Important Notes
 
-### Token Value Conversions
-
-**Standard Pattern** (follows core repository):
-- Frontend sends E8S for most operations (multiply natural units by 10^8 in thunks)
-- Exception: `burn_secondary` expects natural units
-- Tokenomics canister uses 4-decimal format internally for space efficiency (50,000 = 5.0 tokens)
-
-- Kongswap is deployed here for full liquidity functionality, but the repo is not in this codebase.
+- Kongswap is deployed locally for liquidity functionality (separate repo)
 - Uses WASM compilation with `ic-wasm` for size optimization
-
-## Tokenomics Graph Consolidation (2025-06-23)
-
-### Problem Solved
-The tokenomics graphs displayed differently between pool creation and the swap tab due to:
-1. Different calculation methods for `initialRewardPerBurnUnit`
-2. The swap tab trying to derive values that should come directly from the backend
-
-### Solution
-Created `UnifiedTokenomicsGraphs` component that:
-- Uses consistent E8S conversions
-- Gets `initialRewardPerBurnUnit` from the tokenomics schedule (first element of `primary_mint_per_threshold`)
-- Works for both creation preview and deployed token display
-
-### Key Changes
-- `TokenomicsGraphsBackend` is now deprecated (re-exports UnifiedTokenomicsGraphs)
-- Both views use the same component with the same calculations
-- See `TOKENOMICS_GRAPH_CONSOLIDATION.md` for full details
+- All canisters use stable memory for upgrade persistence
 
 ## Responses
 - When providing technical advice, ultra deep think about specific actionable steps rather than abstract concepts.

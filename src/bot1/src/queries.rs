@@ -235,3 +235,150 @@ pub async fn get_pool_logs_impl(
         icp_swap_logs,
     })
 }
+
+pub async fn get_summary_impl(pool_id: u64) -> Result<ValidationSummary, String> {
+    // Get snapshots for this pool
+    let snapshots = get_snapshots(pool_id);
+    if snapshots.is_empty() {
+        return Err(format!("No data found for pool {}", pool_id));
+    }
+    
+    // Get cached token info
+    let token_info = get_cached_token_info(pool_id)
+        .ok_or_else(|| format!("Token info not found for pool {}", pool_id))?;
+    
+    // Get token record for pool parameters
+    let lbry_fun = get_lbry_fun_principal();
+    let token_record = get_token_record(lbry_fun, pool_id).await
+        .map_err(|e| format!("Failed to get token record: {}", e))?;
+    
+    // Extract pool parameters
+    let pool_parameters = PoolParameters {
+        primary_max_supply: token_record.primary_token_max_supply,
+        initial_secondary_burn: token_record.initial_secondary_burn,
+        halving_step: token_record.halving_step,
+        initial_reward_per_burn_unit: token_record.initial_reward_per_burn_unit,
+    };
+    
+    // Detect epochs by tracking unique mint rates
+    let mut epoch_data: Vec<EpochSnapshot> = vec![];
+    let mut current_epoch = 0u32;
+    let mut current_mint_rate = 0.0;
+    let mut epoch_start_idx = 0;
+    let precision = 10000.0; // Round to 4 decimal places
+    
+    for (idx, snapshot) in snapshots.iter().enumerate() {
+        let rounded_rate = (snapshot.actual_mint_rate * precision).round() / precision;
+        
+        // Detect epoch change
+        if idx == 0 || (rounded_rate - current_mint_rate).abs() > 0.0001 {
+            // Save previous epoch data if not first iteration
+            if idx > 0 {
+                let epoch_snapshots = &snapshots[epoch_start_idx..idx];
+                epoch_data.push(build_epoch_snapshot(
+                    current_epoch,
+                    current_mint_rate,
+                    epoch_start_idx > 0, // halving occurred if not first epoch
+                    epoch_snapshots,
+                    &pool_parameters,
+                ));
+                current_epoch += 1;
+            }
+            
+            current_mint_rate = rounded_rate;
+            epoch_start_idx = idx;
+        }
+    }
+    
+    // Don't forget the last epoch
+    if epoch_start_idx < snapshots.len() {
+        let epoch_snapshots = &snapshots[epoch_start_idx..];
+        epoch_data.push(build_epoch_snapshot(
+            current_epoch,
+            current_mint_rate,
+            epoch_start_idx > 0,
+            epoch_snapshots,
+            &pool_parameters,
+        ));
+    }
+    
+    // Calculate summary statistics
+    let first_loop = snapshots.first().unwrap().clone();
+    let last_loop = snapshots.last().unwrap().clone();
+    let cumulative_state = get_cumulative_state(pool_id);
+    
+    let total_usd_cost = (cumulative_state.total_icp_spent as f64 / E8S as f64) * ICP_USD_RATE;
+    let average_cost_per_token = if cumulative_state.total_primary_minted > 0 {
+        total_usd_cost / (cumulative_state.total_primary_minted as f64 / E8S as f64)
+    } else {
+        0.0
+    };
+    
+    let final_percentage_minted = if pool_parameters.primary_max_supply > 0 {
+        (cumulative_state.total_primary_minted as f64 / pool_parameters.primary_max_supply as f64) * 100.0
+    } else {
+        0.0
+    };
+    
+    Ok(ValidationSummary {
+        pool_id,
+        token_info,
+        pool_parameters,
+        total_loops: snapshots.len() as u32,
+        epochs_reached: epoch_data.len() as u32,
+        final_percentage_minted,
+        epoch_snapshots: epoch_data,
+        first_loop,
+        last_loop,
+        total_icp_spent: cumulative_state.total_icp_spent,
+        total_usd_cost,
+        average_mint_rate: cumulative_state.total_primary_minted as f64 / cumulative_state.total_secondary_burned as f64,
+        average_cost_per_token,
+    })
+}
+
+fn build_epoch_snapshot(
+    epoch_number: u32,
+    mint_rate: f64,
+    halving_occurred: bool,
+    snapshots: &[LoopSnapshot],
+    pool_parameters: &PoolParameters,
+) -> EpochSnapshot {
+    let total_loops_in_epoch = snapshots.len() as u32;
+    let total_secondary_burned_in_epoch: u64 = snapshots.iter().map(|s| s.secondary_burned).sum();
+    let total_primary_minted_in_epoch: u64 = snapshots.iter().map(|s| s.primary_received).sum();
+    let total_icp_spent_in_epoch: u64 = snapshots.iter().map(|s| s.icp_spent).sum();
+    
+    let costs: Vec<f64> = snapshots.iter().map(|s| s.cost_per_primary).collect();
+    let min_cost_in_epoch = costs.iter().cloned().fold(f64::INFINITY, f64::min);
+    let max_cost_in_epoch = costs.iter().cloned().fold(0.0, f64::max);
+    let avg_cost_per_token_in_epoch = if !costs.is_empty() {
+        costs.iter().sum::<f64>() / costs.len() as f64
+    } else {
+        0.0
+    };
+    
+    let last_snapshot = snapshots.last().unwrap();
+    let percentage_of_max_supply = if pool_parameters.primary_max_supply > 0 {
+        (last_snapshot.cumulative_primary_minted as f64 / pool_parameters.primary_max_supply as f64) * 100.0
+    } else {
+        0.0
+    };
+    
+    EpochSnapshot {
+        epoch_number,
+        mint_rate,
+        halving_occurred,
+        total_loops_in_epoch,
+        total_secondary_burned_in_epoch,
+        total_primary_minted_in_epoch,
+        total_icp_spent_in_epoch,
+        avg_cost_per_token_in_epoch,
+        min_cost_in_epoch,
+        max_cost_in_epoch,
+        cumulative_primary_minted: last_snapshot.cumulative_primary_minted,
+        cumulative_secondary_burned: last_snapshot.cumulative_secondary_burned,
+        cumulative_icp_spent: last_snapshot.cumulative_icp_spent,
+        percentage_of_max_supply,
+    }
+}

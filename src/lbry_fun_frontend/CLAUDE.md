@@ -1,21 +1,6 @@
-# CLAUDE.md
+# Frontend CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Recent Performance Optimizations
-
-### Completed Optimizations (2025-06-17)
-1. **Skeleton Loaders**: Added to Swap and Stake tabs for immediate UI rendering
-2. **Request Deduplication**: Middleware prevents duplicate API calls  
-3. **ICP Price Caching**: Fixed duplicate fetches (was 4+, now 1 with 5-min cache)
-4. **Burn Calculation Fix**: Frontend now matches backend logic (no 50% reserve for burns)
-5. **Performance Monitoring**: Added metrics tracking in development mode
-
-### Key Architectural Improvements
-- Progressive loading: UI shows immediately with skeleton loaders
-- Request deduplication middleware in Redux store
-- Performance monitoring utility for tracking data fetch times
-- Fixed burn validation to match backend expectations
+This file provides guidance for frontend-specific code in the lbry_fun_frontend directory.
 
 ## Frontend Architecture
 
@@ -54,10 +39,12 @@ This is a React TypeScript frontend for a crypto token launchpad built on the In
 
 ### Token Value Conversions
 
-**Standard Pattern** (follows core repository):
-- Convert to E8S in thunks: `BigInt(amount * 10**8)`
-- Exception: `burn_secondary` - send natural units
-- Tokenomics preview has mixed handling (see `UnifiedTokenomicsGraphs.tsx`)
+See main CLAUDE.md for comprehensive E8S conversion patterns.
+
+**Frontend-Specific Notes**:
+- Use `TokenConversionService` for all conversions
+- Remember `burn_secondary` is the exception (sends natural units)
+- Token creation parameters are sent as BigInt without conversion
 
 **State Management Flow**:
 1. Components dispatch thunks

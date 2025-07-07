@@ -88,17 +88,31 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
       return;
     }
     
-    // Convert natural numbers to E8S for backend
+    // Convert parameters according to thunk interface expectations
     const E8S_MULTIPLIER = BigInt(100_000_000);
+    const MAX_U64 = BigInt("18446744073709551615"); // 2^64 - 1
     
-    // Frontend uses whole numbers, convert to E8S for backend
-    const primary_per_threshold = BigInt(initialRewardPerBurnUnit || '0') * E8S_MULTIPLIER;
-    const max_primary_supply = BigInt(primaryMaxSupply || '0') * E8S_MULTIPLIER;
-    const initial_secondary_burn = BigInt(initialSecondaryBurn || '0') * E8S_MULTIPLIER;
+    // Parse values safely
+    const primary_per_threshold = parseFloat(initialRewardPerBurnUnit || '0');
+    const max_primary_supply = BigInt(primaryMaxSupply && primaryMaxSupply !== '' ? primaryMaxSupply : '0') * E8S_MULTIPLIER;
+    const initial_secondary_burn = parseFloat(initialSecondaryBurn || '0');
     const halving_step = parseInt(halvingStep || '0');
-    const tge_allocation = BigInt(tgeAllocation || '0') * E8S_MULTIPLIER;
+    const tge_allocation = BigInt(tgeAllocation && tgeAllocation !== '' ? tgeAllocation : '0') * E8S_MULTIPLIER;
 
-    if (primary_per_threshold > 0 && max_primary_supply > 0 && initial_secondary_burn > 0 && halving_step > 0) {
+    // Check for u64 overflow
+    if (max_primary_supply > MAX_U64) {
+        setError(`Primary max supply is too large. Maximum allowed is ${(MAX_U64 / E8S_MULTIPLIER).toString()} tokens.`);
+        setLoading(false);
+        return;
+    }
+    
+    if (tge_allocation > MAX_U64) {
+        setError(`TGE allocation is too large. Maximum allowed is ${(MAX_U64 / E8S_MULTIPLIER).toString()} tokens.`);
+        setLoading(false);
+        return;
+    }
+
+    if (primary_per_threshold > 0 && max_primary_supply > 0n && initial_secondary_burn > 0 && halving_step > 0) {
         setLoading(true);
         setError(null);
         
@@ -137,6 +151,27 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
 
     const epochs = scheduleData.epochs;
     const maxSupply = parseFloat(primaryMaxSupply) || 0;
+    
+    // Detect when floor rate is reached by looking for when minting amounts stop decreasing
+    let floorRateEpoch = -1;
+    let minMintRate = Infinity;
+    
+    for (let i = 1; i < epochs.length; i++) {
+      const currentMinted = Number(epochs[i].primary_minted_this_epoch_e8s) / E8S;
+      const prevMinted = Number(epochs[i-1].primary_minted_this_epoch_e8s) / E8S;
+      const currentBurned = Number(epochs[i].secondary_burned_this_epoch_e8s) / E8S;
+      const prevBurned = Number(epochs[i-1].secondary_burned_this_epoch_e8s) / E8S;
+      
+      // Calculate effective mint rate (primary minted per secondary burned)
+      const currentRate = currentBurned > 0 ? currentMinted / currentBurned : 0;
+      const prevRate = prevBurned > 0 ? prevMinted / prevBurned : 0;
+      
+      // Check if we've hit a floor (rate stops decreasing)
+      if (currentRate > 0 && currentRate === prevRate && floorRateEpoch === -1) {
+        floorRateEpoch = i;
+        minMintRate = currentRate;
+      }
+    }
 
     // Cumulative Supply Chart Data
     const cumulativeSupplyData = {
@@ -151,11 +186,22 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
     };
 
     // Cost to Mint vs Supply
+    // Handle the final epoch specially if supply cap is reached
+    const isSupplyCapped = scheduleData.total_supply_percentage >= 99.9;
+    const lastEpochIndex = epochs.length - 1;
+    
     const costToMintData = {
       xAxis: epochs.filter(e => e.cost_per_primary_token_usd > 0)
                    .map(e => Number(e.cumulative_primary_minted_e8s) / E8S),
       yAxis: epochs.filter(e => e.cost_per_primary_token_usd > 0)
-                   .map(e => e.cost_per_primary_token_usd),
+                   .map((e, index, filteredArray) => {
+                     // If this is the last epoch and supply is capped, use the previous epoch's cost
+                     // to avoid the misleading cliff caused by partial minting
+                     if (isSupplyCapped && index === filteredArray.length - 1 && index > 0) {
+                       return filteredArray[index - 1].cost_per_primary_token_usd;
+                     }
+                     return e.cost_per_primary_token_usd;
+                   }),
     };
 
     // Cumulative USD Cost (Minting Valuation)
@@ -194,6 +240,8 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
       actualTotalMinted: cumulativeSupplyData.yAxis[cumulativeSupplyData.yAxis.length - 1] || 0,
       theoreticalOvermint: false,
       supplyCapped: scheduleData.total_supply_percentage >= 99.9,
+      floorRateEpoch: floorRateEpoch,
+      minMintRate: minMintRate,
     };
 
     return {
@@ -268,6 +316,16 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
           </div>
         </div>
       )}
+      {graphData.summaryData?.floorRateEpoch && graphData.summaryData.floorRateEpoch > 0 && (
+        <div className="terminal-section bg-black border border-purple-500/30 p-3 font-mono mb-4">
+          <div className="terminal-status text-purple-400">[MINT_RATE_FLOOR_REACHED]</div>
+          <div className="text-purple-400 text-xs mt-2">
+            The mint rate reaches its minimum floor at <span className="terminal-value">Epoch {graphData.summaryData.floorRateEpoch}</span>.
+            After this point, tokens will continue minting at the floor rate of <span className="terminal-value">{graphData.summaryData.minMintRate.toFixed(6)}</span> primary per secondary.
+            This causes the exponential growth visible in later epochs.
+          </div>
+        </div>
+      )}
       <div className="terminal-section text-center my-4">
         <div className="terminal-header font-mono">
           <span className="terminal-prompt">&gt;&gt;</span> tokenomics_simulation
@@ -303,13 +361,19 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
                'extended'}
             </span>
           </div>
+          {graphData.summaryData?.floorRateEpoch && graphData.summaryData.floorRateEpoch > 0 && (
+            <div className="terminal-row">
+              <span className="terminal-label">floor_rate_reached_at:</span>
+              <span className="terminal-accent">epoch_{graphData.summaryData.floorRateEpoch}</span>
+            </div>
+          )}
         </div>
       </div>
       <div className="space-y-8 mt-10 md:grid md:grid-cols-2 md:gap-x-8 md:space-y-0">
         <div className="terminal-graph">
           <div className="terminal-section-header mb-4">
             <span className="terminal-prompt">&gt;</span> cumulative_primary_supply_vs_burn
-            <TooltipIcon text="This graph shows the total amount of Primary Token that will be minted as more Secondary Tokens are burned. Look for how quickly the supply hard cap is reached. A steeper curve means faster minting in early stages. The line flattens when the supply Hard Cap is hit." />
+            <TooltipIcon text="This graph shows the total amount of Primary Token that will be minted as more Secondary Tokens are burned. Look for how quickly the supply hard cap is reached. A steeper curve means faster minting in early stages. The line flattens when the supply Hard Cap is hit. Note: If you see a 'hockey stick' pattern with rapid growth in later epochs, this indicates the mint rate has reached its minimum floor while burn thresholds continue doubling." />
           </div>
           {hasData && graphData.cumulativeSupplyData ? (
             <LineChart
@@ -357,7 +421,7 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
         <div className="terminal-graph">
           <div className="terminal-section-header mb-4">
               <span className="terminal-prompt">&gt;</span> cost_to_mint_vs_supply
-              <TooltipIcon text="This graph shows the 'price' to create one new Primary Token by burning Secondary Tokens. Notice how the cost jumps up at each stage (or 'epoch'). This increasing cost is what makes it more rewarding for early participants to mint tokens." />
+              <TooltipIcon text="This graph shows the 'price' to create one new Primary Token by burning Secondary Tokens. Notice how the cost jumps up at each stage (or 'epoch'). This increasing cost is what makes it more rewarding for early participants to mint tokens. When the supply cap is reached, the final epoch's cost is adjusted to avoid misleading drops caused by partial minting." />
           </div>
           {hasData && graphData.costToMintData ? (
             <LineChart

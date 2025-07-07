@@ -5,11 +5,11 @@ use serde::Serialize;
 pub const E8S: u64 = 100_000_000;
 pub const ICP_USD_RATE: f64 = 10.0; // Placeholder - could query from XRC
 pub const EFFECTIVE_SECONDARY_COST: f64 = 0.005; // After 50% ICP return
+pub const SECONDARY_TOKEN_FEE: u64 = 10_000; // ICRC-1 transfer fee in E8S
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct LoopSnapshot {
     pub loop_number: u32,
-    pub timestamp: u64,
     
     // Transaction amounts (all in E8S)
     pub icp_spent: u64,
@@ -314,4 +314,54 @@ pub struct PaginatedLogs {
 pub struct PoolLogs {
     pub tokenomics_logs: Option<PaginatedTokenLogs>,
     pub icp_swap_logs: Option<PaginatedLogs>,
+}
+
+// Summary types for epoch-focused data
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct EpochSnapshot {
+    pub epoch_number: u32,
+    pub mint_rate: f64,
+    pub halving_occurred: bool,
+    
+    // Epoch aggregates
+    pub total_loops_in_epoch: u32,
+    pub total_secondary_burned_in_epoch: u64,
+    pub total_primary_minted_in_epoch: u64,
+    pub total_icp_spent_in_epoch: u64,
+    
+    // Cost metrics
+    pub avg_cost_per_token_in_epoch: f64,
+    pub min_cost_in_epoch: f64,
+    pub max_cost_in_epoch: f64,
+    
+    // Cumulative state at epoch end
+    pub cumulative_primary_minted: u64,
+    pub cumulative_secondary_burned: u64,
+    pub cumulative_icp_spent: u64,
+    pub percentage_of_max_supply: f64,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct ValidationSummary {
+    pub pool_id: u64,
+    pub token_info: TokenInfo,
+    pub pool_parameters: PoolParameters,
+    
+    // Core metrics
+    pub total_loops: u32,
+    pub epochs_reached: u32,
+    pub final_percentage_minted: f64,
+    
+    // Epoch data
+    pub epoch_snapshots: Vec<EpochSnapshot>,
+    
+    // Key transition points
+    pub first_loop: LoopSnapshot,
+    pub last_loop: LoopSnapshot,
+    
+    // Summary statistics
+    pub total_icp_spent: u64,
+    pub total_usd_cost: f64,
+    pub average_mint_rate: f64,
+    pub average_cost_per_token: f64,
 }

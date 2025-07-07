@@ -8,7 +8,7 @@ mod queries;
 mod validation;
 mod errors;
 
-use types::{ValidationTable, PoolLogs};
+use types::{ValidationTable, PoolLogs, ValidationSummary};
 use validation::PoolValidation;
 
 // Initialize the canister
@@ -66,6 +66,12 @@ fn get_bot_principal() -> String {
 #[update]
 async fn get_pool_logs(pool_id: u64, page: Option<u64>, page_size: Option<u64>) -> Result<PoolLogs, String> {
     queries::get_pool_logs_impl(pool_id, page, page_size).await
+}
+
+// Get epoch-focused summary data
+#[update]
+async fn get_summary(pool_id: u64) -> Result<ValidationSummary, String> {
+    queries::get_summary_impl(pool_id).await
 }
 
 // Export candid interface

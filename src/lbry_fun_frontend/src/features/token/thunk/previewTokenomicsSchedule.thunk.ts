@@ -32,10 +32,26 @@ const previewTokenomicsSchedule = createAsyncThunk<TokenomicsSchedule, PreviewSc
             }
             
             // Call the backend with the parameters in the expected format
+            // Convert natural units to E8S for primary_per_threshold and initial_secondary_burn
+            const E8S = 100_000_000;
+            const MAX_U64 = BigInt("18446744073709551615"); // 2^64 - 1
+            
+            // Check for overflow before converting
+            const primary_per_threshold_e8s = BigInt(Math.floor(args.primary_per_threshold * E8S));
+            const initial_secondary_burn_e8s = BigInt(Math.floor(args.initial_secondary_burn * E8S));
+            
+            if (primary_per_threshold_e8s > MAX_U64) {
+                throw new Error(`Primary reward per burn unit is too large. Maximum allowed is ${MAX_U64 / BigInt(E8S)} tokens.`);
+            }
+            
+            if (initial_secondary_burn_e8s > MAX_U64) {
+                throw new Error(`Initial secondary burn is too large. Maximum allowed is ${MAX_U64 / BigInt(E8S)} tokens.`);
+            }
+            
             const result = await actor.preview_tokenomics_schedule(
-                BigInt(args.primary_per_threshold),
+                primary_per_threshold_e8s,
                 args.max_primary_supply,
-                BigInt(args.initial_secondary_burn),
+                initial_secondary_burn_e8s,
                 BigInt(args.halving_step),
                 args.tge_allocation
             );

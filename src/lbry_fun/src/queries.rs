@@ -4,7 +4,6 @@ use serde::Deserialize;
 use crate::{TokenRecord, TOKENS, get_self_icp_balance};
 use crate::simulation_new::{GraphData, PreviewArgs};
 use crate::tokenomics_simple::{preview_tokenomics_from_frontend, TokenomicsSchedule};
-use crate::utlis::E8S;
 
 #[query]
 pub fn get_all_token_record() -> Vec<(u64, TokenRecord)> {

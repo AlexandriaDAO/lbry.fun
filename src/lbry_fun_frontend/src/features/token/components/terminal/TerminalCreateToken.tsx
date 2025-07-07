@@ -204,6 +204,19 @@ const TerminalCreateToken: React.FC = () => {
     return submitAttempted && !!errors[field];
   };
 
+  // Helper to format large numbers in human-readable format
+  const formatSupplyDisplay = (value: string): string => {
+    const num = parseFloat(value) || 0;
+    if (num >= 1_000_000_000) {
+      return `${(num / 1_000_000_000).toFixed(1)}B`;
+    } else if (num >= 1_000_000) {
+      return `${(num / 1_000_000).toFixed(1)}M`;
+    } else if (num >= 1_000) {
+      return `${(num / 1_000).toFixed(1)}K`;
+    }
+    return num.toLocaleString();
+  };
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -234,7 +247,7 @@ const TerminalCreateToken: React.FC = () => {
       primary_max_supply: (BigInt(form.primary_max_supply) * BigInt(TokenConversionService.getE8S())).toString(),
       initial_primary_mint: (BigInt(form.tge_allocation) * BigInt(TokenConversionService.getE8S())).toString(),
       initial_secondary_burn: (BigInt(form.initial_secondary_burn) * BigInt(TokenConversionService.getE8S())).toString(),
-      initial_reward_per_burn_unit: (BigInt(form.initial_reward_per_burn_unit) * BigInt(TokenConversionService.getE8S())).toString(),
+      initial_reward_per_burn_unit: (BigInt(Math.floor(parseFloat(form.initial_reward_per_burn_unit) * Number(TokenConversionService.getE8S())))).toString(),
       halving_step: form.halving_step,
       distribution_interval_seconds: form.distribution_interval_seconds,
       launch_delay_seconds: form.launch_delay_seconds,
@@ -454,9 +467,12 @@ const TerminalCreateToken: React.FC = () => {
                 value={form.primary_max_supply}
                 onChange={(v) => updateForm('primary_max_supply', v)}
                 min={1000000}
-                max={1000000000000}
+                max={100000000000}
                 step={1000000}
               />
+              <div className="terminal-helper text-xs mt-1 text-gray-500">
+                = {formatSupplyDisplay(form.primary_max_supply)} tokens
+              </div>
             </div>
 
             {/* Initial Reward per Burn Unit */}

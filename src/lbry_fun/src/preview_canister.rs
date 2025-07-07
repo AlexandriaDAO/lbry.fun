@@ -87,16 +87,16 @@ async fn deploy_preview_tokenomics(args: PreviewArgs) -> Result<Principal, Strin
             
             // Convert from E8S rate to 4-decimal format
             let reward_4decimal = ((rate_e8s * 10_000) / E8S as u128) as u64;
-            primary_rewards.push(reward_4decimal);
+            primary_rewards.push(reward_4decimal.max(100));  // 100 = 0.01 tokens
         } else {
             // For epoch 0 or if no burning
             if i > 0 {
                 let prev_reward = primary_rewards.last().copied().unwrap_or(50_000);
                 let new_reward = (prev_reward * args.halving_step as u64) / 100;
-                primary_rewards.push(new_reward);
+                primary_rewards.push(new_reward.max(100));
             } else {
                 let reward_4decimal = args.initial_reward_per_burn_unit * 10_000;
-                primary_rewards.push(reward_4decimal as u64);
+                primary_rewards.push((reward_4decimal as u64).max(100));
             }
         }
     }

@@ -1,4 +1,3 @@
-use ic_cdk::api::time;
 use std::time::Duration;
 
 use crate::{
@@ -81,7 +80,6 @@ async fn execute_single_loop(
     cumulative_state: &mut CumulativeState,
 ) -> Result<(), String> {
     ic_cdk::println!("[BOT1] Loop {}: Starting execution for pool {}", loop_number, pool_id);
-    let timestamp = time();
     let icp_ledger = get_icp_ledger_principal();
     
     // 1. Check ICP balance
@@ -121,11 +119,12 @@ async fn execute_single_loop(
         .map_err(|e| format!("Failed to approve secondary tokens: {}", e))?;
     
     // 7. Convert to natural units for burn (icp_swap expects natural units)
-    // Use the full balance to avoid dust accumulation
-    let burn_amount_natural = secondary_balance / E8S;
+    // Account for the transfer fee that will be deducted
+    let available_for_burn = secondary_balance.saturating_sub(SECONDARY_TOKEN_FEE);
+    let burn_amount_natural = available_for_burn / E8S;
     
-    ic_cdk::println!("[BOT1] Loop {}: Secondary balance: {} e8s, burn amount: {} natural units", 
-        loop_number, secondary_balance, burn_amount_natural);
+    ic_cdk::println!("[BOT1] Loop {}: Secondary balance: {} e8s, available after fee: {} e8s, burn amount: {} natural units", 
+        loop_number, secondary_balance, available_for_burn, burn_amount_natural);
     
     if burn_amount_natural == 0 {
         return Err("Secondary balance too small to burn".to_string());
@@ -137,7 +136,7 @@ async fn execute_single_loop(
         .map_err(|e| format!("Burn failed: {}", e))?;
     
     // 9. Get final balances
-    let final_secondary = icrc1_balance_of(token_record.secondary_token_id, bot_account.clone()).await?;
+    let _final_secondary = icrc1_balance_of(token_record.secondary_token_id, bot_account.clone()).await?;
     let final_primary = icrc1_balance_of(token_record.primary_token_id, bot_account.clone()).await?;
     let primary_received = final_primary.saturating_sub(initial_primary);
     ic_cdk::println!("[BOT1] Loop {}: Received {} primary tokens (e8s)", loop_number, primary_received);
@@ -148,7 +147,7 @@ async fn execute_single_loop(
     
     // 11. Calculate metrics
     let secondary_burned = burn_amount_natural * E8S; // Convert back to E8S for consistent reporting
-    let secondary_dust = secondary_balance.saturating_sub(secondary_burned); // Any remainder that couldn't be burned
+    let secondary_dust = secondary_balance.saturating_sub(secondary_burned).saturating_sub(SECONDARY_TOKEN_FEE); // Remainder after burn and fee
     
     let actual_mint_rate = if secondary_burned > 0 {
         primary_received as f64 / secondary_burned as f64
@@ -171,7 +170,6 @@ async fn execute_single_loop(
     // 13. Create and store snapshot
     let snapshot = LoopSnapshot {
         loop_number,
-        timestamp,
         icp_spent: icp_amount,
         secondary_received,
         secondary_burned,

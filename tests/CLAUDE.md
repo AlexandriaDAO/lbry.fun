@@ -16,3 +16,12 @@ candid-extractor target/wasm32-unknown-unknown/release/icp_swap.wasm > src/icp_s
 - Operations expect natural units, not e8s (except balance queries)
 - All operations return `Result<String, ExecutionError>` from canisters
 - Never change a test to make it pass unless you're absolutely positive that the test failure is not a reflection of an issue in the core logic.
+
+## E8S Conversions in Tests
+
+See main CLAUDE.md for comprehensive E8S conversion patterns.
+
+**Test-Specific Notes**:
+- Test helpers accept natural units for readability
+- Balance queries return E8S (divide by 100_000_000 for assertions)
+- `burn_secondary` expects natural units (matches frontend)
