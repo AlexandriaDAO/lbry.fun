@@ -44,17 +44,7 @@ async fn validate_pool(pool_id: u64) -> Result<PoolValidation, String> {
     validation::validate_pool_ready(pool_id, 100_000_000).await // Default 1 ICP per loop (in E8S)
 }
 
-// Additional query methods for debugging
-#[query]
-fn get_pool_summary(pool_id: u64) -> Result<String, String> {
-    queries::get_pool_summary(pool_id)
-}
 
-// Clear pool data (useful for testing)
-#[update]
-fn clear_pool_data(pool_id: u64) -> Result<String, String> {
-    queries::clear_pool_data_impl(pool_id)
-}
 
 // Get canister principal
 #[query]

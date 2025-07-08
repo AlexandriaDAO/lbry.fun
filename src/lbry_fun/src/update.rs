@@ -66,7 +66,6 @@ async fn create_token(
     
     // Always skip epoch 0 as it's only for TGE and has no mining rewards
     let start_index = 1;
-    let mut is_first_mining_epoch = true;
     
     for (i, epoch) in schedule.epochs.iter().enumerate().skip(start_index) {
         // Convert cumulative burned from E8S to natural units
@@ -76,24 +75,21 @@ async fn create_token(
         // Calculate the reward rate for this epoch
         if epoch.secondary_burned_this_epoch_e8s > 0 {
             // Reverse engineer the reward rate from minted/burned ratio
-            // The tokenomics canister expects: rate × burned × 3 = minted
-            // The schedule already includes the 3x in primary_minted_this_epoch_e8s
-            // So we need to divide by 3 to get the base rate
-            // rate_e8s = primary_minted_e8s / (secondary_burned_e8s × 3)
+            // The tokenomics canister expects: rate × burned = minted
+            // rate_e8s = primary_minted_e8s / secondary_burned_e8s
             
             // Calculate rate preserving precision:
             // The tokenomics schedule already has values in E8S
             // We need to convert the rate to 4-decimal format
-            // rate = primary_minted / (secondary_burned × 3)
+            // rate = primary_minted / secondary_burned
             // Since both values are in E8S, they cancel out in the division
             // Then multiply by 10_000 to get 4-decimal format
             
             // Step-by-step calculation for debugging
             let step1 = epoch.primary_minted_this_epoch_e8s.checked_mul(10_000);
             let step2 = step1.and_then(|p| p.checked_div(epoch.secondary_burned_this_epoch_e8s));
-            let step3 = step2.and_then(|r| r.checked_div(3));
             // Remove the E8S division - the E8S units already cancelled out in step2
-            let reward_4decimal = step3.unwrap_or(0) as u64;
+            let reward_4decimal = step2.unwrap_or(0) as u64;
             
             // Debug logging with intermediate steps
             if i <= 3 {  // Log first few epochs
@@ -102,30 +98,17 @@ async fn create_token(
                 ic_cdk::println!("  secondary_burned_e8s = {}", epoch.secondary_burned_this_epoch_e8s);
                 ic_cdk::println!("  step1 (primary * 10_000) = {:?}", step1);
                 ic_cdk::println!("  step2 (step1 / secondary) = {:?}", step2);
-                ic_cdk::println!("  step3 (step2 / 3) = {:?}", step3);
                 ic_cdk::println!("  final reward_4decimal = {}", reward_4decimal);
             }
             
             primary_rewards.push(reward_4decimal.max(100));  // 100 = 0.01 tokens
         } else {
-            // For epochs with no burning data, calculate reward
-            if is_first_mining_epoch {
-                // First mining epoch - use initial reward rate
-                // Convert initial_reward_per_burn_unit from E8S to 4-decimal
-                let reward_4decimal = (initial_reward_per_burn_unit * 10_000) / E8S;
-                
-                // Debug logging
-                ic_cdk::println!("[CREATE_TOKEN] First mining epoch: initial_reward_per_burn_unit={}, reward_4decimal={}", 
-                    initial_reward_per_burn_unit, reward_4decimal);
-                
-                primary_rewards.push((reward_4decimal as u64).max(100));  // 100 = 0.01 tokens
-                is_first_mining_epoch = false;
-            } else {
-                // Subsequent epochs - apply halving
-                let prev_reward = primary_rewards.last().copied().unwrap_or(50_000);
-                let new_reward = ((prev_reward * halving_step as u64) / 100).max(100);
-                primary_rewards.push(new_reward);
-            }
+            // All mining epochs should have burning data
+            // If we reach here, it indicates a bug in the tokenomics schedule generation
+            return Err(format!(
+                "Invalid tokenomics schedule: epoch {} has no burning data. All mining epochs must have burning data.",
+                i
+            ));
         }
     }
     

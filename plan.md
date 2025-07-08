@@ -15,7 +15,7 @@ Good test: Conservation analysis: (start with a set amount of ICP, mint, burn, l
 
 
 
-
+- Staking reward percent is a fake number in icp_swap
 - Could we make all the terminals into expanders?
 - Get launch pending to update the state when time runs out.
 - Success page should update state with the new token page.
@@ -54,7 +54,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "ebonj-26ttl-oubal-a5j6o-5fpbs-uk5b5-to7c2-uwttl-icxwd-aaorh-zqe"; subaccount = null }; amount = (999_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "5znxe-glwdp-qx53d-vczv3-7ox7x-kexzi-sjd6t-44h4x-mjr45-r5gtc-aqe"; subaccount = null }; amount = (999_900_000_000 : nat) })'
 
 dfx identity use default
 

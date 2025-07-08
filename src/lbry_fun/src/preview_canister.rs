@@ -82,7 +82,6 @@ async fn deploy_preview_tokenomics(args: PreviewArgs) -> Result<Principal, Strin
         if epoch.secondary_burned_this_epoch_e8s > 0 {
             let rate_e8s = epoch.primary_minted_this_epoch_e8s
                 .checked_div(epoch.secondary_burned_this_epoch_e8s)
-                .and_then(|r| r.checked_div(3))  // Remove the 3x multiplier
                 .unwrap_or(0);
             
             // Convert from E8S rate to 4-decimal format

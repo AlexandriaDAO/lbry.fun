@@ -241,11 +241,9 @@ type ValidationTable = record {
   token_info : TokenInfo;
 };
 service : () -> {
-  clear_pool_data : (nat64) -> (Result);
   execute_loops : (nat64, nat64, nat32) -> (Result);
   get_bot_principal : () -> (text) query;
   get_pool_logs : (nat64, opt nat64, opt nat64) -> (Result_1);
-  get_pool_summary : (nat64) -> (Result) query;
   get_summary : (nat64) -> (Result_2);
   get_table : (nat64) -> (Result_3);
   validate_pool : (nat64) -> (Result_4);

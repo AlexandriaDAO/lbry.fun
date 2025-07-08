@@ -36,13 +36,11 @@ pub struct TokenomicsSchedule {
 /// Calculate how many primary tokens are minted for burning secondary tokens
 /// Takes reward rate in E8S format and burn amount in E8S format
 fn calculate_primary_minted(secondary_burned_e8s: u128, reward_rate_e8s: u128) -> u128 {
-    // Apply tokenomics formula: (rate × amount × 3)
-    // The 3x multiplier matches the whitepaper expectations
+    // Apply tokenomics formula: (rate × amount)
     // Work in E8S to preserve precision
     secondary_burned_e8s
         .saturating_mul(reward_rate_e8s)
         .saturating_div(E8S)  // Normalize after multiplication
-        .saturating_mul(3)    // 3x multiplier
 }
 
 /// Calculate the cost per primary token in USD
@@ -78,14 +76,17 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
         cost_per_primary_token_usd: 0.0,
     });
     
-    // Initialize dynamic variables
+    // Initialize for threshold-based generation
     let mut epoch_number = 1;
-    let mut burn_amount = params.initial_burn_e8s;
+    let mut current_threshold = params.initial_burn_e8s;
     let mut reward_rate = params.initial_reward_rate_e8s;
     
-    // Generate epochs dynamically until natural termination
+    // Generate epochs based on thresholds (geometric progression with 2x multiplier)
     loop {
-        // Calculate primary tokens to mint with 3x multiplier
+        // Calculate how much would be burned to reach this threshold
+        let burn_amount = current_threshold.saturating_sub(cumulative_secondary);
+        
+        // Calculate primary tokens to mint for this threshold
         let primary_to_mint = calculate_primary_minted(burn_amount, reward_rate);
         let remaining_supply = params.max_supply_e8s.saturating_sub(cumulative_primary);
         
@@ -122,7 +123,7 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
         
         // Full epoch
         cumulative_primary = cumulative_primary.saturating_add(primary_to_mint);
-        cumulative_secondary = cumulative_secondary.saturating_add(burn_amount);
+        cumulative_secondary = current_threshold;
         
         let cost_per_token = calculate_cost_per_token(burn_amount, primary_to_mint);
         
@@ -138,10 +139,8 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
         // Update for next epoch
         epoch_number += 1;
         
-        // Burn pattern: same for epoch 2, then double each epoch
-        if epoch_number > 2 {
-            burn_amount = burn_amount.saturating_mul(2);
-        }
+        // Next threshold: always 2x the current threshold
+        current_threshold = current_threshold.saturating_mul(2);
         
         // Apply halving but enforce minimum
         let new_reward_rate = reward_rate
@@ -156,14 +155,14 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
             break;
         }
         
-        // Stop if we've been at minimum reward rate for too long
-        // and the amount minted per epoch becomes insignificant relative to total supply
-        if reward_rate == MIN_REWARD_RATE_E8S && primary_to_mint < params.max_supply_e8s / 1000 {
+        // Stop if we've been at minimum reward rate and minting becomes insignificant
+        // Use a fixed threshold of 100 tokens (100 * E8S) instead of percentage-based
+        if reward_rate == MIN_REWARD_RATE_E8S && primary_to_mint < (100 * E8S) {
             break;
         }
         
-        // Safety check: prevent infinite loops
-        if epoch_number > 100 {
+        // Safety check: prevent infinite loops (increased for very large supplies)
+        if epoch_number > 1000 {
             break;
         }
     }

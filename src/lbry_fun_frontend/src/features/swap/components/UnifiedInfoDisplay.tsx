@@ -4,6 +4,8 @@ import { getLbryFunActor } from '@/features/auth/utils/authUtils';
 import { toast } from 'sonner';
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import { CanisterLogs } from "./CanisterLogs";
+import CopyHelper from "./CopyHelper";
+import { CanisterStats } from "./CanisterStats";
 
 interface UnifiedInfoDisplayProps {
     variant: 'card' | 'cycles' | 'stats' | 'developer';
@@ -136,13 +138,21 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                     <span className="hex-address" title={activeSwapPoolFromRedux[1].icp_swap_canister_id}>
                                         {shortenCanisterId(activeSwapPoolFromRedux[1].icp_swap_canister_id)}
                                     </span>
+                                    <span className="ml-2 text-gray-400 hover:text-white transition-colors cursor-pointer">
+                                        <CopyHelper account={activeSwapPoolFromRedux[1].icp_swap_canister_id} />
+                                    </span>
                                 </div>
                                 <UnifiedInfoDisplay 
                                     variant="cycles" 
                                     canisterId={activeSwapPoolFromRedux[1].icp_swap_canister_id} 
                                 />
-                                <div className="terminal-row pl-4">
+                                <div className="terminal-row pl-4 space-x-2">
                                     <CanisterLogs 
+                                        canisterId={activeSwapPoolFromRedux[1].icp_swap_canister_id}
+                                        canisterName="ICP Swap"
+                                        canisterType="icp_swap"
+                                    />
+                                    <CanisterStats 
                                         canisterId={activeSwapPoolFromRedux[1].icp_swap_canister_id}
                                         canisterName="ICP Swap"
                                         canisterType="icp_swap"
@@ -156,13 +166,21 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                     <span className="hex-address" title={activeSwapPoolFromRedux[1].tokenomics_canister_id}>
                                         {shortenCanisterId(activeSwapPoolFromRedux[1].tokenomics_canister_id)}
                                     </span>
+                                    <span className="ml-2 text-gray-400 hover:text-white transition-colors cursor-pointer">
+                                        <CopyHelper account={activeSwapPoolFromRedux[1].tokenomics_canister_id} />
+                                    </span>
                                 </div>
                                 <UnifiedInfoDisplay 
                                     variant="cycles" 
                                     canisterId={activeSwapPoolFromRedux[1].tokenomics_canister_id} 
                                 />
-                                <div className="terminal-row pl-4">
+                                <div className="terminal-row pl-4 space-x-2">
                                     <CanisterLogs 
+                                        canisterId={activeSwapPoolFromRedux[1].tokenomics_canister_id}
+                                        canisterName="Tokenomics"
+                                        canisterType="tokenomics"
+                                    />
+                                    <CanisterStats 
                                         canisterId={activeSwapPoolFromRedux[1].tokenomics_canister_id}
                                         canisterName="Tokenomics"
                                         canisterType="tokenomics"
@@ -175,6 +193,9 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                     <span className="terminal-label">logs:</span>
                                     <span className="hex-address" title={activeSwapPoolFromRedux[1].logs_canister_id}>
                                         {shortenCanisterId(activeSwapPoolFromRedux[1].logs_canister_id)}
+                                    </span>
+                                    <span className="ml-2 text-gray-400 hover:text-white transition-colors cursor-pointer">
+                                        <CopyHelper account={activeSwapPoolFromRedux[1].logs_canister_id} />
                                     </span>
                                 </div>
                                 <UnifiedInfoDisplay 
@@ -189,6 +210,9 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                     <span className="hex-address" title={activeSwapPoolFromRedux[1].primary_token_id}>
                                         {shortenCanisterId(activeSwapPoolFromRedux[1].primary_token_id)}
                                     </span>
+                                    <span className="ml-2 text-gray-400 hover:text-white transition-colors cursor-pointer">
+                                        <CopyHelper account={activeSwapPoolFromRedux[1].primary_token_id} />
+                                    </span>
                                 </div>
                                 <UnifiedInfoDisplay 
                                     variant="cycles" 
@@ -201,6 +225,9 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                     <span className="terminal-label">secondary_token:</span>
                                     <span className="hex-address" title={activeSwapPoolFromRedux[1].secondary_token_id}>
                                         {shortenCanisterId(activeSwapPoolFromRedux[1].secondary_token_id)}
+                                    </span>
+                                    <span className="ml-2 text-gray-400 hover:text-white transition-colors cursor-pointer">
+                                        <CopyHelper account={activeSwapPoolFromRedux[1].secondary_token_id} />
                                     </span>
                                 </div>
                                 <UnifiedInfoDisplay 

@@ -38,12 +38,12 @@ fn test_simple_tokenomics_debug() {
         println!("  Cumulative primary (E8S): {}", epoch.cumulative_primary_minted_e8s);
     }
     
-    // First epoch should burn 10 secondary and mint 30 primary (1:1 ratio × 3)
+    // First epoch should burn 10 secondary and mint 10 primary (1:1 ratio)
     assert_eq!(schedule.epochs[1].secondary_burned_this_epoch_e8s, 10 * E8S);
-    assert_eq!(schedule.epochs[1].primary_minted_this_epoch_e8s, 30 * E8S);
+    assert_eq!(schedule.epochs[1].primary_minted_this_epoch_e8s, 10 * E8S);
     
-    // Cost should be $0.005 × 10 / 30 = $0.00167 per primary token
-    let expected_cost = (10.0 * 0.005) / 30.0;
+    // Cost should be $0.005 × 10 / 10 = $0.005 per primary token
+    let expected_cost = (10.0 * 0.005) / 10.0;
     assert!((schedule.epochs[1].cost_per_primary_token_usd - expected_cost).abs() < 0.0001);
 }
 
@@ -51,26 +51,26 @@ fn test_simple_tokenomics_debug() {
 fn test_reward_rate_calculation() {
     // Test the reward rate calculation directly
     
-    // Test case 1: 5 tokens per burn with 3x multiplier
+    // Test case 1: 5 tokens per burn
     let reward_rate_e8s = 5 * E8S;
     let burn_amount_e8s = 21_000 * E8S;
     let result = calculate_primary_minted(burn_amount_e8s, reward_rate_e8s);
-    let expected = 21_000 * 5 * 3 * E8S; // 315,000 tokens
+    let expected = 21_000 * 5 * E8S; // 105,000 tokens
     
     println!("Test 1: reward_rate=5, burn=21k");
     println!("  Expected: {} tokens", expected / E8S);
     println!("  Got: {} tokens", result / E8S);
-    assert_eq!(result, expected, "5 tokens × 21k burns × 3 = 315k tokens");
+    assert_eq!(result, expected, "5 tokens × 21k burns = 105k tokens");
     
     // Test case 2: After first halving (2.5 tokens per burn)
     let reward_rate_e8s = 250_000_000; // 2.5 * E8S
     let result2 = calculate_primary_minted(burn_amount_e8s, reward_rate_e8s);
-    let expected2 = 157_500 * E8S; // 21k × 2.5 × 3
+    let expected2 = 52_500 * E8S; // 21k × 2.5
     
     println!("\nTest 2: reward_rate=2.5, burn=21k");
     println!("  Expected: {} tokens", expected2 / E8S);
     println!("  Got: {} tokens", result2 / E8S);
-    assert_eq!(result2, expected2, "2.5 tokens × 21k burns × 3 = 157.5k tokens");
+    assert_eq!(result2, expected2, "2.5 tokens × 21k burns = 52.5k tokens");
 }
 
 #[test]

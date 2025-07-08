@@ -1,5 +1,5 @@
 use crate::{
-    storage::*,
+    storage::{get_snapshots, get_cached_token_info, get_cumulative_state, add_snapshot, cache_token_info, update_cumulative_state},
     types::*,
     utils::{get_token_record, get_lbry_fun_principal},
 };
@@ -159,38 +159,7 @@ pub async fn get_table_impl(pool_id: u64) -> Result<ValidationTable, String> {
     })
 }
 
-pub fn clear_pool_data_impl(pool_id: u64) -> Result<String, String> {
-    clear_pool_data(pool_id);
-    Ok(format!("Cleared all data for pool {}", pool_id))
-}
 
-pub fn get_pool_summary(pool_id: u64) -> Result<String, String> {
-    let snapshots = get_snapshots(pool_id);
-    let cumulative_state = get_cumulative_state(pool_id);
-    
-    if snapshots.is_empty() {
-        return Ok(format!("No data for pool {}", pool_id));
-    }
-    
-    let summary = format!(
-        "Pool {} Summary:\n\
-        Total Loops: {}\n\
-        Total ICP Spent: {} ICP\n\
-        Total Secondary Burned: {} tokens\n\
-        Total Primary Minted: {} tokens\n\
-        Total Dust: {} tokens\n\
-        Last Loop: {}",
-        pool_id,
-        snapshots.len(),
-        cumulative_state.total_icp_spent / E8S,
-        cumulative_state.total_secondary_burned / E8S,
-        cumulative_state.total_primary_minted / E8S,
-        cumulative_state.total_dust / E8S,
-        snapshots.last().map(|s| s.loop_number).unwrap_or(0)
-    );
-    
-    Ok(summary)
-}
 
 pub async fn get_pool_logs_impl(
     pool_id: u64, 

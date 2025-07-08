@@ -12,6 +12,22 @@ This file tracks all changes made to convert the audited tokenomics canister int
 
 ## Change Log
 
+### 3X Multiplier Removal (2025-01-08)
+
+| Change ID | File | Risk | Description | Details | Test Status |
+|-----------|------|------|-------------|---------|-------------|
+| TOK-032 | src/update.rs | HIGH | Removed legacy 3x multiplier from mint_primary | The 3x multiplier was a carryover from older code where tokens were distributed to three destinations. This change aligns the actual minting with the preview calculations and removes the circular dependency that prevented initialRewardPerBurnUnit from having any effect. Changed lines 418-432 to remove the multiplication and associated error handling. | Pending |
+| TOK-033 | src/update.rs | LOW | Updated logging to remove 3x references | Updated the logging at line 435-439 to remove references to the 3x multiplication | Pending |
+
+**Justification**: The 3x multiplier creates a circular dependency where:
+1. Preview calculation multiplies by 3
+2. Token creation divides by 3 to extract "base rate"
+3. Actual minting multiplies by 3 again
+
+This meant the `initialRewardPerBurnUnit` parameter had no effect on the tokenomics graphs. Removing this multiplier simplifies the system and makes the parameter functional.
+
+**Security Impact**: This change only affects the emission rate calculation. No security implications as it simplifies the calculation and reduces potential for manipulation.
+
 ### Completed Changes
 
 #### TOK-012: Added Detailed Logging to mint_primary (LOW RISK)

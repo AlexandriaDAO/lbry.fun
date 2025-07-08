@@ -29,5 +29,5 @@ fn main() {
     println!("\nIf epoch 18 followed the pattern:");
     println!("  Cumulative: {} tokens", normal_epoch_18);
     println!("  Burn: {} tokens", normal_burn);
-    println!("  Primary minted (at 0.0001 rate): {} tokens", (normal_burn as u128 * 3 * 10_000) / 100_000_000);
+    println!("  Primary minted (at 0.0001 rate): {} tokens", (normal_burn as u128 * 10_000) / 100_000_000);
 }

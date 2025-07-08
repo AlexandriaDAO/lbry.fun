@@ -78,11 +78,3 @@ pub fn get_cumulative_state(pool_id: u64) -> CumulativeState {
     })
 }
 
-pub fn clear_pool_data(pool_id: u64) {
-    POOL_SNAPSHOTS.with(|snapshots| {
-        snapshots.borrow_mut().remove(&pool_id);
-    });
-    CUMULATIVE_STATE.with(|state| {
-        state.borrow_mut().remove(&pool_id);
-    });
-}

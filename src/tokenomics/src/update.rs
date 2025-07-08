@@ -415,27 +415,13 @@ pub async fn mint_primary(
         })
     })?;
     
-    // SIMPLIFIED DISTRIBUTION: 100% to burner (no NFT splitting)
-    // Multiply by 3 to maintain original emission schedule (was split 3 ways, now all to burner)
-    let primary_to_mint = phase_mint_primary
-        .checked_mul(3)
-        .ok_or_else(|| {
-            ExecutionError::new_with_log(
-                actual_caller,
-                "mint_primary",
-                ExecutionError::MultiplicationOverflow {
-                    operation: "phase_mint_primary * 3".to_string(),
-                    details: "Overflow during 3x multiplication for emission schedule".to_string(),
-                }
-            )
-        })?
-        .min(remaining_primary);
+    // Direct emission without legacy multiplier
+    let primary_to_mint = phase_mint_primary.min(remaining_primary);
 
     // Add detailed logging before the zero check
     register_info_log(actual_caller, "mint_primary", &format!(
-        "mint_primary calculation: phase_mint_primary={}, after 3x={}, remaining_primary={}, final primary_to_mint={}",
+        "mint_primary calculation: phase_mint_primary={}, remaining_primary={}, final primary_to_mint={}",
         phase_mint_primary,
-        phase_mint_primary.saturating_mul(3),
         remaining_primary,
         primary_to_mint
     ));

@@ -495,7 +495,7 @@ const TerminalCreateToken: React.FC = () => {
                 label=""
                 value={form.initial_reward_per_burn_unit}
                 onChange={(v) => updateForm('initial_reward_per_burn_unit', v)}
-                min={0.001}
+                min={0.01}
                 max={20}
                 step={0.001}
                 helperText={form.primary_max_supply && form.initial_secondary_burn ? 

@@ -225,7 +225,15 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
       xAxis: cumulativeUsdCostData.xAxis,
       yAxis: cumulativeUsdCostData.xAxis.map((minted) => {
         if (maxSupply > 0) {
-          return parseFloat(((minted / maxSupply) * 100).toFixed(2));
+          const percentage = (minted / maxSupply) * 100;
+          // Use dynamic precision for very small percentages
+          if (percentage < 0.01) {
+            return parseFloat(percentage.toFixed(6));
+          } else if (percentage < 1) {
+            return parseFloat(percentage.toFixed(4));
+          } else {
+            return parseFloat(percentage.toFixed(2));
+          }
         }
         return 0;
       }),
