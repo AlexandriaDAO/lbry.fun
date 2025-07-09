@@ -54,7 +54,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "5znxe-glwdp-qx53d-vczv3-7ox7x-kexzi-sjd6t-44h4x-mjr45-r5gtc-aqe"; subaccount = null }; amount = (999_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "cgstv-prmsl-vdv22-ttkpc-dgq3b-pzat3-4fght-i7h4e-affgt-fu766-kae"; subaccount = null }; amount = (999_900_000_000 : nat) })'
 
 dfx identity use default
 

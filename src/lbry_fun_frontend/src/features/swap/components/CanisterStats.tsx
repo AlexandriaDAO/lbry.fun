@@ -84,31 +84,6 @@ const ICP_SWAP_FUNCTIONS: QueryFunction[] = [
     description: 'The percentage of the ICP pool distributed hourly to stakers'
   },
   {
-    name: 'get_tokenomics_schedule',
-    label: 'Halving Schedule',
-    description: 'Shows all burn thresholds and corresponding primary token rewards'
-  },
-  {
-    name: 'get_current_threshold_index',
-    label: 'Current Halving Level',
-    description: 'Which halving tier we\'re currently on (0 = first tier)'
-  },
-  {
-    name: 'get_current_primary_rate',
-    label: 'Current Mining Rate',
-    description: 'How many primary tokens you get per secondary token burned'
-  },
-  {
-    name: 'get_current_secondary_threshold',
-    label: 'Next Halving At',
-    description: 'How many secondary tokens need to be burned to reach next halving'
-  },
-  {
-    name: 'get_total_secondary_burn',
-    label: 'Total Burned',
-    description: 'Total secondary tokens burned so far'
-  },
-  {
     name: 'get_all_stakes',
     label: 'All Stakers',
     description: 'Complete list of all stakers and their positions'
@@ -129,19 +104,19 @@ const ICP_SWAP_FUNCTIONS: QueryFunction[] = [
     description: 'Past APY values over time to analyze reward trends'
   },
   {
-    name: 'fetch_total_minted_primary',
-    label: 'Primary Token Supply',
-    description: 'Current circulating supply of primary tokens'
-  },
-  {
-    name: 'get_max_stats',
-    label: 'Max Supply Info',
-    description: 'Maximum burn threshold and progress towards it'
-  },
-  {
     name: 'get_distribution_interval',
     label: 'Reward Frequency',
     description: 'How often rewards are distributed (in seconds)'
+  },
+  {
+    name: 'get_launch_status',
+    label: 'Launch Status',
+    description: 'Whether the token has been launched and when'
+  },
+  {
+    name: 'get_config',
+    label: 'Swap Configuration',
+    description: 'Returns the ICP swap canister configuration'
   }
 ];
 
@@ -161,14 +136,32 @@ export const CanisterStats: React.FC<CanisterStatsProps> = ({
     if (typeof value === 'boolean') return value ? 'YES' : 'NO';
     if (typeof value === 'bigint') return value.toLocaleString();
     if (typeof value === 'number') return value.toLocaleString();
+    
+    // Special handling for launch status tuple
+    if (Array.isArray(value) && value.length === 2 && typeof value[0] === 'boolean') {
+      const [isLaunched, timestamp] = value;
+      if (isLaunched && timestamp && timestamp.length > 0) {
+        const time = new Date(Number(timestamp[0]) / 1000000).toLocaleString();
+        return `Launched: YES\nLaunch Time: ${time}`;
+      }
+      return `Launched: ${isLaunched ? 'YES' : 'NO'}`;
+    }
+    
     if (Array.isArray(value)) {
-      if (value.length === 0) return 'Empty array';
-      if (value.length > 10) return `[${value.length} items]`;
+      if (value.length === 0) return '[ empty ]';
+      if (value.length > 10) return `[ ${value.length} items ]\n\nToo many items to display`;
       return JSON.stringify(value, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2);
     }
+    
     if (typeof value === 'object') {
-      return JSON.stringify(value, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2);
+      // Pretty print objects with proper indentation
+      try {
+        return JSON.stringify(value, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2);
+      } catch {
+        return String(value);
+      }
     }
+    
     return String(value);
   };
 
@@ -229,21 +222,6 @@ export const CanisterStats: React.FC<CanisterStatsProps> = ({
           case 'get_current_staking_reward_percentage':
             result = await actor.get_current_staking_reward_percentage();
             break;
-          case 'get_tokenomics_schedule':
-            result = await actor.get_tokenomics_schedule();
-            break;
-          case 'get_current_threshold_index':
-            result = await actor.get_current_threshold_index();
-            break;
-          case 'get_current_primary_rate':
-            result = await actor.get_current_primary_rate();
-            break;
-          case 'get_current_secondary_threshold':
-            result = await actor.get_current_secondary_threshold();
-            break;
-          case 'get_total_secondary_burn':
-            result = await actor.get_total_secondary_burn();
-            break;
           case 'get_all_stakes':
             result = await actor.get_all_stakes();
             break;
@@ -256,14 +234,14 @@ export const CanisterStats: React.FC<CanisterStatsProps> = ({
           case 'get_all_apy_values':
             result = await actor.get_all_apy_values();
             break;
-          case 'fetch_total_minted_primary':
-            result = await actor.fetch_total_minted_primary();
-            break;
-          case 'get_max_stats':
-            result = await actor.get_max_stats();
-            break;
           case 'get_distribution_interval':
             result = await actor.get_distribution_interval();
+            break;
+          case 'get_launch_status':
+            result = await actor.get_launch_status();
+            break;
+          case 'get_config':
+            result = await actor.get_config();
             break;
           default:
             throw new Error(`Unknown function: ${func.name}`);
@@ -308,57 +286,69 @@ export const CanisterStats: React.FC<CanisterStatsProps> = ({
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto terminal-section">
-            <div className="space-y-3">
+          <div className="flex-1 overflow-y-auto terminal-section p-2">
+            <div className="space-y-2">
               {functions.map((func) => {
                 const result = results[func.name];
                 const isLoading = result?.loading;
                 const hasResult = result && !result.loading && result.value !== null;
                 
                 return (
-                  <div key={func.name} className="terminal-info p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-lime-500 font-bold">{func.label}</span>
-                          {func.requiresAuth && !principal && (
-                            <span className="text-xs text-yellow-500">[requires auth]</span>
-                          )}
+                  <div key={func.name} className="terminal-info p-4 mb-4">
+                    <div className="grid grid-cols-[1fr,auto] gap-4">
+                      <div className="space-y-2">
+                        {/* Function Header */}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-lime-500 font-bold text-sm">{func.label}</span>
+                            {func.requiresAuth && !principal && (
+                              <span className="text-xs text-yellow-500">[requires auth]</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {func.description}
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-400 mb-2">
-                          {func.description}
-                        </div>
-                        <div className="font-mono text-xs text-cyan-400">
+                        
+                        {/* Function Name */}
+                        <div className="font-mono text-xs text-cyan-400 opacity-70">
                           {func.name}()
                         </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        scale="sm"
-                        onClick={() => queryFunction(func)}
-                        disabled={isLoading || (func.requiresAuth && !principal)}
-                        className="terminal-button ml-4"
-                      >
-                        <FontAwesomeIcon 
-                          icon={isLoading ? faSpinner : faPlay} 
-                          className={isLoading ? 'animate-spin' : ''}
-                        />
-                      </Button>
+                      
+                      {/* Query Button */}
+                      <div className="flex items-start">
+                        <Button
+                          variant="outline"
+                          scale="sm"
+                          onClick={() => queryFunction(func)}
+                          disabled={isLoading || (func.requiresAuth && !principal)}
+                          className="terminal-button"
+                        >
+                          <FontAwesomeIcon 
+                            icon={isLoading ? faSpinner : faPlay} 
+                            className={isLoading ? 'animate-spin' : ''}
+                          />
+                        </Button>
+                      </div>
                     </div>
                     
+                    {/* Result Section */}
                     {hasResult && (
-                      <div className="mt-3 pt-3 border-t border-white/10">
-                        <div className="text-xs text-gray-400 mb-1">Result:</div>
-                        <pre className="text-xs text-white overflow-x-auto whitespace-pre-wrap break-words">
+                      <div className="mt-4 p-3 bg-black/50 border border-white/10 rounded">
+                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Result</div>
+                        <pre className="text-sm text-white font-mono overflow-x-auto whitespace-pre-wrap break-words">
                           {formatValue(result.value)}
                         </pre>
                       </div>
                     )}
                     
+                    {/* Error Section */}
                     {result?.error && (
-                      <div className="mt-3 pt-3 border-t border-white/10">
-                        <div className="text-xs text-red-500">
-                          Error: {result.error}
+                      <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded">
+                        <div className="text-xs text-red-400 uppercase tracking-wider mb-2">Error</div>
+                        <div className="text-sm text-red-300">
+                          {result.error}
                         </div>
                       </div>
                     )}

@@ -1,7 +1,7 @@
 use candid::{encode_args, decode_one, CandidType, Deserialize, Principal, Nat};
 use ic_cdk::api::call::call_raw;
 use num_traits::ToPrimitive;
-use crate::types::{Account, TokenRecord, ExecutionError};
+use crate::types::{Account, TokenRecord, ExecutionError, TokenomicsSchedule};
 
 // ICRC1 token standards
 #[derive(CandidType, Deserialize)]
@@ -205,4 +205,23 @@ pub fn get_lbry_fun_principal() -> Principal {
 
 pub fn get_icp_ledger_principal() -> Principal {
     Principal::from_text(ICP_LEDGER_CANISTER).expect("Invalid ICP ledger canister ID")
+}
+
+pub async fn get_tokenomics_schedule(
+    tokenomics_canister: Principal,
+) -> Result<TokenomicsSchedule, String> {
+    let args = encode_args(()).map_err(|e| format!("Failed to encode args: {:?}", e))?;
+    
+    let result = call_raw(
+        tokenomics_canister,
+        "get_tokenomics_schedule",
+        &args,
+        0,
+    ).await
+    .map_err(|e| format!("Failed to call get_tokenomics_schedule: {:?}", e))?;
+    
+    let schedule: TokenomicsSchedule = decode_one(&result)
+        .map_err(|e| format!("Failed to decode tokenomics schedule: {:?}", e))?;
+    
+    Ok(schedule)
 }

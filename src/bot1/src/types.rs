@@ -316,6 +316,13 @@ pub struct PoolLogs {
     pub icp_swap_logs: Option<PaginatedLogs>,
 }
 
+// Tokenomics schedule from tokenomics canister
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct TokenomicsSchedule {
+    pub thresholds: Vec<u64>,
+    pub rewards: Vec<u64>,
+}
+
 // Summary types for epoch-focused data
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct EpochSnapshot {
@@ -364,4 +371,68 @@ pub struct ValidationSummary {
     pub total_usd_cost: f64,
     pub average_mint_rate: f64,
     pub average_cost_per_token: f64,
+    
+    // NEW: Enhanced analysis fields
+    pub epoch_analysis: Option<EpochCrossingAnalysis>,
+    pub rate_verification: Option<RateVerification>,
+    pub largest_multi_epoch_burn: Option<MultiEpochBurn>,
+    pub analysis_warnings: Vec<String>,
+}
+
+// NEW: Analysis data structures for enhanced tracking
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct TheoreticalEpochContribution {
+    pub epoch_number: u32,
+    pub amount_burned: u64,
+    pub rate_4decimal: u64,      // 46280 = 4.628
+    pub rate_human: f64,         // 4.628
+    pub amount_minted: u64,
+    pub percentage_of_burn: f64,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct SingleEpochBurn {
+    pub loop_number: u32,
+    pub epoch: u32,
+    pub actual_rate: f64,
+    pub expected_rate: f64,
+    pub deviation_percent: f64,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct MultiEpochBurn {
+    pub loop_number: u32,
+    pub epochs_crossed: Vec<u32>,
+    pub actual_total: u64,
+    pub theoretical_total: u64,
+    pub theoretical_breakdown: Vec<TheoreticalEpochContribution>,
+    pub deviation_percent: f64,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct EpochCrossingAnalysis {
+    pub single_epoch_burns: Vec<SingleEpochBurn>,
+    pub multi_epoch_burns: Vec<MultiEpochBurn>,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct RateVerification {
+    pub configured_halving: u32,
+    pub observed_halvings: Vec<ObservedHalving>,
+    pub status: VerificationStatus,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct ObservedHalving {
+    pub from_epoch: u32,
+    pub to_epoch: u32,
+    pub observed_percentage: f64,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub enum VerificationStatus {
+    Verified,
+    InsufficientData,
+    Mismatch { expected: f64, observed: f64 },
 }

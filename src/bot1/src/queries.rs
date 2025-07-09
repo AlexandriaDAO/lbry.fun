@@ -1,7 +1,7 @@
 use crate::{
     storage::{get_snapshots, get_cached_token_info, get_cumulative_state, add_snapshot, cache_token_info, update_cumulative_state},
     types::*,
-    utils::{get_token_record, get_lbry_fun_principal},
+    utils::{get_token_record, get_lbry_fun_principal, get_tokenomics_schedule},
 };
 use ic_cdk::api::call::call;
 
@@ -289,6 +289,28 @@ pub async fn get_summary_impl(pool_id: u64) -> Result<ValidationSummary, String>
         0.0
     };
     
+    // NEW: Fetch tokenomics schedule for enhanced analysis
+    let tokenomics_schedule = get_tokenomics_schedule(token_record.tokenomics_canister_id).await
+        .map_err(|e| format!("Failed to get tokenomics schedule: {}", e))?;
+    
+    // NEW: Perform epoch crossing analysis
+    let epoch_analysis = analyze_epoch_crossings(&snapshots, &tokenomics_schedule);
+    
+    // NEW: Add rate verification from single-epoch burns
+    let rate_verification = verify_halving_rates(
+        &epoch_analysis.single_epoch_burns, 
+        &tokenomics_schedule,
+        pool_parameters.halving_step as u32
+    );
+    
+    // NEW: Find largest multi-epoch burn for detailed display
+    let largest_multi_epoch = epoch_analysis.multi_epoch_burns.iter()
+        .max_by_key(|b| b.epochs_crossed.len())
+        .cloned();
+    
+    // NEW: Generate analysis warnings
+    let analysis_warnings = generate_warnings(&epoch_analysis);
+    
     Ok(ValidationSummary {
         pool_id,
         token_info,
@@ -303,6 +325,11 @@ pub async fn get_summary_impl(pool_id: u64) -> Result<ValidationSummary, String>
         total_usd_cost,
         average_mint_rate: cumulative_state.total_primary_minted as f64 / cumulative_state.total_secondary_burned as f64,
         average_cost_per_token,
+        // NEW: Enhanced analysis fields
+        epoch_analysis: Some(epoch_analysis),
+        rate_verification: Some(rate_verification),
+        largest_multi_epoch_burn: largest_multi_epoch,
+        analysis_warnings,
     })
 }
 
@@ -350,4 +377,234 @@ fn build_epoch_snapshot(
         cumulative_icp_spent: last_snapshot.cumulative_icp_spent,
         percentage_of_max_supply,
     }
+}
+
+// NEW: Analysis functions for enhanced tracking
+
+// Calculate theoretical epoch breakdown for any burn
+fn calculate_theoretical_breakdown(
+    start_burned: u64,        // Cumulative before this burn
+    burn_amount: u64,         // Amount being burned
+    schedule: &TokenomicsSchedule,
+) -> Vec<TheoreticalEpochContribution> {
+    let mut contributions = Vec::new();
+    let mut remaining_burn = burn_amount;
+    let mut current_position = start_burned;
+    
+    // Find starting epoch
+    let mut epoch_idx = 0;
+    for (i, &threshold) in schedule.thresholds.iter().enumerate() {
+        if current_position < threshold {
+            epoch_idx = i;
+            break;
+        }
+    }
+    
+    // Process burn through epochs
+    while remaining_burn > 0 && epoch_idx < schedule.thresholds.len() {
+        let epoch_end = schedule.thresholds[epoch_idx];
+        let burn_in_epoch = (epoch_end - current_position).min(remaining_burn);
+        
+        if burn_in_epoch > 0 {
+            let rate_4decimal = schedule.rewards[epoch_idx];
+            // Calculate minted: (burn * rate * 10_000) / E8S
+            let minted = (burn_in_epoch as u128 * rate_4decimal as u128 * 10_000) / E8S as u128;
+            
+            contributions.push(TheoreticalEpochContribution {
+                epoch_number: epoch_idx as u32,
+                amount_burned: burn_in_epoch,
+                rate_4decimal,
+                rate_human: rate_4decimal as f64 / 10_000.0,
+                amount_minted: minted as u64,
+                percentage_of_burn: (burn_in_epoch as f64 / burn_amount as f64) * 100.0,
+            });
+        }
+        
+        current_position += burn_in_epoch;
+        remaining_burn -= burn_in_epoch;
+        epoch_idx += 1;
+    }
+    
+    // Handle any remaining burn in the last epoch
+    if remaining_burn > 0 && epoch_idx > 0 {
+        let rate_4decimal = schedule.rewards[epoch_idx - 1];
+        let minted = (remaining_burn as u128 * rate_4decimal as u128 * 10_000) / E8S as u128;
+        
+        contributions.push(TheoreticalEpochContribution {
+            epoch_number: (epoch_idx - 1) as u32,
+            amount_burned: remaining_burn,
+            rate_4decimal,
+            rate_human: rate_4decimal as f64 / 10_000.0,
+            amount_minted: minted as u64,
+            percentage_of_burn: (remaining_burn as f64 / burn_amount as f64) * 100.0,
+        });
+    }
+    
+    contributions
+}
+
+// Find which epoch a cumulative burn amount falls into
+fn find_epoch(cumulative_burned: u64, thresholds: &[u64]) -> u32 {
+    for (i, &threshold) in thresholds.iter().enumerate() {
+        if cumulative_burned < threshold {
+            return i as u32;
+        }
+    }
+    thresholds.len() as u32 - 1
+}
+
+// Analyze all burns to categorize single vs multi-epoch
+fn analyze_epoch_crossings(
+    snapshots: &[LoopSnapshot], 
+    schedule: &TokenomicsSchedule
+) -> EpochCrossingAnalysis {
+    let mut single_epoch_burns = Vec::new();
+    let mut multi_epoch_burns = Vec::new();
+    
+    for snapshot in snapshots {
+        let start_burned = snapshot.cumulative_secondary_burned - snapshot.secondary_burned;
+        let start_epoch = find_epoch(start_burned, &schedule.thresholds);
+        let end_epoch = find_epoch(snapshot.cumulative_secondary_burned, &schedule.thresholds);
+        
+        if start_epoch == end_epoch {
+            // Single epoch burn - perfect for rate verification
+            let expected_rate = schedule.rewards[start_epoch as usize] as f64 / 10_000.0;
+            let actual_rate = snapshot.primary_received as f64 / snapshot.secondary_burned as f64;
+            
+            single_epoch_burns.push(SingleEpochBurn {
+                loop_number: snapshot.loop_number,
+                epoch: start_epoch,
+                actual_rate,
+                expected_rate,
+                deviation_percent: ((actual_rate - expected_rate) / expected_rate * 100.0).abs(),
+            });
+        } else {
+            // Multi-epoch burn - calculate theoretical breakdown
+            let theoretical_breakdown = calculate_theoretical_breakdown(
+                start_burned,
+                snapshot.secondary_burned,
+                &schedule
+            );
+            
+            let theoretical_total: u64 = theoretical_breakdown.iter()
+                .map(|e| e.amount_minted)
+                .sum();
+            
+            multi_epoch_burns.push(MultiEpochBurn {
+                loop_number: snapshot.loop_number,
+                epochs_crossed: (start_epoch..=end_epoch).map(|e| e as u32).collect(),
+                actual_total: snapshot.primary_received,
+                theoretical_total,
+                theoretical_breakdown,
+                deviation_percent: ((theoretical_total as f64 - snapshot.primary_received as f64) / snapshot.primary_received as f64 * 100.0).abs(),
+            });
+        }
+    }
+    
+    EpochCrossingAnalysis {
+        single_epoch_burns,
+        multi_epoch_burns,
+    }
+}
+
+// Verify halving rates from single-epoch burns
+fn verify_halving_rates(
+    single_epoch_burns: &[SingleEpochBurn], 
+    _schedule: &TokenomicsSchedule,
+    halving_step: u32,
+) -> RateVerification {
+    let mut observed_halvings = Vec::new();
+    
+    // Group burns by epoch
+    let mut epochs_data: std::collections::HashMap<u32, Vec<f64>> = std::collections::HashMap::new();
+    for burn in single_epoch_burns {
+        epochs_data.entry(burn.epoch)
+            .or_insert_with(Vec::new)
+            .push(burn.actual_rate);
+    }
+    
+    // Calculate average rate per epoch
+    let mut epoch_rates: Vec<(u32, f64)> = epochs_data.into_iter()
+        .map(|(epoch, rates)| {
+            let avg_rate = rates.iter().sum::<f64>() / rates.len() as f64;
+            (epoch, avg_rate)
+        })
+        .collect();
+    epoch_rates.sort_by_key(|(epoch, _)| *epoch);
+    
+    // Check halving between consecutive epochs
+    for i in 0..epoch_rates.len().saturating_sub(1) {
+        let (epoch1, rate1) = epoch_rates[i];
+        let (epoch2, rate2) = epoch_rates[i+1];
+        
+        let observed_percentage = (rate2 / rate1 * 100.0).round();
+        observed_halvings.push(ObservedHalving {
+            from_epoch: epoch1,
+            to_epoch: epoch2,
+            observed_percentage,
+        });
+    }
+    
+    // Determine status
+    let configured_halving = halving_step; 
+    let all_match = observed_halvings.iter()
+        .all(|h| (h.observed_percentage - configured_halving as f64).abs() < 2.0);
+    
+    let status = if observed_halvings.is_empty() {
+        VerificationStatus::InsufficientData
+    } else if all_match {
+        VerificationStatus::Verified
+    } else {
+        let avg_observed = observed_halvings.iter()
+            .map(|h| h.observed_percentage)
+            .sum::<f64>() / observed_halvings.len() as f64;
+        VerificationStatus::Mismatch { 
+            expected: configured_halving as f64, 
+            observed: avg_observed 
+        }
+    };
+    
+    RateVerification {
+        configured_halving,
+        observed_halvings,
+        status,
+    }
+}
+
+// Generate warnings based on analysis
+fn generate_warnings(analysis: &EpochCrossingAnalysis) -> Vec<String> {
+    let mut warnings = Vec::new();
+    
+    // Check for high deviations in single-epoch burns
+    let high_deviation_burns: Vec<_> = analysis.single_epoch_burns.iter()
+        .filter(|b| b.deviation_percent > 1.0)
+        .collect();
+    
+    if !high_deviation_burns.is_empty() {
+        warnings.push(format!(
+            "Found {} single-epoch burns with >1% deviation from expected rates", 
+            high_deviation_burns.len()
+        ));
+    }
+    
+    // Check for high deviations in multi-epoch burns
+    let high_deviation_multi: Vec<_> = analysis.multi_epoch_burns.iter()
+        .filter(|b| b.deviation_percent > 1.0)
+        .collect();
+    
+    if !high_deviation_multi.is_empty() {
+        warnings.push(format!(
+            "Found {} multi-epoch burns with >1% deviation from theoretical calculations", 
+            high_deviation_multi.len()
+        ));
+    }
+    
+    // Recommend single-epoch burns if insufficient data
+    if analysis.single_epoch_burns.len() < 3 {
+        warnings.push(
+            "Insufficient single-epoch burns for rate verification. Consider performing burns that stay within single epochs.".to_string()
+        );
+    }
+    
+    warnings
 }

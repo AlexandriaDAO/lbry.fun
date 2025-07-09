@@ -64,6 +64,19 @@ async fn create_token(
     let mut secondary_thresholds = Vec::new();
     let mut primary_rewards = Vec::new();
     
+    // Convert initial reward rate from E8S to 4-decimal format
+    // Frontend sends: 0.105 tokens = 10,500,000 E8S
+    // Tokenomics expects: 0.105 tokens = 1,050 in 4-decimal format (0.105 × 10,000)
+    // Conversion: E8S / 10,000 = 4-decimal format
+    let initial_reward_4decimal = (initial_reward_per_burn_unit / 10_000).max(100); // Minimum 0.01 tokens
+    
+    ic_cdk::println!("[CREATE_TOKEN] Initial reward conversion: {} E8S -> {} 4-decimal format", 
+        initial_reward_per_burn_unit, initial_reward_4decimal);
+    
+    // Generate rewards array using the same halving logic as tokenomics_simple
+    let mut current_reward = initial_reward_4decimal;
+    let min_reward_4decimal = 100u64; // 0.01 tokens in 4-decimal format
+    
     // Always skip epoch 0 as it's only for TGE and has no mining rewards
     let start_index = 1;
     
@@ -72,44 +85,21 @@ async fn create_token(
         let threshold_natural = (epoch.cumulative_secondary_burned_e8s / E8S as u128) as u64;
         secondary_thresholds.push(threshold_natural);
         
-        // Calculate the reward rate for this epoch
-        if epoch.secondary_burned_this_epoch_e8s > 0 {
-            // Reverse engineer the reward rate from minted/burned ratio
-            // The tokenomics canister expects: rate × burned = minted
-            // rate_e8s = primary_minted_e8s / secondary_burned_e8s
-            
-            // Calculate rate preserving precision:
-            // The tokenomics schedule already has values in E8S
-            // We need to convert the rate to 4-decimal format
-            // rate = primary_minted / secondary_burned
-            // Since both values are in E8S, they cancel out in the division
-            // Then multiply by 10_000 to get 4-decimal format
-            
-            // Step-by-step calculation for debugging
-            let step1 = epoch.primary_minted_this_epoch_e8s.checked_mul(10_000);
-            let step2 = step1.and_then(|p| p.checked_div(epoch.secondary_burned_this_epoch_e8s));
-            // Remove the E8S division - the E8S units already cancelled out in step2
-            let reward_4decimal = step2.unwrap_or(0) as u64;
-            
-            // Debug logging with intermediate steps
-            if i <= 3 {  // Log first few epochs
-                ic_cdk::println!("[CREATE_TOKEN] Epoch {} calculation steps:", i);
-                ic_cdk::println!("  primary_minted_e8s = {}", epoch.primary_minted_this_epoch_e8s);
-                ic_cdk::println!("  secondary_burned_e8s = {}", epoch.secondary_burned_this_epoch_e8s);
-                ic_cdk::println!("  step1 (primary * 10_000) = {:?}", step1);
-                ic_cdk::println!("  step2 (step1 / secondary) = {:?}", step2);
-                ic_cdk::println!("  final reward_4decimal = {}", reward_4decimal);
-            }
-            
-            primary_rewards.push(reward_4decimal.max(100));  // 100 = 0.01 tokens
-        } else {
-            // All mining epochs should have burning data
-            // If we reach here, it indicates a bug in the tokenomics schedule generation
-            return Err(format!(
-                "Invalid tokenomics schedule: epoch {} has no burning data. All mining epochs must have burning data.",
-                i
-            ));
+        // Add the current reward rate (already in 4-decimal format)
+        primary_rewards.push(current_reward);
+        
+        // Debug logging
+        if i <= 3 {  // Log first few epochs
+            ic_cdk::println!("[CREATE_TOKEN] Epoch {} reward: {} (4-decimal format)", i, current_reward);
         }
+        
+        // Apply halving for next epoch (same as tokenomics_simple)
+        let new_reward = current_reward
+            .saturating_mul(halving_step)
+            .saturating_div(100);
+        
+        // Don't go below minimum
+        current_reward = new_reward.max(min_reward_4decimal);
     }
     
     // Validate the arrays

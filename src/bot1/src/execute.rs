@@ -146,8 +146,8 @@ async fn execute_single_loop(
     let primary_total_supply = icrc1_total_supply(token_record.primary_token_id).await?;
     
     // 11. Calculate metrics
-    let secondary_burned = burn_amount_natural * E8S; // Convert back to E8S for consistent reporting
-    let secondary_dust = secondary_balance.saturating_sub(secondary_burned).saturating_sub(SECONDARY_TOKEN_FEE); // Remainder after burn and fee
+    let secondary_burned = available_for_burn; // Already in E8S
+    let secondary_dust = secondary_balance.saturating_sub(available_for_burn).saturating_sub(SECONDARY_TOKEN_FEE); // Remainder after burn and fee
     
     let actual_mint_rate = if secondary_burned > 0 {
         primary_received as f64 / secondary_burned as f64

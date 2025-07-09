@@ -1,4 +1,8 @@
 type CostData = record { y_axis : vec float64; x_axis : vec nat64 };
+type EpochCrossingAnalysis = record {
+  multi_epoch_burns : vec MultiEpochBurn;
+  single_epoch_burns : vec SingleEpochBurn;
+};
 type EpochData = record { y_axis : vec nat64; x_axis : vec text };
 type EpochSnapshot = record {
   percentage_of_max_supply : float64;
@@ -101,6 +105,19 @@ type LoopSnapshot = record {
   secondary_dust : nat64;
   primary_total_supply : nat64;
 };
+type MultiEpochBurn = record {
+  deviation_percent : float64;
+  theoretical_breakdown : vec TheoreticalEpochContribution;
+  loop_number : nat32;
+  theoretical_total : nat64;
+  actual_total : nat64;
+  epochs_crossed : vec nat32;
+};
+type ObservedHalving = record {
+  to_epoch : nat32;
+  from_epoch : nat32;
+  observed_percentage : float64;
+};
 type PaginatedLogs = record {
   page_size : nat64;
   logs : vec Log;
@@ -132,11 +149,24 @@ type PoolValidation = record {
   canisters_accessible : bool;
   launch_time : nat64;
 };
+type RateVerification = record {
+  status : VerificationStatus;
+  observed_halvings : vec ObservedHalving;
+  configured_halving : nat32;
+};
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok : PoolLogs; Err : text };
-type Result_2 = variant { Ok : ValidationSummary; Err : text };
-type Result_3 = variant { Ok : ValidationTable; Err : text };
-type Result_4 = variant { Ok : PoolValidation; Err : text };
+type Result_2 = variant { Ok : TokenomicsSchedule; Err : text };
+type Result_3 = variant { Ok : ValidationSummary; Err : text };
+type Result_4 = variant { Ok : ValidationTable; Err : text };
+type Result_5 = variant { Ok : PoolValidation; Err : text };
+type SingleEpochBurn = record {
+  deviation_percent : float64;
+  loop_number : nat32;
+  epoch : nat32;
+  expected_rate : float64;
+  actual_rate : float64;
+};
 type SummaryData = record {
   total_minting_valuation : float64;
   percentage_of_max_supply : float64;
@@ -145,6 +175,14 @@ type SummaryData = record {
   initial_mint_cost : float64;
   actual_total_minted : nat64;
   epochs_reached : nat32;
+};
+type TheoreticalEpochContribution = record {
+  percentage_of_burn : float64;
+  amount_burned : nat64;
+  rate_4decimal : nat64;
+  rate_human : float64;
+  amount_minted : nat64;
+  epoch_number : nat32;
 };
 type TokenInfo = record {
   secondary_token_id : text;
@@ -206,10 +244,16 @@ type TokenomicsExecutionError = variant {
   };
   MaxPrimaryPerTrnxReached : record { reason : text };
 };
+type TokenomicsSchedule = record {
+  rewards : vec nat64;
+  thresholds : vec nat64;
+};
 type ValidationSummary = record {
   total_loops : nat32;
   average_cost_per_token : float64;
+  largest_multi_epoch_burn : opt MultiEpochBurn;
   total_usd_cost : float64;
+  analysis_warnings : vec text;
   total_icp_spent : nat64;
   average_mint_rate : float64;
   first_loop : LoopSnapshot;
@@ -219,6 +263,8 @@ type ValidationSummary = record {
   pool_id : nat64;
   epochs_reached : nat32;
   token_info : TokenInfo;
+  rate_verification : opt RateVerification;
+  epoch_analysis : opt EpochCrossingAnalysis;
   final_percentage_minted : float64;
 };
 type ValidationTable = record {
@@ -240,11 +286,17 @@ type ValidationTable = record {
   minted_per_epoch_data : EpochData;
   token_info : TokenInfo;
 };
+type VerificationStatus = variant {
+  Mismatch : record { observed : float64; expected : float64 };
+  Verified;
+  InsufficientData;
+};
 service : () -> {
   execute_loops : (nat64, nat64, nat32) -> (Result);
   get_bot_principal : () -> (text) query;
   get_pool_logs : (nat64, opt nat64, opt nat64) -> (Result_1);
-  get_summary : (nat64) -> (Result_2);
-  get_table : (nat64) -> (Result_3);
-  validate_pool : (nat64) -> (Result_4);
+  get_pool_tokenomics_schedule : (nat64) -> (Result_2);
+  get_summary : (nat64) -> (Result_3);
+  get_table : (nat64) -> (Result_4);
+  validate_pool : (nat64) -> (Result_5);
 }

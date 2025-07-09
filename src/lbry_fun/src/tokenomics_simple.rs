@@ -90,8 +90,15 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
         let primary_to_mint = calculate_primary_minted(burn_amount, reward_rate);
         let remaining_supply = params.max_supply_e8s.saturating_sub(cumulative_primary);
         
+        // Debug first few epochs
+        if epoch_number <= 3 {
+            ic_cdk::println!("[PREVIEW] Epoch {}: burn_amount={}, reward_rate={}, primary_to_mint={}, remaining={}", 
+                epoch_number, burn_amount, reward_rate, primary_to_mint, remaining_supply);
+        }
+        
         // Natural termination: minting less than 1 token
         if primary_to_mint < E8S {
+            ic_cdk::println!("[PREVIEW] Stopping: primary_to_mint {} < E8S {}", primary_to_mint, E8S);
             break;
         }
         
@@ -204,6 +211,9 @@ pub fn preview_tokenomics_from_frontend(
         initial_reward_rate_e8s: primary_per_threshold as u128,  // Already in E8S
         halving_percentage: halving_step as u32,
     };
+    
+    ic_cdk::println!("[PREVIEW] Tokenomics params: max_supply={}, tge={}, initial_burn={}, reward_rate={}, halving={}%", 
+        params.max_supply_e8s, params.tge_allocation_e8s, params.initial_burn_e8s, params.initial_reward_rate_e8s, params.halving_percentage);
     
     generate_tokenomics_schedule(params)
 }
