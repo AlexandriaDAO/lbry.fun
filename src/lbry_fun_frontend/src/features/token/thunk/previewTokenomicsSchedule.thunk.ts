@@ -20,6 +20,7 @@ export interface PreviewScheduleArgs {
     initial_secondary_burn: number;     // Natural units (e.g., 21000 tokens)
     halving_step: number;               // Percentage (e.g., 50 for 50%)
     tge_allocation: bigint;             // E8S
+    threshold_multiplier: number;       // Multiplier for burn threshold progression (e.g., 2.0 for doubling)
 }
 
 const previewTokenomicsSchedule = createAsyncThunk<TokenomicsSchedule, PreviewScheduleArgs, { rejectValue: { title: string, message: string } }>(
@@ -53,7 +54,8 @@ const previewTokenomicsSchedule = createAsyncThunk<TokenomicsSchedule, PreviewSc
                 args.max_primary_supply,
                 initial_secondary_burn_e8s,
                 BigInt(args.halving_step),
-                args.tge_allocation
+                args.tge_allocation,
+                args.threshold_multiplier
             );
 
             // Convert BigInt values to serializable format

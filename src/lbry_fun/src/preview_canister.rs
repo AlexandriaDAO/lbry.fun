@@ -64,6 +64,7 @@ async fn deploy_preview_tokenomics(args: PreviewArgs) -> Result<Principal, Strin
         args.initial_secondary_burn,
         args.halving_step,
         args.tge_allocation,
+        2.0, // Default to 2.0 for preview canister since PreviewArgs doesn't have threshold_multiplier yet
     );
     
     // Extract arrays from the generated schedule

@@ -22,6 +22,7 @@ fn test_simple_tokenomics_debug() {
         10 * E8S as u64,     // 10 secondary tokens to burn (frontend sends E8S)
         50,                  // 50% halving
         0,                   // No TGE
+        2.0,                 // 2x threshold multiplier
     );
     
     println!("DEBUG: Simple tokenomics test");
@@ -83,6 +84,7 @@ fn test_user_scenario_fix() {
         21_000 * E8S as u64,     // 21k secondary to burn (frontend sends E8S)
         50,                      // 50% halving
         0,                       // No TGE
+        2.0,                     // 2x threshold multiplier
     );
     
     // First epoch calculations:
@@ -118,6 +120,7 @@ fn test_dynamic_epoch_generation_simple() {
         initial_burn_e8s: 1_000 * E8S,
         initial_reward_rate_e8s: 10 * E8S,  // 10 tokens per burn
         halving_percentage: 50,
+        threshold_multiplier: 2.0,
     };
     
     let schedule = generate_tokenomics_schedule(params);
@@ -153,10 +156,10 @@ fn test_dynamic_epoch_generation_simple() {
                   schedule.epochs[2].secondary_burned_this_epoch_e8s,
                   "Epochs 1 and 2 should burn same amount");
                   
-        // Epoch 3 should burn double of epoch 2
+        // Epoch 3 should burn double of epoch 2 (with 2x multiplier)
         assert_eq!(schedule.epochs[3].secondary_burned_this_epoch_e8s, 
                   schedule.epochs[2].secondary_burned_this_epoch_e8s * 2,
-                  "Epoch 3 should burn double of epoch 2");
+                  "Epoch 3 should burn double of epoch 2 (with 2x multiplier)");
     }
 }
 
@@ -201,6 +204,7 @@ fn test_halving_step_conversion() {
         initial_burn_e8s: 21_000 * E8S,
         initial_reward_rate_e8s: 5 * E8S,
         halving_percentage: 80,  // Should retain 80% of previous rate
+        threshold_multiplier: 2.0,
     };
     
     let schedule = generate_tokenomics_schedule(params);
@@ -264,6 +268,7 @@ fn test_tokenomics_calculation_with_4decimal_fix() {
         initial_burn as u64,  // Frontend sends natural units, not E8S
         70, // 70% halving
         1 * E8S as u64, // Small TGE
+        2.0, // 2x threshold multiplier
     );
     
     // First real epoch (after TGE) should mint: 5 tokens × 1M tokens × 3 = 15M tokens
@@ -288,6 +293,7 @@ fn test_halving_percentage_fix() {
         initial_burn_e8s: 1_000 * E8S,
         initial_reward_rate_e8s: 100 * E8S,
         halving_percentage: 50, // 50% halving
+        threshold_multiplier: 2.0,
     };
     
     let schedule = generate_tokenomics_schedule(params);

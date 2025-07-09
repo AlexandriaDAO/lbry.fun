@@ -41,6 +41,7 @@ async fn create_token(
     initial_primary_mint: u64,
     initial_secondary_burn: u64,
     halving_step: u64,
+    threshold_multiplier: f64,
     initial_reward_per_burn_unit: u64,
     distribution_interval_seconds: u64,
     launch_delay_seconds: u64,
@@ -58,6 +59,7 @@ async fn create_token(
         initial_secondary_burn,
         halving_step,
         initial_primary_mint, // TGE amount (usually 0)
+        threshold_multiplier,
     );
     
     // Extract arrays from the generated schedule
@@ -275,6 +277,7 @@ async fn create_token(
         initial_primary_mint,
         initial_secondary_burn,
         halving_step,
+        threshold_multiplier,
         initial_reward_per_burn_unit,
         distribution_interval_seconds,
         launch_delay_seconds,

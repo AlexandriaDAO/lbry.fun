@@ -14,6 +14,7 @@ pub struct TokenomicsParams {
     pub initial_burn_e8s: u128,         // e.g., 1M tokens = 100_000_000_000_000
     pub initial_reward_rate_e8s: u128,  // e.g., 2000 tokens = 200_000_000_000
     pub halving_percentage: u32,        // e.g., 70 for 70%
+    pub threshold_multiplier: f64,      // e.g., 2.0 for doubling, 1.5 for 50% increase
 }
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
@@ -146,8 +147,9 @@ pub fn generate_tokenomics_schedule(params: TokenomicsParams) -> TokenomicsSched
         // Update for next epoch
         epoch_number += 1;
         
-        // Next threshold: always 2x the current threshold
-        current_threshold = current_threshold.saturating_mul(2);
+        // Next threshold: multiply by the configured multiplier
+        current_threshold = ((current_threshold as f64 * params.threshold_multiplier) as u128)
+            .max(current_threshold + 1); // Ensure progression even with low multipliers
         
         // Apply halving but enforce minimum
         let new_reward_rate = reward_rate
@@ -202,7 +204,16 @@ pub fn preview_tokenomics_from_frontend(
     initial_secondary_burn: u64,     // E8S from frontend (already converted)
     halving_step: u64,               // Percentage as natural number (e.g., 50 for 50%)
     tge_allocation: u64,             // E8S from frontend
+    threshold_multiplier: f64,       // Multiplier for burn threshold progression
 ) -> TokenomicsSchedule {
+    // Validate multiplier range
+    if threshold_multiplier <= 1.0 {
+        ic_cdk::trap("Threshold multiplier must be greater than 1.0");
+    }
+    if threshold_multiplier > 10.0 {
+        ic_cdk::trap("Threshold multiplier cannot exceed 10.0");
+    }
+    
     // Frontend already sends values in E8S, no conversion needed
     let params = TokenomicsParams {
         max_supply_e8s: max_primary_supply as u128,
@@ -210,6 +221,7 @@ pub fn preview_tokenomics_from_frontend(
         initial_burn_e8s: initial_secondary_burn as u128,  // Already in E8S
         initial_reward_rate_e8s: primary_per_threshold as u128,  // Already in E8S
         halving_percentage: halving_step as u32,
+        threshold_multiplier,
     };
     
     ic_cdk::println!("[PREVIEW] Tokenomics params: max_supply={}, tge={}, initial_burn={}, reward_rate={}, halving={}%", 

@@ -81,6 +81,7 @@ async fn preview_tokenomics_schedule(
     initial_secondary_burn: u64,     // Natural units (e.g., 21000 tokens)
     halving_step: u64,               // Percentage (e.g., 50 for 50%)
     tge_allocation: u64,             // E8S
+    threshold_multiplier: f64,       // Multiplier for burn threshold progression
 ) -> TokenomicsSchedule {
     preview_tokenomics_from_frontend(
         primary_per_threshold,
@@ -88,6 +89,7 @@ async fn preview_tokenomics_schedule(
         initial_secondary_burn,
         halving_step,
         tge_allocation,
+        threshold_multiplier,
     )
 }
 
@@ -167,6 +169,7 @@ pub fn get_tokenomics_graphs(pool_id: u64) -> Result<GraphData, String> {
         initial_secondary_burn: token_record.initial_secondary_burn,
         halving_step: token_record.halving_step,
         initial_reward_per_burn_unit: token_record.initial_reward_per_burn_unit,
+        threshold_multiplier: Some(token_record.threshold_multiplier),
     };
     
     // 3. Use the existing preview logic

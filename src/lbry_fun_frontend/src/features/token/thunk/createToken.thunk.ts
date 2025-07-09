@@ -73,6 +73,7 @@ const createToken = createAsyncThunk<
         BigInt(formData.initial_primary_mint),
         BigInt(formData.initial_secondary_burn),
         BigInt(formData.halving_step),
+        formData.threshold_multiplier,
         BigInt(formData.initial_reward_per_burn_unit),
         BigInt(formData.distribution_interval_seconds),
         BigInt(formData.launch_delay_seconds)

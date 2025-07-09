@@ -33,6 +33,7 @@ export interface TokenFormValues {
   tge_allocation: string;
   initial_secondary_burn: string;
   halving_step: string;
+  threshold_multiplier: string;
   initial_reward_per_burn_unit: string;
   distribution_interval_seconds: string;
   launch_delay_seconds: string;
@@ -73,6 +74,7 @@ const TerminalCreateToken: React.FC = () => {
     initial_secondary_burn: '1000000',
     primary_token_logo_base64: '',
     halving_step: '50',
+    threshold_multiplier: '2',
     initial_reward_per_burn_unit: '0.105',
     distribution_interval_seconds: '3600',
     launch_delay_seconds: '86400',
@@ -96,7 +98,7 @@ const TerminalCreateToken: React.FC = () => {
     const requiredFields: Array<keyof TokenFormValues> = [
       'primary_token_symbol', 'primary_token_name', 'primary_token_description', 'primary_token_logo_base64',
       'secondary_token_symbol', 'secondary_token_name', 'secondary_token_description', 'secondary_token_logo_base64',
-      'initial_secondary_burn', 'halving_step'
+      'initial_secondary_burn', 'halving_step', 'threshold_multiplier'
     ];
     requiredFields.forEach(field => {
       if (!form[field]) {
@@ -155,6 +157,16 @@ const TerminalCreateToken: React.FC = () => {
     if (!newErrors.halving_step && (step < 25 || step > 99)) {
       newErrors.halving_step = `Halving Step must be between 25% and 99%.`;
     }
+    
+    // Validate threshold multiplier
+    const multiplier = parseFloat(form.threshold_multiplier);
+    if (!form.threshold_multiplier) {
+      newErrors.threshold_multiplier = 'Threshold multiplier is required';
+    } else if (isNaN(multiplier)) {
+      newErrors.threshold_multiplier = 'Must be a valid number';
+    } else if (multiplier < 1 || multiplier > 10) {
+      newErrors.threshold_multiplier = 'Must be between 1 and 10';
+    }
 
     // Validate launch delay
     const launchDelay = parseInt(form.launch_delay_seconds);
@@ -180,14 +192,19 @@ const TerminalCreateToken: React.FC = () => {
       'halving_step'
     ];
     
+    const decimalFieldNames: Array<keyof TokenFormValues> = [
+      'initial_reward_per_burn_unit',
+      'threshold_multiplier'
+    ];
+    
     if (field === 'tge_allocation') return;
 
     if (integerFieldNames.includes(field)) {
       if (value === '' || /^[0-9]+$/.test(value)) {
         setForm(prev => ({ ...prev, [field]: value }));
       }
-    } else if (field === 'initial_reward_per_burn_unit') {
-      // Allow decimals for initial reward
+    } else if (decimalFieldNames.includes(field)) {
+      // Allow decimals for these fields
       if (value === '' || /^\d*\.?\d*$/.test(value)) {
         setForm(prev => ({ ...prev, [field]: value }));
       }
@@ -249,6 +266,7 @@ const TerminalCreateToken: React.FC = () => {
       initial_secondary_burn: (BigInt(form.initial_secondary_burn) * BigInt(TokenConversionService.getE8S())).toString(),
       initial_reward_per_burn_unit: (BigInt(Math.floor(parseFloat(form.initial_reward_per_burn_unit) * Number(TokenConversionService.getE8S())))).toString(),
       halving_step: form.halving_step,
+      threshold_multiplier: parseFloat(form.threshold_multiplier),
       distribution_interval_seconds: form.distribution_interval_seconds,
       launch_delay_seconds: form.launch_delay_seconds,
     };
@@ -561,6 +579,34 @@ const TerminalCreateToken: React.FC = () => {
                 warning={halvingStepWarning}
               />
             </div>
+
+            {/* Threshold Multiplier */}
+            <div>
+              <div className="flex items-center mb-1">
+                <span className="terminal-label">threshold_multiplier (x)</span>
+                <span className="terminal-error ml-1">*</span>
+                <TooltipIcon
+                  text="The multiplier for burn threshold progression between epochs. 2x means each epoch requires double the burns of the previous. Higher values create faster progression, lower values create slower progression."
+                />
+              </div>
+              <TerminalInput
+                label=""
+                value={form.threshold_multiplier}
+                onChange={(v) => updateForm('threshold_multiplier', v)}
+                error={shouldShowError('threshold_multiplier') ? errors.threshold_multiplier : undefined}
+                placeholder="e.g. 2"
+              />
+              <TerminalRange
+                label=""
+                value={form.threshold_multiplier}
+                onChange={(v) => updateForm('threshold_multiplier', v)}
+                min={1}
+                max={10}
+                step={0.1}
+                suffix="x"
+                helperText={`Each epoch will require ${form.threshold_multiplier}x the burns of the previous epoch`}
+              />
+            </div>
           </div>
 
           {/* Distribution Interval - Advanced */}
@@ -627,6 +673,7 @@ const TerminalCreateToken: React.FC = () => {
             initialSecondaryBurn={form.initial_secondary_burn}
             halvingStep={form.halving_step}
             initialRewardPerBurnUnit={form.initial_reward_per_burn_unit}
+            thresholdMultiplier={form.threshold_multiplier}
           />
         </div>
 

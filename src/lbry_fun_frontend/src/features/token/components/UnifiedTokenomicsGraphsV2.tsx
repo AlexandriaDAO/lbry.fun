@@ -13,6 +13,7 @@ interface UnifiedTokenomicsGraphsV2Props {
   initialSecondaryBurn: string;       // Natural number (e.g., "1000000")
   halvingStep: string;                // Percentage (e.g., "70" for 70%)
   initialRewardPerBurnUnit: string;   // Natural number (e.g., "2000")
+  thresholdMultiplier?: string;       // Multiplier (e.g., "2" for 2x)
   
   // Optional: For deployed tokens, we might have the actual schedule
   deployedSchedule?: {
@@ -35,6 +36,7 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
   initialSecondaryBurn,
   halvingStep,
   initialRewardPerBurnUnit,
+  thresholdMultiplier,
   deployedSchedule,
   currentState,
   preCalculatedSchedule,
@@ -98,6 +100,7 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
     const initial_secondary_burn = parseFloat(initialSecondaryBurn || '0');
     const halving_step = parseInt(halvingStep || '0');
     const tge_allocation = BigInt(tgeAllocation && tgeAllocation !== '' ? tgeAllocation : '0') * E8S_MULTIPLIER;
+    const threshold_multiplier = parseFloat(thresholdMultiplier || '2');
 
     // Check for u64 overflow
     if (max_primary_supply > MAX_U64) {
@@ -122,6 +125,7 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
             initial_secondary_burn,
             halving_step,
             tge_allocation,
+            threshold_multiplier,
         }))
         .unwrap()
         .then((result) => {
@@ -134,7 +138,7 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
             setLoading(false);
         });
     }
-  }, [primaryMaxSupply, tgeAllocation, initialSecondaryBurn, halvingStep, initialRewardPerBurnUnit, dispatch, preCalculatedSchedule]);
+  }, [primaryMaxSupply, tgeAllocation, initialSecondaryBurn, halvingStep, initialRewardPerBurnUnit, thresholdMultiplier, dispatch, preCalculatedSchedule]);
 
   // Convert schedule data to graph format
   const graphData = useMemo(() => {
@@ -273,6 +277,7 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
         initialSecondaryBurn,
         halvingStep,
         initialRewardPerBurnUnit,
+        thresholdMultiplier,
       },
       ...graphData
     };

@@ -2,7 +2,7 @@
 
 const E8S = 100_000_000;
 
-function simulatePreset(name, maxSupply, burnUnit, rewardRate, halvingStep) {
+function simulatePreset(name, maxSupply, burnUnit, rewardRate, halvingStep, thresholdMultiplier = 2) {
     console.log(`\n=== ${name} Preset ===`);
     console.log(`Parameters:`);
     console.log(`  Max supply: ${maxSupply.toLocaleString()} tokens`);
@@ -48,7 +48,7 @@ function simulatePreset(name, maxSupply, burnUnit, rewardRate, halvingStep) {
         }
         
         // Update for next epoch
-        currentBurnThreshold *= 2; // Double the burn requirement
+        currentBurnThreshold = Math.floor(currentBurnThreshold * thresholdMultiplier); // Apply threshold multiplier
         currentReward = Math.max(1, Math.floor((currentReward * halvingStep) / 100));
         epoch += 1;
     }

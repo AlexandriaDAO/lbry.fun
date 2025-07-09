@@ -6,7 +6,7 @@ I need you to verify that a token launch's actual results match the frontend pro
 - **Pool ID**: 4
 - **Frontend Graph Data**: 
 ```json
-
+<replace the table data>
 ```
 
 ## Background
@@ -15,6 +15,7 @@ The bot1 canister has enhanced tracking that separates actual transaction data f
 ## Key Values to Extract from Graph Data
 From the provided JSON, note these key values:
 - **Halving Step**: `parameters.halvingStep` (e.g., 86 means 86%)
+- **Threshold Multiplier**: `parameters.thresholdMultiplier` (e.g., 2 means epochs double in size)
 - **Initial Reward**: `parameters.initialRewardPerBurnUnit` 
 - **Max Supply**: `parameters.primaryMaxSupply`
 - **Total Epochs**: `summaryData.epochs`
@@ -151,6 +152,8 @@ In `get_summary` output, check:
 - [ ] Epoch progression matches expectation
 
 ## Common Issues and Debugging
+
+*Timeouts if there are more than 5 loops. Always execute_loops() with 5 loops or less so it doesn't timeout.*
 
 ### 1. **"Maximum primary token supply reached" Error**
 If you get this error immediately when trying to burn:

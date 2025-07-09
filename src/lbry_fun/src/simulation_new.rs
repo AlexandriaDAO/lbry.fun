@@ -14,6 +14,7 @@ pub struct PreviewArgs {
     pub initial_secondary_burn: u64,
     pub halving_step: u64,
     pub initial_reward_per_burn_unit: u64,
+    pub threshold_multiplier: Option<f64>, // Optional to maintain backward compatibility
 }
 
 #[derive(CandidType, Deserialize, Clone, Default)]
@@ -39,6 +40,7 @@ pub fn preview_tokenomics(args: PreviewArgs) -> GraphData {
         args.initial_secondary_burn,
         args.halving_step,
         args.tge_allocation,
+        args.threshold_multiplier.unwrap_or(2.0), // Default to 2.0 if not provided
     );
     
     let mut graph_data = GraphData::default();

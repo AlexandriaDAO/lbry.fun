@@ -19,6 +19,7 @@ type GraphData = record {
 type PreviewArgs = record {
   halving_step : nat64;
   initial_reward_per_burn_unit : nat64;
+  threshold_multiplier : opt float64;
   tge_allocation : nat64;
   primary_max_supply : nat64;
   initial_secondary_burn : nat64;
@@ -43,6 +44,7 @@ type TokenRecord = record {
   pool_creation_failed : bool;
   initial_reward_per_burn_unit : nat64;
   initial_primary_mint : nat64;
+  threshold_multiplier : float64;
   primary_token_id : principal;
   caller : principal;
   pool_created_at : nat64;
@@ -97,6 +99,7 @@ service : () -> {
       nat64,
       nat64,
       nat64,
+      float64,
       nat64,
       nat64,
       nat64,
@@ -111,8 +114,13 @@ service : () -> {
   get_treasury_balance : () -> (Result_4) query;
   get_upcomming : () -> (vec record { nat64; TokenRecord }) query;
   preview_tokenomics_graphs : (PreviewArgs) -> (GraphData);
-  preview_tokenomics_schedule : (nat64, nat64, nat64, nat64, nat64) -> (
-      TokenomicsSchedule,
-    );
+  preview_tokenomics_schedule : (
+      nat64,
+      nat64,
+      nat64,
+      nat64,
+      nat64,
+      float64,
+    ) -> (TokenomicsSchedule);
   retry_pool_creation : (nat64) -> (Result);
 }
