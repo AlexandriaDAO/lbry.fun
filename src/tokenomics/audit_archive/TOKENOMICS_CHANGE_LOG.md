@@ -30,24 +30,12 @@ This meant the `initialRewardPerBurnUnit` parameter had no effect on the tokenom
 
 ### Completed Changes
 
-#### TOK-012: Added Detailed Logging to mint_primary (LOW RISK)
-- **File**: src/update.rs
-- **Change**: Added comprehensive logging to debug "No more primary can be minted" errors
-- **Timestamp**: 2025-01-03
-- **Details**: 
-  - Added early debug log showing total_burned_secondary and secondary_burn values
-  - Added logging inside early threshold check (total_after_burn vs last_threshold)
-  - Log threshold state at start of function (current index, threshold, reward, total burned)
-  - Added critical check logging when current reward rate is 0
-  - Log calculation details in threshold crossing loop
-  - Log when not crossing threshold with all relevant values
-  - Log final calculation results before zero check (phase_mint_primary, remaining_primary, etc)
-  - Log supply check details (total_minted, max_supply)
-  - Added zero primary tokens detailed log
-  - Added final success log showing minted amount
-- **Security Impact**: Read-only logging only, no functional changes to logic
-- **Important Note**: Temporarily refactored early threshold check for clarity but reverted to original structure
-- **Test Status**: Pending
+#### [REMOVED] TOK-012: Detailed Logging Removed for Security
+- **Original Change**: Added comprehensive logging to mint_primary for debugging
+- **Removal Date**: 2025-01-10
+- **Reason for Removal**: Unbounded log growth could cause upgrade failures
+- **Security Issue**: The TOKEN_LOGS BTreeMap has unbounded growth. During canister upgrades, all data must be deserialized. Excessive logs could exceed the instruction limit during deserialization, permanently breaking upgrades.
+- **Resolution**: Removed all non-essential logging from mint_primary to eliminate this risk
 
 #### TOK-011: Distribution Model Change (HIGH RISK)
 - **File**: tokenomics.did

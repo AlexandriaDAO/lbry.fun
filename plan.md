@@ -1,3 +1,31 @@
+This app is made with a modified fork of the 'tokenomics' and 'icp_swap' canisters. In the process of making them configurable for this launchpad I added changes all of which are recorded in the @src/icp_swap/ICP_SWAP_CHANGE_LOG.md and @src/tokenomics/TOKENOMICS_CHANGE_LOG.md
+
+
+You could see the original audit in @audit.md, the issues of which have all been addressed but this will give you a feel of the general style in which to explain vulnerabilities.
+
+
+We're now going through each of the changes listed throughout the entire changelog and doing a vulnerability check, and writing out an audit report for those newly introduced changes with the goal of moving the changelog and changelog_audit files into an archive folder after correcting all the newly introdcued vulnerabilitiesl.
+
+Start by filling in the @src/icp_swap/ICP_SWAP_CHANGE_LOG_AUDIT.md with an audit report for the first 10 changes and then we'll stop for a review. Think about all possible issues that were introduced before moving on, and don't write down the issue until you've clearly identified the problem scenario.
+
+Don't worry about frontend api compatability, as that would obviously have come up naturally in building and testing this and we have a fresh project here so backwards compatability is not an issue. This is about opening up subtle cracks that could be exploited.
+
+Always understand the existing architecture before proposing fixes. If you're going to propose a vulnerability, stop, assess the failure scenario and prove it, e.g., this is exploited when X user does X or this fails when X canister gets upgraded while X function is being called, etc. If there's no failure scenario, don't label it as a vulnerability.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 When you come back: 
 - Do some stress integrationtesting with the bot1 canister and make sure the graphs align.
 - Audit the existing code based on the changelogs.

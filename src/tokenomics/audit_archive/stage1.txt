@@ -1,0 +1,3 @@
+These changelogs and audits were for the purpose of making tokenomics customisable to accept the custom parameters from lbry_fun.
+
+That's it. All risks from this changelog have been assessed and the canister is safe (assuming the lbry_fun canister enforces good input parameters).
