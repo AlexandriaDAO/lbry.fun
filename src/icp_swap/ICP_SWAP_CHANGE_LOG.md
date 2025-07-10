@@ -274,3 +274,53 @@ This file tracks all changes made to convert the audited icp_swap canister into 
 - The tokenomics canister was rejecting calls from icp_swap because it checks against a hardcoded canister ID
 - This fix requires changes to both icp_swap and tokenomics canisters to pass the correct authorization
 - The change is marked HIGH risk because it affects core functionality (execute_burn/mint_primary flow)
+
+### Critical Bug Fixes for Hardcoded Canister IDs (2025-01-10)
+
+| Change ID | File | Risk | Description | Original | New | Justification | Security Impact | Test Status |
+|-----------|------|------|-------------|----------|-----|---------------|-----------------|-------------|
+| SWAP-113 | src/utils.rs | HIGH | Fix get_total_primary_staked hardcoded ID | Uses `get_principal(PRIMARY_TOKEN_CANISTER_ID)` | Get ID from CONFIGS | Was querying wrong canister | Critical - fix data accuracy | Pending |
+| SWAP-114 | src/utils.rs | HIGH | Fix get_primary_fee hardcoded ID | Uses `get_principal(PRIMARY_TOKEN_CANISTER_ID)` | Get ID from CONFIGS | Was querying wrong canister | Critical - fix functionality | Pending |
+| SWAP-115 | src/utils.rs | MEDIUM | Remove dead code tokenomics_burn_secondary_stats | Function with hardcoded ID marked `//remove` | Deleted entire function | Unused code with wrong canister ID | Cleanup - prevent future bugs | Pending |
+
+## Summary Statistics
+- Total Changes: 128 (was 125, added 3 fixes)
+- Low Risk: 82
+- Medium Risk: 41 (was 40, added 1 medium risk)
+- High Risk: 5 (was 3, added 2 high risk fixes)
+- Fixed: 9
+- Tested: 0
+- Pending: 119 (was 116, added 3 pending)
+
+## Critical Discovery
+- The functions `get_total_primary_staked` and `get_primary_fee` were using hardcoded canister IDs from the parent Alexandria project
+- This would cause them to query the wrong canisters entirely, breaking functionality for all new token launches
+- These functions now properly use the configurable canister IDs from CONFIGS storage
+- Removed dead code `tokenomics_burn_secondary_stats` which also had hardcoded IDs and was marked for removal
+
+### Default Rate Vulnerability Fix (2025-01-10)
+
+| Change ID | File | Risk | Description | Original | New | Justification | Security Impact | Test Status |
+|-----------|------|------|-------------|----------|-----|---------------|-----------------|-------------|
+| SWAP-116 | src/queries.rs | HIGH | Change get_current_secondary_ratio return type | `-> u64` | `-> Option<u64>` | Separate "no data" from "price floor" | Prevents exploitation | Pending |
+| SWAP-117 | src/queries.rs | HIGH | Remove default fallback | `None => return DEFAULT_SECONDARY_RATIO` | `None => None` | Don't use $4 default when no rate set | Critical fix | Pending |
+| SWAP-118 | icp_swap.did | HIGH | Update interface | `get_current_secondary_ratio : () -> (nat64) query` | `get_current_secondary_ratio : () -> (opt nat64) query` | Match implementation | API consistency | Pending |
+| SWAP-119 | src/update.rs | HIGH | Handle None in swap | Direct call to get ratio | Check for None, return error | Block swaps until rate available | Prevents wrong pricing | Pending |
+| SWAP-120 | src/update.rs | HIGH | Handle None in burn_secondary | Direct call to get ratio | Check for None, return error | Block burns until rate available | Prevents wrong pricing | Pending |
+| SWAP-121 | src/queries.rs | LOW | Remove unused import | `DEFAULT_SECONDARY_RATIO` imported | Removed from imports | No longer needed | Clean up warning | Fixed |
+| SWAP-122 | src/utils.rs | LOW | Fix error type | `ConfigurationError` (doesn't exist) | `StateError` | Use existing error type | Compilation fix | Fixed |
+
+## Summary Statistics
+- Total Changes: 135 (was 133, added 2 compilation fixes)
+- Low Risk: 84 (was 82, added 2 low risk)
+- Medium Risk: 41
+- High Risk: 10
+- Fixed: 11 (was 9, added 2 fixed)
+- Tested: 0
+- Pending: 124
+
+## Critical Vulnerability Details
+- **Issue**: DEFAULT_SECONDARY_RATIO (400 = $4.00) was used both as a price floor AND as a fallback when no rate exists
+- **Impact**: New tokens could be purchased at $4/ICP rate even if ICP was worth $10+, creating up to 60% discount exploit window
+- **Fix**: Return None when no rate is set, forcing operations to wait for XRC oracle update
+- **Result**: Eliminates the vulnerability window while maintaining the $4 floor when price is legitimately low

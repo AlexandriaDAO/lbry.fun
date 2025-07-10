@@ -126,27 +126,6 @@ pub fn principal_to_subaccount(principal_id: &Principal) -> [u8; 32] {
 //     }
 // }
 
-//remove
-pub async fn tokenomics_burn_secondary_stats() -> Result<(u64, u64), String> {
-    let result: Result<(u64, u64), String> = ic_cdk
-        ::call::<(), (u64, u64)>(
-            Principal::from_text(TOKENOMICS_CANISTER_ID).expect("Could not decode the principal."),
-            "get_max_stats",
-            ()
-        ).await
-        .map_err(|e: (ic_cdk::api::call::RejectionCode, String)| {
-            format!("failed to call ledger: {:?}", e)
-        });
-
-    match result {
-        Ok((max_threshold, total_burned)) => {
-            return Ok((max_threshold, total_burned));
-        }
-        Err(e) => {
-            return Err(e);
-        }
-    }
-}
 
 // pub static TOTAL_ARCHIVED_BALANCE: RefCell<u64> = RefCell::new(0);
 pub(crate) fn add_to_distribution_intervals(amount: u32) -> Result<(), ExecutionError> {
@@ -292,7 +271,16 @@ pub(crate) fn archive_user_transaction(amount: u64) -> Result<String, ExecutionE
 }
 
 pub(crate) async fn get_total_primary_staked() -> Result<u64, ExecutionError> {
-    let primary_canister_id: Principal = get_principal(PRIMARY_TOKEN_CANISTER_ID);
+    // Get primary token ID from CONFIGS
+    let primary_canister_id = CONFIGS.with(|configs| {
+        configs.borrow()
+            .get(&())
+            .map(|c| c.primary_token_id)
+            .ok_or_else(|| ExecutionError::StateError(
+                "Primary token ID not configured".to_string()
+            ))
+    })?;
+    
     let canister_id = ic_cdk::api::id();
     let args = BalanceOfArgs {
         owner: canister_id,
@@ -378,7 +366,16 @@ pub(crate) async fn fetch_canister_icp_balance() -> Result<u64, ExecutionError> 
 }
 
 pub(crate) async fn get_primary_fee() -> Result<u64, ExecutionError> {
-    let primary_canister_id: Principal = get_principal(PRIMARY_TOKEN_CANISTER_ID);
+    // Get primary token ID from CONFIGS
+    let primary_canister_id = CONFIGS.with(|configs| {
+        configs.borrow()
+            .get(&())
+            .map(|c| c.primary_token_id)
+            .ok_or_else(|| ExecutionError::StateError(
+                "Primary token ID not configured".to_string()
+            ))
+    })?;
+    
     let result: Result<(Nat,), (RejectionCode, String)> = ic_cdk::call(
         primary_canister_id,
         "icrc1_fee",
@@ -397,7 +394,7 @@ pub(crate) async fn get_primary_fee() -> Result<u64, ExecutionError> {
                     caller(),
                     "get_primary_fee",
                     ExecutionError::CanisterCallFailed {
-                        canister: PRIMARY_TOKEN_CANISTER_ID.to_string(),
+                        canister: "PRIMARY".to_string(),
                         method: "icrc1_fee".to_string(),
                         details: format!("Rejection code: {:?}, Message: {}", code, msg),
                     }

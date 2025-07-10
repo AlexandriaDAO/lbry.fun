@@ -155,7 +155,11 @@ pub async fn swap(
         "swap",
         &format!("Successfully deposited {} ICP (e8s) into canister", amount_icp)
     );
-    let icp_rate_in_cents: u64 = get_current_secondary_ratio();
+    let icp_rate_in_cents: u64 = get_current_secondary_ratio().ok_or_else(|| 
+        ExecutionError::new_with_log(caller, "swap", ExecutionError::StateError(
+            "Exchange rate not yet available. Please try again in a few moments.".to_string()
+        ))
+    )?;
     // checke here if return
     let secondary_amount: u64 = amount_icp.checked_mul(icp_rate_in_cents).ok_or_else(|| 
         ExecutionError::new_with_log(caller, "swap", ExecutionError::MultiplicationOverflow {
@@ -240,7 +244,11 @@ pub async fn burn_secondary(
     }
 
     //Dynamic price
-    let mut icp_rate_in_cents: u64 = get_current_secondary_ratio();
+    let mut icp_rate_in_cents: u64 = get_current_secondary_ratio().ok_or_else(|| 
+        ExecutionError::new_with_log(caller, "burn_secondary", ExecutionError::StateError(
+            "Exchange rate not yet available. Please try again in a few moments.".to_string()
+        ))
+    )?;
     let mut amount_icp_e8s = amount_secondary.checked_mul(100_000_000).ok_or_else(|| {
         ExecutionError::new_with_log(caller, "burn_secondary", ExecutionError::MultiplicationOverflow {
             operation: DEFAULT_MULTIPLICATION_OVERFLOW_ERROR.to_string(),

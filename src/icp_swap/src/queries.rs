@@ -1,7 +1,7 @@
 use crate::{
     storage::*,
     utils::{
-        principal_to_subaccount, is_token_live, DEFAULT_SECONDARY_RATIO, SCALING_FACTOR, STAKING_REWARD_PERCENTAGE,
+        principal_to_subaccount, is_token_live, SCALING_FACTOR, STAKING_REWARD_PERCENTAGE,
     },
     Configs,
     CONFIGS,
@@ -61,12 +61,12 @@ pub fn get_current_staking_reward_percentage() -> String {
 }
 
 #[query]
-pub fn get_current_secondary_ratio() -> u64 {
+pub fn get_current_secondary_ratio() -> Option<u64> {
     let secondary_ratio_map = get_secondary_ratio_mem();
 
     match secondary_ratio_map.get(&()) {
-        Some(secondary_ratio) => return secondary_ratio.ratio, // Return the ratio if it exists
-        None => return DEFAULT_SECONDARY_RATIO,           //default case
+        Some(secondary_ratio) => Some(secondary_ratio.ratio), // Return the ratio if it exists
+        None => None,                                          // Return None if no ratio is set
     }
 }
 

@@ -1,7 +1,7 @@
 This app is made with a modified fork of the 'tokenomics' and 'icp_swap' canisters. In the process of making them configurable for this launchpad I added changes all of which are recorded in the @src/icp_swap/ICP_SWAP_CHANGE_LOG.md and @src/tokenomics/TOKENOMICS_CHANGE_LOG.md
 
 
-You could see the original audit in @audit.md, the issues of which have all been addressed but this will give you a feel of the general style in which to explain vulnerabilities.
+You could see the original audit in @audit_archive.md, the issues of which have all been addressed but this will give you a feel of the general style in which to explain vulnerabilities.
 
 
 We're now going through each of the changes listed throughout the entire changelog and doing a vulnerability check, and writing out an audit report for those newly introduced changes with the goal of moving the changelog and changelog_audit files into an archive folder after correcting all the newly introdcued vulnerabilitiesl.

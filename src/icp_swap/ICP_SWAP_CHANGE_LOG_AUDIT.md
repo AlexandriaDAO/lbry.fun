@@ -100,3 +100,164 @@ All changes in SWAP-011 to SWAP-020 are simple renaming operations that do not i
 
 ### Conclusion:
 SWAP-011 to SWAP-020 contain no security vulnerabilities or exploitable issues.
+
+## Changes SWAP-021 to SWAP-030: Utility Function Renaming
+
+### Summary
+These 10 changes continue the systematic token renaming from ALEX/LBRY to primary/secondary, focusing on utility functions in src/utils.rs and src/queries.rs.
+
+### Security Assessment: NO VULNERABILITIES FOUND
+
+### Detailed Analysis:
+
+#### Changes Reviewed:
+- **SWAP-021**: Rename `tokenomics_burn_LBRY_stats()` → `tokenomics_burn_secondary_stats()` (function later removed in SWAP-115)
+- **SWAP-022**: Rename `update_current_LBRY_ratio()` → `update_current_secondary_ratio()`
+- **SWAP-023**: Update comment from "LBRY ratio" to "secondary ratio"
+- **SWAP-024**: Rename variable `lbry_ratio` → `secondary_ratio`
+- **SWAP-025**: Rename `update_ALEX_fee()` → `update_primary_fee()`
+- **SWAP-026**: Update storage reference `ALEX_FEE.with()` → `PRIMARY_FEE.with()`
+- **SWAP-027**: Rename `get_total_alex_staked()` → `get_total_primary_staked()`
+- **SWAP-028**: Update variable `alex_canister_id` → `primary_canister_id`
+- **SWAP-029**: Update error string from "ALEX" to "PRIMARY"
+- **SWAP-030**: Rename `get_alex_fee()` → `get_primary_fee()`
+
+### Security Considerations:
+
+#### 1. ICP Upgrade Safety
+The Internet Computer's upgrade model ensures these renames are safe:
+- Upgrades are atomic (all-or-nothing)
+- Canister is stopped during upgrade (no concurrent execution)
+- Timers are cancelled and must be explicitly restarted
+- No partial states or race conditions possible
+
+#### 2. Storage Access Patterns
+Functions like `update_current_secondary_ratio()` (SWAP-022) and `update_primary_fee()` (SWAP-025) maintain identical storage access patterns:
+- Same underlying memory IDs
+- Same data structures
+- Same access methods through RefCell
+
+#### 3. Cross-Canister Calls
+Functions making cross-canister calls (SWAP-027, SWAP-030) are renamed but functionality unchanged:
+- Still use the same canister IDs (hardcoded at this point, fixed later)
+- Same call patterns and error handling
+- No new failure modes introduced
+
+#### 4. Compiler Enforcement
+Rust's type system ensures all renamed functions are updated at all call sites, preventing any mismatch issues.
+
+### Notable Observations:
+
+1. **Dead Code**: SWAP-021 renames a function marked `//remove` that was later deleted in SWAP-115. No security impact.
+
+2. **Timer-Called Functions**: While `update_current_secondary_ratio()` is called by timers, the ICP ensures timers don't execute during upgrades, eliminating any upgrade-related vulnerabilities.
+
+3. **Error Messages**: String literals updated for consistency (SWAP-029), improving debugging without affecting security.
+
+### Verification Performed:
+- ✓ All function signatures remain identical (only names changed)
+- ✓ Storage access patterns unchanged
+- ✓ No new external dependencies introduced
+- ✓ No logic modifications
+- ✓ Type safety maintained by Rust compiler
+
+### Conclusion:
+SWAP-021 to SWAP-030 are purely cosmetic renaming changes that maintain identical functionality and security properties. The Internet Computer's robust upgrade model prevents any timing-related vulnerabilities. These changes improve code consistency without introducing any security risks.
+
+## Changes SWAP-031 to SWAP-040: Query Functions and Initialization Renaming
+
+### Summary
+These 10 changes continue token renaming in query functions (src/queries.rs) and initialization code (src/script.rs), plus two minor bug fixes.
+
+### Security Assessment: NO VULNERABILITIES FOUND
+
+### Detailed Analysis:
+
+#### Changes Reviewed:
+- **SWAP-031**: Update import `DEFAULT_LBRY_RATIO` → `DEFAULT_SECONDARY_RATIO` in queries.rs
+- **SWAP-032**: Add % symbol to staking percentage display (bug fix)
+- **SWAP-033**: Rename `get_current_LBRY_ratio()` → `get_current_secondary_ratio()`
+- **SWAP-034**: Update variable `lbry_ratio_map` → `secondary_ratio_map`
+- **SWAP-035**: Update variable in pattern match `lbry_ratio` → `secondary_ratio`
+- **SWAP-036**: Update default return value to use `DEFAULT_SECONDARY_RATIO`
+- **SWAP-037**: Fix typo in comment: "defult" → "default"
+- **SWAP-038**: Update import `LbryRatio` → `SecondaryRatio` in script.rs
+- **SWAP-039**: Update import `LBRY_RATIO` → `SECONDARY_RATIO` in script.rs
+- **SWAP-040**: Update InitArgs field `lbry_ratio` → `secondary_ratio`
+
+### Security Analysis:
+
+#### 1. Query Function Safety (SWAP-031 to SWAP-037)
+All changes in queries.rs affect read-only query functions:
+- Cannot modify canister state
+- Cannot perform transfers or burns
+- Safe default fallback behavior preserved
+- No attack surface exposed
+
+#### 2. Display String Fix (SWAP-032)
+Adding % symbol to staking percentage display:
+- Pure cosmetic change
+- Improves user interface clarity
+- No computation or logic affected
+
+#### 3. Initialization Parameter Renaming (SWAP-038 to SWAP-040)
+Changes to InitArgs struct in script.rs:
+- Only affects fresh canister initialization (not upgrades)
+- Field rename maintains same type and semantics
+- No change to initialization logic
+- Compiler ensures all references updated
+
+#### 4. Default Value Behavior (SWAP-036)
+The function returns `DEFAULT_SECONDARY_RATIO` when no value is found:
+- This is a safety mechanism, not a vulnerability
+- Ensures predictable behavior
+- Same default value as before rename
+
+### Key Observations:
+
+1. **Read-Only Operations**: Most changes affect query functions which are inherently safe
+2. **Type Safety**: Rust compiler ensures renamed types are used consistently
+3. **No Logic Changes**: All changes are naming updates, no behavioral modifications
+4. **Bug Fixes**: SWAP-032 and SWAP-037 fix minor display/documentation issues
+
+### Verification Checklist:
+- ✓ No state-modifying operations affected
+- ✓ Query functions remain read-only
+- ✓ InitArgs changes only affect new deployments
+- ✓ Default values preserved
+- ✓ No cross-canister calls modified
+
+### Initial Assessment:
+The renaming changes themselves (SWAP-031 to SWAP-040) do not introduce vulnerabilities. However, our analysis revealed a pre-existing critical vulnerability that becomes apparent when examining these changes.
+
+### Critical Vulnerability Discovered: Default Rate Exploitation
+
+#### Vulnerability Details:
+**Severity**: HIGH  
+**Location**: `get_current_secondary_ratio()` function (SWAP-033-036)  
+**Root Cause**: Conflation of "price floor" with "no data fallback"
+
+#### The Problem:
+The system uses `DEFAULT_SECONDARY_RATIO = 400` ($4.00) for two distinct purposes:
+1. As a minimum price floor when ICP trades below $4.00
+2. As a fallback value when no exchange rate has been set
+
+This creates a critical vulnerability window:
+- New canisters start with no ratio stored
+- Until XRC oracle provides the first rate (up to 24 hours)
+- All swaps use the $4.00 fallback rate
+- If ICP is actually worth $10+, users get tokens at 40% of intended price
+
+#### Attack Scenario:
+1. New token launches when ICP trades at $10
+2. Attacker immediately calls swap before XRC update
+3. Buys tokens at $4.00 rate instead of $10.00 rate
+4. 60% discount exploitation window
+
+#### Why Original Audit Missed This:
+- Original Alexandria project was a single trusted deployment
+- This fork is a launchpad where multiple tokens are launched
+- The trust model changed but the initialization logic didn't adapt
+
+### Conclusion:
+While SWAP-031 to SWAP-040 are simple renames, they exposed a critical pre-existing vulnerability where new tokens can be purchased at incorrect rates before the XRC oracle initializes the exchange rate.
