@@ -1,5 +1,5 @@
 use crate::{
-    get_current_threshold_index_mem, get_principal, get_total_lbry_burned_mem, Logs, TokenLogs, ALEX_CANISTER_ID, ALEX_PER_THRESHOLD, LBRY_THRESHOLDS, LOGS, TOKEN_LOGS
+    get_current_threshold_index_mem, get_principal, get_total_secondary_burned_mem, Logs, TokenLogs, PRIMARY_CANISTER_ID, PRIMARY_PER_THRESHOLD, SECONDARY_THRESHOLDS, LOGS, TOKEN_LOGS
 };
 use candid::{CandidType, Nat, Principal};
 use ic_cdk::{
@@ -84,8 +84,8 @@ struct GetTokensArgs {
 }
 
 #[query]
-pub fn get_total_LBRY_burn() -> u64 {
-    let result = get_total_lbry_burned_mem();
+pub fn get_total_SECONDARY_burn() -> u64 {
+    let result = get_total_secondary_burned_mem();
     return result.get(&()).unwrap_or(0);
 }
 
@@ -95,28 +95,28 @@ pub fn get_current_threshold_index() -> u32 {
     return result.get(&()).unwrap_or(0);
 }
 #[query]
-pub fn get_current_ALEX_rate() -> u64 {
+pub fn get_current_PRIMARY_rate() -> u64 {
     let current_threshold = get_current_threshold_index();
-    ALEX_PER_THRESHOLD[current_threshold as usize]
+    PRIMARY_PER_THRESHOLD[current_threshold as usize]
 }
 #[query]
-pub fn get_current_LBRY_threshold() -> u64 {
+pub fn get_current_SECONDARY_threshold() -> u64 {
     let current_threshold = get_current_threshold_index();
-    LBRY_THRESHOLDS[current_threshold as usize]
+    SECONDARY_THRESHOLDS[current_threshold as usize]
 }
 
 #[query]
 pub fn get_max_stats() -> (u64, u64) {
-    let max_threshold = LBRY_THRESHOLDS[LBRY_THRESHOLDS.len() - 1];
-    let total_burned = get_total_LBRY_burn();
+    let max_threshold = SECONDARY_THRESHOLDS[SECONDARY_THRESHOLDS.len() - 1];
+    let total_burned = get_total_SECONDARY_burn();
     (max_threshold, total_burned)
 }
 #[update]
-pub async fn fetch_total_minted_ALEX() -> Result<u64, String> {
-    let alex_canister_id = get_principal(ALEX_CANISTER_ID);
+pub async fn fetch_total_minted_PRIMARY() -> Result<u64, String> {
+    let primary_canister_id = get_principal(PRIMARY_CANISTER_ID);
 
     // Call the ledger canister's `icrc1_total_supply` method with no input, expecting a `Nat` response
-    let result: Result<(Nat,), _> = ic_cdk::call(alex_canister_id, "icrc1_total_supply", ())
+    let result: Result<(Nat,), _> = ic_cdk::call(primary_canister_id, "icrc1_total_supply", ())
         .await
         .map_err(|e: (ic_cdk::api::call::RejectionCode, String)| {
             format!("Failed to call ledger: {:?}", e)

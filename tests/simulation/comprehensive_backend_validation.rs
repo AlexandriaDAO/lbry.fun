@@ -1,5 +1,5 @@
 use candid::{decode_one, Encode, CandidType};
-use crate::simulation::common::{setup_test_environment, setup_lbry_fun_canister};
+use crate::simulation::common::{setup_test_environment, setup_secondary_fun_canister};
 use serde::Deserialize;
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -330,7 +330,7 @@ fn get_complete_phase1_test_cases() -> Vec<TestCase> {
 #[test]
 fn test_complete_phase1_backend_validation() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     let test_cases = get_complete_phase1_test_cases();
     let mut total_tests = 0;
@@ -406,7 +406,7 @@ fn test_complete_phase1_backend_validation() {
 #[test]
 fn test_economic_cost_validation() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     const SECONDARY_BURN_USD_COST: f64 = 0.005;
     
@@ -486,7 +486,7 @@ fn test_economic_cost_validation() {
 #[test]
 fn test_backend_edge_cases() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     println!("🔍 Testing backend edge cases and boundary conditions...\n");
     

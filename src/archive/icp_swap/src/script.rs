@@ -14,7 +14,7 @@ use crate::{
     APY,
     ARCHIVED_TRANSACTION_LOG,
     DISTRIBUTION_INTERVALS,
-    LBRY_RATIO,
+    SECONDARY_RATIO,
     STAKES,
     TOTAL_ARCHIVED_BALANCE,
     TOTAL_UNCLAIMED_ICP_REWARD,
@@ -28,7 +28,7 @@ pub struct InitArgs {
     pub stakes: Option<Vec<(Principal, Stake)>>,
     pub archived_transaction_log: Option<Vec<(Principal, ArchiveBalance)>>,
     pub total_unclaimed_icp_reward: Option<u64>,
-    pub lbry_ratio: Option<LbryRatio>,
+    pub secondary_ratio: Option<LbryRatio>,
     pub total_archived_balance: Option<u64>,
     pub apy: Option<Vec<(u32, DailyValues)>>,
     pub distribution_intervals: Option<u32>,
@@ -52,9 +52,9 @@ fn initialize_globals(args: InitArgs) {
         });
     }
 
-    if let Some(lbry_ratio) = args.lbry_ratio {
-        LBRY_RATIO.with(|m| {
-            m.borrow_mut().insert((), lbry_ratio);
+    if let Some(secondary_ratio) = args.secondary_ratio {
+        SECONDARY_RATIO.with(|m| {
+            m.borrow_mut().insert((), secondary_ratio);
         });
     }
 
@@ -118,11 +118,11 @@ fn init(args: Option<InitArgs>) {
                     &format!("Total unclaimed reward: {}", unclaimed_reward)
                 );
             }
-            if let Some(ref ratio) = init_args.lbry_ratio {
+            if let Some(ref ratio) = init_args.secondary_ratio {
                 register_info_log(
                     caller(),
                     "init",
-                    &format!("LBRY ratio provided: {}", ratio.ratio)
+                    &format!("SECONDARY ratio provided: {}", ratio.ratio)
                 );
             }
 

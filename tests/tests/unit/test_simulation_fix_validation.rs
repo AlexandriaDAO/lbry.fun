@@ -8,13 +8,13 @@ fn test_simulation_fix_prevents_overminting() {
     
     let pic = pocket_ic::PocketIc::new();
     
-    // Deploy lbry_fun canister with the fixed code
-    let lbry_fun_wasm = include_bytes!("../../../../target/wasm32-unknown-unknown/release/lbry_fun.wasm");
+    // Deploy secondary_fun canister with the fixed code
+    let secondary_fun_wasm = include_bytes!("../../../../target/wasm32-unknown-unknown/release/secondary_fun.wasm");
     let canister_id = pic.create_canister();
     pic.add_cycles(canister_id, 2_000_000_000_000);
     
     let arg = Encode!(&()).unwrap();
-    pic.install_canister(canister_id, lbry_fun_wasm.to_vec(), arg, None);
+    pic.install_canister(canister_id, secondary_fun_wasm.to_vec(), arg, None);
     
     // Test default preset
     println!("\nTesting default preset:");
@@ -56,7 +56,7 @@ fn test_preset(
     halving: u64,
     reward_rate: u64
 ) {
-    use lbry_fun::simulation::{PreviewArgs, GraphData};
+    use secondary_fun::simulation::{PreviewArgs, GraphData};
     
     let args = PreviewArgs {
         primary_max_supply: max_supply,
@@ -105,15 +105,15 @@ fn test_graph_data_units() {
     
     let pic = pocket_ic::PocketIc::new();
     
-    // Deploy lbry_fun canister
-    let lbry_fun_wasm = include_bytes!("../../../../target/wasm32-unknown-unknown/release/lbry_fun.wasm");
+    // Deploy secondary_fun canister
+    let secondary_fun_wasm = include_bytes!("../../../../target/wasm32-unknown-unknown/release/secondary_fun.wasm");
     let canister_id = pic.create_canister();
     pic.add_cycles(canister_id, 2_000_000_000_000);
     
     let arg = Encode!(&()).unwrap();
-    pic.install_canister(canister_id, lbry_fun_wasm.to_vec(), arg, None);
+    pic.install_canister(canister_id, secondary_fun_wasm.to_vec(), arg, None);
     
-    use lbry_fun::simulation::{PreviewArgs, GraphData};
+    use secondary_fun::simulation::{PreviewArgs, GraphData};
     
     let args = PreviewArgs {
         primary_max_supply: 21_000_000,

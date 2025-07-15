@@ -8,13 +8,13 @@ use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::{ BTreeSet, HashMap };
 
-use crate::utils::DEFAULT_LBRY_RATIO;
+use crate::utils::DEFAULT_SECONDARY_RATIO;
 use crate::ExecutionError;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 // Memory identifiers for each variable
 pub const TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID: MemoryId = MemoryId::new(0);
-pub const LBRY_RATIO_MEM_ID: MemoryId = MemoryId::new(1);
+pub const SECONDARY_RATIO_MEM_ID: MemoryId = MemoryId::new(1);
 pub const TOTAL_ARCHIVED_BALANCE_MEM_ID: MemoryId = MemoryId::new(2);
 pub const APY_MEM_ID: MemoryId = MemoryId::new(3);
 pub const STAKES_MEM_ID: MemoryId = MemoryId::new(4);
@@ -49,8 +49,8 @@ thread_local! {
             MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID))
         )
     );
-    pub static LBRY_RATIO: RefCell<StableBTreeMap<(), LbryRatio, Memory>> = RefCell::new(
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LBRY_RATIO_MEM_ID)))
+    pub static SECONDARY_RATIO: RefCell<StableBTreeMap<(), LbryRatio, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(SECONDARY_RATIO_MEM_ID)))
     );
     pub static TOTAL_ARCHIVED_BALANCE: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_ARCHIVED_BALANCE_MEM_ID)))
@@ -62,7 +62,7 @@ thread_local! {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LOGS_MEM_ID)))
     );
     pub static LOG_COUNTER: RefCell<u64> = RefCell::new(0);
-    pub static ALEX_FEE: RefCell<u64> = RefCell::new(0);
+    pub static PRIMARY_FEE: RefCell<u64> = RefCell::new(0);
 }
 
 pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u64, Memory> {
@@ -73,9 +73,9 @@ pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u64, Memory> {
     })
 }
 
-pub fn get_lbry_ratio_mem() -> StableBTreeMap<(), LbryRatio, Memory> {
-    LBRY_RATIO.with(|ratio_map| {
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LBRY_RATIO_MEM_ID)))
+pub fn get_secondary_ratio_mem() -> StableBTreeMap<(), LbryRatio, Memory> {
+    SECONDARY_RATIO.with(|ratio_map| {
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(SECONDARY_RATIO_MEM_ID)))
     })
 }
 pub fn get_total_archived_balance_mem() -> StableBTreeMap<(), u64, Memory> {
@@ -105,7 +105,7 @@ pub struct LbryRatio {
 impl Default for LbryRatio {
     fn default() -> Self {
         LbryRatio {
-            ratio: DEFAULT_LBRY_RATIO, // Default value
+            ratio: DEFAULT_SECONDARY_RATIO, // Default value
             time: ic_cdk::api::time(), // Current timestamp
         }
     }

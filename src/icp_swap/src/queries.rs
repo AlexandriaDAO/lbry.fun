@@ -107,9 +107,9 @@ pub fn get_all_apy_values() -> Vec<(u32, u128)> {
             .iter()
             .map(|(day, daily_values)| {
                 // Extract the day and its corresponding reward value
-                let icp_reward_per_alex =
+                let icp_reward_per_primary =
                     daily_values.values.get(&day).cloned().unwrap_or_default();
-                (day, icp_reward_per_alex)
+                (day, icp_reward_per_primary)
             })
             .collect();
 

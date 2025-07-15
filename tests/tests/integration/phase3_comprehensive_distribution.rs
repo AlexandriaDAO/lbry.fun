@@ -198,14 +198,14 @@ mod comprehensive_distribution_tests {
         let distributed = pool_before.saturating_sub(pool_after);
         println!("Total distributed: {} e8s ({} ICP)", distributed, distributed / E8S);
         
-        // Verify distribution - only LBRY fee (1% of 1%) leaves the canister
-        let expected_external_distribution = pool_before / 10000; // 0.01% (LBRY fee)
+        // Verify distribution - only SECONDARY fee (1% of 1%) leaves the canister
+        let expected_external_distribution = pool_before / 10000; // 0.01% (SECONDARY fee)
         let tolerance = expected_external_distribution / 10; // 10% tolerance
         
         assert!(
             distributed >= expected_external_distribution - tolerance && 
             distributed <= expected_external_distribution + tolerance,
-            "External distribution should be ~0.01% of pool (LBRY fee). Expected: {}, Got: {}", 
+            "External distribution should be ~0.01% of pool (SECONDARY fee). Expected: {}, Got: {}", 
             expected_external_distribution, distributed
         );
         

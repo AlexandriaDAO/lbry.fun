@@ -1,5 +1,5 @@
 use candid::{decode_one, Encode, CandidType};
-use crate::simulation::common::{setup_test_environment, setup_lbry_fun_canister};
+use crate::simulation::common::{setup_test_environment, setup_secondary_fun_canister};
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -300,7 +300,7 @@ fn validate_graph_data(test_case: &TestCase, graph_data: &GraphData) -> Validati
 #[test]
 fn test_backend_graph_accuracy_phase1() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     let test_cases = get_phase1_test_cases();
     let mut results = Vec::new();
@@ -366,7 +366,7 @@ fn test_backend_graph_accuracy_phase1() {
 #[test]
 fn test_backend_fair_launch_scenarios() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     let test_cases = get_phase15_critical_test_cases();
     let mut results = Vec::new();
@@ -421,7 +421,7 @@ fn test_backend_fair_launch_scenarios() {
 #[test]
 fn test_backend_precision_requirements() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     // Test with high-precision requirements
     let precision_test = TestCase {
@@ -481,7 +481,7 @@ fn calculate_percentage_difference(expected: f64, actual: f64) -> f64 {
 #[test]
 fn test_frontend_backend_discrepancy_measurement() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     // Use a controlled test case for precise measurement
     let test_case = TestCase {

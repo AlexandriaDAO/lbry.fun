@@ -98,9 +98,9 @@ fn get_exchange_rate(request: GetExchangeRateRequest) -> GetExchangeRateResult {
             },
         (AssetClass::Cryptocurrency, AssetClass::Cryptocurrency)
             if request.base_asset.symbol == "ICP" && 
-               request.quote_asset.symbol == "LBRY" => {
-                ic_cdk::println!("XRC: Matched ICP/LBRY pair");
-                400_000_000  // 4.00 LBRY per ICP
+               request.quote_asset.symbol == "SECONDARY" => {
+                ic_cdk::println!("XRC: Matched ICP/SECONDARY pair");
+                400_000_000  // 4.00 SECONDARY per ICP
             },
         _ => {
             ic_cdk::println!("XRC: No matching pair found");

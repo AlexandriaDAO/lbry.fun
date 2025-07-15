@@ -12,7 +12,7 @@ use std::cell::RefCell;
 use crate::ExecutionError;
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
-pub const LBRY_THRESHOLDS: [u64; 18] = [
+pub const SECONDARY_THRESHOLDS: [u64; 18] = [
     21_000,         // 21,000.00
     42_000,         // 42,000.00
     84_000,         // 84,000.00
@@ -33,7 +33,7 @@ pub const LBRY_THRESHOLDS: [u64; 18] = [
     61_632_592_000, // 61,632,592,000.00  61632592000
 ];
 
-pub const ALEX_PER_THRESHOLD: [u64; 18] = [
+pub const PRIMARY_PER_THRESHOLD: [u64; 18] = [
     //upto 4 decimals
     50_000, // 5.0000
     25_000, // 2.5000
@@ -54,7 +54,7 @@ pub const ALEX_PER_THRESHOLD: [u64; 18] = [
     1,      // 0.0001
     1,      // 0.0001
 ];
-pub const TOTAL_LBRY_BURNED_MEM_ID: MemoryId = MemoryId::new(0);
+pub const TOTAL_SECONDARY_BURNED_MEM_ID: MemoryId = MemoryId::new(0);
 pub const CURRENT_THRESHOLD_MEM_ID: MemoryId = MemoryId::new(1);
 pub const TOKEN_LOGS_MEM_ID: MemoryId = MemoryId::new(2);
 pub const LOGS_COUNTER_ID: MemoryId = MemoryId::new(3);
@@ -66,8 +66,8 @@ thread_local! {
         MemoryManager::init(DefaultMemoryImpl::default())
     );
 
-    pub static TOTAL_LBRY_BURNED: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_LBRY_BURNED_MEM_ID)))
+    pub static TOTAL_SECONDARY_BURNED: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_SECONDARY_BURNED_MEM_ID)))
     );
     pub static CURRENT_THRESHOLD_INDEX: RefCell<StableBTreeMap<(), u32, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(CURRENT_THRESHOLD_MEM_ID)))
@@ -82,9 +82,9 @@ thread_local! {
 
 }
 
-pub fn get_total_lbry_burned_mem() -> StableBTreeMap<(), u64, Memory> {
-    TOTAL_LBRY_BURNED.with(|burned_map| {
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_LBRY_BURNED_MEM_ID)))
+pub fn get_total_secondary_burned_mem() -> StableBTreeMap<(), u64, Memory> {
+    TOTAL_SECONDARY_BURNED.with(|burned_map| {
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_SECONDARY_BURNED_MEM_ID)))
     })
 }
 

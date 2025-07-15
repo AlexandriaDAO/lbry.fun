@@ -64,7 +64,7 @@ fn test_backend_table_data_for_presets() {
         let graph_response: Result<GraphData, String> = env
             .pic
             .update_call(
-                env.lbry_fun,
+                env.secondary_fun,
                 Principal::anonymous(),
                 "preview_tokenomics_graphs",
                 candid::encode_one(&args).unwrap(),

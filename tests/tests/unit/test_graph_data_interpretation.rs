@@ -27,7 +27,7 @@ fn call_backend_and_format_table(env: &TokenTestEnvironment, name: &str, args: P
     let response = env
         .pic
         .query_call(
-            env.lbry_fun,
+            env.secondary_fun,
             Principal::anonymous(),
             "preview_tokenomics",
             candid::encode_one(&args).unwrap(),

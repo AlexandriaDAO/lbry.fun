@@ -12,9 +12,9 @@ const ICP_TRANSFER_FEE: u64 = 10_000;
 const TOKENOMICS_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/tokenomics.wasm");
 const ICP_SWAP_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/icp_swap.wasm");
 const LOGS_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/logs.wasm");
-const ICRC1_LEDGER_WASM: &[u8] = include_bytes!("../../../src/lbry_fun/src/ic-icrc1-ledger.wasm");
+const ICRC1_LEDGER_WASM: &[u8] = include_bytes!("../../../src/secondary_fun/src/ic-icrc1-ledger.wasm");
 // Using ICRC1 ledger for ICP as well for testing
-const ICP_LEDGER_WASM: &[u8] = include_bytes!("../../../src/lbry_fun/src/ic-icrc1-ledger.wasm");
+const ICP_LEDGER_WASM: &[u8] = include_bytes!("../../../src/secondary_fun/src/ic-icrc1-ledger.wasm");
 
 // Import types from individual_canister_tests
 use crate::individual_canister_tests::{TokenomicsInitArgs, TokenomicsRealInitArgs, IcpSwapInitArgs, LogsInitArgs, LedgerArg, InitArgs, FeatureFlags, ArchiveOptions, Account, MetadataValue, SecondaryRatio};
@@ -49,7 +49,7 @@ pub struct TokenTestEnvironment {
     pub icp_swap: Principal,
     pub logs: Principal,
     pub icp_ledger: Principal,
-    pub lbry_fun: Principal,
+    pub secondary_fun: Principal,
     pub test_users: HashMap<String, Principal>,
     // Additional user principals for compatibility with existing tests
     pub user1: Principal,
@@ -110,11 +110,11 @@ impl TokenTestEnvironment {
         let logs = pic.create_canister();
         let icp_ledger = pic.create_canister();
         
-        // Create a mock lbry_fun canister for testing distribution
-        let lbry_fun = pic.create_canister();
+        // Create a mock secondary_fun canister for testing distribution
+        let secondary_fun = pic.create_canister();
         
         // Add cycles to all canisters
-        for canister in &[primary_token, secondary_token, tokenomics, icp_swap, logs, icp_ledger, lbry_fun] {
+        for canister in &[primary_token, secondary_token, tokenomics, icp_swap, logs, icp_ledger, secondary_fun] {
             pic.add_cycles(*canister, 10_000_000_000_000);
         }
         
@@ -142,7 +142,7 @@ impl TokenTestEnvironment {
             icp_swap,
             logs,
             icp_ledger,
-            lbry_fun,
+            secondary_fun,
             test_users,
             user1,
             user2,
@@ -177,8 +177,8 @@ impl TokenTestEnvironment {
         // 6. Deploy Logs
         self.deploy_logs();
         
-        // 7. Deploy mock lbry_fun canister (just needs to receive ICP transfers)
-        self.deploy_mock_lbry_fun();
+        // 7. Deploy mock secondary_fun canister (just needs to receive ICP transfers)
+        self.deploy_mock_secondary_fun();
         
         println!("✓ All canisters deployed and initialized");
     }
@@ -394,14 +394,14 @@ impl TokenTestEnvironment {
         println!("✓ Logs deployed");
     }
     
-    fn deploy_mock_lbry_fun(&self) {
-        // Deploy a mock lbry_fun canister using the ICRC1 ledger as a simple receiver
+    fn deploy_mock_secondary_fun(&self) {
+        // Deploy a mock secondary_fun canister using the ICRC1 ledger as a simple receiver
         // This just needs to be able to receive ICP transfers for distribution testing
         let init_args = Encode!(&LedgerArg::Init(
             InitArgs {
                 decimals: Some(8),
                 token_symbol: "MOCK".to_string(),
-                token_name: "Mock LBRY".to_string(),
+                token_name: "Mock SECONDARY".to_string(),
                 minting_account: Account {
                     owner: Principal::anonymous(),
                     subaccount: None,
@@ -425,16 +425,16 @@ impl TokenTestEnvironment {
                 },
             }
         ))
-        .expect("Failed to encode mock lbry_fun init args");
+        .expect("Failed to encode mock secondary_fun init args");
         
         self.pic.install_canister(
-            self.lbry_fun,
+            self.secondary_fun,
             ICRC1_LEDGER_WASM.to_vec(),
             init_args,
             Some(Principal::anonymous()),
         );
         
-        println!("✓ Mock lbry_fun deployed at: {}", self.lbry_fun);
+        println!("✓ Mock secondary_fun deployed at: {}", self.secondary_fun);
     }
     
     // Create a new token set with custom configuration

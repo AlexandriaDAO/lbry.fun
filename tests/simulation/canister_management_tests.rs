@@ -1,10 +1,10 @@
 use candid::{decode_one, Encode, Nat, Principal};
-use crate::simulation::common::{setup_test_environment, setup_lbry_fun_canister};
+use crate::simulation::common::{setup_test_environment, setup_secondary_fun_canister};
 
 #[test]
 fn test_get_canister_cycle_balance() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
 
     let args = Encode!(&canister_id).expect("Failed to encode arguments");
     let result = pic.update_call(canister_id, sender, "get_canister_cycle_balance", args);

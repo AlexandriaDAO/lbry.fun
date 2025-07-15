@@ -1,11 +1,11 @@
 use candid::{decode_one, Encode, CandidType};
-use crate::simulation::common::{setup_test_environment, setup_lbry_fun_canister, TokenRecord};
+use crate::simulation::common::{setup_test_environment, setup_secondary_fun_canister, TokenRecord};
 use serde::Deserialize;
 
 #[test]
 fn test_get_all_token_record() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
 
     let args = Encode!().expect("Failed to encode arguments");
     let result = pic.query_call(canister_id, sender, "get_all_token_record", args);
@@ -28,7 +28,7 @@ fn test_get_all_token_record() {
 #[test]
 fn test_get_upcomming_tokens() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
 
     let args = Encode!().expect("Failed to encode arguments");
     let result = pic.query_call(canister_id, sender, "get_upcomming", args);
@@ -49,7 +49,7 @@ fn test_get_upcomming_tokens() {
 #[test]
 fn test_get_live_tokens() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
 
     let args = Encode!().expect("Failed to encode arguments");
     let result = pic.query_call(canister_id, sender, "get_live", args);
@@ -73,7 +73,7 @@ fn test_create_token() {
     
     pic.add_cycles(canister_id, 8_000_000_000_000);
     
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
 
     let args = Encode!(&(
         "Test Primary Token".to_string(),
@@ -163,7 +163,7 @@ struct GraphData {
 fn test_frontend_backend_token_parameter_consistency() {
     let (pic, canister_id) = setup_test_environment();
     pic.add_cycles(canister_id, 8_000_000_000_000);
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
 
     // Frontend TokenomicsGraphsBackend component parameters
     let primary_max_supply = 1_000_000u64;
@@ -269,7 +269,7 @@ fn test_frontend_backend_token_parameter_consistency() {
 fn test_frontend_parameter_validation() {
     let (pic, canister_id) = setup_test_environment();
     pic.add_cycles(canister_id, 8_000_000_000_000);
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
 
     // Test case 1: TGE allocation equals max supply (should be invalid per frontend warning)
     let invalid_preview_args = PreviewArgs {
@@ -347,7 +347,7 @@ fn test_frontend_parameter_validation() {
 #[test]
 fn test_e8s_conversion_consistency() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
 
     // Frontend uses E8S = 100_000_000
     const FRONTEND_E8S: u64 = 100_000_000;

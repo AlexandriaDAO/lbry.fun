@@ -72,7 +72,7 @@ fn test_actual_backend_response() {
         let response: Result<GraphData, String> = env
             .pic
             .update_call(
-                env.lbry_fun,
+                env.secondary_fun,
                 Principal::anonymous(),
                 "preview_tokenomics_graphs",
                 candid::encode_one(&args).unwrap(),

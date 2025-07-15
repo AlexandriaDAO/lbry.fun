@@ -169,17 +169,17 @@ mod timer_distribution_tests {
         
         if pool_after < pool_initial {
             let distributed = pool_initial - pool_after;
-            // Only the LBRY fee (1% of 1%) leaves the canister
+            // Only the SECONDARY fee (1% of 1%) leaves the canister
             // The rest (LP treasury and staker rewards) stay internal
-            let expected_external = pool_initial / 10000; // 0.01% (LBRY fee only)
+            let expected_external = pool_initial / 10000; // 0.01% (SECONDARY fee only)
             println!("External distribution: {} ICP transferred out (expected ~{})", distributed, expected_external);
             
-            // Check if external distribution is roughly 0.01% (only LBRY fee leaves)
+            // Check if external distribution is roughly 0.01% (only SECONDARY fee leaves)
             let ratio = (distributed as f64) / (pool_initial as f64);
             println!("External distribution ratio: {:.4}%", ratio * 100.0);
             
             // The actual 1% distribution happens internally
-            assert!(ratio >= 0.00008 && ratio <= 0.00012, "External distribution should be ~0.01% of pool (LBRY fee only)");
+            assert!(ratio >= 0.00008 && ratio <= 0.00012, "External distribution should be ~0.01% of pool (SECONDARY fee only)");
             
             // TODO: Query internal rewards and LP treasury to verify full 1% was distributed
         } else {

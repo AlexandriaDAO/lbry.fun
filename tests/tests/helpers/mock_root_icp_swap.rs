@@ -7,7 +7,7 @@ use crate::individual_canister_tests::{LedgerArg, InitArgs, FeatureFlags, Archiv
 /// This simulates the parent project's icp_swap canister (54fqz-5iaaa-aaaap-qkmqa-cai)
 pub fn deploy_mock_root_icp_swap(pic: &PocketIc) -> Principal {
     // Use a simple ICRC1 ledger as mock since it can receive ICP transfers
-    let icrc1_wasm = include_bytes!("../../../src/lbry_fun/src/ic-icrc1-ledger.wasm");
+    let icrc1_wasm = include_bytes!("../../../src/secondary_fun/src/ic-icrc1-ledger.wasm");
     
     // Deploy with the expected canister ID
     let canister_id = Principal::from_text("54fqz-5iaaa-aaaap-qkmqa-cai")

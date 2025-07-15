@@ -8,8 +8,8 @@ use std::path::PathBuf;
 pub const ICP_SWAP_WASM: &[u8] =
     include_bytes!("../../target/wasm32-unknown-unknown/release/icp_swap.wasm");
 
-pub const LBRY_FUN_WASM: &[u8] =
-    include_bytes!("../../target/wasm32-unknown-unknown/release/lbry_fun.wasm");
+pub const SECONDARY_FUN_WASM: &[u8] =
+    include_bytes!("../../target/wasm32-unknown-unknown/release/secondary_fun.wasm");
 
 #[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Configs {
@@ -89,13 +89,13 @@ pub fn setup_test_environment() -> (PocketIc, candid::Principal) {
     (pic, canister_id)
 }
 
-pub fn setup_lbry_fun_canister(pic: &PocketIc, canister_id: Principal) -> Principal {
+pub fn setup_secondary_fun_canister(pic: &PocketIc, canister_id: Principal) -> Principal {
     let sender = Principal::anonymous();
     let install_payload = candid::Encode!(&()).expect("Failed to encode init args");
 
     pic.install_canister(
         canister_id,
-        LBRY_FUN_WASM.to_vec(),
+        SECONDARY_FUN_WASM.to_vec(),
         install_payload,
         Some(sender),
     );

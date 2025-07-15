@@ -1,4 +1,4 @@
-use lbry_fun::tokenomics_simple::{
+use secondary_fun::tokenomics_simple::{
     generate_tokenomics_schedule, preview_tokenomics_from_frontend,
     EpochData, TokenomicsParams, TokenomicsSchedule,
 };

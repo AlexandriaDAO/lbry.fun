@@ -207,7 +207,7 @@ mod distribution_tests {
         let result1 = trigger_distribution(&mut env);
         assert!(result1.is_ok(), "First distribution should succeed");
         
-        // Check pool decreased (LBRY fee transferred)
+        // Check pool decreased (SECONDARY fee transferred)
         let pool_after1 = get_canister_balance(&env, env.icp_swap, env.icp_ledger);
         assert!(pool_after1 < pool_before, "Pool should decrease after distribution");
         

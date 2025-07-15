@@ -110,7 +110,7 @@ pub struct TokenInfo {
     pub tokenomics_canister_id: String,
 }
 
-// Mirror of TokenRecord from lbry_fun for decoding
+// Mirror of TokenRecord from secondary_fun for decoding
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct TokenRecord {
     pub id: u64,

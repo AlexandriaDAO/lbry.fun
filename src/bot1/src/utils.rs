@@ -46,15 +46,15 @@ pub enum TransferError {
 
 // Helper functions for canister interactions
 
-pub async fn get_token_record(lbry_fun_canister: Principal, pool_id: u64) -> Result<TokenRecord, String> {
-    ic_cdk::println!("[BOT1] Calling get_all_token_record on {}", lbry_fun_canister.to_text());
+pub async fn get_token_record(secondary_fun_canister: Principal, pool_id: u64) -> Result<TokenRecord, String> {
+    ic_cdk::println!("[BOT1] Calling get_all_token_record on {}", secondary_fun_canister.to_text());
     
     // Call get_all_token_record which returns Vec<(u64, TokenRecord)>
     // For query calls with no arguments, we need to pass empty encoded args
     let empty_args = encode_args(()).map_err(|e| format!("Failed to encode empty args: {:?}", e))?;
     
     let result = call_raw(
-        lbry_fun_canister,
+        secondary_fun_canister,
         "get_all_token_record",
         &empty_args,
         0,
@@ -70,7 +70,7 @@ pub async fn get_token_record(lbry_fun_canister: Principal, pool_id: u64) -> Res
     all_records.into_iter()
         .find(|(id, _)| *id == pool_id)
         .map(|(_, record)| record)
-        .ok_or_else(|| format!("Pool {} not found in lbry_fun registry", pool_id))
+        .ok_or_else(|| format!("Pool {} not found in secondary_fun registry", pool_id))
 }
 
 pub async fn icrc1_balance_of(token: Principal, account: Account) -> Result<u64, String> {
@@ -196,11 +196,11 @@ pub async fn burn_secondary(
 }
 
 // Constants for canister IDs
-pub const LBRY_FUN_CANISTER: &str = "oni4e-oyaaa-aaaap-qp2pq-cai";
+pub const SECONDARY_FUN_CANISTER: &str = "oni4e-oyaaa-aaaap-qp2pq-cai";
 pub const ICP_LEDGER_CANISTER: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 
-pub fn get_lbry_fun_principal() -> Principal {
-    Principal::from_text(LBRY_FUN_CANISTER).expect("Invalid lbry_fun canister ID")
+pub fn get_secondary_fun_principal() -> Principal {
+    Principal::from_text(SECONDARY_FUN_CANISTER).expect("Invalid secondary_fun canister ID")
 }
 
 pub fn get_icp_ledger_principal() -> Principal {

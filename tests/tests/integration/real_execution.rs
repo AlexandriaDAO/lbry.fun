@@ -1,5 +1,5 @@
 use candid::{decode_one, Encode, Principal, Nat, CandidType, Deserialize};
-use crate::simulation::common::{setup_test_environment, setup_lbry_fun_canister, TokenRecord};
+use crate::simulation::common::{setup_test_environment, setup_secondary_fun_canister, TokenRecord};
 use pocket_ic::PocketIc;
 use std::collections::HashMap;
 
@@ -10,7 +10,7 @@ const TOKEN_CREATION_FEE: u64 = 500_000_000; // 5 ICP in e8s
 
 // Include WASM files
 const ICP_LEDGER_WASM: &[u8] = include_bytes!("../../../src/icp_ledger_canister/ledger.wasm");
-const ICRC1_LEDGER_WASM: &[u8] = include_bytes!("../../../src/lbry_fun/src/ic-icrc1-ledger.wasm");
+const ICRC1_LEDGER_WASM: &[u8] = include_bytes!("../../../src/secondary_fun/src/ic-icrc1-ledger.wasm");
 const TOKENOMICS_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/tokenomics.wasm");
 const ICP_SWAP_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/icp_swap.wasm");
 const LOGS_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/logs.wasm");
@@ -215,10 +215,10 @@ fn test_minimal_token_deployment() {
     let kong_id = setup_mock_kong_swap(&pic);
     println!("✓ Mock Kong Swap deployed at: {}", kong_id);
     
-    // Install the lbry_fun canister
-    let _sender = setup_lbry_fun_canister(&pic, canister_id);
+    // Install the secondary_fun canister
+    let _sender = setup_secondary_fun_canister(&pic, canister_id);
     
-    // First, we need to approve the lbry_fun canister to spend our ICP
+    // First, we need to approve the secondary_fun canister to spend our ICP
     let approve_args = Encode!(&ApproveArg {
         from_subaccount: None,
         spender: Account {

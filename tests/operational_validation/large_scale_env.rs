@@ -94,8 +94,8 @@ impl LargeScaleValidationEnv {
     }
     
     fn get_tokenomics_predictions(env: &TokenTestEnvironment) -> GraphData {
-        // Try to get real predictions from the lbry_fun canister if available
-        if env.lbry_fun != Principal::anonymous() {
+        // Try to get real predictions from the secondary_fun canister if available
+        if env.secondary_fun != Principal::anonymous() {
             // Use the same parameters as the actual tokenomics deployment
             let args = PreviewArgs {
                 primary_max_supply: 21_000_000,  // 21M tokens (in natural units, not e8s)
@@ -106,7 +106,7 @@ impl LargeScaleValidationEnv {
             };
             
             let result = env.pic.query_call(
-                env.lbry_fun,
+                env.secondary_fun,
                 Principal::anonymous(),
                 "preview_tokenomics_graphs",
                 Encode!(&args).unwrap(),

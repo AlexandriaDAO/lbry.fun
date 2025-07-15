@@ -1,7 +1,7 @@
 use candid::{CandidType, Deserialize};
 use ic_cdk;
 use crate::types::{TokenRecord, Account};
-use crate::utils::{get_token_record, get_lbry_fun_principal, icrc1_balance_of, get_icp_ledger_principal};
+use crate::utils::{get_token_record, get_secondary_fun_principal, icrc1_balance_of, get_icp_ledger_principal};
 
 #[derive(Debug, CandidType, Deserialize)]
 pub struct PoolValidation {
@@ -17,11 +17,11 @@ pub struct PoolValidation {
 pub async fn validate_pool_ready(pool_id: u64, icp_per_loop: u64) -> Result<PoolValidation, String> {
     ic_cdk::println!("[BOT1] Starting pool validation for pool_id: {}", pool_id);
     
-    // Get token record from lbry_fun
-    let lbry_fun = get_lbry_fun_principal();
-    ic_cdk::println!("[BOT1] Using lbry_fun canister: {}", lbry_fun.to_text());
+    // Get token record from secondary_fun
+    let secondary_fun = get_secondary_fun_principal();
+    ic_cdk::println!("[BOT1] Using secondary_fun canister: {}", secondary_fun.to_text());
     
-    let token_record = match get_token_record(lbry_fun, pool_id).await {
+    let token_record = match get_token_record(secondary_fun, pool_id).await {
         Ok(record) => {
             ic_cdk::println!("[BOT1] Found pool {} with primary token: {}", pool_id, record.primary_token_symbol);
             record

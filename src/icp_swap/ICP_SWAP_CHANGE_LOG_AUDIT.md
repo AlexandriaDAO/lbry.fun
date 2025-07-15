@@ -47,7 +47,7 @@ These changes rename token references from ALEX/LBRY to primary/secondary throug
 
 1. **Partial State Corruption**: If upgrade process reads old type name from stable memory but writes new type name, could cause deserialization failures. However, Storable trait handles this correctly.
 
-2. **Import Path Confusion**: SWAP-007 changes import paths. If old and new types coexist temporarily, wrong type could be used. Compilation prevents this.
+2. **Import Path Confusion**: SWAP-007 changes import paths. If old and new types coexist temporarily, wrong type could be used. Compilation prevents this. 
 
 3. **Default Value Changes**: SWAP-013 updates default initialization to use `DEFAULT_SECONDARY_RATIO`. If this constant's value differs from `DEFAULT_LBRY_RATIO`, behavior changes. Need to verify values match.
 

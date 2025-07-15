@@ -1,7 +1,7 @@
 use crate::{
     storage::{get_snapshots, get_cached_token_info, get_cumulative_state, add_snapshot, cache_token_info, update_cumulative_state},
     types::*,
-    utils::{get_token_record, get_lbry_fun_principal, get_tokenomics_schedule},
+    utils::{get_token_record, get_secondary_fun_principal, get_tokenomics_schedule},
 };
 use ic_cdk::api::call::call;
 
@@ -17,8 +17,8 @@ pub async fn get_table_impl(pool_id: u64) -> Result<ValidationTable, String> {
         .ok_or_else(|| format!("Token info not found for pool {}", pool_id))?;
     
     // Get token record for pool parameters
-    let lbry_fun = get_lbry_fun_principal();
-    let token_record = get_token_record(lbry_fun, pool_id).await
+    let secondary_fun = get_secondary_fun_principal();
+    let token_record = get_token_record(secondary_fun, pool_id).await
         .map_err(|e| format!("Failed to get token record: {}", e))?;
     
     // Extract pool parameters
@@ -166,9 +166,9 @@ pub async fn get_pool_logs_impl(
     page: Option<u64>, 
     page_size: Option<u64>
 ) -> Result<PoolLogs, String> {
-    // Get token record from lbry_fun to find canister IDs
-    let lbry_fun = get_lbry_fun_principal();
-    let token_record = match get_token_record(lbry_fun, pool_id).await {
+    // Get token record from secondary_fun to find canister IDs
+    let secondary_fun = get_secondary_fun_principal();
+    let token_record = match get_token_record(secondary_fun, pool_id).await {
         Ok(record) => record,
         Err(e) => return Err(format!("Failed to get token record: {}", e)),
     };
@@ -217,8 +217,8 @@ pub async fn get_summary_impl(pool_id: u64) -> Result<ValidationSummary, String>
         .ok_or_else(|| format!("Token info not found for pool {}", pool_id))?;
     
     // Get token record for pool parameters
-    let lbry_fun = get_lbry_fun_principal();
-    let token_record = get_token_record(lbry_fun, pool_id).await
+    let secondary_fun = get_secondary_fun_principal();
+    let token_record = get_token_record(secondary_fun, pool_id).await
         .map_err(|e| format!("Failed to get token record: {}", e))?;
     
     // Extract pool parameters

@@ -27,9 +27,9 @@ mod tokenomics_realworld_validation_tests {
         let (primary_token, secondary_token, icp_swap) = {
             let alice_principal = env.test_users["alice"];
             
-            // Query lbry_fun for alice's token
+            // Query secondary_fun for alice's token
             let result = env.pic.query_call(
-                env.lbry_fun,
+                env.secondary_fun,
                 alice_principal,
                 "get_user_metadata",
                 candid::encode_one(&alice_principal).unwrap(),
@@ -182,7 +182,7 @@ mod tokenomics_realworld_validation_tests {
         let (primary_token, secondary_token, icp_swap) = {
             let alice_principal = env.test_users["alice"];
             let result = env.pic.query_call(
-                env.lbry_fun,
+                env.secondary_fun,
                 alice_principal,
                 "get_user_metadata",
                 candid::encode_one(&alice_principal).unwrap(),
@@ -365,7 +365,7 @@ mod tokenomics_realworld_validation_tests {
         let (primary_token, secondary_token, icp_swap) = {
             let alice_principal = env.test_users["alice"];
             let result = env.pic.query_call(
-                env.lbry_fun,
+                env.secondary_fun,
                 alice_principal,
                 "get_user_metadata",
                 candid::encode_one(&alice_principal).unwrap(),

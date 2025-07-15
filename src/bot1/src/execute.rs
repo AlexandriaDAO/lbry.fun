@@ -22,9 +22,9 @@ pub async fn execute_loops_impl(pool_id: u64, icp_amount: u64, number_of_loops: 
     // Validate pool and execution parameters
     validate_execution_params(pool_id, icp_amount, number_of_loops).await?;
     
-    // Get token info from lbry_fun canister
-    let lbry_fun = get_lbry_fun_principal();
-    let token_record = get_token_record(lbry_fun, pool_id).await
+    // Get token info from secondary_fun canister
+    let secondary_fun = get_secondary_fun_principal();
+    let token_record = get_token_record(secondary_fun, pool_id).await
         .map_err(|e| format!("Failed to get token record: {}", e))?;
     
     // Cache token info

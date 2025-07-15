@@ -25,7 +25,7 @@ use crate::{
 
 const CANISTER_CREATION_CYCLES: u128 = 2_000_000_000_000u128;
 const ICP_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
-const LBRY_SWAP_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";
+const SECONDARY_SWAP_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";
 
 #[ic_cdk::update]
 async fn create_token(
@@ -150,7 +150,7 @@ async fn create_token(
     ic_cdk::println!("[CREATE_TOKEN] Logs canister created: {}", logs_canister_id);
 
     // Create primary token
-    // ALEX
+    // PRIMARY
 
     // max supply from user
     //
@@ -844,29 +844,29 @@ async fn _process_fee_treasury() -> Result<String, String> {
         return Ok(log_msg);
     }
 
-    let lbry_swap_principal = Principal::from_text(LBRY_SWAP_CANISTER_ID).unwrap();
+    let secondary_swap_principal = Principal::from_text(SECONDARY_SWAP_CANISTER_ID).unwrap();
 
-    // 1. Approve the LBRY swap canister to spend our ICP
+    // 1. Approve the SECONDARY swap canister to spend our ICP
     match approve_tokens_to_spender(
         Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
-        lbry_swap_principal,
+        secondary_swap_principal,
         balance.into(),
     )
     .await
     {
-        Ok(_) => ic_cdk::println!("Successfully approved LBRY swap canister to spend ICP."),
-        Err(e) => return Err(format!("Failed to approve ICP for LBRY swap: {}", e)),
+        Ok(_) => ic_cdk::println!("Successfully approved SECONDARY swap canister to spend ICP."),
+        Err(e) => return Err(format!("Failed to approve ICP for SECONDARY swap: {}", e)),
     }
 
-    // 2. Call swap on the LBRY swap canister
+    // 2. Call swap on the SECONDARY swap canister
     let swap_args = (balance, None::<Vec<u8>>);
     let result: Result<(Result<String, String>,), _> =
-        ic_cdk::call(lbry_swap_principal, "swap", swap_args).await;
+        ic_cdk::call(secondary_swap_principal, "swap", swap_args).await;
 
     match result {
         Ok((Ok(success_msg),)) => {
             let success_log = format!(
-                "Successfully swapped {} e8s of ICP for LBRY and burned it: {}",
+                "Successfully swapped {} e8s of ICP for SECONDARY and burned it: {}",
                 balance, success_msg
             );
             ic_cdk::println!("{}", success_log);
@@ -882,7 +882,7 @@ async fn _process_fee_treasury() -> Result<String, String> {
         }
         Err((code, msg)) => {
             let error_log = format!(
-                "Failed to call swap on LBRY canister: (code: {:?}, message: '{}'). ICP remains in treasury.",
+                "Failed to call swap on SECONDARY canister: (code: {:?}, message: '{}'). ICP remains in treasury.",
                 code, msg
             );
             ic_cdk::println!("{}", error_log);

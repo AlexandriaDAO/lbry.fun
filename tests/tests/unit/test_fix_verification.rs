@@ -1,5 +1,5 @@
 /// Test to verify the tokenomics bug fix
-use lbry_fun::simulation::{preview_tokenomics_graphs, PresetTokenomics};
+use secondary_fun::simulation::{preview_tokenomics_graphs, PresetTokenomics};
 
 #[test]
 fn test_tokenomics_fix_verification() {

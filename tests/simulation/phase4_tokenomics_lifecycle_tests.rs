@@ -1,5 +1,5 @@
 use candid::{decode_one, Encode, CandidType};
-use crate::simulation::common::{setup_test_environment, setup_lbry_fun_canister};
+use crate::simulation::common::{setup_test_environment, setup_secondary_fun_canister};
 use serde::Deserialize;
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -591,7 +591,7 @@ fn simulate_step_by_step_execution(args: &PreviewArgs) -> (usize, u64, Vec<u64>,
 #[test]
 fn test_phase4_complete_token_lifecycle_validation() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     let test_cases = get_complete_phase1_test_cases();
     let mut results = Vec::new();
@@ -672,7 +672,7 @@ fn test_phase4_complete_token_lifecycle_validation() {
 #[test]
 fn test_phase4_projected_vs_executed_epochs() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     println!("🎯 Phase 4: Projected vs Executed Epochs Comparison\n");
     
@@ -752,7 +752,7 @@ fn test_phase4_projected_vs_executed_epochs() {
 #[test]
 fn test_phase4_cumulative_amounts_validation() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     println!("📊 Phase 4: Cumulative Token Amounts Validation\n");
     
@@ -815,7 +815,7 @@ fn test_phase4_cumulative_amounts_validation() {
 #[test]
 fn test_phase4_one_reward_mode_activation() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     println!("🎯 Phase 4: One Reward Mode Activation Testing\n");
     

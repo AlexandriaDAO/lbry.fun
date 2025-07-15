@@ -35,8 +35,8 @@ fn test_kong_pool_creation_debug() {
     println!("3. Kong is rejecting with 'insufficient allowance' errors");
     
     println!("\nThe issue appears to be:");
-    println!("- lbry_fun canister approves Kong to spend tokens");
-    println!("- But the actual tokens need to be transferred FROM lbry_fun TO Kong");
+    println!("- secondary_fun canister approves Kong to spend tokens");
+    println!("- But the actual tokens need to be transferred FROM secondary_fun TO Kong");
     println!("- Kong's add_pool expects the caller to have the tokens, not just approval");
     
     println!("\nPossible solutions:");
@@ -58,18 +58,18 @@ fn test_simplified_kong_integration() {
     println!("\n=== Simplified Kong Integration Test ===");
     
     // In the real implementation:
-    // 1. lbry_fun creates tokens
-    // 2. lbry_fun has 1 primary token and some ICP
-    // 3. lbry_fun approves Kong to spend these
-    // 4. lbry_fun calls Kong's add_pool
+    // 1. secondary_fun creates tokens
+    // 2. secondary_fun has 1 primary token and some ICP
+    // 3. secondary_fun approves Kong to spend these
+    // 4. secondary_fun calls Kong's add_pool
     
     // The issue: Kong expects the CALLER to have the tokens, not just approval to spend them
     
     println!("\nCurrent flow:");
-    println!("- lbry_fun (has tokens) -> approves Kong");
-    println!("- lbry_fun -> calls Kong.add_pool");
-    println!("- Kong checks lbry_fun's balance (not its spending allowance)");
-    println!("- Kong sees lbry_fun has tokens but can't use them directly");
+    println!("- secondary_fun (has tokens) -> approves Kong");
+    println!("- secondary_fun -> calls Kong.add_pool");
+    println!("- Kong checks secondary_fun's balance (not its spending allowance)");
+    println!("- Kong sees secondary_fun has tokens but can't use them directly");
     
     println!("\nWhat Kong might expect:");
     println!("- User has tokens in their own account");
@@ -77,6 +77,6 @@ fn test_simplified_kong_integration() {
     println!("- User calls add_pool");
     println!("- Kong transfers tokens FROM user TO pool");
     
-    println!("\nThe mismatch: lbry_fun is acting as both token holder AND pool creator,");
+    println!("\nThe mismatch: secondary_fun is acting as both token holder AND pool creator,");
     println!("but Kong might expect these to be the same account with direct token ownership.");
 }

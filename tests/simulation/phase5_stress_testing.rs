@@ -1,5 +1,5 @@
 use candid::{decode_one, Encode, CandidType};
-use crate::simulation::common::{setup_test_environment, setup_lbry_fun_canister};
+use crate::simulation::common::{setup_test_environment, setup_secondary_fun_canister};
 use serde::Deserialize;
 use std::time::Instant;
 
@@ -341,7 +341,7 @@ fn execute_stress_test(
 #[test]
 fn test_phase5_boundary_conditions() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     let boundary_test_cases = get_boundary_condition_test_cases();
     let mut results = Vec::new();
@@ -413,7 +413,7 @@ fn test_phase5_boundary_conditions() {
 #[test]
 fn test_phase5_extreme_scenarios() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     let extreme_test_cases = get_extreme_scenario_test_cases();
     let mut results = Vec::new();
@@ -501,7 +501,7 @@ fn test_phase5_extreme_scenarios() {
 #[test]
 fn test_phase5_performance_validation() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     println!("⚡ Phase 5 Task 3: Performance Validation\n");
     
@@ -594,7 +594,7 @@ fn test_phase5_performance_validation() {
 #[test]
 fn test_phase5_memory_validation() {
     let (pic, canister_id) = setup_test_environment();
-    let sender = setup_lbry_fun_canister(&pic, canister_id);
+    let sender = setup_secondary_fun_canister(&pic, canister_id);
     
     println!("🧠 Phase 5 Task 4: Memory Usage Validation\n");
     

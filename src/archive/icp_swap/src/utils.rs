@@ -1,7 +1,7 @@
 use crate::{
     get_distribution_interval,
     get_distribution_interval_mem,
-    get_lbry_ratio_mem,
+    get_secondary_ratio_mem,
     get_stake,
     get_total_archived_balance,
     get_total_archived_balance_mem,
@@ -12,7 +12,7 @@ use crate::{
     LbryRatio,
     Log,
     LogType,
-    ALEX_FEE,
+    PRIMARY_FEE,
     ARCHIVED_TRANSACTION_LOG,
     DEFAULT_ADDITION_OVERFLOW_ERROR,
     DEFAULT_MULTIPLICATION_OVERFLOW_ERROR,
@@ -29,15 +29,15 @@ use ic_ledger_types::{ AccountBalanceArgs, Tokens, DEFAULT_SUBACCOUNT, MAINNET_L
 use serde::Deserialize;
 
 pub const STAKING_REWARD_PERCENTAGE: u64 = 100; // 1%
-pub const ALEX_CANISTER_ID: &str = "ysy5f-2qaaa-aaaap-qkmmq-cai";
-pub const LBRY_CANISTER_ID: &str = "y33wz-myaaa-aaaap-qkmna-cai";
+pub const PRIMARY_CANISTER_ID: &str = "ysy5f-2qaaa-aaaap-qkmmq-cai";
+pub const SECONDARY_CANISTER_ID: &str = "y33wz-myaaa-aaaap-qkmna-cai";
 pub const TOKENOMICS_CANISTER_ID: &str = "5abki-kiaaa-aaaap-qkmsa-cai";
 pub const XRC_CANISTER_ID: &str = "uf6dk-hyaaa-aaaaq-qaaaq-cai";
 pub const ICP_TRANSFER_FEE: u64 = 10_000;
 pub const MAX_DAYS: u32 = 30;
 pub const SCALING_FACTOR: u128 = 1_000_000_000_000; // Adjust based on your precision needs
 pub const BURN_CYCLE_FEE: u64 = 10_000_000_000;
-pub const DEFAULT_LBRY_RATIO: u64 = 400;
+pub const DEFAULT_SECONDARY_RATIO: u64 = 400;
 pub const E8S: u64 = 100_000_000;
 pub const LOGS_LIMIT: u64 = 100_000;
 
@@ -114,7 +114,7 @@ pub fn principal_to_subaccount(principal_id: &Principal) -> Subaccount {
 // }
 
 //remove
-pub async fn tokenomics_burn_LBRY_stats() -> Result<(u64, u64), String> {
+pub async fn tokenomics_burn_SECONDARY_stats() -> Result<(u64, u64), String> {
     let result: Result<(u64, u64), String> = ic_cdk
         ::call::<(), (u64, u64)>(
             Principal::from_text(TOKENOMICS_CANISTER_ID).expect("Could not decode the principal."),
@@ -217,25 +217,25 @@ pub(crate) fn sub_to_unclaimed_amount(amount: u64) -> Result<(), ExecutionError>
     Ok(())
 }
 
-pub(crate) fn update_current_LBRY_ratio(
+pub(crate) fn update_current_SECONDARY_ratio(
     new_ratio: u64,
     current_time: u64
 ) -> Result<(), ExecutionError> {
-    // Get the StableBTreeMap for LBRY ratio
-    let mut lbry_ratio_map = get_lbry_ratio_mem();
+    // Get the StableBTreeMap for SECONDARY ratio
+    let mut secondary_ratio_map = get_secondary_ratio_mem();
 
     // Create a new LbryRatio instance with the provided values
-    let lbry_ratio = LbryRatio {
+    let secondary_ratio = LbryRatio {
         ratio: new_ratio,
         time: current_time,
     };
 
     // Insert or update the LbryRatio value at the key `()`
-    lbry_ratio_map.insert((), lbry_ratio);
+    secondary_ratio_map.insert((), secondary_ratio);
     Ok(())
 }
-pub(crate) fn update_ALEX_fee(fee: u64) -> Result<(), ExecutionError> {
-    ALEX_FEE.with(|fee_cell| {
+pub(crate) fn update_PRIMARY_fee(fee: u64) -> Result<(), ExecutionError> {
+    PRIMARY_FEE.with(|fee_cell| {
         *fee_cell.borrow_mut() = fee;
     });
     Ok(())
@@ -278,8 +278,8 @@ pub(crate) fn archive_user_transaction(amount: u64) -> Result<String, ExecutionE
     Ok("Transaction added successfully!".to_string())
 }
 
-pub(crate) async fn get_total_alex_staked() -> Result<u64, ExecutionError> {
-    let alex_canister_id: Principal = get_principal(ALEX_CANISTER_ID);
+pub(crate) async fn get_total_primary_staked() -> Result<u64, ExecutionError> {
+    let primary_canister_id: Principal = get_principal(PRIMARY_CANISTER_ID);
     let canister_id = ic_cdk::api::id();
     let args = BalanceOfArgs {
         owner: canister_id,
@@ -287,7 +287,7 @@ pub(crate) async fn get_total_alex_staked() -> Result<u64, ExecutionError> {
     };
 
     let result: Result<(Nat,), (RejectionCode, String)> = ic_cdk::call(
-        alex_canister_id,
+        primary_canister_id,
         "icrc1_balance_of",
         (args,)
     ).await;
@@ -299,7 +299,7 @@ pub(crate) async fn get_total_alex_staked() -> Result<u64, ExecutionError> {
                 .map_err(|_|
                     ExecutionError::new_with_log(
                         caller(),
-                        "get_total_alex_staked",
+                        "get_total_primary_staked",
                         ExecutionError::StateError("Balance exceeds u64 max value".to_string())
                     )
                 ),
@@ -307,9 +307,9 @@ pub(crate) async fn get_total_alex_staked() -> Result<u64, ExecutionError> {
             Err(
                 ExecutionError::new_with_log(
                     caller(),
-                    "get_total_alex_staked",
+                    "get_total_primary_staked",
                     ExecutionError::CanisterCallFailed {
-                        canister: "ALEX".to_string(),
+                        canister: "PRIMARY".to_string(),
                         method: "icrc1_balance_of".to_string(),
                         details: format!("Rejection code: {:?}, Message: {}", code, msg),
                     }
@@ -342,10 +342,10 @@ pub(crate) async fn fetch_canister_icp_balance() -> Result<u64, ExecutionError> 
     result.map(|tokens| tokens.e8s())
 }
 
-pub(crate) async fn get_alex_fee() -> Result<u64, ExecutionError> {
-    let alex_canister_id: Principal = get_principal(ALEX_CANISTER_ID);
+pub(crate) async fn get_primary_fee() -> Result<u64, ExecutionError> {
+    let primary_canister_id: Principal = get_principal(PRIMARY_CANISTER_ID);
     let result: Result<(Nat,), (RejectionCode, String)> = ic_cdk::call(
-        alex_canister_id,
+        primary_canister_id,
         "icrc1_fee",
         ()
     ).await;
@@ -360,9 +360,9 @@ pub(crate) async fn get_alex_fee() -> Result<u64, ExecutionError> {
             Err(
                 ExecutionError::new_with_log(
                     caller(),
-                    "get_alex_fee",
+                    "get_primary_fee",
                     ExecutionError::CanisterCallFailed {
-                        canister: ALEX_CANISTER_ID.to_string(),
+                        canister: PRIMARY_CANISTER_ID.to_string(),
                         method: "icrc1_fee".to_string(),
                         details: format!("Rejection code: {:?}, Message: {}", code, msg),
                     }

@@ -50,7 +50,7 @@ impl BotError {
     pub fn to_string(&self) -> String {
         match self {
             BotError::PoolNotFound { pool_id } => {
-                format!("Pool {} not found in lbry_fun registry", pool_id)
+                format!("Pool {} not found in secondary_fun registry", pool_id)
             },
             BotError::PoolNotLive { pool_id, launch_time, current_time } => {
                 let time_until_live = launch_time.saturating_sub(*current_time);

@@ -68,8 +68,8 @@ async fn get_summary(pool_id: u64) -> Result<ValidationSummary, String> {
 #[update]
 async fn get_pool_tokenomics_schedule(pool_id: u64) -> Result<types::TokenomicsSchedule, String> {
     // Get token record to find tokenomics canister
-    let lbry_fun = utils::get_lbry_fun_principal();
-    let token_record = utils::get_token_record(lbry_fun, pool_id).await
+    let secondary_fun = utils::get_secondary_fun_principal();
+    let token_record = utils::get_token_record(secondary_fun, pool_id).await
         .map_err(|e| format!("Failed to get token record: {}", e))?;
     
     // Query tokenomics schedule

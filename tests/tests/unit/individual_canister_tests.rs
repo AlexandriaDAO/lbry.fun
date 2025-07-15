@@ -6,7 +6,7 @@ use std::collections::HashMap;
 const TOKENOMICS_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/tokenomics.wasm");
 const ICP_SWAP_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/icp_swap.wasm");
 const LOGS_WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/logs.wasm");
-const ICRC1_LEDGER_WASM: &[u8] = include_bytes!("../../../src/lbry_fun/src/ic-icrc1-ledger.wasm");
+const ICRC1_LEDGER_WASM: &[u8] = include_bytes!("../../../src/secondary_fun/src/ic-icrc1-ledger.wasm");
 
 // Test constants
 const E8S: u64 = 100_000_000;
