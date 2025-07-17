@@ -1,16 +1,142 @@
-This app is made with a modified fork of the 'tokenomics' and 'icp_swap' canisters. In the process of making them configurable for this launchpad I added changes all of which are recorded in the @src/icp_swap/ICP_SWAP_CHANGE_LOG.md and @src/tokenomics/TOKENOMICS_CHANGE_LOG.md
+<!-- This app is made with a modified fork of the 'tokenomics' and 'icp_swap' canisters. In the process of making them configurable for this launchpad I added changes all of which are recorded in the @src/icp_swap/ICP_SWAP_CHANGE_LOG.md and @src/tokenomics/TOKENOMICS_CHANGE_LOG.md
 
 
 You could see the original audit in @audit_archive.md, the issues of which have all been addressed but this will give you a feel of the general style in which to explain vulnerabilities.
 
 
-We're now going through each of the changes listed throughout the entire changelog and doing a vulnerability check, and writing out an audit report for those newly introduced changes with the goal of moving the changelog and changelog_audit files into an archive folder after correcting all the newly introdcued vulnerabilitiesl.
+We're now going through each of the changes listed throughout the entire changelog and doing a vulnerability check, and writing out an audit report for those newly introduced changes with the goal of moving the changelog and changelog_audit files into an archive folder after correcting all the newly introdcued vulnerabilities.
 
-Start by filling in the @src/icp_swap/ICP_SWAP_CHANGE_LOG_AUDIT.md with an audit report for the first 10 changes and then we'll stop for a review. Think about all possible issues that were introduced before moving on, and don't write down the issue until you've clearly identified the problem scenario.
+We're now up to changes SWAP-71 through SWAP-80. We're just doing 10 at a time, filling in the @src/icp_swap/ICP_SWAP_CHANGE_LOG_AUDIT.md with an audit report for the first 10 changes and then we'll stop for a review. Think about all possible issues that were introduced before moving on, and don't write down the issue until you've clearly identified the problem scenario.
 
 Don't worry about frontend api compatability, as that would obviously have come up naturally in building and testing this and we have a fresh project here so backwards compatability is not an issue. This is about opening up subtle cracks that could be exploited.
 
-Always understand the existing architecture before proposing fixes. If you're going to propose a vulnerability, stop, assess the failure scenario and prove it, e.g., this is exploited when X user does X or this fails when X canister gets upgraded while X function is being called, etc. If there's no failure scenario, don't label it as a vulnerability.
+Always understand the existing architecture before proposing fixes. If you're going to propose a vulnerability, stop, assess the failure scenario and prove it, e.g., this is exploited when X user does X or this fails when X canister gets upgraded while X function is being called, etc. If there's no failure scenario, don't label it as a vulnerability. -->
+
+
+
+
+
+
+
+    1 You are a world-class canister security auditor. Your sole task is to rigorously
+      audit a specific block of changes in the provided changelogs for an Internet
+      Computer application.
+    2 
+    3 **Project Context:**
+    4 This application is a launchpad. A parent canister (`lbry_fun`) deploys new,
+      independent `icp_swap` canisters for different tokens. These `icp_swap` canisters
+      are "fire-and-forget"; they will **not** be upgraded after deployment. All
+      initial configuration is provided by the trusted `lbry_fun` canister.
+    5 
+    6 **Your Task:**
+    7 Audit changes **SWAP-71 through SWAP-80** as documented in `@src/icp_swap/
+      ICP_SWAP_CHANGE_LOG.md`.
+    8 
+    9 **Mandatory Audit Principles:**
+   10 
+   11 1.  **Ground Truth is Code:** Your analysis must be based *exclusively* on the
+      provided source code. Do not speculate. Read the relevant functions before making
+      any claims.
+   12 2.  **Prove the Exploit:** Do not label something a "vulnerability" unless you
+      can describe a concrete, plausible failure or exploitation scenario. Your proof
+      must consider the "no-upgrade" and "trusted deployer" context.
+   13 3.  **Distinguish Vulnerabilities from Recommendations:**
+   14     *   A **Vulnerability** is a flaw that can be exploited to cause a loss of
+      funds, a denial of service, or a permanent, broken state.
+   15     *   A **Recommendation** is a change that improves code quality, robustness,
+      or adherence to best practices, but does not fix a direct exploit (e.g.,
+      replacing `.expect()` with `Result`).
+   16 4.  **No Distractions:** Do not concern yourself with backward compatibility, API
+      compatibility, or issues that are explicitly handled by the `lbry_fun` deployer.
+      Focus only on the security and integrity of the `icp_swap` canister itself.
+   17 
+   18 **Output Format:**
+   19 Begin your response with a clear verdict for the block of changes (e.g., "NO
+      VULNERABILITIES FOUND" or "CRITICAL VULNERABILITY FOUND"). Then, for each
+      specific finding, provide:
+   20 *   **Change ID(s):** The relevant SWAP ID(s).
+   21 *   **Severity:** CRITICAL, HIGH, MEDIUM, LOW, or RECOMMENDATION.
+   22 *   **The Flaw:** A concise description of the weakness.
+   23 *   **Failure Scenario / Proof:** A concrete explanation of how the flaw leads to
+      a failure state.
+   24 *   **The Fix:** A precise, code-level recommendation for fixing the flaw.
+   25 
+   26 Proceed with the audit of SWAP-71 through SWAP-80.
+
+
+
+
+
+
+Phase 1: Context Loading
+
+  First, you must read and fully process the following files to establish ground truth:
+   1. src/icp_swap/ICP_SWAP_CHANGE_LOG.md
+   2. src/icp_swap/src/lib.rs
+   3. src/icp_swap/src/utils.rs
+   4. src/icp_swap/src/update.rs
+   5. src/icp_swap/src/queries.rs
+   6. src/icp_swap/src/error.rs
+
+  Do not proceed until you have loaded the content of these files.
+
+  Phase 2: Security Audit
+
+  Now, acting as a world-class canister security auditor, perform the following task based
+  exclusively on the files you have just read.
+
+  Project Context:
+  This application is a launchpad. A parent canister (lbry_fun) deploys new, independent
+  icp_swap canisters for different tokens. These icp_swap canisters are "fire-and-forget";
+  they will not be upgraded after deployment. All initial configuration is provided by the
+  trusted lbry_fun canister.
+
+  Your Task:
+  Rigorously audit changes SWAP-81 through SWAP-90 as documented in the
+  ICP_SWAP_CHANGE_LOG.md file you have read.
+
+  Mandatory Audit Principles:
+
+   1. Ground Truth is Code: Your analysis must be based exclusively on the provided source code
+      you read in Phase 1. Do not speculate. Reference the relevant functions before making any
+      claims.
+   2. Prove the Exploit: Do not label something a "vulnerability" unless you can describe a
+      concrete, plausible failure or exploitation scenario. Your proof must consider the
+      "no-upgrade" and "trusted deployer" context.
+   3. Distinguish Vulnerabilities from Recommendations:
+       * A Vulnerability is a flaw that can be exploited to cause a loss of funds, a denial of
+         service, or a permanent, broken state.
+       * A Recommendation is a change that improves code quality, robustness, or adherence to
+         best practices, but does not fix a direct exploit.
+   4. No Distractions: Do not concern yourself with backward compatibility, API compatibility, or
+       issues that are explicitly handled by the lbry_fun deployer. Focus only on the security
+      and integrity of the icp_swap canister itself.
+
+  Output Format:
+  Begin your response with a clear verdict for the block of changes (e.g., "NO VULNERABILITIES
+  FOUND" or "CRITICAL VULNERABILITY FOUND"). Then, for each specific finding, provide:
+   * Change ID(s): The relevant SWAP ID(s).
+   * Severity: CRITICAL, HIGH, MEDIUM, LOW, or RECOMMENDATION.
+   * The Flaw: A concise description of the weakness.
+   * Failure Scenario / Proof: A concrete explanation of how the flaw leads to a failure state.
+   * The Fix: A precise, code-level recommendation for fixing the flaw.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -31,6 +157,9 @@ When you come back:
 - Audit the existing code based on the changelogs.
 - Remove the changelogs and declare things safe before moving on to switching staking for locked liquidity.
 - Done.
+
+
+- Minor vulnerability. There is a minor concern where if the XRC oracle fails, the tokens become permanently untradable. Why don't we look into using our core canister's XRC rate instead of having each one use its own.
 
 
 

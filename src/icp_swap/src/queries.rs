@@ -50,7 +50,7 @@ pub fn get_stake(principal: Principal) -> Option<Stake> {
 }
 
 #[query]
-pub fn get_total_unclaimed_icp_reward() -> u64 {
+pub fn get_total_unclaimed_icp_reward() -> u128 {
     let result = get_total_unclaimed_icp_reward_mem();
     result.get(&()).unwrap_or(0)
 }

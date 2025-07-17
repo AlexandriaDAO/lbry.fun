@@ -176,7 +176,7 @@ pub(crate) fn sub_to_total_archived_balance(amount: u64) -> Result<(), Execution
     result.insert((), new_total);
     Ok(())
 }
-pub(crate) fn add_to_unclaimed_amount(amount: u64) -> Result<(), ExecutionError> {
+pub(crate) fn add_to_unclaimed_amount(amount: u128) -> Result<(), ExecutionError> {
     let current_total = get_total_unclaimed_icp_reward();
     let new_total = current_total.checked_add(amount).ok_or_else(||
         ExecutionError::new_with_log(
@@ -192,7 +192,7 @@ pub(crate) fn add_to_unclaimed_amount(amount: u64) -> Result<(), ExecutionError>
     result.insert((), new_total);
     Ok(())
 }
-pub(crate) fn sub_to_unclaimed_amount(amount: u64) -> Result<(), ExecutionError> {
+pub(crate) fn sub_to_unclaimed_amount(amount: u128) -> Result<(), ExecutionError> {
     let current_total = get_total_unclaimed_icp_reward();
     let new_total = current_total.checked_sub(amount).ok_or_else(||
         ExecutionError::new_with_log(
@@ -270,7 +270,7 @@ pub(crate) fn archive_user_transaction(amount: u64) -> Result<String, ExecutionE
     Ok("Transaction added successfully!".to_string())
 }
 
-pub(crate) async fn get_total_primary_staked() -> Result<u64, ExecutionError> {
+pub(crate) async fn get_total_primary_staked() -> Result<u128, ExecutionError> {
     // Get primary token ID from CONFIGS
     let primary_canister_id = CONFIGS.with(|configs| {
         configs.borrow()
@@ -301,7 +301,7 @@ pub(crate) async fn get_total_primary_staked() -> Result<u64, ExecutionError> {
                     ExecutionError::new_with_log(
                         caller(),
                         "get_total_primary_staked",
-                        ExecutionError::StateError("Balance exceeds u64 max value".to_string())
+                        ExecutionError::StateError("Balance exceeds u128 max value".to_string())
                     )
                 ),
         Err((code, msg)) =>

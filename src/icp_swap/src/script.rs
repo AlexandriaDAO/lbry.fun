@@ -29,7 +29,7 @@ pub const PRICE_FETCH_INTERVAL: Duration = Duration::from_secs(1 * 24 * 60 * 60)
 pub struct InitArgs {
     pub stakes: Option<Vec<(Principal, Stake)>>,
     pub archived_transaction_log: Option<Vec<(Principal, ArchiveBalance)>>,
-    pub total_unclaimed_icp_reward: Option<u64>,
+    pub total_unclaimed_icp_reward: Option<u128>,
     pub secondary_ratio: Option<SecondaryRatio>,
     pub total_archived_balance: Option<u64>,
     pub apy: Option<Vec<(u32, DailyValues)>>,
@@ -117,19 +117,52 @@ fn initialize_globals(args: InitArgs) {
     }
 
     // Initialize configs - all token IDs are required for new projects
+    let self_id = ic_cdk::api::id();
+    let primary_token_id = args.primary_token_id.expect("Primary token ID is required");
+    let secondary_token_id = args.secondary_token_id.expect("Secondary token ID is required");
+    let tokenomics_canister_id = args.tokenomics_canister_id.expect("Tokenomics canister ID is required");
+    let icp_ledger_id = args.icp_ledger_id.unwrap_or(Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap());
+
+    // Validate that none of the canister IDs are self-referential
+    if primary_token_id == self_id {
+        panic!("Primary token ID cannot be the same as this canister's ID");
+    }
+    if secondary_token_id == self_id {
+        panic!("Secondary token ID cannot be the same as this canister's ID");
+    }
+    if tokenomics_canister_id == self_id {
+        panic!("Tokenomics canister ID cannot be the same as this canister's ID");
+    }
+    if icp_ledger_id == self_id {
+        panic!("ICP ledger ID cannot be the same as this canister's ID");
+    }
+
+    // Additional validation: ensure all token IDs are different from each other
+    if primary_token_id == secondary_token_id {
+        panic!("Primary and secondary token IDs must be different");
+    }
+
     let configs = Configs {
-        primary_token_id: args.primary_token_id.expect("Primary token ID is required"),
-        secondary_token_id: args.secondary_token_id.expect("Secondary token ID is required"),
-        tokenomics_canister_id: args.tokenomics_canister_id.expect("Tokenomics canister ID is required"),
-        icp_ledger_id: args.icp_ledger_id.unwrap_or(Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap()), // ICP ledger can use mainnet default
+        primary_token_id,
+        secondary_token_id,
+        tokenomics_canister_id,
+        icp_ledger_id,
     };
-    
+
     CONFIGS.with(|m| {
         m.borrow_mut().insert((), configs);
     });
 
     // Store distribution interval in DISTRIBUTION_INTERVALS if provided
     if let Some(interval_seconds) = args.distribution_interval_seconds {
+        // Add lower bound check to prevent DoS attacks
+        if interval_seconds < 60 {
+            panic!("Distribution interval cannot be less than 60 seconds to prevent timer-based DoS attacks");
+        }
+        // Validate that the interval fits in u32 to prevent truncation
+        if interval_seconds > u32::MAX as u64 {
+            panic!("Distribution interval exceeds maximum allowed value of {} seconds", u32::MAX);
+        }
         DISTRIBUTION_INTERVALS.with(|m| {
             m.borrow_mut().insert((), interval_seconds as u32);
         });

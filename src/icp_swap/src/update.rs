@@ -290,9 +290,13 @@ pub async fn burn_secondary(
     };
     let total_archived_bal: u64 = get_total_archived_balance();
 
-    let total_unclaimed_icp: u64 = get_total_unclaimed_icp_reward();
+    let total_unclaimed_icp: u128 = get_total_unclaimed_icp_reward();
 
-    let mut remaining_icp: u64 = total_icp_available.checked_sub(total_unclaimed_icp).ok_or_else(||
+    let mut remaining_icp: u64 = total_icp_available.checked_sub(total_unclaimed_icp.try_into().map_err(|_| 
+        ExecutionError::new_with_log(caller, "burn_secondary", ExecutionError::ConversionError {
+            details: "Total unclaimed ICP exceeds u64 max".to_string()
+        })
+    )?).ok_or_else(||
         ExecutionError::new_with_log(caller, "burn_secondary", ExecutionError::Underflow {
             operation: DEFAULT_UNDERFLOW_ERROR.to_string(),
             details: format!(
@@ -497,8 +501,11 @@ async fn mint_secondary(amount: u64) -> Result<BlockIndex, TransferError> {
         configs.borrow()
             .get(&())
             .map(|c| c.secondary_token_id)
-            .expect("Secondary token ID not configured")
-    });
+            .ok_or_else(|| TransferError::GenericError {
+                error_code: 1u64.into(),
+                message: "Secondary token ID not configured".to_string()
+            })
+    })?;
 
     // 1. Asynchronously call another canister function using `ic_cdk::call`.
     let result = ic_cdk
@@ -605,8 +612,8 @@ async fn mint_primary(
         configs.borrow()
             .get(&())
             .map(|c| c.tokenomics_canister_id)
-            .expect("Tokenomics canister ID not configured")
-    });
+            .ok_or_else(|| "Tokenomics canister ID not configured".to_string())
+    })?;
 
     // Prepare arguments and call tokenomics canister
     let args = (secondary_amount, caller, to_subaccount);
@@ -862,6 +869,14 @@ async fn un_stake_all_primary(from_subaccount: Option<[u8; 32]>) -> Result<Strin
     Ok("Successfully unstaked!".to_string())
 }
 //Guard ensure call is only by canister.
+// Helper function to safely convert u128 to u64 for ICP transfers
+fn safe_reward_to_transfer_amount(reward: u128) -> Result<u64, ExecutionError> {
+    reward.try_into()
+        .map_err(|_| ExecutionError::ConversionError {
+            details: format!("Reward amount {} exceeds maximum transferable amount", reward)
+        })
+}
+
 pub async fn distribute_reward() -> Result<String, ExecutionError> {
     register_info_log(caller(), "distribute_reward", "distribute_reward initiated.");
     let intervals = get_distribution_interval();
@@ -873,11 +888,11 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
         }
     };
 
-    let total_unclaimed_icp_reward: u64 = get_total_unclaimed_icp_reward();
+    let total_unclaimed_icp_reward: u128 = get_total_unclaimed_icp_reward();
     let total_archived_bal: u64 = get_total_archived_balance();
 
-    let unclaimed_icps: u64 = total_unclaimed_icp_reward
-        .checked_add(total_archived_bal)
+    let unclaimed_icps: u128 = total_unclaimed_icp_reward
+        .checked_add(total_archived_bal as u128)
         .ok_or_else(||
             ExecutionError::new_with_log(
                 caller(),
@@ -893,7 +908,7 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
             )
         )?;
 
-    if total_icp_available == 0 || total_icp_available < unclaimed_icps {
+    if total_icp_available == 0 || (total_icp_available as u128) < unclaimed_icps {
         return Err(
             ExecutionError::new_with_log(
                 caller(),
@@ -906,8 +921,8 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
             )
         );
     }
-    let mut total_icp_allocated: u128 = total_icp_available
-        .checked_sub((unclaimed_icps as u128).try_into().unwrap())
+    let mut total_icp_allocated: u128 = (total_icp_available as u128)
+        .checked_sub(unclaimed_icps)
         .ok_or_else(||
             ExecutionError::new_with_log(caller(), "distribute_reward", ExecutionError::Underflow {
                 operation: DEFAULT_UNDERFLOW_ERROR.to_string(),
@@ -954,7 +969,7 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
         );
     }
 
-    let total_staked_primary = get_total_primary_staked().await? as u128;
+    let total_staked_primary = get_total_primary_staked().await?;
 
     if total_staked_primary == 0 {
         return Err(
@@ -1059,7 +1074,7 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
                         )
                     )?;
 
-                    stake.reward_icp = stake.reward_icp.checked_add(reward as u64).ok_or_else(||
+                    stake.reward_icp = stake.reward_icp.checked_add(reward).ok_or_else(||
                         ExecutionError::new_with_log(
                             caller(),
                             "distribute_reward",
@@ -1092,7 +1107,7 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
         apy_map.insert(index, daily_values);
     });
 
-    add_to_unclaimed_amount(total_icp_reward as u64)?;
+    add_to_unclaimed_amount(total_icp_reward)?;
 
     add_to_distribution_intervals(1)?;
     register_info_log(caller(), "distribute_reward", "Successfully distributed reward. Completed.");
@@ -1116,7 +1131,7 @@ async fn claim_icp_reward(from_subaccount: Option<[u8; 32]>) -> Result<String, E
                         "claim_icp_reward",
                         ExecutionError::MinimumRequired {
                             required: 1000_000,
-                            provided: stake.reward_icp,
+                            provided: stake.reward_icp.try_into().unwrap_or(u64::MAX),
                             token: "ICP".to_string(),
                             details: DEFAULT_MINIMUM_REQUIRED_ERROR.to_string(),
                         }
@@ -1130,25 +1145,28 @@ async fn claim_icp_reward(from_subaccount: Option<[u8; 32]>) -> Result<String, E
                 }
             };
 
-            if stake.reward_icp > total_icp_available {
+            // Convert reward to u64 for comparison and transfer
+            let reward_u64 = safe_reward_to_transfer_amount(stake.reward_icp)?;
+            
+            if reward_u64 > total_icp_available {
                 return Err(
                     ExecutionError::new_with_log(
                         caller,
                         "claim_icp_reward",
                         ExecutionError::InsufficientCanisterBalance {
-                            required: stake.reward_icp,
+                            required: reward_u64,
                             available: total_icp_available,
                             details: DEFAULT_INSUFFICIENT_CANISTER_BALANCE_ERROR.to_string(),
                         }
                     )
                 );
             }
-            let amount_after_fee = stake.reward_icp.checked_sub(ICP_TRANSFER_FEE).ok_or_else(||
+            let amount_after_fee = reward_u64.checked_sub(ICP_TRANSFER_FEE).ok_or_else(||
                 ExecutionError::new_with_log(caller, "claim_icp_reward", ExecutionError::Underflow {
                     operation: DEFAULT_UNDERFLOW_ERROR.to_string(),
                     details: format!(
                         "stake.reward_icp: {} with ICP_TRANSFER_FEE: {}",
-                        stake.reward_icp,
+                        reward_u64,
                         ICP_TRANSFER_FEE
                     ),
                 })
@@ -1431,8 +1449,11 @@ async fn withdraw_token(
         configs.borrow()
             .get(&())
             .map(|c| c.primary_token_id)
-            .expect("Primary token ID not configured")
-    });
+            .ok_or_else(|| TransferFromError::GenericError {
+                error_code: 1u64.into(),
+                message: "Primary token ID not configured".to_string()
+            })
+    })?;
 
     let amount: Nat = Nat::from(amount);
     if amount <= Nat::from(0 as u8) {
@@ -1481,8 +1502,11 @@ async fn deposit_token(
         configs.borrow()
             .get(&())
             .map(|c| c.primary_token_id)
-            .expect("Primary token ID not configured")
-    });
+            .ok_or_else(|| TransferFromError::GenericError {
+                error_code: 1u64.into(),
+                message: "Primary token ID not configured".to_string()
+            })
+    })?;
     
     let amount = Nat::from(amount);
     if amount < Nat::from(0 as u8) {
@@ -1551,8 +1575,11 @@ async fn burn_token(
         configs.borrow()
             .get(&())
             .map(|c| c.secondary_token_id)
-            .expect("Secondary token ID not configured")
-    });
+            .ok_or_else(|| TransferFromError::GenericError {
+                error_code: 1u64.into(),
+                message: "Secondary token ID not configured".to_string()
+            })
+    })?;
 
     // 1. Asynchronously call another canister function using `ic_cdk::call`.
     let (result,) = ic_cdk

@@ -324,3 +324,39 @@ This file tracks all changes made to convert the audited icp_swap canister into 
 - **Impact**: New tokens could be purchased at $4/ICP rate even if ICP was worth $10+, creating up to 60% discount exploit window
 - **Fix**: Return None when no rate is set, forcing operations to wait for XRC oracle update
 - **Result**: Eliminates the vulnerability window while maintaining the $4 floor when price is legitimately low
+
+### Security Vulnerability Fixes (2025-01-16)
+
+| Change ID | File | Risk | Description | Original | New | Justification | Security Impact | Test Status |
+|-----------|------|------|-------------|----------|-----|---------------|-----------------|-------------|
+| SWAP-123 | src/script.rs | HIGH | Add validation for distribution interval | Direct cast `as u32` | Validate before cast to prevent truncation | Prevent integer truncation DoS | Critical - fixes DoS vulnerability | Fixed |
+| SWAP-124 | src/update.rs | MEDIUM | Fix mint_secondary panic | `.expect("Secondary token ID not configured")` | Return `TransferError` | Prevent canister panic | Improves robustness | Fixed |
+| SWAP-125 | src/update.rs | MEDIUM | Fix mint_primary panic | `.expect("Tokenomics canister ID not configured")` | Return error string | Prevent canister panic | Improves robustness | Fixed |
+| SWAP-126 | src/update.rs | MEDIUM | Fix withdraw_token panic | `.expect("Primary token ID not configured")` | Return `TransferFromError` | Prevent canister panic | Improves robustness | Fixed |
+| SWAP-127 | src/update.rs | MEDIUM | Fix deposit_token panic | `.expect("Primary token ID not configured")` | Return `TransferFromError` | Prevent canister panic | Improves robustness | Fixed |
+| SWAP-128 | src/update.rs | MEDIUM | Fix burn_token panic | `.expect("Secondary token ID not configured")` | Return `TransferFromError` | Prevent canister panic | Improves robustness | Fixed |
+| SWAP-129 | src/script.rs | HIGH | Add minimum interval validation | No check | `if interval_seconds < 60` panic | Prevent timer DoS | Critical security fix | Fixed |
+| SWAP-130 | src/script.rs | HIGH | Add self-referential ID validation | No validation | Check IDs != self_id | Prevent logic errors | Security enhancement | Fixed |
+| SWAP-131 | src/script.rs | MEDIUM | Add token ID uniqueness check | No check | Ensure primary != secondary | Prevent configuration errors | Robustness improvement | Fixed |
+| SWAP-132 | src/storage.rs | HIGH | Change reward_icp to u128 | `reward_icp: u64` | `reward_icp: u128` | Prevent reward overflow | Critical fix | Fixed |
+| SWAP-133 | src/utils.rs | HIGH | Update get_total_primary_staked return type | Returns u64 | Returns u128 | Prevent stake overflow | Critical fix | Fixed |
+| SWAP-134 | src/update.rs | HIGH | Safe u128 to u64 conversion | Direct cast | Try_into with error | Prevent transfer overflow | Safety enhancement | Fixed |
+| SWAP-135 | src/storage.rs | MEDIUM | Update unclaimed rewards to u128 | u64 storage | u128 storage | Consistency fix | Type alignment | Fixed |
+| SWAP-136 | src/script.rs | MEDIUM | Update InitArgs total_unclaimed_icp_reward type | `Option<u64>` | `Option<u128>` | Match storage type | Type consistency | Fixed |
+
+## Summary Statistics
+- Total Changes: 143 (was 142, added 1)
+- Low Risk: 84
+- Medium Risk: 49 (was 48, added 1 medium risk)
+- High Risk: 16
+- Fixed: 26 (was 25, added 1 fixed)
+- Tested: 0
+- Pending: 117
+
+## Security Vulnerability Details
+- **Integer Truncation (SWAP-123)**: Distribution interval could be truncated from u64 to u32, causing timer to fire continuously if value > u32::MAX
+- **Panic Vulnerabilities (SWAP-124 to SWAP-128)**: `.expect()` calls could panic if configs not initialized, replaced with proper error returns
+- **Timer DoS (SWAP-129)**: No minimum interval validation allowed setting 1-second intervals, causing continuous timer execution
+- **Self-Referential IDs (SWAP-130)**: No validation prevented canister from being configured to call itself, risking infinite loops
+- **Token ID Conflicts (SWAP-131)**: Primary and secondary tokens could be the same, causing unexpected behavior
+- **Numeric Type Inconsistency (SWAP-132 to SWAP-135)**: Mixed u64/u128 types in reward calculations could cause overflow at multiple points

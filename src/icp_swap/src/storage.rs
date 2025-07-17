@@ -46,7 +46,7 @@ thread_local! {
         )
     );
 
-    pub static TOTAL_UNCLAIMED_ICP_REWARD: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
+    pub static TOTAL_UNCLAIMED_ICP_REWARD: RefCell<StableBTreeMap<(), u128, Memory>> = RefCell::new(
         StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID))
         )
@@ -73,7 +73,7 @@ thread_local! {
     );
 }
 
-pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u64, Memory> {
+pub fn get_total_unclaimed_icp_reward_mem() -> StableBTreeMap<(), u128, Memory> {
     TOTAL_UNCLAIMED_ICP_REWARD.with(|_reward_map| {
         StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID))
@@ -114,7 +114,7 @@ pub fn get_launch_time_mem() -> StableBTreeMap<(), u64, Memory> {
 pub struct Stake {
     pub amount: u64,
     pub time: u64,
-    pub reward_icp: u64,
+    pub reward_icp: u128,
 }
 
 #[derive(CandidType, Deserialize, Clone)]

@@ -74,7 +74,7 @@ type InitArgs = record {
   secondary_ratio : opt SecondaryRatio;
   primary_token_id : opt principal;
   archived_transaction_log : opt vec record { principal; ArchiveBalance };
-  total_unclaimed_icp_reward : opt nat64;
+  total_unclaimed_icp_reward : opt nat;
   launch_time : opt nat64;
   distribution_interval_seconds : opt nat64;
   distribution_intervals : opt nat32;
@@ -98,7 +98,7 @@ type PaginatedLogs = record {
 };
 type Result = variant { Ok : text; Err : ExecutionError };
 type SecondaryRatio = record { time : nat64; ratio : nat64 };
-type Stake = record { time : nat64; reward_icp : nat64; amount : nat64 };
+type Stake = record { time : nat64; reward_icp : nat; amount : nat64 };
 service : (opt InitArgs) -> {
   burn_secondary : (nat64, opt blob) -> (Result);
   caller_subaccount : () -> (text) query;
@@ -118,7 +118,7 @@ service : (opt InitArgs) -> {
   get_stake : (principal) -> (opt Stake) query;
   get_stakers_count : () -> (nat64) query;
   get_total_archived_balance : () -> (nat64) query;
-  get_total_unclaimed_icp_reward : () -> (nat64) query;
+  get_total_unclaimed_icp_reward : () -> (nat) query;
   get_user_archive_balance : (principal) -> (opt ArchiveBalance) query;
   redeem : (opt blob) -> (Result);
   stake_primary : (nat64, opt blob) -> (Result);
