@@ -18,8 +18,14 @@
     },
 
     "internet_identity": {
-      "type": "pull",
-      "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+      "type": "custom",
+      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
+      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz",
+      "remote": {
+        "id": {
+          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+        }
+      }
     },
     "tokenomics": {
       "candid": "src/tokenomics/tokenomics.did",
@@ -59,8 +65,7 @@
     "bot1": {
       "type": "rust",
       "package": "bot1",
-      "candid": "src/bot1/bot1.did",
-      "specified_id": "ucwa4-rx777-77774-qaada-cai"
+      "candid": "src/bot1/bot1.did"
     }
     
   },

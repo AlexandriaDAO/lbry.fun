@@ -7,10 +7,13 @@ set -ex
 # dfx start --clean --background --host 127.0.0.1:4943
 
 # Step 2: II Canister
-dfx deps pull
-dfx deps init
-dfx deps deploy
-dfx deps deploy internet_identity
+# Check if Internet Identity is already deployed
+if dfx canister id internet_identity >/dev/null 2>&1; then
+    echo "Internet Identity already deployed at $(dfx canister id internet_identity)"
+else
+    echo "Deploying Internet Identity..."
+    dfx deploy internet_identity --specified-id rdmx6-jaaaa-aaaaa-aaadq-cai
+fi
 
 ## xrc first because it's used in init functions of others.
 dfx canister create xrc --specified-id uf6dk-hyaaa-aaaaq-qaaaq-cai
@@ -51,7 +54,7 @@ dfx ledger fabricate-cycles --canister "$LBRY_FUN_PRINCIPAL" --cycles 1000000000
 # For bot1
 cargo build --release --target wasm32-unknown-unknown --package bot1
 candid-extractor target/wasm32-unknown-unknown/release/bot1.wasm > src/bot1/bot1.did
-dfx deploy bot1 --specified-id ucwa4-rx777-77774-qaada-cai
+dfx deploy bot1
 
 export BOT1_PRINCIPAL=$(dfx canister id bot1)
 dfx ledger fabricate-cycles --canister "$BOT1_PRINCIPAL" --cycles 1000000000000000

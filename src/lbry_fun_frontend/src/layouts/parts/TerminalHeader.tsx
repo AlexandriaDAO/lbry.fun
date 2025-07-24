@@ -9,7 +9,7 @@ const TerminalHeader: React.FC = () => {
         <div className="flex justify-between items-center">
           <Link to="/" className="flex flex-col no-underline">
             <h1 className="text-6xl font-black tracking-widest terminal-primary font-mono hover:text-green-400 transition-colors" style={{fontWeight: 900}}>
-              LBRY_FUN
+              DAOPAD_FUN
             </h1>
             <span className="text-[10px] terminal-comment opacity-60">
               Powered by Alexandria

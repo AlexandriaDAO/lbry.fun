@@ -578,20 +578,27 @@ async fn add_token_to_kong_swap(token_id: Principal) -> AddTokenResponse {
     }
 }
 
+/// Creates a liquidity pool on KongSwap for a new token paired with ICP.
+/// All new tokens launched through lbryfun are paired with ICP by default.
+/// 
+/// # Arguments
+/// * `primary_token_id` - The Principal ID of the new token to create a pool for
+/// * `primary_tx_id` - The block index of the new token transfer to Kong
+/// * `icp_tx_id` - The block index of the ICP transfer to Kong
 pub async fn create_pool_on_kong_swap(
     primary_token_id: Principal, 
     primary_tx_id: Nat,
     icp_tx_id: Nat
 ) -> Result<AddPoolReply, String> {
-    // Kong requires token_1 to be ICP or ksUSDT
+    // Always create pools with ICP as the pair token
     let args = AddPoolArgs {
-        token_0: format!("{}.{}", CHAIN_ID, primary_token_id), // Custom token as token_0
+        token_0: format!("{}.{}", CHAIN_ID, primary_token_id), // New meme token
         amount_0: E8S.into(), // 1 token
-        tx_id_0: Some(TxId::BlockIndex(primary_tx_id)), // Provide the transfer tx id
-        token_1: "ICP".to_string(), // ICP as token_1
+        tx_id_0: Some(TxId::BlockIndex(primary_tx_id)),
+        token_1: "ICP".to_string(), // Always pair with ICP
         amount_1: (10_000_000 as u64).into(), // 0.1 ICP
-        tx_id_1: Some(TxId::BlockIndex(icp_tx_id)), // Provide the transfer tx id
-        lp_fee_bps: Some(100), // 1% LP fee (100 basis points)
+        tx_id_1: Some(TxId::BlockIndex(icp_tx_id)),
+        lp_fee_bps: Some(100), // 1% LP fee
     };
     
     ic_cdk::println!("[CREATE_POOL] Calling KongSwap to create pool");
