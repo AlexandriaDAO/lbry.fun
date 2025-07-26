@@ -12,7 +12,7 @@ pub const TOKEN_RECORD_MEM_ID: MemoryId = MemoryId::new(0);
 
 thread_local! {
     // Initialize memory manager
-    static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
+    pub static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
         MemoryManager::init(DefaultMemoryImpl::default())
     );
 

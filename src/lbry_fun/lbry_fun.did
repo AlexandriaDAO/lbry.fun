@@ -1,3 +1,37 @@
+type AdminCleanupOptions = record {
+  force_refund : bool;
+  remove_record : bool;
+  force_delete_canisters : bool;
+};
+type CreateTokenParams = record {
+  secondary_token_symbol : text;
+  primary_token_name : text;
+  secondary_token_description : text;
+  secondary_token_name : text;
+  primary_token_symbol : text;
+  launch_delay_seconds : nat64;
+  primary_logo : text;
+  halving_step : nat64;
+  primary_token_description : text;
+  initial_reward_per_burn_unit : nat64;
+  initial_primary_mint : nat64;
+  threshold_multiplier : float64;
+  secondary_logo : text;
+  distribution_interval_seconds : nat64;
+  primary_max_supply : nat64;
+  initial_secondary_burn : nat64;
+};
+type DeploymentInfo = record {
+  id : nat64;
+  last_error : opt text;
+  status : text;
+  canister_count : nat64;
+  token_id : opt nat64;
+  cleanup_progress : nat8;
+  failed_at : opt nat64;
+  created_at : nat64;
+  last_activity : nat64;
+};
 type EpochData = record {
   primary_minted_this_epoch_e8s : nat;
   cumulative_primary_minted_e8s : nat;
@@ -25,10 +59,24 @@ type PreviewArgs = record {
   initial_secondary_burn : nat64;
 };
 type Result = variant { Ok : text; Err : text };
-type Result_1 = variant { Ok : nat; Err : TransferFromError };
-type Result_2 = variant { Ok : nat; Err : text };
-type Result_3 = variant { Ok : GraphData; Err : text };
-type Result_4 = variant { Ok : nat64; Err : text };
+type Result_1 = variant { Ok : vec text; Err : text };
+type Result_2 = variant { Ok : nat; Err : TransferFromError };
+type Result_3 = variant { Ok : TokenDeploymentResult; Err : text };
+type Result_4 = variant { Ok : nat; Err : text };
+type Result_5 = variant { Ok : GraphData; Err : text };
+type Result_6 = variant { Ok : nat64; Err : text };
+type StuckDeploymentInfo = record {
+  id : nat64;
+  cleanup_attempts : nat8;
+  last_error : opt text;
+  status : text;
+  payment_amount : nat64;
+  deleted_canisters : vec principal;
+  user : principal;
+  created_at : nat64;
+  created_canisters : vec principal;
+};
+type TokenDeploymentResult = record { token_id : nat64; message : text };
 type TokenRecord = record {
   id : nat64;
   secondary_token_symbol : text;
@@ -86,6 +134,8 @@ type TransferFromError = variant {
   InsufficientFunds : record { balance : nat };
 };
 service : () -> {
+  admin_force_cleanup : (nat64, AdminCleanupOptions) -> (Result);
+  admin_retry_failed_refunds : () -> (Result_1);
   create_token : (
       text,
       text,
@@ -104,15 +154,20 @@ service : () -> {
       nat64,
       nat64,
     ) -> (Result);
-  deposit_icp_in_canister : (nat64, opt blob) -> (Result_1);
+  deposit_icp_in_canister : (nat64, opt blob) -> (Result_2);
+  execute_token_deployment : (nat64) -> (Result_3);
   get_all_token_record : () -> (vec record { nat64; TokenRecord }) query;
-  get_canister_cycle_balance : (principal) -> (Result_2);
+  get_canister_cycle_balance : (principal) -> (Result_4);
   get_live : () -> (vec record { nat64; TokenRecord }) query;
+  get_my_deployments : () -> (vec DeploymentInfo) query;
+  get_stuck_deployments : () -> (vec StuckDeploymentInfo) query;
   get_token_status : (nat64) -> (opt TokenStatusDetail) query;
   get_token_status_by_swap_canister : (principal) -> (opt TokenStatus) query;
-  get_tokenomics_graphs : (nat64) -> (Result_3) query;
-  get_treasury_balance : () -> (Result_4) query;
+  get_tokenomics_graphs : (nat64) -> (Result_5) query;
+  get_treasury_balance : () -> (Result_6) query;
   get_upcomming : () -> (vec record { nat64; TokenRecord }) query;
+  initiate_token_deployment : (CreateTokenParams) -> (Result_6);
+  migrate_v9_deployments : () -> (text);
   preview_tokenomics_graphs : (PreviewArgs) -> (GraphData);
   preview_tokenomics_schedule : (
       nat64,
@@ -122,5 +177,6 @@ service : () -> {
       nat64,
       float64,
     ) -> (TokenomicsSchedule);
+  recover_stuck_deployment : () -> (Result);
   retry_pool_creation : (nat64) -> (Result);
 }

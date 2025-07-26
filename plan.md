@@ -83,7 +83,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "jyf42-65z2k-o5zsk-7sto2-wvjlt-sk2cr-66ewi-q4qpg-snpgj-qsg5u-2qe"; subaccount = null }; amount = (999_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "i53fg-avfft-u7vfw-cxu2l-tm7t4-sbzin-y2kdu-gzvhz-iswwd-buvte-oqe"; subaccount = null }; amount = (999_900_000_000 : nat) })'
 
 dfx identity use default
 
@@ -91,8 +91,14 @@ Orbit Wallet Local: http://werw6-ayaaa-aaaaa-774aa-cai.localhost:4943/en/login
 
 
 
-Kong Fix after deployment:
+// If you build fresh uses ALEX as token 1. If you just redeploy kong, skip 1 and ICP fills in with 2. 
+### Add alex as token 1
+dfx canister call kong_backend force_add_token '("ysy5f-2qaaa-aaaap-qkmmq-cai")'
+
+### Add Icp as token 2
 dfx canister call kong_backend force_add_token '("ryjl3-tyaaa-aaaaa-aaaba-cai")'
+
+
 
 dfx canister call kong_backend tokens '(opt "ICP")'
 

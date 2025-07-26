@@ -21,6 +21,7 @@ use crate::{
     TokenInfo, TokenRecord, TokenomicsCanisterInitArgs, TxId, CHAIN_ID, E8S, ICP_CANISTER_ID, ICP_TRANSFER_FEE,
     INTITAL_PRIMARY_MINT, KONG_BACKEND_CANISTER, TOKENS,
     tokenomics_simple::preview_tokenomics_from_frontend,
+    CreateTokenParams, initiate_token_deployment, execute_token_deployment,
 };
 
 const CANISTER_CREATION_CYCLES: u128 = 2_000_000_000_000u128;
@@ -29,6 +30,56 @@ const SECONDARY_SWAP_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";
 
 #[ic_cdk::update]
 async fn create_token(
+    primary_token_name: String,
+    primary_token_symbol: String,
+    primary_token_description: String,
+    primary_logo: String,
+    secondary_token_name: String,
+    secondary_token_symbol: String,
+    secondary_token_description: String,
+    secondary_logo: String,
+    primary_max_supply: u64,
+    initial_primary_mint: u64,
+    initial_secondary_burn: u64,
+    halving_step: u64,
+    threshold_multiplier: f64,
+    initial_reward_per_burn_unit: u64,
+    distribution_interval_seconds: u64,
+    launch_delay_seconds: u64,
+) -> Result<String, String> {
+    // Use the new two-phase deployment system internally
+    let params = CreateTokenParams {
+        primary_token_name,
+        primary_token_symbol,
+        primary_token_description,
+        primary_logo,
+        secondary_token_name,
+        secondary_token_symbol,
+        secondary_token_description,
+        secondary_logo,
+        primary_max_supply,
+        initial_primary_mint,
+        initial_secondary_burn,
+        halving_step,
+        threshold_multiplier,
+        initial_reward_per_burn_unit,
+        distribution_interval_seconds,
+        launch_delay_seconds,
+    };
+    
+    // Phase 1: Initiate deployment
+    let deployment_id = initiate_token_deployment(params).await?;
+    
+    // Phase 2: Execute deployment
+    let result = execute_token_deployment(deployment_id).await?;
+    
+    // Return appropriate message based on result
+    Ok(format!("Token created successfully (ID: {})", result.token_id))
+}
+
+// Keep the old implementation as a separate function for reference
+#[allow(dead_code)]
+async fn create_token_old(
     primary_token_name: String,
     primary_token_symbol: String,
     primary_token_description: String,
@@ -329,7 +380,7 @@ async fn create_token(
     }
 }
 
-async fn create_icrc1_canister(
+pub async fn create_icrc1_canister(
     token_symbol: String,
     token_name: String,
     token_description: String,
@@ -410,7 +461,7 @@ async fn create_icrc1_canister(
     Ok(canister_id.to_string())
 }
 
-async fn create_a_canister(cycles: u128) -> Result<Principal, String> {
+pub async fn create_a_canister(cycles: u128) -> Result<Principal, String> {
     let create_args = CreateCanisterArgument { settings: None };
     let canister_id_record = create_canister(create_args, cycles)
         .await
@@ -420,7 +471,7 @@ async fn create_a_canister(cycles: u128) -> Result<Principal, String> {
     Ok(canister_id)
 }
 
-async fn install_tokenomics_wasm_on_existing_canister(
+pub async fn install_tokenomics_wasm_on_existing_canister(
     canister_id: Principal,
     primary_token_id: Option<Principal>,
     secondary_token_id: Option<Principal>,
@@ -462,7 +513,7 @@ async fn install_tokenomics_wasm_on_existing_canister(
     Ok(())
 }
 
-async fn install_icp_swap_wasm_on_existing_canister(
+pub async fn install_icp_swap_wasm_on_existing_canister(
     canister_id: Principal,
     primary_token_id: Option<Principal>,
     secondary_token_id: Option<Principal>,
@@ -505,7 +556,7 @@ async fn install_icp_swap_wasm_on_existing_canister(
     Ok(())
 }
 
-async fn install_logs_wasm_on_existing_canister(
+pub async fn install_logs_wasm_on_existing_canister(
     canister_id: Principal,
     primary_token_id: Principal,
     secondary_token_id: Principal,
@@ -537,7 +588,7 @@ async fn install_logs_wasm_on_existing_canister(
     Ok(())
 }
 
-async fn add_token_to_kong_swap(token_id: Principal) -> AddTokenResponse {
+pub async fn add_token_to_kong_swap(token_id: Principal) -> AddTokenResponse {
     let args: AddTokenArgs = AddTokenArgs {
         token: format!("IC.{}", token_id),
     };
@@ -706,7 +757,7 @@ async fn retry_pool_creation(token_id: u64) -> Result<String, String> {
     }
 }
 
-async fn transfer_tokens_to_kong(
+pub async fn transfer_tokens_to_kong(
     ledger_canister_id: Principal,
     amount: Nat,
 ) -> Result<Nat, String> {
@@ -794,7 +845,7 @@ async fn get_canister_cycle_balance(canister_id: Principal) -> Result<Nat, Strin
 }
 
 #[update]
-async fn deposit_icp_in_canister(
+pub async fn deposit_icp_in_canister(
     amount: u64,
     from_subaccount: Option<[u8; 32]>,
 ) -> Result<BlockIndex, TransferFromError> {

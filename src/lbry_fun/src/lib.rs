@@ -1,5 +1,15 @@
 mod storage;
 pub use storage::*;
+mod deployment;
+pub use deployment::*;
+mod deployment_updates;
+pub use deployment_updates::{
+    initiate_token_deployment, execute_token_deployment, 
+    recover_stuck_deployment, get_my_deployments
+};
+mod deployment_execution;
+pub use deployment_execution::*;
+mod deployment_cleanup;
 mod tokenomics_simple;
 pub use tokenomics_simple::{TokenomicsSchedule, EpochData};
 mod simulation_new;
