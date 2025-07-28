@@ -13,6 +13,7 @@ import RouteErrorBoundary from "@/components/RouteErrorBoundary";
 
 const NotFoundPage = lazy(()=>import("@/pages/NotFoundPage"));
 const TokenPage = lazy(() => import("@/pages/tokenPage"));
+const DeploymentsPage = lazy(() => import("@/pages/DeploymentsPage"));
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
@@ -25,6 +26,7 @@ const router = createBrowserRouter(
 
 				</Route>
 				<Route path="swap" element={<Suspense key="swap" fallback={<TopProgressBar />}><SwapPage /></Suspense>} />
+				<Route path="deployments" element={<Suspense key="deployments" fallback={<TopProgressBar />}><DeploymentsPage /></Suspense>} />
 
 				<Route path={ROUTES.UNAUTHORIZED} element={<Suspense key="401" fallback={<TopProgressBar />}><UnauthorizedPage /></Suspense>} />
 				<Route path={ROUTES.NOT_FOUND} element={<Suspense key="404" fallback={<TopProgressBar />}><NotFoundPage /></Suspense>} />

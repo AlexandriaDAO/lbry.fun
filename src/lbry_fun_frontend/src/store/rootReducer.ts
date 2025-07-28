@@ -7,6 +7,7 @@ import tokenomicsReducer from "@/features/swap/tokenomicsSlice";
 import primaryReducer from "@/features/swap/primarySlice";
 import lbryFunReducer from "@/features/token/lbryFunSlice";
 import uiReducer from './slices/uiSlice';
+import deploymentReducer from './slices/deploymentSlice';
 
 
 const rootReducer = combineReducers({
@@ -18,6 +19,7 @@ const rootReducer = combineReducers({
 	primary:primaryReducer,
 	lbryFun:lbryFunReducer,
     ui: uiReducer,
+    deployment: deploymentReducer,
 });
 
 export default rootReducer;

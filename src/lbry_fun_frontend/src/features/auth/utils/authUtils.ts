@@ -67,7 +67,7 @@ const getActor = async <T>(
       const agent = await HttpAgent.create({
         identity,
         host: isLocalDevelopment
-          ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943` // Local development URL
+          ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943` // Local development URL - hardcoded II canister ID
           : "https://identity.ic0.app", // Default to mainnet if neither condition is true
       });
 
@@ -103,7 +103,7 @@ export const getActorSwap = async (canisterId:string) => {
     const agent = await HttpAgent.create({
       identity,
       host: isLocalDevelopment
-        ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
+        ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943` // hardcoded II canister ID
         : "https://identity.ic0.app",
     });
     
@@ -142,7 +142,7 @@ export const getTokenomicsActor = async (canisterId:string) => {
     const agent = await HttpAgent.create({
       identity,
       host: isLocalDevelopment
-        ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
+        ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943` // hardcoded II canister ID
         : "https://identity.ic0.app",
     });
     
@@ -178,7 +178,7 @@ export const getICRCActor = async (canisterId:string) => {
     const agent = await HttpAgent.create({
       identity,
       host: isLocalDevelopment
-        ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
+        ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943` // hardcoded II canister ID
         : "https://identity.ic0.app",
     });
     

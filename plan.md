@@ -83,7 +83,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "i53fg-avfft-u7vfw-cxu2l-tm7t4-sbzin-y2kdu-gzvhz-iswwd-buvte-oqe"; subaccount = null }; amount = (999_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "naeuf-h7bkj-fxjvx-uq7bs-m2whk-bfqdq-efee3-wwfwy-e5fd4-qjtdl-zqe"; subaccount = null }; amount = (999_900_000_000 : nat) })'
 
 dfx identity use default
 
@@ -127,7 +127,7 @@ dfx canister call kong_backend tokens '(opt "ICP")'
 
 XWKa-Q2gppignoX_Ngs7VJYZPN_yhiy1ToovQ1NBMFs
 NVkSolD-1AJcJ0BMfEASJjIuak3Y6CvDJZ4XOIUbU9g
-8Pvu_hc9dQWqIPOIcEhtsRYuPtLiQe2TTvhgIj9zmq8
+8Pvu_hc9dQWqIPOIcEhtsRYuPtLiQe2TTvhgIj9zmq8 
 93mQRQG7zpvKQj3sUaDlNu_dOWFmb3-vp2Myu8sw03I 09/2022
 QXvFGeh4LaqKQD7pxNOjs48FmFEjSAhhzxgvBairAFc
 bqQgrxMXYFJXTqS5EF_XgmHUYyLNPXUv5Ze_c0RlW18 

@@ -190,7 +190,7 @@ pub async fn recover_stuck_deployment() -> Result<String, String> {
     Ok(format!(
         "Deployment {} marked for cleanup. Refund of {} ICP will be processed within 5 minutes.",
         deployment_id,
-        (deployment.payment_amount - 10_000) as f64 / 100_000_000.0 // Minus transfer fee
+        (deployment.payment_amount - 100_000_000) as f64 / 100_000_000.0 // Minus 1 ICP platform fee
     ))
 }
 

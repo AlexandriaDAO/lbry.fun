@@ -70,8 +70,10 @@ async fn cleanup_worker() {
 async fn cleanup_deployment_with_progress(deployment: &Deployment) -> Result<(), String> {
     let mut errors = vec![];
     
-    // Calculate refund amount (payment minus transfer fee)
-    let refund_amount = deployment.payment_amount.saturating_sub(10_000);
+    // Calculate refund amount (payment minus platform fee)
+    // Platform fee: 1 ICP (100_000_000 e8s) to cover cycle costs and prevent abuse
+    const PLATFORM_FEE: u64 = 100_000_000; // 1 ICP
+    let refund_amount = deployment.payment_amount.saturating_sub(PLATFORM_FEE);
     
     // Delete only canisters not already deleted
     let canisters_to_delete: Vec<Principal> = deployment.created_canisters
@@ -193,7 +195,9 @@ async fn admin_force_cleanup(deployment_id: u64, options: AdminCleanupOptions) -
     
     // Force refund if requested
     if options.force_refund {
-        let refund_amount = deployment.payment_amount.saturating_sub(10_000);
+        // Platform fee: 1 ICP (100_000_000 e8s) to cover cycle costs and prevent abuse
+        const PLATFORM_FEE: u64 = 100_000_000; // 1 ICP
+        let refund_amount = deployment.payment_amount.saturating_sub(PLATFORM_FEE);
         match transfer_icp_to_account(deployment.user, refund_amount).await {
             Ok(_) => results.push(format!("Refunded {} ICP", refund_amount as f64 / 100_000_000.0)),
             Err(e) => results.push(format!("Refund failed: {}", e)),

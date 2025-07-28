@@ -14,7 +14,7 @@ const frontendDirectory = "lbry_fun_frontend";
 const frontend_entry = path.join("src", frontendDirectory, "public", "index.html");
 
 const II_URL = process.env.DFX_NETWORK === "local"
-  ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
+  ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943` // hardcoded II canister ID
   : "https://identity.ic0.app";
 
 module.exports = {

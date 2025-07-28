@@ -10,6 +10,9 @@ import { TokenConversionService } from '@/utils/TokenConversionService';
 import UnifiedTokenomicsGraphsV2 from '../UnifiedTokenomicsGraphsV2';
 import UserICPBalance from '../userICPBalance';
 import TooltipIcon from '../TooltipIcon';
+import { initiateTokenDeployment, fetchDeploymentHistory } from '../../thunk/deploymentThunks';
+import { CreateTokenParams } from '@/types/deployment';
+import { DeploymentStatusModal } from '../DeploymentStatusModal';
 
 import {
   TerminalInput,
@@ -48,6 +51,7 @@ const TerminalCreateToken: React.FC = () => {
   const navigate = useNavigate();
   const lbryFun = useAppSelector((state: RootState) => state.lbryFun);
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+  const { activeDeploymentId } = useAppSelector((state: RootState) => state.deployment);
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
@@ -59,6 +63,7 @@ const TerminalCreateToken: React.FC = () => {
   }>({ type: 'idle' });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDeploymentModal, setShowDeploymentModal] = useState(false);
 
   // Form state with LBRY/ALEX reference parameters
   const [form, setForm] = useState<TokenFormValues>({
@@ -234,23 +239,16 @@ const TerminalCreateToken: React.FC = () => {
     return num.toLocaleString();
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Prevent double submission
-    if (isSubmitting) {
-      console.log('Submission already in progress, ignoring duplicate attempt');
-      return;
-    }
+    if (isSubmitting) return;
     
     setSubmitAttempted(true);
-    
-    if (Object.keys(errors).length > 0) {
-      return;
-    }
+    if (Object.keys(errors).length > 0) return;
     
     setIsSubmitting(true);
-    setStatus({ type: 'loading', message: 'Creating tokens...' });
+    setStatus({ type: 'loading', message: 'Initiating deployment...' });
     
     if (!isAuthenticated || !principal) {
       setStatus({ type: 'error', message: 'Please log in to create a token.' });
@@ -258,37 +256,52 @@ const TerminalCreateToken: React.FC = () => {
       return;
     }
     
-    // Convert whole token values to e8s for the backend
-    const formDataForBackend = {
-      ...form,
-      primary_max_supply: (BigInt(form.primary_max_supply) * BigInt(TokenConversionService.getE8S())).toString(),
-      initial_primary_mint: (BigInt(form.tge_allocation) * BigInt(TokenConversionService.getE8S())).toString(),
-      initial_secondary_burn: (BigInt(form.initial_secondary_burn) * BigInt(TokenConversionService.getE8S())).toString(),
-      initial_reward_per_burn_unit: (BigInt(Math.floor(parseFloat(form.initial_reward_per_burn_unit) * Number(TokenConversionService.getE8S())))).toString(),
-      halving_step: form.halving_step,
+    // Convert form data to deployment params
+    const params: CreateTokenParams = {
+      primary_token_name: form.primary_token_name,
+      primary_token_symbol: form.primary_token_symbol,
+      primary_token_description: form.primary_token_description,
+      primary_logo: form.primary_token_logo_base64,
+      secondary_token_name: form.secondary_token_name,
+      secondary_token_symbol: form.secondary_token_symbol,
+      secondary_token_description: form.secondary_token_description,
+      secondary_logo: form.secondary_token_logo_base64,
+      primary_max_supply: BigInt(form.primary_max_supply) * BigInt(TokenConversionService.getE8S()),
+      initial_primary_mint: BigInt(form.tge_allocation) * BigInt(TokenConversionService.getE8S()),
+      initial_secondary_burn: BigInt(form.initial_secondary_burn) * BigInt(TokenConversionService.getE8S()),
+      halving_step: BigInt(form.halving_step),
       threshold_multiplier: parseFloat(form.threshold_multiplier),
-      distribution_interval_seconds: form.distribution_interval_seconds,
-      launch_delay_seconds: form.launch_delay_seconds,
+      initial_reward_per_burn_unit: BigInt(Math.floor(parseFloat(form.initial_reward_per_burn_unit) * Number(TokenConversionService.getE8S()))),
+      distribution_interval_seconds: BigInt(form.distribution_interval_seconds),
+      launch_delay_seconds: BigInt(form.launch_delay_seconds)
     };
-
-    dispatch(createToken({ formData: formDataForBackend, userPrincipal: principal }));
-    console.log('Submitting (converted to e8s):', formDataForBackend);
-  };
-
-  useEffect(() => {
-    if (lbryFun.success === true) {
-      dispatch(lbryFunFlagHandler());
-      setStatus({ type: 'success', message: 'Token created successfully!' });
+    
+    // Phase 1: Initiate deployment
+    const result = await dispatch(initiateTokenDeployment(params));
+    
+    if (initiateTokenDeployment.fulfilled.match(result)) {
+      // Successfully initiated, open modal to execute phase 2
+      setShowDeploymentModal(true);
       setIsSubmitting(false);
-      setTimeout(() => {
-        navigate('/token/success');
-      }, 1500);
-    } 
-    if (lbryFun.error !== null) {
-      setStatus({ type: 'error', message: lbryFun.error.message });
+    } else {
+      // Initiation failed
+      setStatus({ 
+        type: 'error', 
+        message: result.payload?.message || 'Failed to initiate deployment' 
+      });
       setIsSubmitting(false);
     }
-  }, [lbryFun.success, lbryFun.error, dispatch, navigate]);
+  };
+
+  // Check for existing deployment on mount
+  useEffect(() => {
+    const savedDeploymentId = localStorage.getItem('activeDeploymentId');
+    if (savedDeploymentId && !activeDeploymentId) {
+      // Restore deployment state
+      dispatch(fetchDeploymentHistory());
+      setShowDeploymentModal(true);
+    }
+  }, [activeDeploymentId, dispatch]);
 
   const distributionIntervalOptions = [
     { value: '60', label: '1_minute' },
@@ -677,6 +690,17 @@ const TerminalCreateToken: React.FC = () => {
           />
         </div>
 
+        {/* Cost transparency display */}
+        <div className="terminal-info mb-4">
+          <div className="terminal-label">Deployment Cost:</div>
+          <div className="text-sm">
+            <span>Total: 5.0 ICP</span>
+            <span className="ml-4 text-xs text-gray-400">
+              (Refundable on failure: 4.0 ICP)
+            </span>
+          </div>
+        </div>
+
         {/* Submit Commands */}
         <div className="terminal-commands">
           <button
@@ -685,6 +709,13 @@ const TerminalCreateToken: React.FC = () => {
             disabled={Object.keys(errors).length > 0 || status.type === 'loading' || isSubmitting}
           >
             &gt; execute_token_creation
+          </button>
+          <button
+            type="button"
+            className="terminal-command"
+            onClick={() => navigate('/deployments')}
+          >
+            &gt; view_deployment_history
           </button>
           <button
             type="button"
@@ -698,6 +729,16 @@ const TerminalCreateToken: React.FC = () => {
 
       {/* Status bar */}
       <TerminalStatus status={status} />
+      
+      {/* Deployment Status Modal */}
+      <DeploymentStatusModal 
+        deploymentId={activeDeploymentId}
+        isOpen={showDeploymentModal}
+        onClose={() => setShowDeploymentModal(false)}
+        onSuccess={(tokenId) => {
+          navigate(`/token/success?id=${tokenId}`);
+        }}
+      />
     </div>
   );
 };

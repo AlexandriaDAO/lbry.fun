@@ -148,3 +148,4 @@ Each token launch creates two tokens: Primary (reward) and Secondary (mining).
 - When providing technical advice, ultra deep think about specific actionable steps rather than abstract concepts.
 - If troubleshooting leads to a dead end, go back to planning in a fresh markdown file that we discuss together.
 - Don't make core changes unless you're confident we have an optimized solution.
+- Never worry about backend compatability because this project is not launched live. Instead, refactor for optimizationo both simply and surgically.

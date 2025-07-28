@@ -7,20 +7,33 @@ set -ex
 # dfx start --clean --background --host 127.0.0.1:4943
 
 # Step 2: II Canister
-# Check if Internet Identity is already deployed
-if dfx canister id internet_identity >/dev/null 2>&1; then
-    echo "Internet Identity already deployed at $(dfx canister id internet_identity)"
+# Check if Internet Identity is already deployed on the network
+if dfx canister info rdmx6-jaaaa-aaaaa-aaadq-cai 2>/dev/null | grep -q "Controllers:"; then
+    echo "Internet Identity already deployed at rdmx6-jaaaa-aaaaa-aaadq-cai"
+    # Download the candid file for type generation
+    mkdir -p .dfx/local/canisters/internet_identity
+    curl -L -o .dfx/local/canisters/internet_identity/internet_identity.did \
+        "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did"
+    # No need to add to .env - hardcoded in frontend
 else
     echo "Deploying Internet Identity..."
     dfx deploy internet_identity --specified-id rdmx6-jaaaa-aaaaa-aaadq-cai
 fi
 
 ## xrc first because it's used in init functions of others.
-dfx canister create xrc --specified-id uf6dk-hyaaa-aaaaq-qaaaq-cai
 cargo build --release --target wasm32-unknown-unknown --package xrc
 /home/theseus/.cargo/bin/ic-wasm target/wasm32-unknown-unknown/release/xrc.wasm -o target/wasm32-unknown-unknown/release/xrc.wasm shrink
 candid-extractor target/wasm32-unknown-unknown/release/xrc.wasm > src/xrc/xrc.did
-dfx deploy xrc --specified-id uf6dk-hyaaa-aaaaq-qaaaq-cai
+
+# Check if XRC is already deployed on the network
+if dfx canister info uf6dk-hyaaa-aaaaq-qaaaq-cai 2>/dev/null | grep -q "Controllers:"; then
+    echo "XRC already deployed at uf6dk-hyaaa-aaaaq-qaaaq-cai - upgrading..."
+    dfx canister install uf6dk-hyaaa-aaaaq-qaaaq-cai --mode upgrade --wasm target/wasm32-unknown-unknown/release/xrc.wasm
+    # No need to add to .env - XRC ID is not used in frontend
+else
+    echo "Creating and deploying XRC..."
+    dfx deploy xrc --specified-id uf6dk-hyaaa-aaaaq-qaaaq-cai
+fi
 
 # Step 4: Generate all other backend canisters.
 
@@ -90,7 +103,12 @@ gunzip -f src/icp_ledger_canister/ledger.wasm.gz
 curl -L -o src/icp_ledger_canister/ledger.did "https://raw.githubusercontent.com/dfinity/ic/$IC_VERSION/rs/rosetta-api/icrc1/ledger/ledger.did"
 
 # Deploy the ICRC-1 ICP ledger with ICRC-2 features enabled
-dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argument "
+# Check if ICP ledger is already deployed on the network
+if dfx canister info ryjl3-tyaaa-aaaaa-aaaba-cai 2>/dev/null | grep -q "Controllers:"; then
+    echo "ICP ledger already deployed at ryjl3-tyaaa-aaaaa-aaaba-cai"
+    # No need to add to .env - hardcoded in frontend
+else
+    dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argument "
   (variant {  
     Init = record {  
       minting_account = record { owner = principal \"$MINTER_PRINCIPAL\"; subaccount = null };
@@ -122,6 +140,7 @@ dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argu
     }  
   })  
 "
+fi
 
 
 # # How we get the icrc1 ledger wasm:
