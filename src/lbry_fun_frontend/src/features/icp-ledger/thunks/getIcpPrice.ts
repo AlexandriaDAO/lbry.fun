@@ -21,8 +21,8 @@ const getIcpPrice = createAsyncThunk<
 
   // Check if we have an active swap pool to get the ICP price from
   if (!state.swap.activeSwapPool) {
-    console.warn("No active swap pool found, using fallback ICP price of $10.00");
-    return 10.0;
+    console.warn("No active swap pool found, using fallback ICP price of $4.00");
+    return 4.0;
   }
 
   // Fetching fresh ICP price from XRC canister via icp_swap canister
@@ -31,8 +31,8 @@ const getIcpPrice = createAsyncThunk<
     
     // Validate actor before using it
     if (!validateActor(actor, "ICP Swap")) {
-      console.warn("Unable to connect to swap canister, using fallback ICP price of $10.00");
-      return 10.0;
+      console.warn("Unable to connect to swap canister, using fallback ICP price of $4.00");
+      return 4.0;
     }
 
     // Get the secondary ratio (ICP price in cents) from the canister
@@ -54,8 +54,8 @@ const getIcpPrice = createAsyncThunk<
     }
 
     // As a last resort, return a fallback price to prevent complete failure
-    console.warn("No cached price available, using fallback ICP price of $10.00");
-    return 10.0;
+    console.warn("No cached price available, using fallback ICP price of $4.00");
+    return 4.0;
   }
 });
 

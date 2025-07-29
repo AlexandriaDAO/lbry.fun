@@ -54,8 +54,7 @@ Instead of being an LBP, it uses a dual token system. The secondary token is min
 All ICP collected from minting secondary tokens is distributed accordingly (1% of the whole pool every hour):
 
 - 1% to buy back and burn $LBRY, which is the secondary token of the parent project of which this is a fork.
-- 49.5% to stakers of the primary token.
-- 49.5% to buyback and provide locked liquidity in kongswap (which we deploy locally from a separate repo).
+99% → Primary token stakers (will later be replaced with Permanently Locked Kongswap Liquidity)
 
 ## Project Architecture
 
@@ -123,8 +122,7 @@ Each token launch creates two tokens: Primary (reward) and Secondary (mining).
 
 ### ICP Distribution (1% of pool hourly)
 - 1% → Buy/burn $LBRY (parent project token)
-- 49.5% → Primary token stakers
-- 49.5% → Kongswap liquidity (locked)
+- 99% → Primary token stakers (will later be replaced with Permanently Locked Kongswap Liquidity)
 
 ## Common Error Patterns & Solutions
 

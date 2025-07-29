@@ -222,8 +222,7 @@ Primary Token:
 
 Fee Distribution (from secondary token sales):
   - 1%: Buy and burn LBRY tokens
-  - 49.5%: To primary token stakers
-  - 49.5%: Buyback and locked liquidity
+  - 99% → Primary token stakers (will later be replaced with Permanently Locked Kongswap Liquidity)
 ```
 
 ### Halving Mechanism

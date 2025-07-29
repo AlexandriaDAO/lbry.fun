@@ -1,44 +1,12 @@
-First thing tomorrow: 
-- We don't enforce the stake requirement or login for accepting proposals. We should, and make it look like an actual vote.
-- Remove the DAO tab. Just make it two tabs.
-- We should show the same lbry_fun kind of canister data.
-- You should have to have staked tokens to be added as an operator.
-- 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-The question is, for the hackathon, should I do the locked liquidity thing or just leave it as is.
-
-
-
-
-
-When you come back: 
-- Do some stress integrationtesting with the bot1 canister and make sure the graphs align.
-- Audit the existing code based on the changelogs.
-- Remove the changelogs and declare things safe before moving on to switching staking for locked liquidity.
-- Done.
-
-
+- Implement the 1% fee to ALEX stakers, and the 5ICP To alex stakers.
 - Minor vulnerability. There is a minor concern where if the XRC oracle fails, the tokens become permanently untradable. Why don't we look into using our core canister's XRC rate instead of having each one use its own.
+- Move on to locked lp.
 
 
 
 
 
-
-Good test: Conservation analysis: (start with a set amount of ICP, mint, burn, lock lp, collect, sell, and repeat). Add up the locations of all the ICP at the end and ensure that all is conserved.
 
 
 

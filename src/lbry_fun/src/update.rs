@@ -958,5 +958,8 @@ fn init() {
             let _ = _process_fee_treasury().await;
         });
     });
+    
+    // Initialize the collection timer for ALEX rewards
+    crate::collection::init_collection_timer();
 
 }

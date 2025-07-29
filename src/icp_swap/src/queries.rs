@@ -6,6 +6,9 @@ use crate::{
     Configs,
     CONFIGS,
     LAUNCH_TIME,
+    UNCOLLECTED_ALEX_FEES,
+    UNCOLLECTED_LP_FEES,
+    REWARD_POOL,
 };
 use candid::{CandidType, Principal};
 use ic_cdk::{api::caller, query};
@@ -171,4 +174,19 @@ pub fn get_launch_status() -> (bool, Option<u64>) {
     let is_live = is_token_live();
     let launch_time = LAUNCH_TIME.with(|m| m.borrow().get(&()));
     (is_live, launch_time)
+}
+
+// Query function for lbry_fun to check available fees
+#[query]
+pub fn get_uncollected_fees() -> (u64, u64) {
+    (
+        UNCOLLECTED_ALEX_FEES.with(|f| f.borrow().get(&()).unwrap_or(0)),
+        UNCOLLECTED_LP_FEES.with(|f| f.borrow().get(&()).unwrap_or(0))
+    )
+}
+
+// Query function to get reward pool status
+#[query]
+pub fn get_reward_pool_status() -> u64 {
+    REWARD_POOL.with(|p| p.borrow().get(&()).unwrap_or(0))
 }

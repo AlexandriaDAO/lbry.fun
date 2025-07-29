@@ -334,7 +334,7 @@ pub async fn burn_secondary(
     }
 
     let amount_secondary_e8s = amount_secondary
-        .checked_mul(100_000_000) //todo
+        .checked_mul(E8S) // Convert to E8S (smallest unit)
         .ok_or_else(||
             ExecutionError::new_with_log(
                 caller,
@@ -877,8 +877,57 @@ fn safe_reward_to_transfer_amount(reward: u128) -> Result<u64, ExecutionError> {
         })
 }
 
+// Internal function - only callable by timer
 pub async fn distribute_reward() -> Result<String, ExecutionError> {
-    register_info_log(caller(), "distribute_reward", "distribute_reward initiated.");
+    // Get current reward pool balance
+    let reward_pool = REWARD_POOL.with(|p| {
+        p.borrow().get(&()).unwrap_or(0)
+    });
+    
+    if reward_pool == 0 {
+        return Ok("No rewards to distribute".to_string());
+    }
+    
+    // Calculate 1% of reward pool
+    let total_distribution = reward_pool / 100;
+    
+    if total_distribution == 0 {
+        return Ok("Distribution amount too small".to_string());
+    }
+    
+    // Deduct from reward pool first
+    REWARD_POOL.with(|p| {
+        let new_pool = reward_pool.saturating_sub(total_distribution);
+        p.borrow_mut().insert((), new_pool);
+    });
+    
+    // Calculate exact distribution
+    let alex_portion = total_distribution / 100;  // 1% of distribution
+    let lp_portion = total_distribution - alex_portion; // Remainder for exact accounting
+    
+    // Update uncollected fees
+    UNCOLLECTED_ALEX_FEES.with(|f| {
+        let current = f.borrow().get(&()).unwrap_or(0);
+        f.borrow_mut().insert((), current.saturating_add(alex_portion));
+    });
+    
+    UNCOLLECTED_LP_FEES.with(|f| {
+        let current = f.borrow().get(&()).unwrap_or(0);
+        f.borrow_mut().insert((), current.saturating_add(lp_portion));
+    });
+    
+    register_info_log(
+        caller(),
+        "distribute_reward",
+        &format!("Distributed {} from pool of {}", total_distribution, reward_pool)
+    );
+    
+    Ok(format!("Distributed {} from pool of {}", total_distribution, reward_pool))
+}
+
+// Legacy distribute_reward_to_stakers function (to be removed when staking is deprecated)
+pub async fn distribute_reward_to_stakers() -> Result<String, ExecutionError> {
+    register_info_log(caller(), "distribute_reward_to_stakers", "distribute_reward_to_stakers initiated.");
     let intervals = get_distribution_interval();
     let staking_percentage = STAKING_REWARD_PERCENTAGE;
     let total_icp_available: u64 = match fetch_canister_icp_balance().await {
@@ -1597,3 +1646,95 @@ async fn burn_token(
 
     result // Return the inner Result<BlockIndex, TransferFromError>
 }
+
+// Collection result structure
+#[derive(CandidType, Deserialize)]
+pub struct CollectionResult {
+    pub collected: u64,
+    pub timestamp: u64,
+}
+
+// Collection error structure
+#[derive(CandidType, Deserialize)]
+pub enum CollectionError {
+    AmountTooSmall { amount: u64 },
+    TransferFailed { reason: String },
+}
+
+// Collection with CEI pattern and failure reversal
+#[update(guard = "only_lbry_fun")]
+pub async fn collect_alex_fees() -> Result<CollectionResult, CollectionError> {
+    // Check
+    let fees = UNCOLLECTED_ALEX_FEES.with(|f| f.borrow().get(&()).unwrap_or(0));
+    
+    if fees < ICP_TRANSFER_FEE {
+        return Err(CollectionError::AmountTooSmall { amount: fees });
+    }
+    
+    // Effect - deduct from balance
+    UNCOLLECTED_ALEX_FEES.with(|f| {
+        f.borrow_mut().insert((), 0);
+    });
+    
+    // Interaction - external transfer
+    match transfer_icp_to_lbry_fun(fees).await {
+        Ok(_) => {
+            Ok(CollectionResult { 
+                collected: fees,
+                timestamp: ic_cdk::api::time()
+            })
+        }
+        Err(e) => {
+            // Failure reversal - restore exact balance
+            UNCOLLECTED_ALEX_FEES.with(|f| {
+                f.borrow_mut().insert((), fees);
+            });
+            Err(CollectionError::TransferFailed { reason: e.to_string() })
+        }
+    }
+}
+
+// Function to add funds to reward pool (only callable by lbry_fun)
+#[update(guard = "only_lbry_fun")]
+pub fn add_to_reward_pool(amount: u64) -> Result<u64, String> {
+    REWARD_POOL.with(|p| {
+        let current = p.borrow().get(&()).unwrap_or(0);
+        let new_total = current.saturating_add(amount);
+        p.borrow_mut().insert((), new_total);
+        Ok(new_total)
+    })
+}
+
+// Helper function to transfer ICP to lbry_fun canister
+async fn transfer_icp_to_lbry_fun(amount: u64) -> Result<BlockIndex, String> {
+    // Get lbry_fun canister ID from environment or configuration
+    let lbry_fun_id = Principal::from_text("oni4e-oyaaa-aaaap-qp2pq-cai")
+        .map_err(|e| format!("Invalid lbry_fun canister ID: {}", e))?;
+    
+    // Get ICP ledger ID from configs or default
+    let icp_ledger_id = CONFIGS.with(|configs| {
+        configs.borrow()
+            .get(&())
+            .map(|c| c.icp_ledger_id)
+            .unwrap_or(MAINNET_LEDGER_CANISTER_ID)
+    });
+    
+    let transfer_args = TransferArg {
+        from_subaccount: None,
+        to: lbry_fun_id.into(),
+        fee: None,
+        created_at_time: None,
+        memo: None,
+        amount: Nat::from(amount),
+    };
+    
+    let (result,) = ic_cdk::call::<(TransferArg,), (Result<BlockIndex, TransferError>,)>(
+        icp_ledger_id,
+        "icrc1_transfer",
+        (transfer_args,)
+    ).await
+    .map_err(|e| format\!("Transfer call failed: {:?}", e))?;
+    
+    result.map_err(|e| format\!("Transfer failed: {:?}", e))
+}
+EOF < /dev/null

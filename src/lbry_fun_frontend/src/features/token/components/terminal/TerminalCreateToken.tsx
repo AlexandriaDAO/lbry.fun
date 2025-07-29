@@ -367,9 +367,8 @@ const TerminalCreateToken: React.FC = () => {
             <span className="terminal-label">icp_revenue_flow:</span>
             <div className="pl-4">
               - every interval, 1% of ICP pool distributed:
-              - 1% to LBRY buyback
-              - 49.5% to primary staking rewards
-              - 49.5% to primary buybacks + locked liquidity
+              - 1% to ALEX stakers wallet
+              - 99% to locked kongswap liquidity
             </div>
           </div>
         </div>
@@ -638,7 +637,7 @@ const TerminalCreateToken: React.FC = () => {
                 <div className="flex items-center mb-1">
                   <span className="terminal-label">distribution_interval</span>
                   <TooltipIcon
-                    text="Controls how often rewards are distributed. Every interval, exactly 1% of the total ICP pool is split: 1% to LBRY buyback, 49.5% to stakers, and 49.5% to liquidity. DEFAULT: 1 hour. WARNING: Only change if you understand the implications."
+                    text="Controls how often rewards are distributed. Every interval, exactly 1% of the total ICP pool is split: 1% to ALEX stakers wallet, 99% to locked kongswap liquidity. DEFAULT: 1 hour. WARNING: Only change if you understand the implications."
                   />
                 </div>
                 <TerminalSelect

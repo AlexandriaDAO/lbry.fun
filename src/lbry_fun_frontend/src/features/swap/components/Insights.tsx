@@ -207,7 +207,7 @@ const Insights: React.FC = () => {
                             </div>
                             <div className="terminal-row">
                                 <span className="terminal-label">protocol:</span>
-                                <span className="terminal-accent">1%_alexandria | 49.5%_lp_treasury | 49.5%_stakers</span>
+                                <span className="terminal-accent">1%_alexandria | 99%_locked_lp</span>
                             </div>
                         </div>
                         <DistributionTracker icpSwapCanisterId={poolData[1].icp_swap_canister_id} />

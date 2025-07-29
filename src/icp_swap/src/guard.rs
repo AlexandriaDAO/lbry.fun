@@ -38,3 +38,15 @@ pub fn not_anon() -> Result<(), String> {
         Err("Anonymous principal not allowed to make calls.".to_string())
     }
 }
+
+pub fn only_lbry_fun() -> Result<(), String> {
+    let caller = ic_cdk::api::caller();
+    let lbry_fun_id = Principal::from_text("oni4e-oyaaa-aaaap-qp2pq-cai")
+        .map_err(|_| "Invalid lbry_fun canister ID")?;
+    
+    if caller == lbry_fun_id {
+        Ok(())
+    } else {
+        Err("Only lbry_fun canister can make this call".to_string())
+    }
+}

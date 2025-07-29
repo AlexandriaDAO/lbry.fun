@@ -124,4 +124,8 @@ service : (opt InitArgs) -> {
   stake_primary : (nat64, opt blob) -> (Result);
   swap : (nat64, opt blob) -> (Result);
   un_stake_all_primary : (opt blob) -> (Result);
+  get_uncollected_fees : () -> (nat64, nat64) query;
+  get_reward_pool_status : () -> (nat64) query;
+  collect_alex_fees : () -> (variant { Ok : record { collected : nat64; timestamp : nat64 }; Err : variant { AmountTooSmall : record { amount : nat64 }; TransferFailed : record { reason : text } } });
+  add_to_reward_pool : (nat64) -> (variant { Ok : nat64; Err : text });
 }
