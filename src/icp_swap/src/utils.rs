@@ -276,7 +276,7 @@ pub(crate) async fn get_total_primary_staked() -> Result<u128, ExecutionError> {
             ),
     }
 }
-pub(crate) async fn fetch_canister_icp_balance() -> Result<u64, ExecutionError> {
+pub async fn fetch_canister_icp_balance() -> Result<u64, ExecutionError> {
     let canister_id = ic_cdk::api::id();
     
     // Get ICP ledger canister ID from configs or use default

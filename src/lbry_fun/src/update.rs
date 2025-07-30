@@ -961,5 +961,25 @@ fn init() {
     
     // Initialize the collection timer for ALEX rewards
     crate::collection::init_collection_timer();
+    
+    // Initialize the reconciliation timer
+    crate::collection::init_reconciliation_timer();
+}
 
+#[ic_cdk::post_upgrade]
+fn post_upgrade() {
+    // Re-initialize timers after upgrade
+    // Schedule the treasury processing to run every hour.
+    let hourly = Duration::from_secs(60 * 60);
+    set_timer_interval(hourly, || {
+        ic_cdk::spawn(async {
+            let _ = _process_fee_treasury().await;
+        });
+    });
+    
+    // Initialize the collection timer for ALEX rewards
+    crate::collection::init_collection_timer();
+    
+    // Initialize the reconciliation timer
+    crate::collection::init_reconciliation_timer();
 }

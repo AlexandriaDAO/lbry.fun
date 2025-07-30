@@ -11,6 +11,9 @@ use std::collections::{ BTreeSet, HashMap };
 use crate::utils::DEFAULT_SECONDARY_RATIO;
 use crate::ExecutionError;
 
+// Threshold for acceptable discrepancy (1 transfer fee)
+pub const ALLOWED_DISCREPANCY_E8S: u64 = 10_000;
+
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 // Memory identifiers for each variable
 pub const TOTAL_UNCLAIMED_ICP_REWARD_MEM_ID: MemoryId = MemoryId::new(0);
@@ -208,6 +211,27 @@ pub struct Configs {
     pub secondary_token_id: Principal,
     pub tokenomics_canister_id: Principal,
     pub icp_ledger_id: Principal,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct ReconciliationStatus {
+    // Core balance tracking
+    pub icp_balance_actual: u64,
+    pub icp_balance_expected: u64,
+    pub discrepancy_e8s: i64,  // No floating-point percentages
+    
+    // Component breakdown
+    pub reward_pool: u64,
+    pub uncollected_alex_fees: u64,
+    pub uncollected_lp_fees: u64,
+    pub total_staked: u64,
+    pub operational_balance: u64,
+    
+    // Audit metadata
+    pub timestamp: u64,
+    pub canister_id: Principal,
+    pub requires_attention: bool,
+    pub operational_balance_suspicious: bool,
 }
 
 impl Storable for Stake {

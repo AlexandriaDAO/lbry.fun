@@ -6,8 +6,9 @@ import { useAppSelector } from '@/store/hooks/useAppSelector';
 // Lazy load heavy components
 const Insights = lazy(() => import('../Insights'));
 const TokenomicsTab = lazy(() => import('../TokenomicsTab'));
+const TreasuryTab = lazy(() => import('../TreasuryTab'));
 
-type AnalyticsView = 'insights' | 'tokenomics' | 'technical';
+type AnalyticsView = 'insights' | 'tokenomics' | 'technical' | 'treasury';
 
 export const AnalyticsTerminal: React.FC = React.memo(() => {
   const [activeView, setActiveView] = useState<AnalyticsView>('insights');
@@ -30,6 +31,12 @@ export const AnalyticsTerminal: React.FC = React.memo(() => {
         );
       case 'technical':
         return <UnifiedInfoDisplay variant="developer" />;
+      case 'treasury':
+        return (
+          <Suspense fallback={<UnifiedSkeleton variant="card" rows={5} />}>
+            <TreasuryTab />
+          </Suspense>
+        );
       default:
         return null;
     }
@@ -44,7 +51,7 @@ export const AnalyticsTerminal: React.FC = React.memo(() => {
         </div>
         {/* View Navigation */}
         <div className="flex gap-1">
-          {(['insights', 'tokenomics', 'technical'] as const).map(view => (
+          {(['insights', 'tokenomics', 'technical', 'treasury'] as const).map(view => (
             <button
               key={view}
               onClick={() => setActiveView(view)}

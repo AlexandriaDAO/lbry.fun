@@ -128,6 +128,15 @@ The following tests should be implemented:
 3. Enhanced monitoring dashboard for audit states
 4. Configurable thresholds for alerts
 
+## Threshold Adjustments
+
+### Depegging Threshold Update (2025-07-30)
+- Changed DE_PEG_THRESHOLD from 0.05 (5%) to 0.0001 (0.01%)
+- Rationale: The 5% threshold was too liberal given that actual failure occurs at >99.99% deviation
+- The 0.01% threshold provides much earlier warning of collection issues
+- This gives operators more time to investigate and resolve problems before they become critical
+- Updated in `src/lbry_fun/src/collection.rs`
+
 
 
 
@@ -342,7 +351,7 @@ index 00000000..cdeefdf6
 +const MIN_SWAP_AMOUNT: u64 = 100_000_000;         // 1 ICP total
 +const COLLECTION_INTERVAL: u64 = 3600;             // 1 hour
 +const OPERATION_TIMEOUT: u64 = 600_000_000_000;   // 10 minutes in nanoseconds
-+const DE_PEG_THRESHOLD: f64 = 0.05;                // 5% price deviation triggers alert
++const DE_PEG_THRESHOLD: f64 = 0.0001;              // 0.01% price deviation triggers alert
 +const STAGNATION_THRESHOLD: u64 = 86400;          // 24 hours without collection
 +
 +// Audit state for monitoring
@@ -598,7 +607,7 @@ index 00000000..cdeefdf6
 +   - State machine transition times
 +
 +2. **Critical Alerts**
-+   - **De-pegging Alert**: Triggered when collection efficiency drops below 95%
++   - **De-pegging Alert**: Triggered when collection efficiency drops below 99.99%
 +   - **Stagnation Alert**: Triggered when no successful collection occurs for 24 hours
 +   - **Token Failure Alert**: Triggered when a token fails collection 3 times consecutively
 +   - **State Timeout Alert**: Triggered when any operation exceeds 10-minute timeout
@@ -614,7 +623,7 @@ index 00000000..cdeefdf6
 +   - Immediately investigate token transfer mechanisms
 +   - Check for systematic collection failures
 +   - Verify guard functions and permissions
-+   - Consider emergency pause if efficiency < 90%
++   - Consider emergency pause if efficiency < 99.9%
 +
 +2. **Stagnation Response**
 +   - Check timer health
@@ -1218,7 +1227,7 @@ index 00000000..d42d1764
 +const MIN_SWAP_AMOUNT: u64 = 100_000_000;         // 1 ICP total
 +const COLLECTION_INTERVAL: u64 = 3600;             // 1 hour
 +const OPERATION_TIMEOUT: u64 = 600_000_000_000;   // 10 minutes in nanoseconds
-+const DE_PEG_THRESHOLD: f64 = 0.05;                // 5% price deviation triggers alert
++const DE_PEG_THRESHOLD: f64 = 0.0001;              // 0.01% price deviation triggers alert
 +const STAGNATION_THRESHOLD: u64 = 86400;          // 24 hours without collection
 +
 +// Audit state for monitoring

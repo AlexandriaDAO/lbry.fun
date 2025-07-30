@@ -1,4 +1,9 @@
 type ArchiveBalance = record { icp : nat64 };
+type CollectionError = variant {
+  TransferFailed : record { reason : text };
+  AmountTooSmall : record { amount : nat64 };
+};
+type CollectionResult = record { collected : nat64; timestamp : nat64 };
 type Configs = record {
   secondary_token_id : principal;
   tokenomics_canister_id : principal;
@@ -96,13 +101,31 @@ type PaginatedLogs = record {
   total_pages : nat64;
   current_page : nat64;
 };
-type Result = variant { Ok : text; Err : ExecutionError };
+type ReconciliationStatus = record {
+  operational_balance_suspicious : bool;
+  canister_id : principal;
+  total_staked : nat64;
+  uncollected_lp_fees : nat64;
+  icp_balance_expected : nat64;
+  discrepancy_e8s : int64;
+  icp_balance_actual : nat64;
+  reward_pool : nat64;
+  uncollected_alex_fees : nat64;
+  timestamp : nat64;
+  requires_attention : bool;
+  operational_balance : nat64;
+};
+type Result = variant { Ok : nat64; Err : text };
+type Result_1 = variant { Ok : text; Err : ExecutionError };
+type Result_2 = variant { Ok : CollectionResult; Err : CollectionError };
 type SecondaryRatio = record { time : nat64; ratio : nat64 };
 type Stake = record { time : nat64; reward_icp : nat; amount : nat64 };
 service : (opt InitArgs) -> {
-  burn_secondary : (nat64, opt blob) -> (Result);
+  add_to_reward_pool : (nat64) -> (Result);
+  burn_secondary : (nat64, opt blob) -> (Result_1);
   caller_subaccount : () -> (text) query;
-  claim_icp_reward : (opt blob) -> (Result);
+  claim_icp_reward : (opt blob) -> (Result_1);
+  collect_alex_fees : () -> (Result_2);
   get_all_apy_values : () -> (vec record { nat32; nat }) query;
   get_all_archive_balances : () -> (
       vec record { principal; ArchiveBalance },
@@ -114,18 +137,17 @@ service : (opt InitArgs) -> {
   get_distribution_interval : () -> (nat32) query;
   get_launch_status : () -> (bool, opt nat64) query;
   get_logs : (opt nat64, opt nat64) -> (PaginatedLogs) query;
+  get_reconciliation_status : () -> (ReconciliationStatus) query;
+  get_reward_pool_status : () -> (nat64) query;
   get_scaling_factor : () -> (nat) query;
   get_stake : (principal) -> (opt Stake) query;
   get_stakers_count : () -> (nat64) query;
   get_total_archived_balance : () -> (nat64) query;
   get_total_unclaimed_icp_reward : () -> (nat) query;
-  get_user_archive_balance : (principal) -> (opt ArchiveBalance) query;
-  redeem : (opt blob) -> (Result);
-  stake_primary : (nat64, opt blob) -> (Result);
-  swap : (nat64, opt blob) -> (Result);
-  un_stake_all_primary : (opt blob) -> (Result);
   get_uncollected_fees : () -> (nat64, nat64) query;
-  get_reward_pool_status : () -> (nat64) query;
-  collect_alex_fees : () -> (variant { Ok : record { collected : nat64; timestamp : nat64 }; Err : variant { AmountTooSmall : record { amount : nat64 }; TransferFailed : record { reason : text } } });
-  add_to_reward_pool : (nat64) -> (variant { Ok : nat64; Err : text });
+  get_user_archive_balance : (principal) -> (opt ArchiveBalance) query;
+  redeem : (opt blob) -> (Result_1);
+  stake_primary : (nat64, opt blob) -> (Result_1);
+  swap : (nat64, opt blob) -> (Result_1);
+  un_stake_all_primary : (opt blob) -> (Result_1);
 }

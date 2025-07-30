@@ -1733,8 +1733,7 @@ async fn transfer_icp_to_lbry_fun(amount: u64) -> Result<BlockIndex, String> {
         "icrc1_transfer",
         (transfer_args,)
     ).await
-    .map_err(|e| format\!("Transfer call failed: {:?}", e))?;
+    .map_err(|e| format!("Transfer call failed: {:?}", e))?;
     
-    result.map_err(|e| format\!("Transfer failed: {:?}", e))
+    result.map_err(|e| format!("Transfer failed: {:?}", e))
 }
-EOF < /dev/null
