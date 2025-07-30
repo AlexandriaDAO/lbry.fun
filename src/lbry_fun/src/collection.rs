@@ -338,8 +338,4 @@ pub fn get_collection_status() -> (SwapState, u64) {
     )
 }
 
-// Manual collection trigger
-#[update]
-pub async fn trigger_collection() -> Result<CollectionSummary, String> {
-    collect_all_fees_internal().await
-}
+// Removed public trigger_collection() - collection should only happen via timer

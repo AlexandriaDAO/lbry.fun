@@ -891,7 +891,7 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
     // Calculate 1% of reward pool
     let total_distribution = reward_pool / 100;
     
-    if total_distribution == 0 {
+    if total_distribution < 1_000_000 {
         return Ok("Distribution amount too small".to_string());
     }
     
