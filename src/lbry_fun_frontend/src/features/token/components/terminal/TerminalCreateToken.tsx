@@ -13,6 +13,7 @@ import TooltipIcon from '../TooltipIcon';
 import { initiateTokenDeployment, fetchDeploymentHistory } from '../../thunk/deploymentThunks';
 import { CreateTokenParams } from '@/types/deployment';
 import { DeploymentStatusModal } from '../DeploymentStatusModal';
+import { setActiveDeploymentId } from '@/store/slices/deploymentSlice';
 
 import {
   TerminalInput,
@@ -733,7 +734,12 @@ const TerminalCreateToken: React.FC = () => {
       <DeploymentStatusModal 
         deploymentId={activeDeploymentId}
         isOpen={showDeploymentModal}
-        onClose={() => setShowDeploymentModal(false)}
+        onClose={() => {
+          setShowDeploymentModal(false);
+          // NOW we can safely clean up the global ID, because the modal is closed.
+          dispatch(setActiveDeploymentId(null));
+          localStorage.removeItem('activeDeploymentId');
+        }}
         onSuccess={(tokenId) => {
           navigate(`/swap?id=${tokenId}`);
         }}

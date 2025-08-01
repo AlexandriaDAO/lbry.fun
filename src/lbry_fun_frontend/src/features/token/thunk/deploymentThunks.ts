@@ -214,7 +214,7 @@ export const initiateTokenDeployment = createAsyncThunk(
 // Execute token deployment
 export const executeTokenDeployment = createAsyncThunk(
   'deployment/execute',
-  async (deploymentId: string, { dispatch, rejectWithValue }) => {
+  async (deploymentId: string, { dispatch, getState, rejectWithValue }) => {
     try {
       const actor = await getLbryFunActor();
       console.log('Executing token deployment for ID:', deploymentId);
@@ -226,17 +226,65 @@ export const executeTokenDeployment = createAsyncThunk(
       console.log('Deployment execution result:', result);
       
       if ('Ok' in result) {
-        // Start polling for status
-        dispatch(pollDeploymentStatus(deploymentId));
+        // Execution succeeded - we have the token_id!
+        const { token_id, message } = result.Ok;
+        console.log('Deployment executed successfully! Token ID:', token_id.toString(), 'Message:', message);
+        
+        // Get the deployment from state
+        const state = getState() as RootState;
+        const deployment = state.deployment.deployments[deploymentId];
+        
+        if (deployment) {
+          // Fetch the token status immediately
+          try {
+            const tokenStatus = await actor.get_token_status(token_id);
+            
+            // Update deployment with token info
+            const updatedDeployment: DeploymentRecord = {
+              ...deployment,
+              tokenStatus: 'Ok' in tokenStatus ? tokenStatus.Ok : { Live: { pool_id: "unknown" } },
+              token_id: [token_id]
+            };
+            
+            dispatch(updateDeployment(updatedDeployment));
+            persistDeployment(updatedDeployment);
+            
+            // If live, force a full refresh to sync all deployments
+            if ('Ok' in tokenStatus && 'Live' in tokenStatus.Ok) {
+              // Force a full refresh to sync all deployments
+              setTimeout(() => {
+                dispatch(initializeDeployments());
+              }, 1000);
+            }
+          } catch (error) {
+            console.error('Failed to fetch token status:', error);
+            // Still update with token_id even if status fetch fails
+            const updatedDeployment: DeploymentRecord = {
+              ...deployment,
+              tokenStatus: { Live: { pool_id: "unknown" } },
+              token_id: [token_id]
+            };
+            dispatch(updateDeployment(updatedDeployment));
+            persistDeployment(updatedDeployment);
+          }
+        }
+        
+        // Check status once after a delay to ensure backend has updated
+        setTimeout(() => {
+          dispatch(checkDeploymentOnce(deploymentId));
+        }, 5000); // 5 second delay
+        
         return result.Ok;
       } else {
-        // If it's a timeout or still processing, start polling
+        // If it's a timeout or still processing, check once after delay
         if (result.Err.includes('timeout') || result.Err.includes('still processing')) {
-          dispatch(pollDeploymentStatus(deploymentId));
+          setTimeout(() => {
+            dispatch(checkDeploymentOnce(deploymentId));
+          }, 5000);
           
           return rejectWithValue({
             title: 'Deployment In Progress',
-            message: 'Deployment is taking longer than expected. Monitoring status...',
+            message: 'Deployment is taking longer than expected. Will check status shortly...',
             isTimeout: true
           });
         }
@@ -255,15 +303,17 @@ export const executeTokenDeployment = createAsyncThunk(
   }
 );
 
-// Proper polling that checks token status
-export const pollDeploymentStatus = createAsyncThunk(
-  'deployment/poll',
+// Check deployment status once (no continuous polling)
+export const checkDeploymentOnce = createAsyncThunk(
+  'deployment/checkOnce',
   async (deploymentId: string, { dispatch, getState }) => {
     const actor = await getLbryFunActor();
     const state = getState() as RootState;
     const deployment = state.deployment.deployments[deploymentId];
     
-    if (!deployment) return;
+    if (!deployment) {
+      return;
+    }
     
     try {
       let updatedDeployment: DeploymentRecord;
@@ -273,7 +323,60 @@ export const pollDeploymentStatus = createAsyncThunk(
         const deployments = await actor.get_my_deployments();
         const backendDeployment = deployments.find(d => d.id.toString() === deploymentId);
         
-        if (!backendDeployment) return;
+        if (!backendDeployment) {
+          // Deployment not found - it might have completed and been cleaned up
+          // Check if a token was created by looking at all tokens
+          const allTokens = await actor.get_all_token_record();
+          
+          // Look for a token created by this user around the same time
+          const userPrincipal = await getPrincipal(await getAuthClient());
+          const matchingToken = allTokens.find(([_, record]) => {
+            // Match by caller and creation time (within 5 minutes)
+            const timeDiff = Math.abs(Number(record.created_time) - Number(deployment.created_at));
+            return record.caller.toString() === userPrincipal && 
+                   timeDiff < 5 * 60 * 1_000_000_000; // 5 minutes in nanoseconds
+          });
+          
+          if (matchingToken) {
+            // Token found! Update deployment as successful
+            const [tokenId, tokenRecord] = matchingToken;
+            
+            updatedDeployment = {
+              ...deployment,
+              tokenStatus: tokenRecord.status,
+              token_id: [tokenId],
+              // Update params with actual token info if they're missing
+              params: deployment.params.primary_token_name ? deployment.params : {
+                ...deployment.params,
+                primary_token_name: tokenRecord.primary_token_name,
+                primary_token_symbol: tokenRecord.primary_token_symbol,
+                secondary_token_name: tokenRecord.secondary_token_name,
+                secondary_token_symbol: tokenRecord.secondary_token_symbol,
+              }
+            };
+            
+            // Update and stop polling
+            dispatch(updateDeployment(updatedDeployment));
+            persistDeployment(updatedDeployment);
+            
+            // Token is now live - modal will handle cleanup when closed
+            return;
+          }
+          
+          // No token found and no deployment - mark as failed
+          updatedDeployment = {
+            ...deployment,
+            tokenStatus: { 
+              Failed: { 
+                reason: 'Deployment not found and no token created' 
+              } 
+            } as TokenStatus
+          };
+          
+          dispatch(updateDeployment(updatedDeployment));
+          persistDeployment(updatedDeployment);
+          return;
+        }
         
         // Convert deployment status to token status
         const deploymentStatus = backendDeployment.status;
@@ -327,7 +430,20 @@ export const pollDeploymentStatus = createAsyncThunk(
         };
       } else {
         // Phase 2: Have token_id, poll token status directly
-        const tokenStatus = await actor.get_token_status(deployment.token_id[0]);
+        const tokenStatusResult = await actor.get_token_status(deployment.token_id[0]);
+        
+        // Handle the Result type from backend
+        let tokenStatus: TokenStatus;
+        if ('Ok' in tokenStatusResult) {
+          tokenStatus = tokenStatusResult.Ok;
+        } else {
+          tokenStatus = { 
+            Failed: { 
+              reason: tokenStatusResult.Err || 'Failed to fetch token status' 
+            } 
+          } as TokenStatus;
+        }
+        
         updatedDeployment = {
           ...deployment,
           tokenStatus
@@ -338,26 +454,11 @@ export const pollDeploymentStatus = createAsyncThunk(
       dispatch(updateDeployment(updatedDeployment));
       persistDeployment(updatedDeployment);
       
-      // Continue polling if still deploying
-      if ('Deploying' in updatedDeployment.tokenStatus) {
-        setTimeout(() => {
-          dispatch(pollDeploymentStatus(deploymentId));
-        }, 5000); // Poll every 5 seconds
-      } else {
-        // Deployment finished (success or failure)
-        if ('Live' in updatedDeployment.tokenStatus) {
-          // Clear active deployment on success
-          dispatch(setActiveDeploymentId(null));
-          localStorage.removeItem('activeDeploymentId');
-        }
-      }
+      // No more continuous polling - just update the status once
       
     } catch (error) {
-      console.error('Polling error for deployment', deploymentId, ':', error);
-      // Retry after delay
-      setTimeout(() => {
-        dispatch(pollDeploymentStatus(deploymentId));
-      }, 10000);
+      console.error('Error checking deployment', deploymentId, ':', error);
+      // Don't retry - just log the error
     }
   }
 );
@@ -366,6 +467,26 @@ export const pollDeploymentStatus = createAsyncThunk(
 export const initializeDeployments = createAsyncThunk(
   'deployment/initialize',
   async (_, { dispatch }) => {
+    // One-time clear of old wrapped formats (can be removed after first deployment)
+    const needsClear = localStorage.getItem('deployment_format_cleaned') !== 'v2';
+    if (needsClear) {
+      const keys = Object.keys(localStorage).filter(k => k.startsWith(DEPLOYMENT_STORAGE_PREFIX));
+      keys.forEach(key => {
+        try {
+          const data = JSON.parse(localStorage.getItem(key) || '{}');
+          // Check if it has the old wrapped format
+          if (data.deployment?.tokenStatus && typeof data.deployment.tokenStatus === 'object' && 
+              ('Ok' in data.deployment.tokenStatus || 'Err' in data.deployment.tokenStatus)) {
+            localStorage.removeItem(key);
+          }
+        } catch {
+          // Invalid JSON, remove it
+          localStorage.removeItem(key);
+        }
+      });
+      localStorage.setItem('deployment_format_cleaned', 'v2');
+    }
+    
     // First load persisted deployments
     const persistedDeployments = loadPersistedDeployments();
     
@@ -373,24 +494,63 @@ export const initializeDeployments = createAsyncThunk(
     try {
       const actor = await getLbryFunActor();
       const backendDeployments = await actor.get_my_deployments();
+      const allTokens = await actor.get_all_token_record();
+      const userPrincipal = await getPrincipal(await getAuthClient());
       
       // Update persisted deployments with backend status
-      const syncedDeployments = persistedDeployments.map(persisted => {
+      const syncedDeployments = await Promise.all(persistedDeployments.map(async persisted => {
         const backend = backendDeployments.find(d => d.id.toString() === persisted.id.toString());
         
         if (!backend) {
           // Deployment doesn't exist in backend
-          // Check if this might be a completed deployment by looking for the token ID
+          
+          // First check if we already have a token_id (completed deployment)
           if (persisted.token_id && persisted.token_id.length > 0) {
-            // This was likely a successful deployment that was cleaned up
-            // Remove it from localStorage
+            // Try to find the token in allTokens
+            const token = allTokens.find(([id]) => id === persisted.token_id![0]);
+            if (token) {
+              // Token exists, update status
+              const [tokenId, tokenRecord] = token;
+              return {
+                ...persisted,
+                tokenStatus: tokenRecord.status,
+                token_id: [tokenId]
+              };
+            }
+            // Token doesn't exist anymore, clean up
             clearPersistedDeployment(persisted.id.toString());
-            return null; // Filter this out
+            return null;
           }
-          // Otherwise mark as unknown
+          
+          // No token_id yet - check if a token was created by matching user/time
+          const matchingToken = allTokens.find(([_, record]) => {
+            const timeDiff = Math.abs(Number(record.created_time) - Number(persisted.created_at));
+            return record.caller.toString() === userPrincipal && 
+                   timeDiff < 5 * 60 * 1_000_000_000; // 5 minutes
+          });
+          
+          if (matchingToken) {
+            // Found a matching token!
+            const [tokenId, tokenRecord] = matchingToken;
+            return {
+              ...persisted,
+              tokenStatus: tokenRecord.status,
+              token_id: [tokenId],
+              // Update params with actual token info
+              params: {
+                ...persisted.params,
+                primary_token_name: tokenRecord.primary_token_name,
+                primary_token_symbol: tokenRecord.primary_token_symbol,
+                secondary_token_name: tokenRecord.secondary_token_name,
+                secondary_token_symbol: tokenRecord.secondary_token_symbol,
+              }
+            };
+          }
+          
+          // No matching token found - mark as unknown
           return {
             ...persisted,
-            tokenStatus: { Failed: { reason: 'Unknown deployment - may have been cleaned up' } } as TokenStatus
+            tokenStatus: { Failed: { reason: 'Deployment not found - may have failed or been cleaned up' } } as TokenStatus
           };
         }
         
@@ -440,30 +600,20 @@ export const initializeDeployments = createAsyncThunk(
           tokenStatus,
           token_id: backend.token_id
         };
-      });
+      }));
       
       // Filter out null values (completed deployments that were cleaned up)
       const validDeployments = syncedDeployments.filter(d => d !== null) as DeploymentRecord[];
       
       dispatch(setDeployments(validDeployments));
       
-      // Resume polling for active deployments
-      validDeployments.forEach(deployment => {
-        if ('Deploying' in deployment.tokenStatus) {
-          dispatch(pollDeploymentStatus(deployment.id.toString()));
-        }
-      });
+      // No automatic polling - deployments will check status when needed
     } catch (error) {
       console.error('Failed to sync with backend:', error);
       // Fall back to persisted deployments
       dispatch(setDeployments(persistedDeployments));
       
-      // Still resume polling
-      persistedDeployments.forEach(deployment => {
-        if ('Deploying' in deployment.tokenStatus) {
-          dispatch(pollDeploymentStatus(deployment.id.toString()));
-        }
-      });
+      // No automatic polling on error either
     }
     
     // Check for active deployment ID
@@ -508,77 +658,8 @@ export const recoverDeployment = createAsyncThunk(
 export const fetchDeploymentHistory = createAsyncThunk(
   'deployment/fetchHistory',
   async (_, { dispatch }) => {
-    try {
-      const actor = await getLbryFunActor();
-      const deployments = await callWithRetry(() => 
-        actor.get_my_deployments()
-      );
-      
-      // For each deployment, get the actual token status if it has a token_id
-      const updatedDeployments: DeploymentRecord[] = await Promise.all(
-        deployments.map(async (deployment) => {
-          let tokenStatus: TokenStatus;
-          
-          if (deployment.token_id?.[0]) {
-            // Has token, get its status
-            try {
-              tokenStatus = await actor.get_token_status(deployment.token_id[0]);
-            } catch {
-              // Error fetching token status
-              tokenStatus = { Failed: { reason: 'Failed to fetch token status' } };
-            }
-          } else if (deployment.status === 'Active') {
-            // Still deploying
-            tokenStatus = {
-              Deploying: {
-                progress: Math.floor((Number(deployment.canister_count) / 5) * 80)
-              }
-            };
-          } else if (deployment.status === 'Failed') {
-            // Failed deployment
-            tokenStatus = {
-              Failed: {
-                reason: deployment.last_error?.[0] || 'Deployment failed'
-              }
-            };
-          } else if (deployment.status === 'Cleaning') {
-            // Being cleaned up
-            tokenStatus = {
-              Failed: {
-                reason: deployment.last_error?.[0] || 'Deployment is being cleaned up'
-              }
-            };
-          } else if (deployment.status === 'Completed') {
-            // Completed but no token_id - shouldn't happen
-            tokenStatus = { Failed: { reason: 'Deployment completed but no token created' } };
-          } else {
-            // Unknown state
-            console.error('Unknown deployment status:', deployment.status);
-            tokenStatus = { Failed: { reason: `Unknown deployment state: ${deployment.status}` } };
-          }
-          
-          // Try to get params from persisted deployment
-          const persistedDeployments = loadPersistedDeployments();
-          const persistedDeployment = persistedDeployments.find(d => d.id.toString() === deployment.id.toString());
-          
-          return {
-            id: deployment.id,
-            deployment_id: deployment.id,
-            tokenStatus,
-            params: persistedDeployment?.params || {} as CreateTokenParams,
-            created_at: deployment.created_at,
-            last_activity: deployment.last_activity,
-            token_id: deployment.token_id
-          };
-        })
-      );
-      
-      dispatch(setDeployments(updatedDeployments));
-      
-      return updatedDeployments;
-    } catch (error) {
-      throw new Error('Failed to fetch deployment history');
-    }
+    // Use the same logic as initializeDeployments to sync properly
+    dispatch(initializeDeployments());
   }
 );
 

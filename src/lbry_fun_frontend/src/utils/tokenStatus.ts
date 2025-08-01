@@ -88,7 +88,7 @@ export function formatCountdown(seconds: number): string {
 export function parseTokenTimings(
   createdTime: string,
   launchDelaySeconds: string,
-  poolCreatedAt: string
+  poolCreatedAt: string | undefined
 ): {
   createdAt: bigint;
   launchDelay: bigint;
@@ -97,6 +97,6 @@ export function parseTokenTimings(
   return {
     createdAt: BigInt(createdTime),
     launchDelay: BigInt(launchDelaySeconds),
-    poolCreatedAt: BigInt(poolCreatedAt)
+    poolCreatedAt: poolCreatedAt ? BigInt(poolCreatedAt) : BigInt(0)
   };
 }

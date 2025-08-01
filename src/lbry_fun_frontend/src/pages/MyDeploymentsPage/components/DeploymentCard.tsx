@@ -1,7 +1,5 @@
 import React from 'react';
 import { DeploymentRecord, getUIState } from '@/types/deployment';
-import { DeploymentProgress } from './DeploymentProgress';
-import { PoolCreationStatus } from './PoolCreationStatus';
 import { RecoveryActions } from './RecoveryActions';
 import { formatDistanceToNow } from 'date-fns';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
@@ -43,16 +41,12 @@ export const DeploymentCard: React.FC<DeploymentCardProps> = ({
 
       {/* Progress for deploying state */}
       {uiState.status === 'deploying' && (
-        <DeploymentProgress 
-          progress={uiState.progress} 
-          message={uiState.message}
-        />
+        <div className="mt-3 flex items-center space-x-3">
+          <div className="animate-spin h-4 w-4 border-2 border-green-500 border-t-transparent rounded-full"></div>
+          <span className="text-sm text-gray-300">{uiState.message}</span>
+        </div>
       )}
 
-      {/* Pool creation visibility for high progress */}
-      {uiState.status === 'deploying' && uiState.progress >= 95 && (
-        <PoolCreationStatus />
-      )}
 
       {/* Failed state with clear reason */}
       {uiState.status === 'failed' && (

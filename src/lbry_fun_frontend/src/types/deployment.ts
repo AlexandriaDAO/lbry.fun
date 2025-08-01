@@ -65,7 +65,7 @@ export function getUIState(tokenStatus: TokenStatus): UIDeploymentState {
     return {
       status: 'deploying',
       progress: tokenStatus.Deploying.progress,
-      message: getDeploymentStageMessage(tokenStatus.Deploying.progress),
+      message: 'Deployment in progress...',
       isRecoverable: false,
       canTrade: false
     };
@@ -75,6 +75,8 @@ export function getUIState(tokenStatus: TokenStatus): UIDeploymentState {
     const isPoolFailure = tokenStatus.Failed.reason.includes('Pool creation');
     const isCleaningUp = tokenStatus.Failed.reason.includes('being cleaned');
     const isUnknownStatus = tokenStatus.Failed.reason.includes('Unknown deployment state');
+    const isNotFound = tokenStatus.Failed.reason.includes('Deployment not found');
+    const isStuck = tokenStatus.Failed.reason.includes('initiated but never executed');
     
     return {
       status: 'failed',
@@ -85,8 +87,12 @@ export function getUIState(tokenStatus: TokenStatus): UIDeploymentState {
         ? 'Deployment failed and is being cleaned up. You can recover funds shortly.'
         : isUnknownStatus
         ? 'This deployment has been cleaned up'
+        : isNotFound
+        ? 'Deployment not found - may have completed or been cleaned up'
+        : isStuck
+        ? 'Deployment was initiated but never executed. You can either continue or cancel it.'
         : tokenStatus.Failed.reason,
-      isRecoverable: !isUnknownStatus, // Can't recover if it's already cleaned up
+      isRecoverable: !isUnknownStatus && !isNotFound, // Can't recover if cleaned up or not found
       canTrade: false
     };
   }
@@ -112,15 +118,6 @@ export function getUIState(tokenStatus: TokenStatus): UIDeploymentState {
   };
 }
 
-// Clear progress messages showing pool creation as final step
-function getDeploymentStageMessage(progress: number): string {
-  if (progress < 20) return "Creating swap mechanism...";
-  if (progress < 40) return "Setting up tokenomics...";
-  if (progress < 60) return "Creating token contracts...";
-  if (progress < 80) return "Configuring trading rules...";
-  if (progress < 95) return "Finalizing deployment...";
-  return "Creating liquidity pool (final step)..."; // Critical visibility
-}
 
 // Result type for token deployment
 export interface TokenDeploymentResult {

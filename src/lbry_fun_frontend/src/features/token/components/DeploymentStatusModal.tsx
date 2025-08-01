@@ -3,12 +3,10 @@ import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { 
   executeTokenDeployment, 
-  recoverDeployment,
-  pollDeploymentStatus
+  recoverDeployment
 } from '../thunk/deploymentThunks';
+import getTokenPools from '@/features/token/thunk/getTokenPools.thunk';
 import { selectDeploymentById, selectDeploymentUIState } from '@/store/slices/deploymentSlice';
-import { DeploymentProgress } from '@/pages/MyDeploymentsPage/components/DeploymentProgress';
-import { PoolCreationStatus } from '@/pages/MyDeploymentsPage/components/PoolCreationStatus';
 
 interface DeploymentStatusModalProps {
   deploymentId: string | null;
@@ -24,11 +22,31 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
   onSuccess
 }) => {
   const dispatch = useAppDispatch();
+  // Store the deployment ID locally so it doesn't get lost when activeDeploymentId is cleared
+  const [localDeploymentId, setLocalDeploymentId] = useState<string | null>(null);
+  
+  // Capture the ID when modal opens with a deployment
+  useEffect(() => {
+    if (deploymentId && !localDeploymentId) {
+      setLocalDeploymentId(deploymentId);
+    }
+  }, [deploymentId, localDeploymentId]);
+  
+  // Clear local ID when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setLocalDeploymentId(null);
+    }
+  }, [isOpen]);
+  
+  // Use the local ID if we have it, otherwise use the prop
+  const effectiveDeploymentId = localDeploymentId || deploymentId;
+  
   const deployment = useAppSelector(state => 
-    deploymentId ? selectDeploymentById(deploymentId)(state) : null
+    effectiveDeploymentId ? selectDeploymentById(effectiveDeploymentId)(state) : null
   );
   const uiState = useAppSelector(state => 
-    deploymentId ? selectDeploymentUIState(deploymentId)(state) : null
+    effectiveDeploymentId ? selectDeploymentUIState(effectiveDeploymentId)(state) : null
   );
   const [localError, setLocalError] = useState<string>('');
   const [hasStartedExecution, setHasStartedExecution] = useState(false);
@@ -47,15 +65,19 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
   // Handle success when token goes live
   useEffect(() => {
     if (deployment && uiState?.status === 'live' && deployment.token_id?.[0]) {
-      onSuccess(deployment.token_id[0]);
+      // Refresh token pools to ensure the new token is in the list
+      dispatch(getTokenPools()).then(() => {
+        // Navigate after pools are refreshed
+        onSuccess(deployment.token_id[0]);
+      });
     }
-  }, [deployment, uiState?.status, onSuccess]);
+  }, [deployment, uiState?.status, onSuccess, dispatch]);
   
   const executePhase2 = async () => {
-    if (!deploymentId) return;
+    if (!effectiveDeploymentId) return;
     
-    console.log('DeploymentStatusModal: Starting phase 2 execution for deployment:', deploymentId);
-    const result = await dispatch(executeTokenDeployment(deploymentId));
+    console.log('DeploymentStatusModal: Starting phase 2 execution for deployment:', effectiveDeploymentId);
+    const result = await dispatch(executeTokenDeployment(effectiveDeploymentId));
     
     if (executeTokenDeployment.rejected.match(result)) {
       console.error('DeploymentStatusModal: Execution failed:', result.payload);
@@ -90,17 +112,11 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
               [INFO] Deployment in progress
             </div>
             
-            <DeploymentProgress 
-              progress={uiState.progress} 
-              message={uiState.message}
-            />
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin h-5 w-5 border-2 border-green-500 border-t-transparent rounded-full"></div>
+              <span className="text-gray-300">Deployment in progress...</span>
+            </div>
             
-            {/* Show pool creation warning when near completion */}
-            {uiState.progress >= 95 && (
-              <div className="mt-4">
-                <PoolCreationStatus />
-              </div>
-            )}
             
             <div className="mt-4 text-xs text-gray-400">
               Status updates automatically...
@@ -126,7 +142,7 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
             <div className="terminal-info mb-3">
               <div className="mb-2">Deployment Details:</div>
               <div className="text-xs">
-                <span className="terminal-label">ID:</span> {deploymentId}
+                <span className="terminal-label">ID:</span> {effectiveDeploymentId}
               </div>
               <div className="text-xs">
                 <span className="terminal-label">Created:</span> {
@@ -182,7 +198,7 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
       <div className="terminal-modal">
         <div className="terminal-header">
           <span className="terminal-prompt">&gt;&gt;</span> deployment_status
-          {deploymentId && (
+          {effectiveDeploymentId && (
             <span className="terminal-status float-right">
               [{uiState?.status.toUpperCase()}]
             </span>
