@@ -1,5 +1,5 @@
 use ic_cdk::{query, update};
-use candid::{CandidType, Principal};
+use candid::CandidType;
 use serde::Deserialize;
 use crate::{TokenRecord, TOKENS, get_self_icp_balance};
 use crate::simulation_new::{GraphData, PreviewArgs};
@@ -20,22 +20,19 @@ pub fn get_all_token_record() -> Vec<(u64, TokenRecord)> {
 
 
 #[query]
-pub fn get_upcomming() -> Vec<(u64, TokenRecord)> {
+pub fn get_upcoming() -> Vec<(u64, TokenRecord)> {
     let current_time = ic_cdk::api::time();
     
     TOKENS.with(|tokens| {
-        let tokens_map = tokens.borrow();
-
-        tokens_map
+        tokens.borrow()
             .iter()
             .filter(|(_, token)| {
-                // Not live if: pool creation failed, pool not created yet, or still within launch delay
-                let launch_delay_nanos = token.launch_delay_seconds * 1_000_000_000;
-                token.pool_creation_failed || 
-                token.pool_created_at == 0 || 
-                current_time < token.created_time + launch_delay_nanos
+                match &token.status {
+                    crate::storage::TokenStatus::Live { .. } => current_time < token.launched_at,
+                    crate::storage::TokenStatus::Deploying { .. } => true,
+                    _ => false,
+                }
             })
-            .map(|(id, token)| (id.clone(), token.clone()))
             .collect()
     })
 }
@@ -45,18 +42,12 @@ pub fn get_live() -> Vec<(u64, TokenRecord)> {
     let current_time = ic_cdk::api::time();
     
     TOKENS.with(|tokens| {
-        let tokens_map = tokens.borrow();
-
-        tokens_map
+        tokens.borrow()
             .iter()
             .filter(|(_, token)| {
-                // Live if: pool created successfully AND launch delay has passed
-                let launch_delay_nanos = token.launch_delay_seconds * 1_000_000_000;
-                !token.pool_creation_failed && 
-                token.pool_created_at > 0 && 
-                current_time >= token.created_time + launch_delay_nanos
+                matches!(&token.status, crate::storage::TokenStatus::Live { .. }) && 
+                current_time >= token.launched_at
             })
-            .map(|(id, token)| (id.clone(), token.clone()))
             .collect()
     })
 }
@@ -93,64 +84,50 @@ async fn preview_tokenomics_schedule(
     )
 }
 
-// Token status structure for icp_swap canister
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub struct TokenStatus {
-    pub created_time: u64,
-    pub pool_creation_failed: bool,
-    pub pool_created_at: u64,
-    pub launch_delay_seconds: u64,
-}
+// Removed old TokenStatus - using the one from storage.rs
 
 #[query]
-pub fn get_token_status_by_swap_canister(swap_canister_id: Principal) -> Option<TokenStatus> {
+pub fn get_token_detail(token_id: u64) -> Option<TokenStatusDetail> {
     TOKENS.with(|tokens| {
-        let tokens_map = tokens.borrow();
-        
-        // Find token by swap canister ID
-        for (_, token) in tokens_map.iter() {
-            if token.icp_swap_canister_id == swap_canister_id {
-                return Some(TokenStatus {
-                    created_time: token.created_time,
-                    pool_creation_failed: token.pool_creation_failed,
-                    pool_created_at: token.pool_created_at,
-                    launch_delay_seconds: token.launch_delay_seconds,
-                });
-            }
-        }
-        
-        None
-    })
-}
-
-#[query]
-pub fn get_token_status(token_id: u64) -> Option<TokenStatusDetail> {
-    TOKENS.with(|tokens| {
-        let tokens_map = tokens.borrow();
-        tokens_map.get(&token_id).map(|token| {
+        tokens.borrow().get(&token_id).map(|token| {
             let current_time = ic_cdk::api::time();
-            let launch_delay_nanos = token.launch_delay_seconds * 1_000_000_000;
-            let time_until_live = if token.pool_creation_failed || token.pool_created_at == 0 {
-                0 // Not applicable if pool creation failed or hasn't been created
-            } else if current_time >= token.created_time + launch_delay_nanos {
-                0 // Already live
+            let is_live = matches!(token.status, crate::storage::TokenStatus::Live { .. }) && 
+                         current_time >= token.launched_at;
+            let time_until_live = if is_live || !matches!(token.status, crate::storage::TokenStatus::Live { .. }) {
+                0
             } else {
-                (token.created_time + launch_delay_nanos) - current_time
+                token.launched_at.saturating_sub(current_time)
             };
             
             TokenStatusDetail {
                 token_id,
-                created_time: token.created_time,
-                pool_creation_failed: token.pool_creation_failed,
-                pool_created_at: token.pool_created_at,
-                is_live: !token.pool_creation_failed && 
-                        token.pool_created_at > 0 && 
-                        current_time >= token.created_time + launch_delay_nanos,
+                status: token.status.clone(),
+                is_live,
                 time_until_live_nanos: time_until_live,
                 primary_token_symbol: token.primary_token_symbol.clone(),
                 secondary_token_symbol: token.secondary_token_symbol.clone(),
             }
         })
+    })
+}
+
+#[query]
+pub fn get_token_status(token_id: u64) -> Result<crate::storage::TokenStatus, String> {
+    TOKENS.with(|tokens| {
+        tokens.borrow()
+            .get(&token_id)
+            .map(|token| token.status.clone())
+            .ok_or_else(|| "Token not found".to_string())
+    })
+}
+
+#[query]
+pub fn get_failed() -> Vec<(u64, TokenRecord)> {
+    TOKENS.with(|tokens| {
+        tokens.borrow()
+            .iter()
+            .filter(|(_, token)| matches!(token.status, crate::storage::TokenStatus::Failed { .. }))
+            .collect()
     })
 }
 
@@ -180,9 +157,7 @@ pub fn get_tokenomics_graphs(pool_id: u64) -> Result<GraphData, String> {
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct TokenStatusDetail {
     pub token_id: u64,
-    pub created_time: u64,
-    pub pool_creation_failed: bool,
-    pub pool_created_at: u64,
+    pub status: crate::storage::TokenStatus,
     pub is_live: bool,
     pub time_until_live_nanos: u64,
     pub primary_token_symbol: String,

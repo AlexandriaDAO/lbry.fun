@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
-import { RootState } from '@/store';
 import { 
   executeTokenDeployment, 
   recoverDeployment,
-  fetchDeploymentHistory 
+  pollDeploymentStatus
 } from '../thunk/deploymentThunks';
-import { DeploymentStatus } from '@/types/deployment';
+import { selectDeploymentById, selectDeploymentUIState } from '@/store/slices/deploymentSlice';
+import { DeploymentProgress } from '@/pages/MyDeploymentsPage/components/DeploymentProgress';
+import { PoolCreationStatus } from '@/pages/MyDeploymentsPage/components/PoolCreationStatus';
 
 interface DeploymentStatusModalProps {
   deploymentId: string | null;
@@ -23,47 +24,47 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
   onSuccess
 }) => {
   const dispatch = useAppDispatch();
-  const deployment = useAppSelector((state: RootState) => 
-    deploymentId ? state.deployment.deployments[deploymentId] : null
+  const deployment = useAppSelector(state => 
+    deploymentId ? selectDeploymentById(deploymentId)(state) : null
+  );
+  const uiState = useAppSelector(state => 
+    deploymentId ? selectDeploymentUIState(deploymentId)(state) : null
   );
   const [localError, setLocalError] = useState<string>('');
+  const [hasStartedExecution, setHasStartedExecution] = useState(false);
   
-  const [recoveryCountdown, setRecoveryCountdown] = useState<number>(0);
-  
+  // Start execution when modal opens with new deployment
   useEffect(() => {
-    if (isOpen && deploymentId && deployment?.frontendStatus === DeploymentStatus.INITIATED) {
-      executePhase2();
+    if (isOpen && deploymentId && deployment && !hasStartedExecution) {
+      // Check if this is a fresh deployment (no token status yet)
+      if ('Deploying' in deployment.tokenStatus && deployment.tokenStatus.Deploying.progress === 0) {
+        setHasStartedExecution(true);
+        executePhase2();
+      }
     }
-  }, [isOpen, deploymentId, deployment?.frontendStatus]);
+  }, [isOpen, deploymentId, deployment, hasStartedExecution]);
   
+  // Handle success when token goes live
   useEffect(() => {
-    if (deployment?.frontendStatus === DeploymentStatus.FAILED && !deployment.recoverable) {
-      const interval = setInterval(() => {
-        const timeSinceActivity = Date.now() - Number(deployment.last_activity / 1_000_000n);
-        const timeUntilRecovery = Math.max(0, 300000 - timeSinceActivity);
-        setRecoveryCountdown(timeUntilRecovery);
-        
-        if (timeUntilRecovery === 0) {
-          clearInterval(interval);
-          dispatch(fetchDeploymentHistory());
-        }
-      }, 1000);
-      
-      return () => clearInterval(interval);
+    if (deployment && uiState?.status === 'live' && deployment.token_id?.[0]) {
+      onSuccess(deployment.token_id[0]);
     }
-  }, [deployment?.frontendStatus, deployment?.recoverable]);
+  }, [deployment, uiState?.status, onSuccess]);
   
   const executePhase2 = async () => {
     if (!deploymentId) return;
     
+    console.log('DeploymentStatusModal: Starting phase 2 execution for deployment:', deploymentId);
     const result = await dispatch(executeTokenDeployment(deploymentId));
     
-    if (executeTokenDeployment.fulfilled.match(result)) {
-      onSuccess(result.payload.token_id);
-    } else if (result.payload?.isTimeout) {
-      setLocalError('Deployment is taking longer than expected. Monitoring status...');
-    } else {
-      setLocalError(result.payload?.message || 'Deployment failed');
+    if (executeTokenDeployment.rejected.match(result)) {
+      console.error('DeploymentStatusModal: Execution failed:', result.payload);
+      if (result.payload?.isTimeout) {
+        // Already polling, just show status
+        setLocalError('');
+      } else {
+        setLocalError(result.payload?.message || 'Deployment failed');
+      }
     }
   };
   
@@ -72,80 +73,55 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
     
     if (recoverDeployment.fulfilled.match(result)) {
       setLocalError('');
+      onClose();
     } else {
       setLocalError(result.payload?.message || 'Recovery failed');
     }
   };
   
   const renderContent = () => {
-    if (!deployment) return null;
+    if (!deployment || !uiState) return null;
     
-    switch (deployment.frontendStatus) {
-      case DeploymentStatus.INITIATED:
-      case DeploymentStatus.EXECUTING:
+    switch (uiState.status) {
+      case 'deploying':
         return (
           <div className="terminal-content">
-            <div className="terminal-loading">
-              <div>Creating token deployment...</div>
-              <div className="terminal-progress">
-                <span className="terminal-label">Status:</span> Initializing canisters
+            <div className="terminal-info mb-4">
+              [INFO] Deployment in progress
+            </div>
+            
+            <DeploymentProgress 
+              progress={uiState.progress} 
+              message={uiState.message}
+            />
+            
+            {/* Show pool creation warning when near completion */}
+            {uiState.progress >= 95 && (
+              <div className="mt-4">
+                <PoolCreationStatus />
               </div>
-              <div className="terminal-blink mt-2">_</div>
+            )}
+            
+            <div className="mt-4 text-xs text-gray-400">
+              Status updates automatically...
             </div>
           </div>
         );
         
-      case DeploymentStatus.POLLING:
-        const canisterNames = ['Secondary Token', 'Primary Token', 'Swap', 'Tokenomics', 'Logs'];
-        const canisterCount = Number(deployment.canister_count);
+      case 'failed':
+        const isPoolFailure = uiState.message.includes('Pool creation');
         
-        return (
-          <div className="terminal-content">
-            <div className="terminal-info">
-              <div className="mb-2">[INFO] Deployment in progress</div>
-              
-              <div className="terminal-progress mb-3">
-                <span className="terminal-label">Progress:</span>
-                <div className="mt-1">
-                  <div className="w-48 h-2 border border-green-400 inline-block">
-                    <div 
-                      className="h-full bg-green-400 transition-all duration-300 ease-out" 
-                      style={{
-                        width: `${(canisterCount / 5) * 100}%`
-                      }} 
-                    />
-                  </div>
-                  <span className="ml-2">{canisterCount}/5</span>
-                </div>
-              </div>
-              
-              <div className="terminal-progress mb-2">
-                <span className="terminal-label">Creating:</span>
-                <div className="mt-1 text-xs">
-                  {canisterNames.map((name, i) => (
-                    <div key={name} className={i < canisterCount ? 'text-green-400' : 'text-gray-500'}>
-                      {i < canisterCount ? '✓' : '○'} {name}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="terminal-progress">
-                <span className="terminal-label">Status:</span> {deployment.status}
-              </div>
-              <div className="mt-3 text-xs text-gray-400">
-                Checking status automatically...
-              </div>
-            </div>
-          </div>
-        );
-        
-      case DeploymentStatus.FAILED:
         return (
           <div className="terminal-content">
             <div className="terminal-error mb-3">
-              [ERROR] {deployment.last_error?.[0] || localError || 'Deployment failed'}
+              [ERROR] {uiState.message}
             </div>
+            
+            {localError && (
+              <div className="terminal-error mb-3 text-sm">
+                {localError}
+              </div>
+            )}
             
             <div className="terminal-info mb-3">
               <div className="mb-2">Deployment Details:</div>
@@ -153,59 +129,45 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
                 <span className="terminal-label">ID:</span> {deploymentId}
               </div>
               <div className="text-xs">
-                <span className="terminal-label">Created:</span> {new Date(Number(deployment.created_at / 1_000_000n)).toLocaleString()}
-              </div>
-              <div className="text-xs">
-                <span className="terminal-label">Canisters created:</span> {deployment.canister_count.toString()}
+                <span className="terminal-label">Created:</span> {
+                  new Date(Number(deployment.created_at / 1_000_000n)).toLocaleString()
+                }
               </div>
             </div>
             
-            {!deployment.recoverable && (() => {
-              const timeSinceActivity = Date.now() - Number(deployment.last_activity / 1_000_000n);
-              const timeUntilRecovery = Math.max(0, 300000 - timeSinceActivity);
-              const minutes = Math.floor(timeUntilRecovery / 60000);
-              const seconds = Math.floor((timeUntilRecovery % 60000) / 1000);
-              
-              return (
-                <div className="terminal-warning">
-                  Recovery available in: {minutes}m {seconds}s
-                  <div className="text-xs mt-1">Keep this deployment ID safe: {deploymentId}</div>
-                </div>
-              );
-            })()}
+            {isPoolFailure && (
+              <div className="terminal-warning mb-3">
+                Your tokens were created but the liquidity pool could not be established.
+                The deployment has been rolled back.
+              </div>
+            )}
+            
+            {uiState.isRecoverable && (
+              <button 
+                onClick={handleRecover} 
+                className="terminal-command"
+              >
+                &gt; recover_deployment (4 ICP refund)
+              </button>
+            )}
           </div>
         );
         
-      case DeploymentStatus.RECOVERABLE:
-        return (
-          <div className="terminal-content">
-            <div className="terminal-info mb-3">
-              [INFO] This deployment can be recovered
-            </div>
-            
-            <div className="mb-3">
-              <div className="terminal-label mb-1">Last error:</div>
-              <div className="terminal-error text-sm">
-                {deployment.last_error?.[0] || 'Unknown error'}
-              </div>
-            </div>
-            
-            <button 
-              onClick={handleRecover} 
-              className="terminal-command"
-            >
-              > recover_deployment
-            </button>
-          </div>
-        );
-        
-      case DeploymentStatus.COMPLETED:
+      case 'live':
         return (
           <div className="terminal-content">
             <div className="terminal-success mb-3">
               [SUCCESS] Token deployment completed!
             </div>
             <div className="terminal-info">
+              <div className="mb-2">Your token is now live!</div>
+              {deployment.token_id?.[0] && (
+                <div className="text-xs">
+                  <span className="terminal-label">Token ID:</span> {deployment.token_id[0].toString()}
+                </div>
+              )}
+            </div>
+            <div className="mt-3 text-sm text-gray-400">
               Redirecting to token page...
             </div>
           </div>
@@ -219,10 +181,10 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
     <div className="terminal-modal-overlay">
       <div className="terminal-modal">
         <div className="terminal-header">
-          <span className="terminal-prompt">>></span> deployment_status
+          <span className="terminal-prompt">&gt;&gt;</span> deployment_status
           {deploymentId && (
             <span className="terminal-status float-right">
-              [ID: {deploymentId}]
+              [{uiState?.status.toUpperCase()}]
             </span>
           )}
         </div>
@@ -230,12 +192,12 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
         {renderContent()}
         
         <div className="terminal-commands mt-4">
-          {deployment?.frontendStatus !== DeploymentStatus.COMPLETED && (
+          {uiState?.status !== 'live' && (
             <button
               onClick={onClose}
               className="terminal-command"
             >
-              > hide_modal
+              &gt; hide_modal (continue in background)
             </button>
           )}
         </div>

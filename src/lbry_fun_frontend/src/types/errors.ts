@@ -17,6 +17,20 @@ export const parseDeploymentError = (error: string): DeploymentError => {
     };
   }
   
+  if (error.includes('You have an active deployment')) {
+    // Extract deployment ID from error message
+    const match = error.match(/ID: (\d+)/);
+    const deploymentId = match ? match[1] : undefined;
+    
+    return {
+      title: 'Active Deployment Exists',
+      message: `You have an unfinished deployment${deploymentId ? ` (ID: ${deploymentId})` : ''}. Please complete or cancel it before creating a new one.`,
+      deploymentId,
+      canRetry: false,
+      refundAvailable: true
+    };
+  }
+  
   if (error.includes('insufficient funds')) {
     return {
       title: 'Insufficient Funds',

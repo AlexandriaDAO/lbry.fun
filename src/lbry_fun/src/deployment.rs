@@ -111,6 +111,8 @@ pub struct TokenDeploymentResult {
     pub message: String,
 }
 
+// We can remove this entirely - no need for conversion between deployment and token status
+
 // Storable implementations
 impl Storable for Deployment {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {

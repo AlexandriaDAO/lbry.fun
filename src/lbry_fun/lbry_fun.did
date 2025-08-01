@@ -98,8 +98,9 @@ type Result_2 = variant { Ok : nat; Err : TransferFromError };
 type Result_3 = variant { Ok : TokenDeploymentResult; Err : text };
 type Result_4 = variant { Ok : nat; Err : text };
 type Result_5 = variant { Ok : ReconciliationDetail; Err : text };
-type Result_6 = variant { Ok : GraphData; Err : text };
-type Result_7 = variant { Ok : nat64; Err : text };
+type Result_6 = variant { Ok : TokenStatus; Err : text };
+type Result_7 = variant { Ok : GraphData; Err : text };
+type Result_8 = variant { Ok : nat64; Err : text };
 type StuckDeploymentInfo = record {
   id : nat64;
   cleanup_attempts : nat8;
@@ -140,6 +141,7 @@ type TokenHealthSummary = record {
 };
 type TokenRecord = record {
   id : nat64;
+  status : TokenStatus;
   secondary_token_symbol : text;
   secondary_token_id : principal;
   primary_token_name : text;
@@ -147,35 +149,31 @@ type TokenRecord = record {
   secondary_token_name : text;
   primary_token_symbol : text;
   launch_delay_seconds : nat64;
+  launched_at : nat64;
   icp_swap_canister_id : principal;
   halving_step : nat64;
   primary_token_max_supply : nat64;
-  pool_creation_failed : bool;
   initial_reward_per_burn_unit : nat64;
   initial_primary_mint : nat64;
   threshold_multiplier : float64;
   primary_token_id : principal;
   caller : principal;
-  pool_created_at : nat64;
   distribution_interval_seconds : nat64;
   created_time : nat64;
   initial_secondary_burn : nat64;
   logs_canister_id : principal;
 };
-type TokenStatus = record {
-  launch_delay_seconds : nat64;
-  pool_creation_failed : bool;
-  pool_created_at : nat64;
-  created_time : nat64;
+type TokenStatus = variant {
+  Failed : record { reason : text };
+  Live : record { pool_id : text };
+  Deploying : record { progress : nat8 };
 };
 type TokenStatusDetail = record {
   is_live : bool;
+  status : TokenStatus;
   secondary_token_symbol : text;
   token_id : nat64;
   primary_token_symbol : text;
-  pool_creation_failed : bool;
-  pool_created_at : nat64;
-  created_time : nat64;
   time_until_live_nanos : nat64;
 };
 type TokenomicsSchedule = record {
@@ -195,7 +193,9 @@ type TransferFromError = variant {
   InsufficientFunds : record { balance : nat };
 };
 service : () -> {
+  // Force cleanup of a specific deployment
   admin_force_cleanup : (nat64, AdminCleanupOptions) -> (Result);
+  // Retry failed refunds
   admin_retry_failed_refunds : () -> (Result_1);
   create_token : (
       text,
@@ -216,25 +216,33 @@ service : () -> {
       nat64,
     ) -> (Result);
   deposit_icp_in_canister : (nat64, opt blob) -> (Result_2);
+  // Phase 2: Execute the deployment with the given ID
   execute_token_deployment : (nat64) -> (Result_3);
+  // Quick fix to remove stuck tokens with failed pool creation
+  fix_stuck_token : (nat64) -> (Result);
   get_all_token_record : () -> (vec record { nat64; TokenRecord }) query;
   get_audit_state : () -> (AuditState) query;
   get_canister_cycle_balance : (principal) -> (Result_4);
   get_collection_metrics : () -> (CollectionMetrics) query;
   get_collection_status : () -> (SwapState, nat64) query;
+  get_failed : () -> (vec record { nat64; TokenRecord }) query;
   get_live : () -> (vec record { nat64; TokenRecord }) query;
+  // Query deployment status and history
   get_my_deployments : () -> (vec DeploymentInfo) query;
   get_problematic_tokens : () -> (vec record { principal; nat32 }) query;
+  // Get deployments that need manual intervention
   get_stuck_deployments : () -> (vec StuckDeploymentInfo) query;
   get_system_reconciliation : () -> (SystemReconciliationSummary) query;
+  get_token_detail : (nat64) -> (opt TokenStatusDetail) query;
   get_token_health_summary : () -> (TokenHealthSummary) query;
   get_token_reconciliation : (nat64) -> (Result_5) query;
-  get_token_status : (nat64) -> (opt TokenStatusDetail) query;
-  get_token_status_by_swap_canister : (principal) -> (opt TokenStatus) query;
-  get_tokenomics_graphs : (nat64) -> (Result_6) query;
-  get_treasury_balance : () -> (Result_7) query;
-  get_upcomming : () -> (vec record { nat64; TokenRecord }) query;
-  initiate_token_deployment : (CreateTokenParams) -> (Result_7);
+  get_token_status : (nat64) -> (Result_6) query;
+  get_tokenomics_graphs : (nat64) -> (Result_7) query;
+  get_treasury_balance : () -> (Result_8) query;
+  get_upcoming : () -> (vec record { nat64; TokenRecord }) query;
+  // Phase 1: Create deployment and return ID immediately
+  initiate_token_deployment : (CreateTokenParams) -> (Result_8);
+  // Migrate V9 deployments to V10 format
   migrate_v9_deployments : () -> (text);
   preview_tokenomics_graphs : (PreviewArgs) -> (GraphData);
   preview_tokenomics_schedule : (
@@ -245,6 +253,7 @@ service : () -> {
       nat64,
       float64,
     ) -> (TokenomicsSchedule);
+  // Allow users to recover stuck deployments based on activity
   recover_stuck_deployment : () -> (Result);
   retry_pool_creation : (nat64) -> (Result);
 }

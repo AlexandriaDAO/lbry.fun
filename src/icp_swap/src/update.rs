@@ -19,7 +19,7 @@ use crate::{
     DEFAULT_UNDERFLOW_ERROR,
 };
 use crate::{ get_stake, storage::* };
-use crate::{ get_user_archive_balance, utils::* };
+use crate::{ get_user_archive_balance, utils::{*, check_can_trade} };
 use candid::{ CandidType, Nat, Principal };
 use ic_cdk::{ self, caller, update };
 use ic_ledger_types::{
@@ -121,10 +121,8 @@ pub async fn swap(
     amount_icp: u64,
     from_subaccount: Option<[u8; 32]>
 ) -> Result<String, ExecutionError> {
-    // ADD THIS CHECK
-    if !is_token_live() {
-        return Err(ExecutionError::StateError("Token is not yet live for trading".to_string()));
-    }
+    // Check if trading is allowed
+    check_can_trade().await?;
     
     let caller = ic_cdk::caller();
     let _guard = CallerGuard::new(caller).map_err(|e| ExecutionError::Unauthorized(e.to_string()))?;
@@ -219,10 +217,8 @@ pub async fn burn_secondary(
     amount_secondary: u64,
     from_subaccount: Option<[u8; 32]>
 ) -> Result<String, ExecutionError> {
-    // ADD THIS CHECK
-    if !is_token_live() {
-        return Err(ExecutionError::StateError("Token is not yet live for burning".to_string()));
-    }
+    // Check if trading is allowed
+    check_can_trade().await?;
     
     let caller = ic_cdk::caller();
     let _guard = CallerGuard::new(caller).map_err(|e| ExecutionError::Unauthorized(e.to_string()))?;

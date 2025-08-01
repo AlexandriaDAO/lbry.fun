@@ -167,6 +167,7 @@ pub async fn execute_deployment_safe(deployment_id: u64) -> Result<u64, String> 
         Some(tokenomics_canister_id),
         params.distribution_interval_seconds,
         params.launch_delay_seconds,
+        Some(deployment_id),  // Pass deployment_id for now, will map to token_id later
     )
     .await?;
     
@@ -210,9 +211,10 @@ pub async fn execute_deployment_safe(deployment_id: u64) -> Result<u64, String> 
         deployments.borrow().get(&deployment_id).map(|d| d.user)
     }).ok_or("Deployment not found")?;
     
-    // Create token record
+    // Create token record with deploying status
     let mut token_record = TokenRecord {
         id: 0, // Will be set when inserting
+        status: crate::storage::TokenStatus::Deploying { progress: 80 }, // 5 canisters = 80%
         primary_token_id: get_principal(&primary_token_id),
         primary_token_name: params.primary_token_name.clone(),
         primary_token_symbol: params.primary_token_symbol.clone(),
@@ -232,8 +234,7 @@ pub async fn execute_deployment_safe(deployment_id: u64) -> Result<u64, String> 
         launch_delay_seconds: params.launch_delay_seconds,
         caller,
         created_time: ic_cdk::api::time(),
-        pool_creation_failed: false,
-        pool_created_at: 0,
+        launched_at: ic_cdk::api::time() + params.launch_delay_seconds * 1_000_000_000,
     };
     
     // Attempt to create pool on KongSwap
@@ -244,25 +245,46 @@ pub async fn execute_deployment_safe(deployment_id: u64) -> Result<u64, String> 
         icp_transfer_result
     ).await {
         Ok(reply) => {
-            ic_cdk::println!("[DEPLOYMENT] Pool creation success: Pool ID: {}", reply.pool_id);
-            token_record.pool_created_at = ic_cdk::api::time();
-            token_record.pool_creation_failed = false;
+            // Pool created - deployment fully successful
+            ic_cdk::println!("[DEPLOYMENT] CRITICAL: Pool creation SUCCESS: Pool ID: {}", reply.pool_id);
+            token_record.status = crate::storage::TokenStatus::Live {
+                pool_id: reply.pool_id.to_string(),
+            };
+            
+            // Save the successful token
+            let token_id = TOKENS.with(|tokens| {
+                let mut tokens = tokens.borrow_mut();
+                let id = tokens.len() as u64 + 1;
+                token_record.id = id;
+                tokens.insert(id, token_record);
+                id
+            });
+            
+            // Update deployment to completed
+            atomic_update_deployment(deployment_id, |d| {
+                d.status = DeploymentStatus::Completed;
+                d.token_id = Some(token_id);
+                Ok(())
+            })?;
+            
+            Ok(token_id)
         },
         Err(e) => {
-            ic_cdk::println!("[DEPLOYMENT] Pool creation failed: {}", e);
-            token_record.pool_creation_failed = true;
-            // Continue with token creation even if pool fails
+            // Pool creation failed - ENTIRE deployment fails
+            ic_cdk::println!("[DEPLOYMENT] CRITICAL: Pool creation FAILED: {}", e);
+            
+            // DO NOT save token record - deployment failed
+            
+            // Mark deployment as failed to trigger cleanup + refund
+            atomic_update_deployment(deployment_id, |d| {
+                d.status = DeploymentStatus::Failed;
+                d.failed_at = Some(ic_cdk::api::time());
+                d.last_error = Some(format!("Pool creation failed: {}", e));
+                Ok(())
+            })?;
+            
+            // Return error - this triggers phase 2 failure handling
+            Err(format!("Deployment failed at final step - pool creation: {}", e))
         }
     }
-    
-    // Save the token record
-    let token_id = TOKENS.with(|tokens| {
-        let mut tokens = tokens.borrow_mut();
-        let token_id = tokens.len() as u64 + 1;
-        token_record.id = token_id;
-        tokens.insert(token_id, token_record.clone());
-        token_id
-    });
-    
-    Ok(token_id)
 }

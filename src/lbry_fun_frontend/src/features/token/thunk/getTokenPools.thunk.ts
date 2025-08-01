@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getLbryFunActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage } from "@/features/swap/utils/errors";
-import { TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
+import { TokenRecord, TokenStatus } from "../../../../../declarations/lbry_fun/lbry_fun.did";
 import fetchTokenLogosForPool from "./fetchTokenLogosForPoolThunk";
 
 const getTokenPools = createAsyncThunk<
@@ -17,10 +17,8 @@ const getTokenPools = createAsyncThunk<
    const safeResult: [string, TokenRecordStringified][] = result.map(([poolId, record]) => {
         const currentTime = Date.now() * 1000000; // Convert to nanoseconds
         
-        // Calculate isLive status based on backend logic
-        const isLive = !record.pool_creation_failed && 
-                      record.pool_created_at > 0n && 
-                      currentTime >= Number(record.created_time) + Number(record.launch_delay_seconds) * 1_000_000_000;
+        // Calculate isLive status based on status field
+        const isLive = 'Live' in record.status;
         
         return [
           poolId.toString(),
@@ -42,9 +40,9 @@ const getTokenPools = createAsyncThunk<
             initial_secondary_burn: record.initial_secondary_burn.toString(),
             initial_reward_per_burn_unit: (BigInt(record.initial_reward_per_burn_unit) / BigInt(100_000_000)).toString(),
             created_time: record.created_time.toString(),
-            pool_created_at: record.pool_created_at.toString(),
-            pool_creation_failed: record.pool_creation_failed,
+            launched_at: record.launched_at.toString(),
             launch_delay_seconds: record.launch_delay_seconds.toString(),
+            status: record.status,
             isLive: isLive,
           },
         ];
@@ -99,9 +97,9 @@ export type TokenRecordStringified = {
   initial_secondary_burn: string;
   initial_reward_per_burn_unit: string;
   created_time: string;
-  pool_created_at: string;
-  pool_creation_failed: boolean;
+  launched_at: string;
   launch_delay_seconds: string;
+  status: TokenStatus;
   isLive: boolean;
   primary_token_logo_base64?: string;
   secondary_token_logo_base64?: string;

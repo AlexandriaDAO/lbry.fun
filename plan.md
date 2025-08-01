@@ -1,10 +1,8 @@
+- Start testing in full, ensuring the 1% actually goes back to buying and burning lbry, and the system conserves all ICP.
 
-- Implement the 1% fee to ALEX stakers, and the 5ICP To alex stakers.
-- Minor vulnerability. There is a minor concern where if the XRC oracle fails, the tokens become permanently untradable. Why don't we look into using our core canister's XRC rate instead of having each one use its own.
-- Move on to locked lp.
-
-
-
+- started with 1000 icp.
+  - 5 icp to launch
+  - 
 
 
 
@@ -12,12 +10,11 @@
 
 
 
-- Staking reward percent is a fake number in icp_swap
 - Could we make all the terminals into expanders?
+- Staking reward percent is a fake number in icp_swap
 - Get launch pending to update the state when time runs out.
 - Success page should update state with the new token page.
 - Definitely going to need to display the price chart.
-- Upload a non-svg cover image (an nft?) and a real project description (optional)
 - Dynamic price feeds from kongswap.
 - y-axis label on graphs 1, 2 and 4
 - Annual APY fix in logs canister.
@@ -51,7 +48,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "naeuf-h7bkj-fxjvx-uq7bs-m2whk-bfqdq-efee3-wwfwy-e5fd4-qjtdl-zqe"; subaccount = null }; amount = (999_900_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "mectm-l7gv5-wrdfk-csd6n-g2x7f-34gu5-23wpf-ocmlm-rauhw-3az5y-fqe"; subaccount = null }; amount = (100_000_000_000 : nat) })'
 
 dfx identity use default
 

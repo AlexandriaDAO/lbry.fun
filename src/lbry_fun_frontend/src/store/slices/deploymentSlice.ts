@@ -1,101 +1,76 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { DeploymentRecord, DeploymentStatus } from '@/types/deployment';
+import { DeploymentRecord, getUIState } from '@/types/deployment';
+import { RootState } from '@/store';
 
 interface DeploymentState {
   deployments: Record<string, DeploymentRecord>;
   activeDeploymentId: string | null;
-  status: 'idle' | 'initiating' | 'executing' | 'polling' | 'recovering' | 'completed' | 'failed';
-  error: { title: string; message: string } | null;
-  pollingInterval: NodeJS.Timeout | null;
-  pollAttempts: number;
-  maxPollAttempts: 60;
+  isLoading: boolean;
 }
 
 const initialState: DeploymentState = {
   deployments: {},
   activeDeploymentId: null,
-  status: 'idle',
-  error: null,
-  pollingInterval: null,
-  pollAttempts: 0,
-  maxPollAttempts: 60
+  isLoading: false
 };
 
-const deploymentSlice = createSlice({
+// Simple actions - no complex state management
+export const deploymentSlice = createSlice({
   name: 'deployment',
   initialState,
   reducers: {
-    setActiveDeployment: (state, action: PayloadAction<string>) => {
-      state.activeDeploymentId = action.payload;
-      state.error = null;
+    // Just store/update deployments
+    setDeployments: (state, action: PayloadAction<DeploymentRecord[]>) => {
+      state.deployments = {};
+      action.payload.forEach(d => {
+        state.deployments[d.id.toString()] = d;
+      });
     },
     
     updateDeployment: (state, action: PayloadAction<DeploymentRecord>) => {
-      const id = action.payload.id.toString();
-      state.deployments[id] = action.payload;
+      state.deployments[action.payload.id.toString()] = action.payload;
     },
     
-    setDeploymentStatus: (state, action: PayloadAction<{
-      id: string;
-      status: DeploymentStatus;
-      error?: string;
-    }>) => {
-      const { id, status, error } = action.payload;
-      if (state.deployments[id]) {
-        state.deployments[id].frontendStatus = status;
-        state.deployments[id].lastChecked = Date.now();
-        
-        if (error) {
-          state.deployments[id].last_error = [error];
-        }
-        
-        if (status === DeploymentStatus.FAILED) {
-          const deployment = state.deployments[id];
-          const timeSinceActivity = Date.now() - Number(deployment.last_activity / 1_000_000n);
-          deployment.recoverable = timeSinceActivity > 5 * 60 * 1000;
-        }
-      }
+    removeDeployment: (state, action: PayloadAction<string>) => {
+      delete state.deployments[action.payload];
     },
     
-    clearActiveDeployment: (state) => {
-      state.activeDeploymentId = null;
-      state.status = 'idle';
-      state.error = null;
-      state.pollAttempts = 0;
-      
-      if (state.pollingInterval) {
-        clearInterval(state.pollingInterval);
-        state.pollingInterval = null;
-      }
-      
-      localStorage.removeItem('activeDeploymentId');
+    setActiveDeploymentId: (state, action: PayloadAction<string | null>) => {
+      state.activeDeploymentId = action.payload;
     },
     
-    setPollingInterval: (state, action: PayloadAction<NodeJS.Timeout | null>) => {
-      if (state.pollingInterval) {
-        clearInterval(state.pollingInterval);
-      }
-      state.pollingInterval = action.payload;
-    },
-    
-    incrementPollAttempts: (state) => {
-      state.pollAttempts += 1;
-    },
-    
-    setError: (state, action: PayloadAction<{ title: string; message: string } | null>) => {
-      state.error = action.payload;
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
     }
   }
 });
 
 export const {
-  setActiveDeployment,
+  setDeployments,
   updateDeployment,
-  setDeploymentStatus,
-  clearActiveDeployment,
-  setPollingInterval,
-  incrementPollAttempts,
-  setError
+  removeDeployment,
+  setActiveDeploymentId,
+  setLoading
 } = deploymentSlice.actions;
+
+// No complex state derivation - just selectors
+export const selectDeploymentUIState = (deploymentId: string) => (state: RootState) => {
+  const deployment = state.deployment.deployments[deploymentId];
+  return deployment ? getUIState(deployment.tokenStatus) : null;
+};
+
+export const selectActiveDeployments = (state: RootState) => {
+  return Object.values(state.deployment.deployments).filter(d => 
+    'Deploying' in d.tokenStatus
+  );
+};
+
+export const selectDeploymentById = (id: string) => (state: RootState) => {
+  return state.deployment.deployments[id];
+};
+
+export const selectAllDeployments = (state: RootState) => {
+  return Object.values(state.deployment.deployments);
+};
 
 export default deploymentSlice.reducer;

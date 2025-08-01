@@ -109,6 +109,20 @@ async fn cleanup_deployment_with_progress(deployment: &Deployment) -> Result<(),
     });
     
     if all_deleted {
+        // NEW: Check if token record was created but deployment failed
+        if let Some(token_id) = deployment.token_id {
+            crate::storage::TOKENS.with(|tokens| {
+                let mut tokens_mut = tokens.borrow_mut();
+                if let Some(token) = tokens_mut.get(&token_id) {
+                    // Only remove if it's in failed state
+                    if matches!(token.status, crate::storage::TokenStatus::Failed { .. }) {
+                        tokens_mut.remove(&token_id);
+                        ic_cdk::println!("[CLEANUP] Removed failed token record {}", token_id);
+                    }
+                }
+            });
+        }
+        
         match transfer_icp_to_account(deployment.user, refund_amount).await {
             Ok(_) => {
                 ic_cdk::println!("Refunded {} ICP to {}", 
@@ -255,12 +269,9 @@ async fn admin_retry_failed_refunds() -> Result<Vec<String>, String> {
 
 /// Check if caller is admin
 fn is_admin() -> Result<(), String> {
-    // You should replace this with your actual admin check logic
-    // For now, let's use a placeholder
     let caller = ic_cdk::caller();
-    let admin_principal = Principal::from_text("admin-principal-here").unwrap_or(Principal::anonymous());
     
-    if caller == admin_principal {
+    if crate::is_admin_principal(&caller) {
         Ok(())
     } else {
         Err("Not authorized".to_string())

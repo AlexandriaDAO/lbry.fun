@@ -31,12 +31,19 @@ pub const LAUNCH_TIME_MEM_ID: MemoryId = MemoryId::new(11);
 pub const UNCOLLECTED_ALEX_FEES_MEM_ID: MemoryId = MemoryId::new(12);
 pub const UNCOLLECTED_LP_FEES_MEM_ID: MemoryId = MemoryId::new(13);
 pub const REWARD_POOL_MEM_ID: MemoryId = MemoryId::new(14);
+pub const TOKEN_ID_MEM_ID: MemoryId = MemoryId::new(15);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
         MemoryManager::init(DefaultMemoryImpl::default())
     );
     pub static STATE: RefCell<State> = RefCell::new(State { pending_requests: BTreeSet::new() });
+    
+    // Store the token ID for status checking
+    pub static TOKEN_ID: RefCell<u64> = RefCell::new(0);
+    
+    // Cache for token status with timestamp
+    pub static CACHED_STATUS: RefCell<Option<(TokenStatus, u64)>> = RefCell::new(None);
 
     pub static APY: RefCell<StableBTreeMap<u32, DailyValues, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(APY_MEM_ID)))
@@ -211,6 +218,14 @@ pub struct Configs {
     pub secondary_token_id: Principal,
     pub tokenomics_canister_id: Principal,
     pub icp_ledger_id: Principal,
+}
+
+// Simplified TokenStatus matching lbry_fun
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub enum TokenStatus {
+    Deploying { progress: u8 },
+    Live { pool_id: String },
+    Failed { reason: String },
 }
 
 #[derive(CandidType, Deserialize)]

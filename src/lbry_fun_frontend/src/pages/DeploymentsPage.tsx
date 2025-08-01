@@ -4,8 +4,8 @@ import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { RootState } from '@/store';
 import { fetchDeploymentHistory } from '@/features/token/thunk/deploymentThunks';
-import { setActiveDeployment } from '@/store/slices/deploymentSlice';
-import { DeploymentStatus } from '@/types/deployment';
+import { setActiveDeploymentId } from '@/store/slices/deploymentSlice';
+import { getUIState } from '@/types/deployment';
 
 const DeploymentsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -16,21 +16,18 @@ const DeploymentsPage: React.FC = () => {
     dispatch(fetchDeploymentHistory());
   }, []);
   
-  const getStatusBadge = (status: DeploymentStatus) => {
+  const getStatusBadge = (status: 'deploying' | 'failed' | 'live') => {
     const badges = {
-      [DeploymentStatus.INITIATED]: 'terminal-badge-info',
-      [DeploymentStatus.EXECUTING]: 'terminal-badge-info',
-      [DeploymentStatus.POLLING]: 'terminal-badge-warning',
-      [DeploymentStatus.COMPLETED]: 'terminal-badge-success',
-      [DeploymentStatus.FAILED]: 'terminal-badge-error',
-      [DeploymentStatus.RECOVERABLE]: 'terminal-badge-warning'
+      deploying: 'terminal-badge-info',
+      failed: 'terminal-badge-error',
+      live: 'terminal-badge-success'
     };
     
     return badges[status] || 'terminal-badge';
   };
   
   const handleSelectDeployment = (deploymentId: string) => {
-    dispatch(setActiveDeployment(deploymentId));
+    dispatch(setActiveDeploymentId(deploymentId));
     navigate('/');
   };
   
@@ -41,7 +38,7 @@ const DeploymentsPage: React.FC = () => {
   return (
     <div className="terminal-page">
       <div className="terminal-header">
-        <span className="terminal-prompt">>></span> deployment_history
+        <span className="terminal-prompt">&gt;&gt;</span> deployment_history
         <span className="terminal-status float-right">
           [{sortedDeployments.length} deployments]
         </span>
@@ -62,8 +59,8 @@ const DeploymentsPage: React.FC = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <span className="terminal-label">ID:</span> {deployment.id.toString()}
-                  <span className={`ml-3 ${getStatusBadge(deployment.frontendStatus)}`}>
-                    {deployment.frontendStatus}
+                  <span className={`ml-3 ${getStatusBadge(getUIState(deployment.tokenStatus).status)}`}>
+                    {getUIState(deployment.tokenStatus).status}
                   </span>
                 </div>
                 <div className="text-xs">
@@ -71,19 +68,19 @@ const DeploymentsPage: React.FC = () => {
                 </div>
               </div>
               
-              {deployment.token_id.length > 0 && (
+              {deployment.token_id && deployment.token_id.length > 0 && (
                 <div className="text-xs mt-1">
                   <span className="terminal-label">Token ID:</span> {deployment.token_id[0].toString()}
                 </div>
               )}
               
-              {deployment.last_error.length > 0 && (
+              {getUIState(deployment.tokenStatus).status === 'failed' && (
                 <div className="text-xs mt-1 terminal-error">
-                  {deployment.last_error[0]}
+                  {getUIState(deployment.tokenStatus).message}
                 </div>
               )}
               
-              {deployment.frontendStatus === DeploymentStatus.RECOVERABLE && (
+              {getUIState(deployment.tokenStatus).isRecoverable && (
                 <div className="text-xs mt-1 terminal-warning">
                   Click to recover this deployment
                 </div>
@@ -98,7 +95,7 @@ const DeploymentsPage: React.FC = () => {
           onClick={() => navigate('/')}
           className="terminal-command"
         >
-          > create_new_token
+          &gt; create_new_token
         </button>
       </div>
     </div>

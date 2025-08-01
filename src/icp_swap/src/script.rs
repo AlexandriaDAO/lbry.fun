@@ -21,12 +21,14 @@ use crate::{
     STAKES,
     TOTAL_ARCHIVED_BALANCE,
     TOTAL_UNCLAIMED_ICP_REWARD,
+    TOKEN_ID,
 };
 
 pub const PRICE_FETCH_INTERVAL: Duration = Duration::from_secs(1 * 24 * 60 * 60); // 1 days in seconds
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct InitArgs {
+    pub token_id: Option<u64>,  // Add token ID for status checking
     pub stakes: Option<Vec<(Principal, Stake)>>,
     pub archived_transaction_log: Option<Vec<(Principal, ArchiveBalance)>>,
     pub total_unclaimed_icp_reward: Option<u128>,
@@ -39,12 +41,13 @@ pub struct InitArgs {
     pub tokenomics_canister_id: Option<Principal>,
     pub icp_ledger_id: Option<Principal>,
     pub distribution_interval_seconds: Option<u64>,
-    pub launch_time: Option<u64>,  // ADD THIS LINE
+    pub launch_time: Option<u64>,
 }
 
 impl Default for InitArgs {
     fn default() -> Self {
         Self {
+            token_id: None,
             stakes: None,
             archived_transaction_log: None,
             total_unclaimed_icp_reward: None,
@@ -257,6 +260,14 @@ fn init(args: Option<InitArgs>) {
         }
     }
 
+    // Store token ID if provided
+    if let Some(ref init_args) = args {
+        if let Some(token_id) = init_args.token_id {
+            TOKEN_ID.with(|id| *id.borrow_mut() = token_id);
+            register_info_log(caller(), "init", &format!("Token ID stored: {}", token_id));
+        }
+    }
+    
     let distribution_interval = args.as_ref()
         .and_then(|args| args.distribution_interval_seconds)
         .expect("Distribution interval seconds is required");

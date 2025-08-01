@@ -735,7 +735,7 @@ const TerminalCreateToken: React.FC = () => {
         isOpen={showDeploymentModal}
         onClose={() => setShowDeploymentModal(false)}
         onSuccess={(tokenId) => {
-          navigate(`/token/success?id=${tokenId}`);
+          navigate(`/swap?id=${tokenId}`);
         }}
       />
     </div>

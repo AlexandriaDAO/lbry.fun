@@ -43,7 +43,80 @@ pub const DEFAULT_SECONDARY_RATIO: u64 = 400;
 pub const E8S: u64 = 100_000_000;
 pub const LOGS_LIMIT: u64 = 100_000;
 
-use crate::storage::LAUNCH_TIME;
+use crate::storage::{LAUNCH_TIME, TOKEN_ID, CACHED_STATUS, TokenStatus};
+use candid::Principal;
+
+pub async fn check_can_trade() -> Result<(), crate::ExecutionError> {
+    let token_id = TOKEN_ID.with(|id| *id.borrow());
+    if token_id == 0 {
+        return Err(crate::ExecutionError::StateError(
+            "Token ID not set".to_string()
+        ));
+    }
+    
+    let now = ic_cdk::api::time();
+    
+    // Check cache first (60 second TTL)
+    let cached = CACHED_STATUS.with(|cache| {
+        cache.borrow().as_ref().and_then(|(status, timestamp)| {
+            if now - timestamp < 60_000_000_000 { // 60 seconds
+                Some(status.clone())
+            } else {
+                None
+            }
+        })
+    });
+    
+    let status = match cached {
+        Some(s) => s,
+        None => {
+            // Get lbry_fun canister ID from config or use default
+            let lbry_fun_canister_id = crate::CONFIGS.with(|c| {
+                c.borrow().get(&()).map(|config| config.icp_ledger_id) // Should have lbry_fun_id field
+                    .unwrap_or_else(|| Principal::from_text("oni4e-oyaaa-aaaap-qp2pq-cai").unwrap())
+            });
+            
+            let (status,): (Result<TokenStatus, String>,) = ic_cdk::call(lbry_fun_canister_id, "get_token_status", (token_id,))
+                .await
+                .map_err(|(code, msg)| crate::ExecutionError::StateError(
+                    format!("Failed to check token status: {:?} - {}", code, msg)
+                ))?;
+            
+            let fresh_status = status.map_err(|e| crate::ExecutionError::StateError(e))?;
+            
+            // Cache the status
+            CACHED_STATUS.with(|cache| {
+                *cache.borrow_mut() = Some((fresh_status.clone(), now));
+            });
+            
+            fresh_status
+        }
+    };
+    
+    // Validate status
+    match status {
+        TokenStatus::Live { .. } => {
+            // Check launch time separately
+            if !is_token_live() {
+                Err(crate::ExecutionError::StateError(
+                    "Token not yet launched".to_string()
+                ))
+            } else {
+                Ok(())
+            }
+        },
+        TokenStatus::Failed { reason } => {
+            Err(crate::ExecutionError::StateError(
+                format!("Token deployment failed: {}", reason)
+            ))
+        },
+        TokenStatus::Deploying { .. } => {
+            Err(crate::ExecutionError::StateError(
+                "Token deployment still in progress".to_string()
+            ))
+        },
+    }
+}
 
 pub fn is_token_live() -> bool {
     let now = ic_cdk::api::time() / 1_000_000_000; // Convert nanos to seconds

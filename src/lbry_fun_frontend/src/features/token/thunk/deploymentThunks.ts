@@ -3,28 +3,121 @@ import { Principal } from '@dfinity/principal';
 import { RootState } from '@/store';
 import { getLbryFunActor, getIcpLedgerActor, getAuthClient, getPrincipal } from '@/features/auth/utils/authUtils';
 import { 
-  DeploymentStatus, 
   CreateTokenParams, 
-  DeploymentRecord 
+  DeploymentRecord,
+  TokenStatus 
 } from '@/types/deployment';
 import {
-  setActiveDeployment,
+  setDeployments,
   updateDeployment,
-  setDeploymentStatus,
-  clearActiveDeployment,
-  setPollingInterval,
-  incrementPollAttempts,
-  setError
+  removeDeployment,
+  setActiveDeploymentId,
+  setLoading
 } from '@/store/slices/deploymentSlice';
 import { callWithRetry } from '@/utils/networkRetry';
 import { parseDeploymentError } from '@/types/errors';
 
-const POLL_INTERVALS = [2000, 5000, 10000, 15000, 30000];
+// Simple persistence utilities
+const DEPLOYMENT_STORAGE_PREFIX = 'lbry_deployment_';
+const DEPLOYMENT_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
+const persistDeployment = (deployment: DeploymentRecord) => {
+  const key = `${DEPLOYMENT_STORAGE_PREFIX}${deployment.id}`;
+  
+  // Convert BigInt values to strings for JSON serialization
+  const serializable = {
+    deployment: {
+      ...deployment,
+      id: deployment.id.toString(),
+      deployment_id: deployment.deployment_id.toString(),
+      created_at: deployment.created_at.toString(),
+      last_activity: deployment.last_activity.toString(),
+      token_id: deployment.token_id?.map(id => id.toString()),
+      params: {
+        ...deployment.params,
+        primary_max_supply: deployment.params.primary_max_supply.toString(),
+        initial_primary_mint: deployment.params.initial_primary_mint.toString(),
+        initial_secondary_burn: deployment.params.initial_secondary_burn.toString(),
+        halving_step: deployment.params.halving_step.toString(),
+        initial_reward_per_burn_unit: deployment.params.initial_reward_per_burn_unit.toString(),
+        distribution_interval_seconds: deployment.params.distribution_interval_seconds.toString(),
+        launch_delay_seconds: deployment.params.launch_delay_seconds.toString()
+      }
+    },
+    expires: Date.now() + DEPLOYMENT_TTL
+  };
+  
+  localStorage.setItem(key, JSON.stringify(serializable));
+};
+
+const loadPersistedDeployments = (): DeploymentRecord[] => {
+  const deployments: DeploymentRecord[] = [];
+  const keys = Object.keys(localStorage).filter(k => k.startsWith(DEPLOYMENT_STORAGE_PREFIX));
+  
+  keys.forEach(key => {
+    try {
+      const data = JSON.parse(localStorage.getItem(key) || '{}');
+      if (data.expires > Date.now() && data.deployment) {
+        // Convert string values back to BigInt
+        const deployment = data.deployment;
+        deployments.push({
+          ...deployment,
+          id: BigInt(deployment.id),
+          deployment_id: BigInt(deployment.deployment_id),
+          created_at: BigInt(deployment.created_at),
+          last_activity: BigInt(deployment.last_activity),
+          token_id: deployment.token_id?.map((id: string) => BigInt(id)),
+          params: {
+            ...deployment.params,
+            primary_max_supply: BigInt(deployment.params.primary_max_supply),
+            initial_primary_mint: BigInt(deployment.params.initial_primary_mint),
+            initial_secondary_burn: BigInt(deployment.params.initial_secondary_burn),
+            halving_step: BigInt(deployment.params.halving_step),
+            initial_reward_per_burn_unit: BigInt(deployment.params.initial_reward_per_burn_unit),
+            distribution_interval_seconds: BigInt(deployment.params.distribution_interval_seconds),
+            launch_delay_seconds: BigInt(deployment.params.launch_delay_seconds)
+          }
+        });
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch {
+      localStorage.removeItem(key);
+    }
+  });
+  
+  return deployments;
+};
+
+const clearPersistedDeployment = (deploymentId: string) => {
+  localStorage.removeItem(`${DEPLOYMENT_STORAGE_PREFIX}${deploymentId}`);
+};
+
+// Clear all stale deployments from localStorage
+export const clearStaleDeployments = () => {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith(DEPLOYMENT_STORAGE_PREFIX));
+  
+  keys.forEach(key => {
+    try {
+      const data = JSON.parse(localStorage.getItem(key) || '{}');
+      // Remove if expired or malformed
+      if (!data.expires || data.expires <= Date.now() || !data.deployment) {
+        localStorage.removeItem(key);
+      }
+    } catch {
+      // Remove if can't parse
+      localStorage.removeItem(key);
+    }
+  });
+};
+
+// Initiate token deployment
 export const initiateTokenDeployment = createAsyncThunk(
   'deployment/initiate',
   async (params: CreateTokenParams, { dispatch, rejectWithValue }) => {
     try {
+      dispatch(setLoading(true));
+      
       // First, approve ICP for the deployment
       const lbry_fun_canister_id = process.env.CANISTER_ID_LBRY_FUN!;
       const deploymentCost = BigInt(5_0000_0000); // 5 ICP in e8s
@@ -71,79 +164,74 @@ export const initiateTokenDeployment = createAsyncThunk(
       }
       
       const actor = await getLbryFunActor();
+      console.log('Initiating token deployment with params:', params);
+      
       const result = await callWithRetry(() => 
         actor.initiate_token_deployment(params)
       );
       
+      console.log('Deployment initiation result:', result);
+      
       if ('Ok' in result) {
-        const deploymentId = result.Ok.toString();
+        const deploymentId = result.Ok;
         
-        localStorage.setItem('activeDeploymentId', deploymentId);
-        
+        // Create initial deployment record
         const deployment: DeploymentRecord = {
-          id: result.Ok,
-          status: 'active',
-          token_id: [],
-          canister_count: 0n,
-          cleanup_progress: 0,
-          last_error: [],
+          id: deploymentId,
+          deployment_id: deploymentId,
+          tokenStatus: { Deploying: { progress: 0 } },
+          params,
           created_at: BigInt(Date.now()) * 1_000_000n,
           last_activity: BigInt(Date.now()) * 1_000_000n,
-          failed_at: [],
-          frontendStatus: DeploymentStatus.INITIATED,
-          lastChecked: Date.now(),
-          recoverable: false,
-          params
+          token_id: []
         };
         
         dispatch(updateDeployment(deployment));
-        dispatch(setActiveDeployment(deploymentId));
+        dispatch(setActiveDeploymentId(deploymentId.toString()));
+        persistDeployment(deployment);
         
-        return deploymentId;
+        // Store active deployment ID
+        localStorage.setItem('activeDeploymentId', deploymentId.toString());
+        
+        return deploymentId.toString();
       } else {
         const parsedError = parseDeploymentError(result.Err);
         return rejectWithValue(parsedError);
       }
     } catch (error) {
+      console.error('Deployment initiation error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       return rejectWithValue({
-        title: 'Network Error',
-        message: 'Failed to connect to the network'
+        title: 'Deployment Failed',
+        message: `Failed to initiate deployment: ${errorMessage}`
       });
+    } finally {
+      dispatch(setLoading(false));
     }
   }
 );
 
+// Execute token deployment
 export const executeTokenDeployment = createAsyncThunk(
   'deployment/execute',
   async (deploymentId: string, { dispatch, rejectWithValue }) => {
     try {
-      dispatch(setDeploymentStatus({ 
-        id: deploymentId, 
-        status: DeploymentStatus.EXECUTING 
-      }));
-      
       const actor = await getLbryFunActor();
+      console.log('Executing token deployment for ID:', deploymentId);
+      
       const result = await callWithRetry(() => 
         actor.execute_token_deployment(BigInt(deploymentId))
       );
       
+      console.log('Deployment execution result:', result);
+      
       if ('Ok' in result) {
-        dispatch(setDeploymentStatus({ 
-          id: deploymentId, 
-          status: DeploymentStatus.COMPLETED 
-        }));
-        
-        dispatch(clearActiveDeployment());
-        
+        // Start polling for status
+        dispatch(pollDeploymentStatus(deploymentId));
         return result.Ok;
       } else {
+        // If it's a timeout or still processing, start polling
         if (result.Err.includes('timeout') || result.Err.includes('still processing')) {
-          dispatch(setDeploymentStatus({ 
-            id: deploymentId, 
-            status: DeploymentStatus.POLLING,
-            error: result.Err
-          }));
-          
           dispatch(pollDeploymentStatus(deploymentId));
           
           return rejectWithValue({
@@ -153,104 +241,240 @@ export const executeTokenDeployment = createAsyncThunk(
           });
         }
         
-        dispatch(setDeploymentStatus({ 
-          id: deploymentId, 
-          status: DeploymentStatus.FAILED,
-          error: result.Err
-        }));
-        
         const parsedError = parseDeploymentError(result.Err);
         return rejectWithValue(parsedError);
       }
     } catch (error) {
+      console.error('Deployment execution error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       return rejectWithValue({
         title: 'Execution Error',
-        message: 'Failed to execute deployment'
+        message: `Failed to execute deployment: ${errorMessage}`
       });
     }
   }
 );
 
+// Proper polling that checks token status
 export const pollDeploymentStatus = createAsyncThunk(
   'deployment/poll',
   async (deploymentId: string, { dispatch, getState }) => {
-    let pollIndex = 0;
+    const actor = await getLbryFunActor();
+    const state = getState() as RootState;
+    const deployment = state.deployment.deployments[deploymentId];
     
-    const poll = async () => {
-      try {
-        const state = getState() as RootState;
+    if (!deployment) return;
+    
+    try {
+      let updatedDeployment: DeploymentRecord;
+      
+      // Phase 1: No token_id yet, poll deployment status
+      if (!deployment.token_id || deployment.token_id.length === 0) {
+        const deployments = await actor.get_my_deployments();
+        const backendDeployment = deployments.find(d => d.id.toString() === deploymentId);
         
-        if (state.deployment.pollAttempts >= state.deployment.maxPollAttempts) {
-          dispatch(setPollingInterval(null));
-          dispatch(setDeploymentStatus({
-            id: deploymentId,
-            status: DeploymentStatus.FAILED,
-            error: 'Polling timeout exceeded. Please try recovery.'
-          }));
-          return;
-        }
+        if (!backendDeployment) return;
         
-        dispatch(incrementPollAttempts());
+        // Convert deployment status to token status
+        const deploymentStatus = backendDeployment.status;
+        let tokenStatus: TokenStatus;
         
-        const actor = await getLbryFunActor();
-        const deployments = await callWithRetry(() => 
-          actor.get_my_deployments()
-        );
-        
-        const deployment = deployments.find(d => d.id.toString() === deploymentId);
-        
-        if (deployment) {
-          const record: DeploymentRecord = {
-            ...deployment,
-            frontendStatus: DeploymentStatus.POLLING,
-            lastChecked: Date.now(),
-            recoverable: false
+        if (deploymentStatus === 'Active') {
+          tokenStatus = {
+            Deploying: {
+              progress: Math.floor((Number(backendDeployment.canister_count) / 5) * 80)
+            }
           };
-          
-          dispatch(updateDeployment(record));
-          
-          if (deployment.status === 'completed') {
-            dispatch(setPollingInterval(null));
-            dispatch(setDeploymentStatus({
-              id: deploymentId,
-              status: DeploymentStatus.COMPLETED
-            }));
-            dispatch(clearActiveDeployment());
-          } else if (deployment.status === 'failed') {
-            dispatch(setPollingInterval(null));
-            
-            const timeSinceActivity = Date.now() - Number(deployment.last_activity / 1_000_000n);
-            const isRecoverable = timeSinceActivity > 5 * 60 * 1000;
-            
-            dispatch(setDeploymentStatus({
-              id: deploymentId,
-              status: isRecoverable ? DeploymentStatus.RECOVERABLE : DeploymentStatus.FAILED,
-              error: deployment.last_error?.[0] || 'Deployment failed'
-            }));
+        } else if (deploymentStatus === 'Failed') {
+          tokenStatus = {
+            Failed: {
+              reason: backendDeployment.last_error?.[0] || 'Deployment failed'
+            }
+          };
+        } else if (deploymentStatus === 'Cleaning') {
+          tokenStatus = {
+            Failed: {
+              reason: 'Deployment is being cleaned up due to failure'
+            }
+          };
+        } else if (deploymentStatus === 'Completed') {
+          // Deployment completed successfully
+          if (backendDeployment.token_id?.[0]) {
+            // Fetch actual token status
+            const status = await actor.get_token_status(backendDeployment.token_id[0]);
+            tokenStatus = status;
+          } else {
+            // Shouldn't happen - completed without token
+            tokenStatus = {
+              Failed: {
+                reason: 'Deployment completed but no token created'
+              }
+            };
           }
+        } else {
+          // Unknown status
+          tokenStatus = {
+            Failed: {
+              reason: `Unknown deployment status: ${deploymentStatus}`
+            }
+          };
         }
         
-        if (state.deployment.pollingInterval) {
-          const nextPollDelay = POLL_INTERVALS[Math.min(pollIndex, POLL_INTERVALS.length - 1)];
-          pollIndex++;
-          
-          const timeoutId = setTimeout(poll, nextPollDelay);
-          dispatch(setPollingInterval(timeoutId as unknown as NodeJS.Timeout));
-        }
-      } catch (error) {
-        console.error('Polling error:', error);
-        const state = getState() as RootState;
-        if (state.deployment.pollingInterval) {
-          const timeoutId = setTimeout(poll, 5000);
-          dispatch(setPollingInterval(timeoutId as unknown as NodeJS.Timeout));
+        updatedDeployment = {
+          ...deployment,
+          tokenStatus,
+          token_id: backendDeployment.token_id
+        };
+      } else {
+        // Phase 2: Have token_id, poll token status directly
+        const tokenStatus = await actor.get_token_status(deployment.token_id[0]);
+        updatedDeployment = {
+          ...deployment,
+          tokenStatus
+        };
+      }
+      
+      // Update store and persist
+      dispatch(updateDeployment(updatedDeployment));
+      persistDeployment(updatedDeployment);
+      
+      // Continue polling if still deploying
+      if ('Deploying' in updatedDeployment.tokenStatus) {
+        setTimeout(() => {
+          dispatch(pollDeploymentStatus(deploymentId));
+        }, 5000); // Poll every 5 seconds
+      } else {
+        // Deployment finished (success or failure)
+        if ('Live' in updatedDeployment.tokenStatus) {
+          // Clear active deployment on success
+          dispatch(setActiveDeploymentId(null));
+          localStorage.removeItem('activeDeploymentId');
         }
       }
-    };
-    
-    poll();
+      
+    } catch (error) {
+      console.error('Polling error for deployment', deploymentId, ':', error);
+      // Retry after delay
+      setTimeout(() => {
+        dispatch(pollDeploymentStatus(deploymentId));
+      }, 10000);
+    }
   }
 );
 
+// Initialize persisted deployments on app load
+export const initializeDeployments = createAsyncThunk(
+  'deployment/initialize',
+  async (_, { dispatch }) => {
+    // First load persisted deployments
+    const persistedDeployments = loadPersistedDeployments();
+    
+    // Then sync with backend to get actual status
+    try {
+      const actor = await getLbryFunActor();
+      const backendDeployments = await actor.get_my_deployments();
+      
+      // Update persisted deployments with backend status
+      const syncedDeployments = persistedDeployments.map(persisted => {
+        const backend = backendDeployments.find(d => d.id.toString() === persisted.id.toString());
+        
+        if (!backend) {
+          // Deployment doesn't exist in backend
+          // Check if this might be a completed deployment by looking for the token ID
+          if (persisted.token_id && persisted.token_id.length > 0) {
+            // This was likely a successful deployment that was cleaned up
+            // Remove it from localStorage
+            clearPersistedDeployment(persisted.id.toString());
+            return null; // Filter this out
+          }
+          // Otherwise mark as unknown
+          return {
+            ...persisted,
+            tokenStatus: { Failed: { reason: 'Unknown deployment - may have been cleaned up' } } as TokenStatus
+          };
+        }
+        
+        // Check if this is a stuck deployment (initiated but never executed)
+        if (backend.status === 'Active' && backend.canister_count === 0n && 
+            'Deploying' in persisted.tokenStatus && persisted.tokenStatus.Deploying.progress === 0) {
+          // This deployment was initiated but never executed
+          return {
+            ...persisted,
+            tokenStatus: { Failed: { reason: 'Deployment was initiated but never executed. You can either continue or cancel it.' } } as TokenStatus
+          };
+        }
+        
+        // Otherwise sync the status
+        let tokenStatus: TokenStatus;
+        if (backend.status === 'Active') {
+          tokenStatus = {
+            Deploying: {
+              progress: Math.floor((Number(backend.canister_count) / 5) * 80)
+            }
+          };
+        } else if (backend.status === 'Failed') {
+          tokenStatus = {
+            Failed: {
+              reason: backend.last_error?.[0] || 'Deployment failed'
+            }
+          };
+        } else if (backend.status === 'Cleaning') {
+          tokenStatus = {
+            Failed: {
+              reason: 'Deployment is being cleaned up due to failure'
+            }
+          };
+        } else if (backend.status === 'Completed' && backend.token_id?.[0]) {
+          // Completed - fetch actual token status
+          return persisted; // Will be updated by pollDeploymentStatus
+        } else {
+          tokenStatus = {
+            Failed: {
+              reason: `Unknown deployment state: ${backend.status}`
+            }
+          };
+        }
+        
+        return {
+          ...persisted,
+          tokenStatus,
+          token_id: backend.token_id
+        };
+      });
+      
+      // Filter out null values (completed deployments that were cleaned up)
+      const validDeployments = syncedDeployments.filter(d => d !== null) as DeploymentRecord[];
+      
+      dispatch(setDeployments(validDeployments));
+      
+      // Resume polling for active deployments
+      validDeployments.forEach(deployment => {
+        if ('Deploying' in deployment.tokenStatus) {
+          dispatch(pollDeploymentStatus(deployment.id.toString()));
+        }
+      });
+    } catch (error) {
+      console.error('Failed to sync with backend:', error);
+      // Fall back to persisted deployments
+      dispatch(setDeployments(persistedDeployments));
+      
+      // Still resume polling
+      persistedDeployments.forEach(deployment => {
+        if ('Deploying' in deployment.tokenStatus) {
+          dispatch(pollDeploymentStatus(deployment.id.toString()));
+        }
+      });
+    }
+    
+    // Check for active deployment ID
+    const activeDeploymentId = localStorage.getItem('activeDeploymentId');
+    if (activeDeploymentId) {
+      dispatch(setActiveDeploymentId(activeDeploymentId));
+    }
+  }
+);
+
+// Recovery mechanism
 export const recoverDeployment = createAsyncThunk(
   'deployment/recover',
   async (_, { dispatch, rejectWithValue }) => {
@@ -261,15 +485,8 @@ export const recoverDeployment = createAsyncThunk(
       );
       
       if ('Ok' in result) {
-        const deployments = await actor.get_my_deployments();
-        const activeDeployment = deployments.find(d => d.status === 'active');
-        
-        if (activeDeployment) {
-          const deploymentId = activeDeployment.id.toString();
-          dispatch(setActiveDeployment(deploymentId));
-          
-          return dispatch(executeTokenDeployment(deploymentId));
-        }
+        // Refresh deployments after recovery
+        dispatch(fetchDeploymentHistory());
         
         return result.Ok;
       } else {
@@ -287,6 +504,7 @@ export const recoverDeployment = createAsyncThunk(
   }
 );
 
+// Fetch deployment history (used for manual refresh)
 export const fetchDeploymentHistory = createAsyncThunk(
   'deployment/fetchHistory',
   async (_, { dispatch }) => {
@@ -296,30 +514,79 @@ export const fetchDeploymentHistory = createAsyncThunk(
         actor.get_my_deployments()
       );
       
-      deployments.forEach(deployment => {
-        const record: DeploymentRecord = {
-          ...deployment,
-          frontendStatus: deployment.status === 'active' ? DeploymentStatus.EXECUTING :
-                         deployment.status === 'completed' ? DeploymentStatus.COMPLETED :
-                         DeploymentStatus.FAILED,
-          lastChecked: Date.now(),
-          recoverable: false
-        };
-        
-        if (deployment.status === 'failed') {
-          const timeSinceActivity = Date.now() - Number(deployment.last_activity / 1_000_000n);
-          record.recoverable = timeSinceActivity > 5 * 60 * 1000;
-          if (record.recoverable) {
-            record.frontendStatus = DeploymentStatus.RECOVERABLE;
+      // For each deployment, get the actual token status if it has a token_id
+      const updatedDeployments: DeploymentRecord[] = await Promise.all(
+        deployments.map(async (deployment) => {
+          let tokenStatus: TokenStatus;
+          
+          if (deployment.token_id?.[0]) {
+            // Has token, get its status
+            try {
+              tokenStatus = await actor.get_token_status(deployment.token_id[0]);
+            } catch {
+              // Error fetching token status
+              tokenStatus = { Failed: { reason: 'Failed to fetch token status' } };
+            }
+          } else if (deployment.status === 'Active') {
+            // Still deploying
+            tokenStatus = {
+              Deploying: {
+                progress: Math.floor((Number(deployment.canister_count) / 5) * 80)
+              }
+            };
+          } else if (deployment.status === 'Failed') {
+            // Failed deployment
+            tokenStatus = {
+              Failed: {
+                reason: deployment.last_error?.[0] || 'Deployment failed'
+              }
+            };
+          } else if (deployment.status === 'Cleaning') {
+            // Being cleaned up
+            tokenStatus = {
+              Failed: {
+                reason: deployment.last_error?.[0] || 'Deployment is being cleaned up'
+              }
+            };
+          } else if (deployment.status === 'Completed') {
+            // Completed but no token_id - shouldn't happen
+            tokenStatus = { Failed: { reason: 'Deployment completed but no token created' } };
+          } else {
+            // Unknown state
+            console.error('Unknown deployment status:', deployment.status);
+            tokenStatus = { Failed: { reason: `Unknown deployment state: ${deployment.status}` } };
           }
-        }
-        
-        dispatch(updateDeployment(record));
-      });
+          
+          // Try to get params from persisted deployment
+          const persistedDeployments = loadPersistedDeployments();
+          const persistedDeployment = persistedDeployments.find(d => d.id.toString() === deployment.id.toString());
+          
+          return {
+            id: deployment.id,
+            deployment_id: deployment.id,
+            tokenStatus,
+            params: persistedDeployment?.params || {} as CreateTokenParams,
+            created_at: deployment.created_at,
+            last_activity: deployment.last_activity,
+            token_id: deployment.token_id
+          };
+        })
+      );
       
-      return deployments;
+      dispatch(setDeployments(updatedDeployments));
+      
+      return updatedDeployments;
     } catch (error) {
       throw new Error('Failed to fetch deployment history');
     }
+  }
+);
+
+// Clean up completed/failed deployments
+export const cleanupDeployment = createAsyncThunk(
+  'deployment/cleanup',
+  async (deploymentId: string, { dispatch }) => {
+    dispatch(removeDeployment(deploymentId));
+    clearPersistedDeployment(deploymentId);
   }
 );
