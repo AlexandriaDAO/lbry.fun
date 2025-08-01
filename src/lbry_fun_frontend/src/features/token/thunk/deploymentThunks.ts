@@ -190,8 +190,7 @@ export const initiateTokenDeployment = createAsyncThunk(
         dispatch(setActiveDeploymentId(deploymentId.toString()));
         persistDeployment(deployment);
         
-        // Store active deployment ID
-        localStorage.setItem('activeDeploymentId', deploymentId.toString());
+        // Don't store in localStorage - we'll use URL params instead
         
         return deploymentId.toString();
       } else {
@@ -616,11 +615,8 @@ export const initializeDeployments = createAsyncThunk(
       // No automatic polling on error either
     }
     
-    // Check for active deployment ID
-    const activeDeploymentId = localStorage.getItem('activeDeploymentId');
-    if (activeDeploymentId) {
-      dispatch(setActiveDeploymentId(activeDeploymentId));
-    }
+    // Don't restore activeDeploymentId on app init to prevent unwanted redirects
+    // The deployment page will set it explicitly when needed
   }
 );
 

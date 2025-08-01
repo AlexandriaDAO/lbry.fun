@@ -5,6 +5,7 @@ import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { RootState } from '@/store';
 import { fetchDeploymentHistory } from '@/features/token/thunk/deploymentThunks';
 import { setActiveDeploymentId } from '@/store/slices/deploymentSlice';
+import { setActiveTokenView } from '@/store/slices/uiSlice';
 import { getUIState } from '@/types/deployment';
 
 const DeploymentsPage: React.FC = () => {
@@ -14,7 +15,13 @@ const DeploymentsPage: React.FC = () => {
   
   useEffect(() => {
     dispatch(fetchDeploymentHistory());
-  }, []);
+    
+    // Clean up when leaving the page
+    return () => {
+      // Don't clear activeDeploymentId here as it's needed for navigation
+      // It will be cleared by the TokenPage cleanup
+    };
+  }, [dispatch]);
   
   const getStatusBadge = (status: 'deploying' | 'failed' | 'live') => {
     const badges = {
@@ -27,8 +34,8 @@ const DeploymentsPage: React.FC = () => {
   };
   
   const handleSelectDeployment = (deploymentId: string) => {
-    dispatch(setActiveDeploymentId(deploymentId));
-    navigate('/');
+    // Navigate with deploymentId in URL instead of setting state
+    navigate(`/?deploymentId=${deploymentId}`);
   };
   
   const sortedDeployments = Object.values(deployments || {})

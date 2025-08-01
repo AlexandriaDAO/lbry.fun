@@ -294,15 +294,12 @@ const TerminalCreateToken: React.FC = () => {
     }
   };
 
-  // Check for existing deployment on mount
+  // Show deployment modal when activeDeploymentId is set (from deployments page)
   useEffect(() => {
-    const savedDeploymentId = localStorage.getItem('activeDeploymentId');
-    if (savedDeploymentId && !activeDeploymentId) {
-      // Restore deployment state
-      dispatch(fetchDeploymentHistory());
+    if (activeDeploymentId) {
       setShowDeploymentModal(true);
     }
-  }, [activeDeploymentId, dispatch]);
+  }, [activeDeploymentId]);
 
   const distributionIntervalOptions = [
     { value: '60', label: '1_minute' },
@@ -736,9 +733,8 @@ const TerminalCreateToken: React.FC = () => {
         isOpen={showDeploymentModal}
         onClose={() => {
           setShowDeploymentModal(false);
-          // NOW we can safely clean up the global ID, because the modal is closed.
+          // Clear the deployment ID from Redux
           dispatch(setActiveDeploymentId(null));
-          localStorage.removeItem('activeDeploymentId');
         }}
         onSuccess={(tokenId) => {
           navigate(`/swap?id=${tokenId}`);

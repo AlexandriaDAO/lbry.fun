@@ -1,14 +1,37 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import TerminalCreateToken from "@/features/token/components/terminal/TerminalCreateToken";
 import GetTokenPools from "@/features/token/components/getTokenPools";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { selectActiveTokenView, setActiveTokenView, type TokenPageView } from '@/store/slices/uiSlice';
+import { setActiveDeploymentId } from '@/store/slices/deploymentSlice';
 import { Button } from "@/lib/components/button";
 
 const TokenPage = () => {
+  const [searchParams] = useSearchParams();
+  const deploymentIdFromUrl = searchParams.get("deploymentId");
   const activeView = useAppSelector(selectActiveTokenView);
   const dispatch = useAppDispatch();
+
+  // Handle URL parameters on mount
+  useEffect(() => {
+    if (deploymentIdFromUrl) {
+      dispatch(setActiveDeploymentId(deploymentIdFromUrl));
+      dispatch(setActiveTokenView('CreateToken'));
+    }
+  }, [deploymentIdFromUrl, dispatch]);
+
+  // Clean up state when leaving the page
+  useEffect(() => {
+    return () => {
+      // Clear deployment state
+      dispatch(setActiveDeploymentId(null));
+      
+      // Reset to default view
+      dispatch(setActiveTokenView('TokenPools'));
+    };
+  }, [dispatch]);
 
   let contentToRender;
   let contentClassName;
