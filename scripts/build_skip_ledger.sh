@@ -108,7 +108,7 @@ if dfx canister info ryjl3-tyaaa-aaaaa-aaaba-cai 2>/dev/null | grep -q "Controll
     echo "ICP ledger already deployed at ryjl3-tyaaa-aaaaa-aaaba-cai"
     # No need to add to .env - hardcoded in frontend
 else
-    dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger_canister --argument "
+    echo "Skipping ICP ledger deployment (already deployed by orbit)" --argument "
   (variant {  
     Init = record {  
       minting_account = record { owner = principal \"$MINTER_PRINCIPAL\"; subaccount = null };

@@ -10,10 +10,8 @@
 
 
 
-- Could we make all the terminals into expanders?
 - Staking reward percent is a fake number in icp_swap
 - Get launch pending to update the state when time runs out.
-- Success page should update state with the new token page.
 - Definitely going to need to display the price chart.
 - Dynamic price feeds from kongswap.
 - y-axis label on graphs 1, 2 and 4
@@ -48,7 +46,7 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "mectm-l7gv5-wrdfk-csd6n-g2x7f-34gu5-23wpf-ocmlm-rauhw-3az5y-fqe"; subaccount = null }; amount = (100_000_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "r6liw-6vsua-r3a4m-y646g-hsnf6-vnhx5-gugtm-zgmdr-dmokv-vrc6x-qae"; subaccount = null }; amount = (100_000_000_000 : nat) })'
 
 dfx identity use default
 
@@ -96,7 +94,6 @@ NVkSolD-1AJcJ0BMfEASJjIuak3Y6CvDJZ4XOIUbU9g
 93mQRQG7zpvKQj3sUaDlNu_dOWFmb3-vp2Myu8sw03I 09/2022
 QXvFGeh4LaqKQD7pxNOjs48FmFEjSAhhzxgvBairAFc
 bqQgrxMXYFJXTqS5EF_XgmHUYyLNPXUv5Ze_c0RlW18 
-- USDC version for the professional DAO builder.
 
 
 
@@ -108,29 +105,3 @@ bqQgrxMXYFJXTqS5EF_XgmHUYyLNPXUv5Ze_c0RlW18
 
 
 
-### DAOPad
-
-
-A story from a hackathon presentation:
-
-How many people here earn a living, at least in part or in whole, in the crypto space?
-Most people raised their hands.
-
-Keep your had up if use an LLC or similar entity to wrap/document that income?
-Most everyone kept their hand up.
-
-How many of you withdraw crypto income/revenue from that buisiness directly to that LLC bank account?
-Everyone put their hand down.
-
-
-
-
-
-"business expenses should be deductible to accurately measure true economic profit" XvFGeh4LaqKQD7pxNOjs48FmFEjSAhhzxgvBairAFc
-bqQgrxMXYFJXTqS5EF_XgmHUYyLNPXUv5Ze_c0RlW18 
-- USDC version for the professional DAO builder.
-
-
-
-Demo:
-Just create a setup where ALEX stakers vote on a threshold to initiate the DAO

@@ -168,7 +168,10 @@ const swapSlice = createSlice({
       .addCase(getCanisterArchivedBalance.fulfilled, (state, action) => { state.canisterArchivedBal = action.payload; })
       .addCase(getAllStakesInfo.fulfilled, (state, action) => { state.totalStaked = action.payload; })
       .addCase(getStakersCount.fulfilled, (state, action) => { state.totalStakers = action.payload; })
-      .addCase(getAverageApy.fulfilled, (state, action) => { state.averageAPY = action.payload; })
+      .addCase(getAverageApy.fulfilled, (state, action) => { 
+        state.averageAPY = action.payload.apy; 
+        state.distributionInterval = action.payload.distributionInterval;
+      })
       .addCase(getAllLogs.pending, (state) => { state.logsLoading = true; })
       .addCase(getAllLogs.fulfilled, (state, action) => {
         state.logsData = action.payload;

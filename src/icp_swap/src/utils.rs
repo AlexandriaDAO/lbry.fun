@@ -44,7 +44,6 @@ pub const E8S: u64 = 100_000_000;
 pub const LOGS_LIMIT: u64 = 100_000;
 
 use crate::storage::{LAUNCH_TIME, TOKEN_ID, CACHED_STATUS, TokenStatus};
-use candid::Principal;
 
 pub async fn check_can_trade() -> Result<(), crate::ExecutionError> {
     let token_id = TOKEN_ID.with(|id| *id.borrow());

@@ -14,6 +14,7 @@ export const initialState: SwapState = {
   canisterArchivedBal: { canisterUnClaimedIcp: 0, canisterArchivedBal: 0 },
   totalStaked: "0",
   averageAPY: 0,
+  distributionInterval: null,
   logsData: null,
   
   // Non-cached data
@@ -94,6 +95,7 @@ export const swapActions = {
       state.totalStaked = null;
       state.canisterArchivedBal = null;
       state.averageAPY = null;
+      state.distributionInterval = null;
       state.logsData = null;
       state.tokenomicsCurrentState = null;
       state.tokenomicsCurrentStateError = null;

@@ -8,6 +8,8 @@ export const StakingTerminal: React.FC = React.memo(() => {
   const isAuthenticated = auth.isAuthenticated;
   const poolData = swap.activeSwapPool;
   const stakeInfo = swap.stakeInfo;
+  const averageAPY = swap.averageAPY;
+  const distributionInterval = swap.distributionInterval;
   
   // Simple balance data
   const balances = {
@@ -15,17 +17,46 @@ export const StakingTerminal: React.FC = React.memo(() => {
     claimable: stakeInfo?.rewardIcp || '0'
   };
 
-  // Calculate APY (placeholder - replace with actual calculation)
+  // Calculate APY - now using real data from Redux
   const calculateAPY = () => {
-    // This should come from actual calculations based on pool data
-    return '125.50';
+    if (averageAPY === null || averageAPY === undefined) {
+      return 'Calculating...';
+    }
+    if (averageAPY === 0) {
+      return '0.00';
+    }
+    // Format to 2 decimal places
+    return averageAPY.toFixed(2);
   };
 
-  // Calculate estimated daily rewards
+  // Calculate estimated daily rewards based on APY
   const calculateDailyRewards = () => {
     if (!balances.staked || parseFloat(balances.staked) === 0) return '0';
-    // Placeholder calculation - replace with actual
-    return '0.1';
+    if (!averageAPY) return '0';
+    
+    // Daily rate = Annual rate / 365
+    const dailyRate = averageAPY / 365 / 100; // Convert percentage to decimal
+    const stakedAmount = parseFloat(balances.staked);
+    const dailyRewards = stakedAmount * dailyRate;
+    
+    return dailyRewards.toFixed(4);
+  };
+
+  // Format distribution interval for display
+  const formatDistributionInterval = () => {
+    if (!distributionInterval) return '';
+    
+    const seconds = distributionInterval;
+    if (seconds < 60) return `${seconds} seconds`;
+    
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''}`;
+    
+    const days = Math.floor(hours / 24);
+    return `${days} day${days > 1 ? 's' : ''}`;
   };
 
 
@@ -53,11 +84,20 @@ export const StakingTerminal: React.FC = React.memo(() => {
             </div>
             <div className="terminal-row justify-between">
               <span className="terminal-label">reward_interval:</span>
-              <span className="terminal-value terminal-pulse">[HOURLY]</span>
+              <span className="terminal-value terminal-pulse">
+                {distributionInterval ? `[EVERY ${formatDistributionInterval().toUpperCase()}]` : '[LOADING...]'}
+              </span>
             </div>
             <div className="terminal-row justify-between">
               <span className="terminal-label">current_apy:</span>
-              <span className="terminal-primary terminal-typewriter">{calculateAPY()}%</span>
+              <span className="terminal-primary terminal-typewriter">
+                {calculateAPY()}%
+                {distributionInterval && averageAPY && averageAPY > 0 && 
+                  <span className="terminal-secondary text-xs ml-2">
+                    (rewards every {formatDistributionInterval()})
+                  </span>
+                }
+              </span>
             </div>
             <div className="terminal-row justify-between">
               <span className="terminal-label">total_staked:</span>

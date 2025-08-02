@@ -27,6 +27,7 @@ export interface SwapState {
   totalStaked: string | null;
   canisterArchivedBal: CanisterArchived | null;
   averageAPY: number | null;
+  distributionInterval: number | null;
   logsData: ProcessedLogsData | null;
   
   // Non-cached data

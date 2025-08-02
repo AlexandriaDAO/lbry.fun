@@ -311,39 +311,108 @@ export const getStakersCount = createAsyncThunk<
 
 // Get average APY
 export const getAverageApy = createAsyncThunk<
-  number,
+  { apy: number; distributionInterval: number },
   void,
   { state: RootState; rejectValue: string }
->("icp_swap/getAverageApy", async (_, { getState,rejectWithValue }) => {
+>("icp_swap/getAverageApy", async (_, { getState, rejectWithValue }) => {
   try {
     const state = getState();
 
+    // Check for active pool
     if (!state.swap.activeSwapPool) {
       throw new Error("No active swap pool found");
     }
-    const actor = await getActorSwap(
-      state.swap.activeSwapPool?.[1].icp_swap_canister_id
-    );
-    const result = await actor.get_all_apy_values();
-    const scalingFactor = TokenConversionService.e8sToNatural(
-      await actor.get_scaling_factor()
-    );
-    const sum = result.reduce(
+
+    const [poolId, tokenRecord] = state.swap.activeSwapPool;
+    
+    // Get distribution interval from TokenRecord (should be in the pool data)
+    // Note: distribution_interval_seconds is not in TokenRecordStringified, need to fetch from canister
+    const actor = await getActorSwap(tokenRecord.icp_swap_canister_id);
+    
+    // Fetch all required data in parallel
+    const [apyValues, scalingFactor, config] = await Promise.all([
+      actor.get_all_apy_values(),
+      actor.get_scaling_factor(),
+      actor.get_config()
+    ]);
+
+    // If no APY values yet, return 0
+    if (apyValues.length === 0) {
+      return { apy: 0, distributionInterval: 3600 };
+    }
+
+    // Get distribution interval from config - handle edge cases
+    let distributionIntervalSeconds = 3600; // Default to 1 hour
+    if (config && config.length > 0 && config[0]?.distribution_interval_seconds) {
+      distributionIntervalSeconds = Number(config[0].distribution_interval_seconds);
+      // Validate interval is reasonable (between 1 minute and 1 day)
+      if (distributionIntervalSeconds < 60 || distributionIntervalSeconds > 86400) {
+        console.warn(`Unusual distribution interval: ${distributionIntervalSeconds}s, using default`);
+        distributionIntervalSeconds = 3600;
+      }
+    }
+    
+    // Calculate average reward per distribution
+    const sum = apyValues.reduce(
       (acc, record) => acc + BigInt(record[1]),
       BigInt(0)
     );
-    const average = TokenConversionService.e8sToNatural(sum) / result.length;
+    const avgRewardPerDistribution = Number(sum) / apyValues.length / Number(scalingFactor);
 
-    return average / scalingFactor;
+    // Calculate distributions per year
+    const secondsPerYear = 365 * 24 * 3600;
+    const distributionsPerYear = secondsPerYear / distributionIntervalSeconds;
+
+    // Calculate annual ICP rewards per token
+    const annualIcpPerToken = avgRewardPerDistribution * distributionsPerYear;
+
+    // Get ICP price from Redux state
+    const icpPriceUsd = Number(state.icpLedger.icpPrice) || 10.0; // Default to $10 if not available
+
+    // Get pool data for primary token price
+    const poolData = state.token.tvlData[poolId];
+    if (!poolData) {
+      // If no pool data, return ICP-based APY without USD conversion
+      // This is a rough estimate assuming 1 primary token = 1 ICP
+      return { apy: (annualIcpPerToken * 100), distributionInterval: distributionIntervalSeconds };
+    }
+
+    // Calculate primary token price from pool ratio
+    const E8S = 100_000_000;
+    const icpInPool = Number(poolData.balance_0) / E8S;
+    const primaryTokensInPool = Number(poolData.balance_1) / E8S;
+    
+    if (primaryTokensInPool === 0 || icpInPool === 0) {
+      // No liquidity in pool yet
+      console.warn("No liquidity in pool, cannot calculate accurate APY");
+      return { apy: 0, distributionInterval: distributionIntervalSeconds };
+    }
+
+    const primaryTokenPriceInIcp = icpInPool / primaryTokensInPool;
+    const primaryTokenPriceUsd = primaryTokenPriceInIcp * icpPriceUsd;
+
+    // Calculate annual reward value in USD
+    const annualRewardValueUsd = annualIcpPerToken * icpPriceUsd;
+
+    // Calculate APY percentage
+    const apy = (annualRewardValueUsd / primaryTokenPriceUsd) * 100;
+
+    // Sanity check - APY shouldn't be unreasonably high
+    if (apy > 10000) { // 10,000% APY seems unrealistic
+      console.warn(`Calculated APY seems too high: ${apy}%, capping at 9999.99%`);
+      return { apy: 9999.99, distributionInterval: distributionIntervalSeconds };
+    }
+
+    return { apy: isNaN(apy) ? 0 : apy, distributionInterval: distributionIntervalSeconds };
   } catch (error) {
-    console.error("Failed to get canister archived balances:", error);
+    console.error("Failed to calculate APY:", error);
 
     if (error instanceof Error) {
       return rejectWithValue(error.message);
     }
   }
   return rejectWithValue(
-    "An unknown error occurred while fetching canister archived balances"
+    "An unknown error occurred while calculating APY"
   );
 });
 

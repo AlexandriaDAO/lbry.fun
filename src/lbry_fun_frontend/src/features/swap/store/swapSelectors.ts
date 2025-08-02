@@ -40,6 +40,11 @@ export const selectAverageAPY = createSelector(
   (swap) => swap.averageAPY
 );
 
+export const selectDistributionInterval = createSelector(
+  [selectSwapState],
+  (swap) => swap.distributionInterval
+);
+
 export const selectTransactionHistory = createSelector(
   [selectSwapState],
   (swap) => swap.transactionHistory
