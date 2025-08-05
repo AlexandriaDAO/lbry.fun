@@ -10,6 +10,7 @@ import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
 import { toast } from "sonner";
 import { RootState } from "@/store";
 import { balanceThunks } from "../thunks/balanceThunks";
+import { TerminalExpander } from "./TerminalExpander";
 
 // Destructure for easier access
 const { getPrimaryBalance, getSecondaryBalance } = balanceThunks;
@@ -92,139 +93,139 @@ const ConsolidatedTerminal: React.FC = () => {
     }
 
     return (
-        <div className="terminal-pure terminal-flicker p-4 min-h-[400px]">
-            {/* System Status Header */}
-            <div className="flex justify-between items-center mb-2">
-                <div className="terminal-header">
-                    <span className="terminal-prompt">&gt;&gt;</span> WALLET_TERMINAL
-                    <span className="terminal-status-live ml-2">[LIVE]</span>
-                </div>
+        <TerminalExpander
+            title="WALLET_TERMINAL"
+            status="[LIVE]"
+            terminalId="wallet"
+            defaultExpanded={false}
+        >
+            <div className="p-4 min-h-[400px]">
                 <span className="terminal-timestamp">
                     {new Date().toTimeString().slice(0, 8)}
                 </span>
-            </div>
-            
-            <div className="terminal-divider-dots" />
-            
-            {/* Principal & Account */}
-            <div className="terminal-row mt-1 terminal-boot" style={{ animationDelay: '0.1s' }}>
-                <span className="terminal-label">principal:</span>
-                <div className="flex items-center gap-2">
-                    <span className="hex-address">{formattedPrincipal}</span>
-                    <span className="terminal-status">[connected]</span>
-                    <CopyHelper account={principal} />
-                </div>
-            </div>
-            
-            <div className="terminal-row">
-                <span className="terminal-label">account_id:</span>
-                <div className="flex items-center gap-2">
-                    <span className="hex-address text-xs">{formattedAccountId}</span>
-                    {icpLedgerAccountId && <CopyHelper account={icpLedgerAccountId} />}
-                </div>
-            </div>
-
-            {/* Active Pool Section */}
-            {swap.activeSwapPool && (
-                <div className="border-t border-white/30 mt-2 pt-2">
-                    <div className="terminal-row">
-                        <span className="terminal-label">status:</span>
-                        <span className="terminal-status">
-                            {swap.activeSwapPool[1].isLive ? "[live]" : "[launching]"}
-                        </span>
+                
+                <div className="terminal-divider-dots mt-2" />
+                
+                {/* Principal & Account */}
+                <div className="terminal-row mt-1 terminal-boot" style={{ animationDelay: '0.1s' }}>
+                    <span className="terminal-label">principal:</span>
+                    <div className="flex items-center gap-2">
+                        <span className="hex-address">{formattedPrincipal}</span>
+                        <span className="terminal-status">[connected]</span>
+                        <CopyHelper account={principal} />
                     </div>
-                    
-                    <div className="terminal-row">
-                        <span className="terminal-label">pool_id:</span>
-                        <span className="terminal-value">{swap.activeSwapPool[0]}</span>
-                    </div>
-                    
-                    <div className="terminal-row">
-                        <span className="terminal-label">primary_token:</span>
-                        <span className="terminal-primary">{swap.activeSwapPool[1].primary_token_symbol}</span>
-                    </div>
-                    
-                    <div className="terminal-row">
-                        <span className="terminal-label">secondary_token:</span>
-                        <span className="terminal-value">{swap.activeSwapPool[1].secondary_token_symbol}</span>
-                    </div>
-                </div>
-            )}
-
-            {/* Balances Section */}
-            <div className="border-t border-white/30 mt-2 pt-2 terminal-boot" style={{ animationDelay: '0.3s' }}>
-                <div className="flex justify-between items-center mb-2">
-                    <span className="terminal-accent text-xs">
-                        <span className="terminal-prompt">&gt;</span> wallet_assets
-                    </span>
-                    <FontAwesomeIcon 
-                        role="button" 
-                        icon={faRotate} 
-                        onClick={handleRefresh} 
-                        className="text-pink-500 hover:text-pink-400 cursor-pointer text-xs hover:animate-spin"
-                    />
                 </div>
                 
                 <div className="terminal-row">
-                    <span className="terminal-label">icp_balance:</span>
-                    <div className="text-right">
-                        <span className="terminal-primary cyber-glow">{icpLedgerAccountBalance}</span>
-                        <span className="terminal-accent ml-2">[${icpLedgerAccountBalanceUSD}]</span>
+                    <span className="terminal-label">account_id:</span>
+                    <div className="flex items-center gap-2">
+                        <span className="hex-address text-xs">{formattedAccountId}</span>
+                        {icpLedgerAccountId && <CopyHelper account={icpLedgerAccountId} />}
                     </div>
                 </div>
 
+                {/* Active Pool Section */}
                 {swap.activeSwapPool && (
-                    <>
+                    <div className="border-t border-white/30 mt-2 pt-2">
                         <div className="terminal-row">
-                            <span className="terminal-label">{swap.activeSwapPool[1].primary_token_symbol.toLowerCase()}:</span>
-                            <div className="text-right">
-                                <span className="terminal-value">{primary.primaryBal}</span>
-                                <span className="terminal-accent ml-2">
-                                    [${(parseFloat(primary.primaryBal) * parseFloat(primary.primaryPriceUsd)).toFixed(4)}]
-                                </span>
-                            </div>
+                            <span className="terminal-label">status:</span>
+                            <span className="terminal-status">
+                                {swap.activeSwapPool[1].isLive ? "[live]" : "[launching]"}
+                            </span>
                         </div>
                         
                         <div className="terminal-row">
-                            <span className="terminal-label">{swap.activeSwapPool[1].secondary_token_symbol.toLowerCase()}:</span>
-                            <div className="text-right">
-                                <span className="terminal-value">{swap.secondaryBalance || "0"}</span>
-                                <span className="terminal-accent ml-2">
-                                    [${(parseFloat(swap.secondaryBalance || "0") * 0.01).toFixed(4)}]
-                                </span>
-                            </div>
+                            <span className="terminal-label">pool_id:</span>
+                            <span className="terminal-value">{swap.activeSwapPool[0]}</span>
                         </div>
-                    </>
+                        
+                        <div className="terminal-row">
+                            <span className="terminal-label">primary_token:</span>
+                            <span className="terminal-primary">{swap.activeSwapPool[1].primary_token_symbol}</span>
+                        </div>
+                        
+                        <div className="terminal-row">
+                            <span className="terminal-label">secondary_token:</span>
+                            <span className="terminal-value">{swap.activeSwapPool[1].secondary_token_symbol}</span>
+                        </div>
+                    </div>
                 )}
-            </div>
 
-            {/* Pool Metrics */}
-            {swap.activeSwapPool && (
-                <div className="border-t border-white/30 mt-2 pt-2">
-                    
-                    <div className="terminal-row">
-                        <span className="terminal-label">max_supply:</span>
-                        <span className="terminal-primary">
-                            {Number(TokenConversionService.formatE8sDisplay(swap.activeSwapPool[1].primary_token_max_supply, 0)).toLocaleString()}
+                {/* Balances Section */}
+                <div className="border-t border-white/30 mt-2 pt-2 terminal-boot" style={{ animationDelay: '0.3s' }}>
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="terminal-accent text-xs">
+                            <span className="terminal-prompt">&gt;</span> wallet_assets
                         </span>
+                        <FontAwesomeIcon 
+                            role="button" 
+                            icon={faRotate} 
+                            onClick={handleRefresh} 
+                            className="text-pink-500 hover:text-pink-400 cursor-pointer text-xs hover:animate-spin"
+                        />
                     </div>
                     
-                    {tokenomics.totalPrimarySupply && (
-                        <div className="terminal-row">
-                            <span className="terminal-label">current_supply:</span>
-                            <div className="text-right">
-                                <span className="terminal-value">
-                                    {Number(TokenConversionService.formatE8sDisplay(tokenomics.totalPrimarySupply, 0)).toLocaleString()}
-                                </span>
-                                <span className="terminal-accent ml-2">
-                                    [{((BigInt(tokenomics.totalPrimarySupply) * BigInt(100)) / BigInt(swap.activeSwapPool[1].primary_token_max_supply)).toString()}%]
-                                </span>
-                            </div>
+                    <div className="terminal-row">
+                        <span className="terminal-label">icp_balance:</span>
+                        <div className="text-right">
+                            <span className="terminal-primary cyber-glow">{icpLedgerAccountBalance}</span>
+                            <span className="terminal-accent ml-2">[${icpLedgerAccountBalanceUSD}]</span>
                         </div>
+                    </div>
+
+                    {swap.activeSwapPool && (
+                        <>
+                            <div className="terminal-row">
+                                <span className="terminal-label">{swap.activeSwapPool[1].primary_token_symbol.toLowerCase()}:</span>
+                                <div className="text-right">
+                                    <span className="terminal-value">{primary.primaryBal}</span>
+                                    <span className="terminal-accent ml-2">
+                                        [${(parseFloat(primary.primaryBal) * parseFloat(primary.primaryPriceUsd)).toFixed(4)}]
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div className="terminal-row">
+                                <span className="terminal-label">{swap.activeSwapPool[1].secondary_token_symbol.toLowerCase()}:</span>
+                                <div className="text-right">
+                                    <span className="terminal-value">{swap.secondaryBalance || "0"}</span>
+                                    <span className="terminal-accent ml-2">
+                                        [${(parseFloat(swap.secondaryBalance || "0") * 0.01).toFixed(4)}]
+                                    </span>
+                                </div>
+                            </div>
+                        </>
                     )}
                 </div>
-            )}
-        </div>
+
+                {/* Pool Metrics */}
+                {swap.activeSwapPool && (
+                    <div className="border-t border-white/30 mt-2 pt-2">
+                        
+                        <div className="terminal-row">
+                            <span className="terminal-label">max_supply:</span>
+                            <span className="terminal-primary">
+                                {Number(TokenConversionService.formatE8sDisplay(swap.activeSwapPool[1].primary_token_max_supply, 0)).toLocaleString()}
+                            </span>
+                        </div>
+                        
+                        {tokenomics.totalPrimarySupply && (
+                            <div className="terminal-row">
+                                <span className="terminal-label">current_supply:</span>
+                                <div className="text-right">
+                                    <span className="terminal-value">
+                                        {Number(TokenConversionService.formatE8sDisplay(tokenomics.totalPrimarySupply, 0)).toLocaleString()}
+                                    </span>
+                                    <span className="terminal-accent ml-2">
+                                        [{((BigInt(tokenomics.totalPrimarySupply) * BigInt(100)) / BigInt(swap.activeSwapPool[1].primary_token_max_supply)).toString()}%]
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </TerminalExpander>
     );
 };
 

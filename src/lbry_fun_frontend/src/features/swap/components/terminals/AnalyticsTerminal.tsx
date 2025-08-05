@@ -2,6 +2,7 @@ import React, { useState, lazy, Suspense } from 'react';
 import UnifiedInfoDisplay from '../UnifiedInfoDisplay';
 import UnifiedSkeleton from '../UnifiedSkeleton';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
+import { TerminalExpander } from '../TerminalExpander';
 
 // Lazy load heavy components
 const Insights = lazy(() => import('../Insights'));
@@ -43,14 +44,15 @@ export const AnalyticsTerminal: React.FC = React.memo(() => {
   };
 
   return (
-    <div className="terminal-pure terminal-flicker p-4 min-h-[400px]">
-      {/* Terminal Header with view tabs */}
-      <div className="flex justify-between items-center mb-3">
-        <div className="terminal-header terminal-boot">
-          <span className="terminal-prompt">&gt;&gt;</span> ANALYTICS_TERMINAL
-        </div>
+    <TerminalExpander
+      title="ANALYTICS_TERMINAL"
+      status="[MONITORING]"
+      terminalId="analytics"
+      defaultExpanded={false}
+    >
+      <div className="p-4 min-h-[400px]">
         {/* View Navigation */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 mb-3">
           {(['insights', 'tokenomics', 'technical', 'treasury'] as const).map(view => (
             <button
               key={view}
@@ -67,15 +69,15 @@ export const AnalyticsTerminal: React.FC = React.memo(() => {
             </button>
           ))}
         </div>
-      </div>
 
-      <div className="terminal-divider-single" />
+        <div className="terminal-divider-single" />
 
-      {/* Active View Content */}
-      <div className="terminal-section">
-        {renderActiveView()}
+        {/* Active View Content */}
+        <div className="terminal-section">
+          {renderActiveView()}
+        </div>
       </div>
-    </div>
+    </TerminalExpander>
   );
 });
 

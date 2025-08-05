@@ -5,6 +5,7 @@ import BurnContent from '../BurnContent';
 import UnifiedTransaction from '../UnifiedTransaction';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { useSwapDataLoader } from '../../hooks/useSwapDataLoader';
+import { TerminalExpander } from '../TerminalExpander';
 
 type OperationMode = 'swap' | 'transfer' | 'burn';
 
@@ -48,14 +49,15 @@ export const TradingTerminal: React.FC = React.memo(() => {
   };
 
   return (
-    <div className="terminal-pure terminal-flicker p-4 min-h-[400px]">
-      {/* Terminal Header with tabs */}
-      <div className="flex justify-between items-center mb-3">
-        <div className="terminal-header">
-          <span className="terminal-prompt">&gt;&gt;</span> TRADING_TERMINAL
-        </div>
+    <TerminalExpander
+      title="TRADING_TERMINAL"
+      status="[ACTIVE]"
+      terminalId="trading"
+      defaultExpanded={false}
+    >
+      <div className="p-4 min-h-[400px]">
         {/* Operation Tabs */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 mb-3">
           {(['swap', 'transfer', 'burn'] as const).map(op => (
             <button
               key={op}
@@ -81,22 +83,22 @@ export const TradingTerminal: React.FC = React.memo(() => {
             HISTORY
           </button>
         </div>
-      </div>
 
-      <div className="terminal-divider-single" />
+        <div className="terminal-divider-single" />
 
-      {/* Active Operation Interface */}
-      <div className="terminal-section">
-        {renderActiveOperation()}
-      </div>
-
-      {/* Recent Transactions */}
-      {isAuthenticated && showTransactions && (
-        <div className="terminal-section mt-4">
-          <UnifiedTransaction view="history" />
+        {/* Active Operation Interface */}
+        <div className="terminal-section">
+          {renderActiveOperation()}
         </div>
-      )}
-    </div>
+
+        {/* Recent Transactions */}
+        {isAuthenticated && showTransactions && (
+          <div className="terminal-section mt-4">
+            <UnifiedTransaction view="history" />
+          </div>
+        )}
+      </div>
+    </TerminalExpander>
   );
 });
 

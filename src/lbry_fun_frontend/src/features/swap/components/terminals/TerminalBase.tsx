@@ -87,12 +87,3 @@ export const TerminalBase: React.FC<TerminalBaseProps> = ({
     </div>
   );
 };
-
-// Export additional terminal utilities for use with TerminalBase
-export { 
-  TerminalProgressBar, 
-  TerminalLoading, 
-  TerminalError, 
-  TerminalSuccess,
-  TerminalBoxHeader 
-} from './TerminalUtils';
