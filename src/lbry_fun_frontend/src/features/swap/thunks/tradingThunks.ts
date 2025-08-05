@@ -222,7 +222,7 @@ export const transferPrimary = createAsyncThunk<
     amount: string;
     destination: string;
   },
-  { state: RootState; rejectValue: string }
+  { state: RootState; rejectValue: ErrorMessage }
 >(
   "primary/transferPrimary",
   async ({ amount, destination }, { getState, rejectWithValue }) => {
@@ -257,10 +257,10 @@ export const transferPrimary = createAsyncThunk<
       }
     } catch (error) {
       if (error instanceof Error) {
-        return rejectWithValue(error.message);
+        return rejectWithValue({ title: "Transfer Failed", message: error.message });
       }
     }
-    return rejectWithValue("An unknown error occurred while transfering ALEX");
+    return rejectWithValue({ title: "Transfer Failed", message: "An unknown error occurred while transferring tokens" });
   }
 );
 

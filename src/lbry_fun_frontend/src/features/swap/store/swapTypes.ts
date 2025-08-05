@@ -5,6 +5,21 @@ import { ErrorMessage } from "../utils/errors";
 import { TokenomicsCurrentState } from "../thunks/tokenomicsThunks";
 import { SerializedDistributionSummary, SerializedDistributionEvent } from "@/utils/bigintSerialization";
 
+// Operation status tracking
+export type OperationStatus = 'idle' | 'pending' | 'success' | 'error';
+
+export interface OperationStates {
+  swap: OperationStatus;
+  burn: OperationStatus;
+  stake: OperationStatus;
+  unstake: OperationStatus;
+  claim: OperationStatus;
+  transferPrimary: OperationStatus;
+  transferSecondary: OperationStatus;
+  transferIcp: OperationStatus;
+  redeem: OperationStatus;
+}
+
 export interface StakeInfo {
   stakedPrimary: string;
   rewardIcp: string;
@@ -32,20 +47,15 @@ export interface SwapState {
   
   // Non-cached data
   maxLbryBurn: Number;
-  loading: boolean;
-  swapSuccess: boolean;
-  burnSuccess: boolean;
-  successStake: boolean;
-  successClaimReward: boolean;
-  unstakeSuccess: boolean;
-  transferSuccess: boolean;
-  redeeemSuccess: boolean;
-  error: ErrorMessage | null;
   spendingBalance: string;
   activeSwapPool: [string, TokenRecordStringified] | null;
   logsLoading: boolean;
   logsError: string | null;
   transactionHistory: TransactionHistoryState;
+  
+  // Operation states
+  operations: OperationStates;
+  operationErrors: Partial<Record<keyof OperationStates, ErrorMessage>>;
   
   // Global loading states for data orchestration
   isLoadingCriticalData: boolean;

@@ -4,7 +4,7 @@ import { useAppSelector } from '@/store/hooks/useAppSelector';
 
 import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swap/icp_swap.did';
 import { stakingThunks } from "../thunks/stakingThunks";
-import { flagHandler } from "../swapSlice";
+import { resetOperation } from "../store/swapSlice";
 import { useTerminalNotification } from "../hooks/useTerminalNotification";
 
 // Destructure for easier access
@@ -13,7 +13,9 @@ const { claimReward } = stakingThunks;
 const ClaimReward: React.FC = () => {
     const dispatch = useAppDispatch();
     const swap = useAppSelector((state) => state.swap);
-    const { showLoading } = useTerminalNotification();
+    const claimStatus = useAppSelector((state) => state.swap.operations.claim);
+    const claimError = useAppSelector((state) => state.swap.operationErrors.claim);
+    const { showLoading, showSuccess, showError, hide } = useTerminalNotification();
 
     const handleClaim = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -21,18 +23,28 @@ const ClaimReward: React.FC = () => {
         showLoading("CLAIMING REWARDS", "Processing ICP reward claim");
     }, [dispatch, swap.stakeInfo.rewardIcp, showLoading]);
 
+    // Handle claim operation state changes
     useEffect(() => {
-        if (swap.successClaimReward === true) {
-            dispatch(flagHandler());
+        if (claimStatus === 'pending') {
+            // Loading state is already shown from handleClaim
+        } else if (claimStatus === 'success') {
+            hide();
+            showSuccess("SUCCESS", "Rewards claimed");
+            // Auto-reset is handled by middleware after 3 seconds
+        } else if (claimStatus === 'error' && claimError) {
+            hide();
+            showError(claimError.title, claimError.message);
+            dispatch(resetOperation('claim'));
         }
-    }, [swap])
+    }, [claimStatus, claimError, dispatch, hide, showSuccess, showError])
 
     return (
         <button
             onClick={(e) => handleClaim(e)}
-            className="terminal-button text-xs"
+            className={`terminal-button text-xs ${claimStatus === 'pending' ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={claimStatus === 'pending'}
         >
-            [CLAIM]
+            {claimStatus === 'pending' ? '[CLAIMING...]' : '[CLAIM]'}
         </button>
     );
 };

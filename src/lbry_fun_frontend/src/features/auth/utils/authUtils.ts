@@ -1,5 +1,7 @@
 import { Actor, HttpAgent, Identity } from "@dfinity/agent";
 import { AuthClient } from "@dfinity/auth-client";
+import { isIdentityExpired } from "@/utils/general";
+import { toast } from "sonner";
 
 import {
   icp_swap,
@@ -54,6 +56,36 @@ export const getAuthClient = async (): Promise<AuthClient> => {
   return authClient;
 };
 
+// Helper function to wrap actors with identity expiration handling
+const wrapActorWithErrorHandler = <T>(actor: T): T => {
+  return new Proxy(actor, {
+    get(target: any, prop: string | symbol, receiver: any) {
+      const value = Reflect.get(target, prop, receiver);
+      if (typeof value === 'function') {
+        return async (...args: any[]) => {
+          try {
+            return await value.apply(target, args);
+          } catch (error) {
+            if (isIdentityExpired(error)) {
+              console.error('Identity expired in direct actor call:', error);
+              toast.error('Session expired.');
+              setTimeout(async () => {
+                // Clear auth and reload
+                const authClient = await getAuthClient();
+                await authClient.logout();
+                window.location.reload();
+              }, 2000);
+              throw error;
+            }
+            throw error;
+          }
+        };
+      }
+      return value;
+    }
+  }) as T;
+};
+
 const getActor = async <T>(
   canisterId: string,
   createActorFn: (canisterId: string, options: { agent: HttpAgent }) => T,
@@ -82,9 +114,12 @@ const getActor = async <T>(
         });
       }
 
-      return createActorFn(canisterId, {
+      const actor = createActorFn(canisterId, {
         agent,
       });
+
+      // Wrap actor with error handler
+      return wrapActorWithErrorHandler(actor);
     }
   } catch (error) {
     console.error(`Error initializing actor for ${canisterId}:`, error);
@@ -114,7 +149,7 @@ export const getActorSwap = async (canisterId:string) => {
       });
     }
     
-    return createActorSwap(canisterId, { agent });
+    return wrapActorWithErrorHandler(createActorSwap(canisterId, { agent }));
   }
   
   // For unauthenticated access, create actor with anonymous identity
@@ -128,7 +163,7 @@ export const getActorSwap = async (canisterId:string) => {
     await agent.fetchRootKey().catch(() => {});
   }
   
-  return createActorSwap(canisterId, { agent });
+  return wrapActorWithErrorHandler(createActorSwap(canisterId, { agent }));
 };
 
 export const getIcpLedgerActor = () =>
@@ -153,7 +188,7 @@ export const getTokenomicsActor = async (canisterId:string) => {
       });
     }
     
-    return createActorTokenomics(canisterId, { agent });
+    return wrapActorWithErrorHandler(createActorTokenomics(canisterId, { agent }));
   }
   
   // For unauthenticated access, create actor with anonymous identity
@@ -167,7 +202,7 @@ export const getTokenomicsActor = async (canisterId:string) => {
     await agent.fetchRootKey().catch(() => {});
   }
   
-  return createActorTokenomics(canisterId, { agent });
+  return wrapActorWithErrorHandler(createActorTokenomics(canisterId, { agent }));
 };
 
 export const getICRCActor = async (canisterId:string) => {
@@ -189,7 +224,7 @@ export const getICRCActor = async (canisterId:string) => {
       });
     }
     
-    return createActorICRC(canisterId, { agent });
+    return wrapActorWithErrorHandler(createActorICRC(canisterId, { agent }));
   }
   
   // For unauthenticated access, create actor with anonymous identity
@@ -203,7 +238,7 @@ export const getICRCActor = async (canisterId:string) => {
     await agent.fetchRootKey().catch(() => {});
   }
   
-  return createActorICRC(canisterId, { agent });
+  return wrapActorWithErrorHandler(createActorICRC(canisterId, { agent }));
 };
 
 

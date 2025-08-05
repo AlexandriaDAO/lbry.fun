@@ -7,12 +7,13 @@ import { analyticsThunks } from "../thunks/analyticsThunks";
 import { fetchTokenomicsCurrentState } from "../thunks/tokenomicsThunks";
 import { distributionThunks } from "../thunks/distributionThunks";
 import fetchTokenLogosForPool from "../../token/thunk/fetchTokenLogosForPoolThunk";
+import transferICP from "../../icp-ledger/thunks/transferICP";
 import { SwapState } from "./swapTypes";
 import { initialState, swapActions } from "./swapActions";
 
 // Destructure thunks for easier access
 const { stakePrimary, unstake, claimReward, getStakedInfo, getAllStakesInfo, getStakersCount, getAverageApy } = stakingThunks;
-const { swapSecondary, burnSecondary, transferSecondary, getSecondaryRatio } = tradingThunks;
+const { swapSecondary, burnSecondary, transferSecondary, transferPrimary, getSecondaryRatio } = tradingThunks;
 const { getSecondaryBalance, getSecondaryFee, getArchivedBalance, getCanisterArchivedBalance, redeemArchivedBalance } = balanceThunks;
 const { fetchTransactionHistory, getAllLogs } = analyticsThunks;
 const { fetchDistributionSummary, fetchDistributionEvents, fetchLatestDistributionEvent } = distributionThunks;
@@ -23,114 +24,72 @@ const swapSlice = createSlice({
   reducers: swapActions,
   extraReducers: (builder: ActionReducerMapBuilder<SwapState>) => {
     builder
-      // Secondary Ratio
-      .addCase(getSecondaryRatio.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      // Secondary Ratio (non-operation, keep as is)
       .addCase(getSecondaryRatio.fulfilled, (state, action) => {
         state.secondaryRatio = action.payload;
-        state.loading = false;
-        state.error = null;
       })
-      .addCase(getSecondaryRatio.rejected, (state) => {
+      .addCase(getSecondaryRatio.rejected, () => {
         toast.error("[ERROR] SECONDARY RATIO FETCH FAILED");
-        state.loading = false;
-        state.error = null;
       })
       
-      // Secondary Balance
-      .addCase(getSecondaryBalance.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      // Secondary Balance (non-operation, keep as is)
       .addCase(getSecondaryBalance.fulfilled, (state, action) => {
         state.secondaryBalance = action.payload;
-        state.loading = false;
-        state.error = null;
       })
       .addCase(getSecondaryBalance.rejected, (state, action) => {
         toast.error("[ERROR] SECONDARY BALANCE FETCH FAILED");
-        state.loading = false;
-        state.error = {
-          message: "",
-          title: (action.payload as string) || "",
-        };
       })
       
-      // Staked Info
-      .addCase(getStakedInfo.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      // Staked Info (non-operation, keep as is)
       .addCase(getStakedInfo.fulfilled, (state, action) => {
         state.stakeInfo = action.payload;
-        state.loading = false;
-        state.error = null;
       })
-      .addCase(getStakedInfo.rejected, (state, action) => {
+      .addCase(getStakedInfo.rejected, () => {
         toast.error("[ERROR] STAKED INFO FETCH FAILED");
-        state.loading = false;
-        state.error = {
-          message: "",
-          title: (action.payload as string) || "",
-        };
       })
       
       // Swap Secondary
       .addCase(swapSecondary.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.swapSuccess = false;
+        state.operations.swap = 'pending';
+        state.operationErrors.swap = undefined;
       })
       .addCase(swapSecondary.fulfilled, (state) => {
-        state.swapSuccess = true;
-        state.loading = false;
-        state.error = null;
+        state.operations.swap = 'success';
         toast.success("[SUCCESS] SWAP COMPLETE");
       })
       .addCase(swapSecondary.rejected, (state, action) => {
-        state.loading = false;
-        state.swapSuccess = false;
-        state.error = action.payload || { title: "Swap failed", message: "Please try again" };
+        state.operations.swap = 'error';
+        state.operationErrors.swap = action.payload || { title: "Swap failed", message: "Please try again" };
         toast.error(`[ERROR] SWAP FAILED: ${action.payload?.title || "UNKNOWN ERROR"}`);
       })
       
       // Burn Secondary
       .addCase(burnSecondary.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.burnSuccess = false;
+        state.operations.burn = 'pending';
+        state.operationErrors.burn = undefined;
       })
       .addCase(burnSecondary.fulfilled, (state) => {
-        state.burnSuccess = true;
-        state.loading = false;
-        state.error = null;
+        state.operations.burn = 'success';
         toast.success("[SUCCESS] BURN COMPLETE");
       })
       .addCase(burnSecondary.rejected, (state, action) => {
-        state.loading = false;
-        state.burnSuccess = false;
-        state.error = action.payload || { title: "Burn failed", message: "Please try again" };
+        state.operations.burn = 'error';
+        state.operationErrors.burn = action.payload || { title: "Burn failed", message: "Please try again" };
         toast.error(`[ERROR] BURN FAILED: ${action.payload?.title || "UNKNOWN ERROR"}`);
       })
       
       // Stake Primary
       .addCase(stakePrimary.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.successStake = false;
+        state.operations.stake = 'pending';
+        state.operationErrors.stake = undefined;
       })
       .addCase(stakePrimary.fulfilled, (state) => {
-        state.successStake = true;
-        state.loading = false;
-        state.error = null;
+        state.operations.stake = 'success';
         toast.success("[SUCCESS] STAKE COMPLETE");
       })
       .addCase(stakePrimary.rejected, (state, action) => {
-        state.loading = false;
-        state.successStake = false;
-        state.error = action.payload || { title: "Stake failed", message: "Please try again" };
+        state.operations.stake = 'error';
+        state.operationErrors.stake = action.payload || { title: "Stake failed", message: "Please try again" };
         toast.error(`[ERROR] STAKE FAILED: ${action.payload?.title || "UNKNOWN ERROR"}`);
       })
       
@@ -158,11 +117,86 @@ const swapSlice = createSlice({
         state.transactionHistory.error = action.payload || "Failed to fetch transactions";
       })
       
-      // Add remaining thunks in a more concise manner
-      .addCase(unstake.fulfilled, (state) => { state.unstakeSuccess = true; })
-      .addCase(claimReward.fulfilled, (state) => { state.successClaimReward = true; })
-      .addCase(transferSecondary.fulfilled, (state) => { state.transferSuccess = true; })
-      .addCase(redeemArchivedBalance.fulfilled, (state) => { state.redeeemSuccess = true; })
+      // Unstake
+      .addCase(unstake.pending, (state) => {
+        state.operations.unstake = 'pending';
+        state.operationErrors.unstake = undefined;
+      })
+      .addCase(unstake.fulfilled, (state) => {
+        state.operations.unstake = 'success';
+      })
+      .addCase(unstake.rejected, (state, action) => {
+        state.operations.unstake = 'error';
+        state.operationErrors.unstake = action.payload;
+      })
+      
+      // Claim Reward
+      .addCase(claimReward.pending, (state) => {
+        state.operations.claim = 'pending';
+        state.operationErrors.claim = undefined;
+      })
+      .addCase(claimReward.fulfilled, (state) => {
+        state.operations.claim = 'success';
+      })
+      .addCase(claimReward.rejected, (state, action) => {
+        state.operations.claim = 'error';
+        state.operationErrors.claim = action.payload;
+      })
+      
+      // Transfer Secondary
+      .addCase(transferSecondary.pending, (state) => {
+        state.operations.transferSecondary = 'pending';
+        state.operationErrors.transferSecondary = undefined;
+      })
+      .addCase(transferSecondary.fulfilled, (state) => {
+        state.operations.transferSecondary = 'success';
+      })
+      .addCase(transferSecondary.rejected, (state, action) => {
+        state.operations.transferSecondary = 'error';
+        state.operationErrors.transferSecondary = action.payload;
+      })
+      
+      // Transfer Primary
+      .addCase(transferPrimary.pending, (state) => {
+        state.operations.transferPrimary = 'pending';
+        state.operationErrors.transferPrimary = undefined;
+      })
+      .addCase(transferPrimary.fulfilled, (state) => {
+        state.operations.transferPrimary = 'success';
+      })
+      .addCase(transferPrimary.rejected, (state, action) => {
+        state.operations.transferPrimary = 'error';
+        state.operationErrors.transferPrimary = action.payload;
+      })
+      
+      // Transfer ICP
+      .addCase(transferICP.pending, (state) => {
+        state.operations.transferIcp = 'pending';
+        state.operationErrors.transferIcp = undefined;
+      })
+      .addCase(transferICP.fulfilled, (state) => {
+        state.operations.transferIcp = 'success';
+      })
+      .addCase(transferICP.rejected, (state, action) => {
+        state.operations.transferIcp = 'error';
+        state.operationErrors.transferIcp = { 
+          title: "ICP Transfer Failed", 
+          message: action.payload as string || "Unknown error" 
+        };
+      })
+      
+      // Redeem Archived Balance
+      .addCase(redeemArchivedBalance.pending, (state) => {
+        state.operations.redeem = 'pending';
+        state.operationErrors.redeem = undefined;
+      })
+      .addCase(redeemArchivedBalance.fulfilled, (state) => {
+        state.operations.redeem = 'success';
+      })
+      .addCase(redeemArchivedBalance.rejected, (state, action) => {
+        state.operations.redeem = 'error';
+        state.operationErrors.redeem = action.payload;
+      })
       .addCase(getSecondaryFee.fulfilled, (state, action) => { state.secondaryFee = action.payload; })
       .addCase(getArchivedBalance.fulfilled, (state, action) => { state.archivedBalance = action.payload; })
       .addCase(getCanisterArchivedBalance.fulfilled, (state, action) => { state.canisterArchivedBal = action.payload; })
@@ -254,5 +288,5 @@ const swapSlice = createSlice({
   },
 });
 
-export const { flagHandler, setActiveSwapPool, resetTransactionHistory, setIsLoadingCriticalData, setIsLoadingSecondaryData } = swapSlice.actions;
+export const { resetOperation, setActiveSwapPool, resetTransactionHistory, setIsLoadingCriticalData, setIsLoadingSecondaryData } = swapSlice.actions;
 export default swapSlice.reducer;

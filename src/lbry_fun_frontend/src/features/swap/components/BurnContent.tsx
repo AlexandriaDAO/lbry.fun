@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { tradingThunks } from "../thunks/tradingThunks";
 import { balanceThunks } from "../thunks/balanceThunks";
 import { analyticsThunks } from "../thunks/analyticsThunks";
-import { flagHandler } from "../swapSlice";
+import { resetOperation } from "../store/swapSlice";
 import { LoaderCircle } from "lucide-react";
 import getCanisterBal from "@/features/icp-ledger/thunks/getCanisterBal";
 import TerminalNotification from "./TerminalNotification";
@@ -29,6 +29,8 @@ const BurnContent = () => {
     const dispatch = useAppDispatch();
     const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
     const swap = useAppSelector((state: RootState) => state.swap);
+    const burnStatus = useAppSelector((state: RootState) => state.swap.operations.burn);
+    const burnError = useAppSelector((state: RootState) => state.swap.operationErrors.burn);
     const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
     const tokenomics = useAppSelector((state: RootState) => state.tokenomics);
     const { accessState, countdown, launchTime, isTokenLive } = useAccessState();
@@ -109,24 +111,35 @@ const BurnContent = () => {
         setTentativePrimary(isNaN(primaryAmount) ? 0 : primaryAmount);
     }, [swap.secondaryBalance, swap.secondaryFee, swap.secondaryRatio, tokenomics.primaryMintRate]);
 
+    // Handle burn operation state changes
     useEffect(() => {
-        if (!isAuthenticated || !principal) return;
-        if (swap.burnSuccess === true && swap.activeSwapPool) {
-            dispatch(flagHandler())
-            dispatch(getSecondaryBalance(principal))
-            // Refresh transaction history after successful burn
-            dispatch(fetchTransactionHistory({ userPrincipal: principal, startIndex: 0 }));
+        if (burnStatus === 'pending') {
+            // Loading state is already shown from handleSubmit
+        } else if (burnStatus === 'success') {
             hide();
             showSuccess("SUCCESS", "TRANSACTION SUBMITTED");
-            // maxBurnAllowed is now memoized
-        }
-        if (swap.error && swap.activeSwapPool) {
-            dispatch(getSecondaryBalance(principal));
+            setAmountSecondary(0);
+            setTentativeICP(0);
+            setTentativePrimary(0);
+            
+            // Refresh balances after successful burn
+            if (isAuthenticated && principal) {
+                dispatch(getSecondaryBalance(principal));
+                dispatch(fetchTransactionHistory({ userPrincipal: principal, startIndex: 0 }));
+            }
+            
+            // Auto-reset is handled by middleware after 3 seconds
+        } else if (burnStatus === 'error' && burnError) {
             hide();
-            showError(swap.error.title, swap.error.message);
-            dispatch(flagHandler());
+            showError(burnError.title, burnError.message);
+            dispatch(resetOperation('burn'));
+            
+            // Refresh balance on error too
+            if (isAuthenticated && principal) {
+                dispatch(getSecondaryBalance(principal));
+            }
         }
-    }, [isAuthenticated, principal, swap, icpLedger.canisterBalance, tokenomics.primaryMintRate, dispatch]);
+    }, [burnStatus, burnError, dispatch, hide, showSuccess, showError, isAuthenticated, principal]);
 
     // getCanisterArchivedBal is now loaded as critical data in useSwapDataLoader
 
@@ -206,20 +219,20 @@ const BurnContent = () => {
                                 <button
                                     type="button"
                                     className={`w-full font-mono text-sm px-4 py-3 rounded transition-all ${
-                                        amountSecondary === 0 || swap.loading || amountSecondary > maxBurnAllowed || !isTokenLive
+                                        amountSecondary === 0 || burnStatus === 'pending' || amountSecondary > maxBurnAllowed || !isTokenLive
                                             ? 'bg-gray-800 text-gray-400 cursor-not-allowed'
                                             : 'bg-lime-500 text-black font-bold hover:bg-lime-400 cursor-pointer'
                                     }`}
                                     disabled={
                                         amountSecondary === 0 ||
-                                        swap.loading === true ||
+                                        burnStatus === 'pending' ||
                                         amountSecondary > maxBurnAllowed ||
                                         !isTokenLive
                                     }
                                     onClick={handleSubmit}
                                     title={!isTokenLive ? "Trading will be enabled after the launch period" : ""}
                                 >
-                                    {swap.loading ? (
+                                    {burnStatus === 'pending' ? (
                                         <LoaderCircle size={14} className="animate-spin mx-auto" />
                                     ) : !isTokenLive ? (
                                         <span>AWAITING LAUNCH</span>

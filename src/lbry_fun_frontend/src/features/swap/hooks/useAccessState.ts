@@ -6,6 +6,7 @@ import { RootState } from '@/store';
 export function useAccessState() {
   const { isAuthenticated, isLoading: authLoading } = useAppSelector((state: RootState) => state.auth);
   const swap = useAppSelector((state: RootState) => state.swap);
+  const operations = useAppSelector((state: RootState) => state.swap.operations);
   const [countdown, setCountdown] = useState<number>(0);
   const [launchTime, setLaunchTime] = useState<Date | undefined>();
 
@@ -86,7 +87,8 @@ export function useAccessState() {
 
   // Determine access state
   const accessState = useMemo(() => {
-    if (authLoading || swap.loading) {
+    const anyOperationPending = Object.values(operations).some(status => status === 'pending');
+    if (authLoading || anyOperationPending) {
       return AccessState.LOADING;
     }
     
@@ -99,7 +101,7 @@ export function useAccessState() {
     }
     
     return AccessState.FULL_ACCESS;
-  }, [authLoading, swap.loading, isAuthenticated, isTokenLive]);
+  }, [authLoading, operations, isAuthenticated, isTokenLive]);
 
   return {
     accessState,

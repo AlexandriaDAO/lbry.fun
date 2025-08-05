@@ -17,6 +17,9 @@ interface StakedInfoProps {
 const StakedInfo: React.FC<StakedInfoProps> = ({ userEstimateReward }) => {
     const dispatch = useAppDispatch();
     const swap = useAppSelector((state: RootState) => state.swap);
+    const stakeStatus = useAppSelector((state: RootState) => state.swap.operations.stake);
+    const unstakeStatus = useAppSelector((state: RootState) => state.swap.operations.unstake);
+    const claimStatus = useAppSelector((state: RootState) => state.swap.operations.claim);
     const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
 
     useEffect(() => {
@@ -26,12 +29,13 @@ const StakedInfo: React.FC<StakedInfoProps> = ({ userEstimateReward }) => {
         dispatch(getAverageApy());
     }, [isAuthenticated, principal, dispatch])
     useEffect(() => {
-        if (swap.successStake === true || swap.unstakeSuccess === true || swap.successClaimReward === true) {
+        // Refresh staking info when any staking operation succeeds
+        if (stakeStatus === 'success' || unstakeStatus === 'success' || claimStatus === 'success') {
             if(isAuthenticated && principal) dispatch(getStakedInfo(principal))
             dispatch(getAllStakesInfo())
             dispatch(getStakersCount())
         }
-    }, [isAuthenticated, principal, swap, dispatch])
+    }, [isAuthenticated, principal, stakeStatus, unstakeStatus, claimStatus, dispatch])
 
     return (
         <div>

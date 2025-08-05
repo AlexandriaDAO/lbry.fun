@@ -5,7 +5,7 @@ import { ActorSubclass } from "@dfinity/agent";
 
 import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swap/icp_swap.did';
 import { stakingThunks } from "../thunks/stakingThunks";
-import { flagHandler } from "../swapSlice";
+import { resetOperation } from "../store/swapSlice";
 import { useTerminalNotification } from "../hooks/useTerminalNotification";
 
 // Destructure for easier access
@@ -13,8 +13,9 @@ const { unstake } = stakingThunks;
 
 const Unstake: React.FC = () => {
     const dispatch = useAppDispatch();
-    const swap = useAppSelector((state) => state.swap);
-    const { showLoading } = useTerminalNotification();
+    const unstakeStatus = useAppSelector((state) => state.swap.operations.unstake);
+    const unstakeError = useAppSelector((state) => state.swap.operationErrors.unstake);
+    const { showLoading, showSuccess, showError, hide } = useTerminalNotification();
 
     const handleUnstake = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -22,18 +23,28 @@ const Unstake: React.FC = () => {
         showLoading("UNSTAKING", "Processing unstake request");
     }, [dispatch, showLoading]);
 
+    // Handle unstake operation state changes
     useEffect(() => {
-        if (swap.unstakeSuccess === true) {
-            dispatch(flagHandler());
+        if (unstakeStatus === 'pending') {
+            // Loading state is already shown from handleUnstake
+        } else if (unstakeStatus === 'success') {
+            hide();
+            showSuccess("SUCCESS", "Unstake completed");
+            // Auto-reset is handled by middleware after 3 seconds
+        } else if (unstakeStatus === 'error' && unstakeError) {
+            hide();
+            showError(unstakeError.title, unstakeError.message);
+            dispatch(resetOperation('unstake'));
         }
-    }, [swap])
+    }, [unstakeStatus, unstakeError, dispatch, hide, showSuccess, showError])
 
     return (
         <button
-            className="terminal-button text-xs"
+            className={`terminal-button text-xs ${unstakeStatus === 'pending' ? 'opacity-50 cursor-not-allowed' : ''}`}
             onClick={(e) => handleUnstake(e)}
+            disabled={unstakeStatus === 'pending'}
         >
-            [UNSTAKE]
+            {unstakeStatus === 'pending' ? '[UNSTAKING...]' : '[UNSTAKE]'}
         </button>
     );
 };

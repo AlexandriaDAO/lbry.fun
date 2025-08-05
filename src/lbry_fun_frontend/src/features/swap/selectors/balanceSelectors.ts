@@ -38,8 +38,12 @@ export const selectNormalizedBalances = createSelector(
 
 // Loading state selectors
 export const selectBalanceLoading = createSelector(
-  [(state: RootState) => state.primary.loading, (state: RootState) => state.swap.loading],
-  (primaryLoading, swapLoading) => primaryLoading || swapLoading
+  [(state: RootState) => state.primary.loading, (state: RootState) => state.swap.operations],
+  (primaryLoading, operations) => {
+    // Check if any operation is pending
+    const anyOperationPending = Object.values(operations).some(status => status === 'pending');
+    return primaryLoading || anyOperationPending;
+  }
 );
 
 // Staking selectors

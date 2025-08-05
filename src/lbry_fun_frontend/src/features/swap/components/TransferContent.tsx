@@ -29,6 +29,9 @@ const TransferContent: React.FC = () => {
   const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
   const primary = useAppSelector((state: RootState) => state.primary);
   const swap = useAppSelector((state: RootState) => state.swap);
+  const transferPrimaryStatus = useAppSelector((state: RootState) => state.swap.operations.transferPrimary);
+  const transferSecondaryStatus = useAppSelector((state: RootState) => state.swap.operations.transferSecondary);
+  const transferIcpStatus = useAppSelector((state: RootState) => state.swap.operations.transferIcp);
   
   // Send state
   const [destinationPrincipal, setDestinationPrincipal] = useState("");
@@ -71,7 +74,7 @@ const TransferContent: React.FC = () => {
     setActiveTab(tab);
   }, []);
 
-  const handleSend = useCallback(async () => {
+  const handleSend = useCallback(() => {
     if (!validatePrincipal(destinationPrincipal)) return;
     if (!amount || Number(amount) <= 0) {
       setPrincipalError("Amount must be greater than 0");
@@ -80,35 +83,44 @@ const TransferContent: React.FC = () => {
 
     showLoading("TRANSFER IN PROGRESS", "PROCESSING TRANSACTION...");
 
-    try {
-      if (selectedToken === "ICP") {
-        await dispatch(transferICP({ to: destinationPrincipal, amount }));
-      } else if (selectedToken === swap.activeSwapPool?.[1]?.primary_token_symbol) {
-        await dispatch(transferPrimary({ to: destinationPrincipal, amount }));
-      } else if (selectedToken === swap.activeSwapPool?.[1]?.secondary_token_symbol) {
-        await dispatch(transferSecondary({ to: destinationPrincipal, amount }));
-      }
+    if (selectedToken === "ICP") {
+      dispatch(transferICP({ to: destinationPrincipal, amount }));
+    } else if (selectedToken === swap.activeSwapPool?.[1]?.primary_token_symbol) {
+      dispatch(transferPrimary({ destination: destinationPrincipal, amount }));
+    } else if (selectedToken === swap.activeSwapPool?.[1]?.secondary_token_symbol) {
+      dispatch(transferSecondary({ to: destinationPrincipal, amount }));
+    }
+  }, [validatePrincipal, destinationPrincipal, amount, selectedToken, swap.activeSwapPool, dispatch, showLoading]);
 
-      // Refresh balances
-      await dispatch(getIcpBal(principal));
-      if (swap.activeSwapPool) {
-        await dispatch(getPrimaryBalance(principal));
-        await dispatch(getSecondaryBalance(principal));
-        await dispatch(fetchTransactionHistory({ 
-          principal: Principal.fromText(principal),
-          poolId: swap.activeSwapPool[0]
-        }));
-      }
-
+  // Handle transfer operation state changes
+  React.useEffect(() => {
+    const isTransferPending = transferPrimaryStatus === 'pending' || transferSecondaryStatus === 'pending' || transferIcpStatus === 'pending';
+    const transferSuccess = transferPrimaryStatus === 'success' || transferSecondaryStatus === 'success' || transferIcpStatus === 'success';
+    const transferError = transferPrimaryStatus === 'error' || transferSecondaryStatus === 'error' || transferIcpStatus === 'error';
+    
+    if (transferSuccess) {
       hide();
       showSuccess("SUCCESS", "TRANSACTION SUBMITTED");
       setAmount("0");
       setDestinationPrincipal("");
-    } catch (error) {
+      
+      // Refresh balances after successful transfer
+      if (principal) {
+        dispatch(getIcpBal(principal));
+        if (swap.activeSwapPool) {
+          dispatch(getPrimaryBalance(principal));
+          dispatch(getSecondaryBalance(principal));
+          dispatch(fetchTransactionHistory({ 
+            userPrincipal: principal,
+            startIndex: 0
+          }));
+        }
+      }
+    } else if (transferError) {
       hide();
       showError("ERROR", "TRANSACTION FAILED → TRY AGAIN");
     }
-  }, [validatePrincipal, destinationPrincipal, amount, selectedToken, swap.activeSwapPool, principal, dispatch, showLoading, hide, showSuccess, showError]);
+  }, [transferPrimaryStatus, transferSecondaryStatus, transferIcpStatus, dispatch, hide, showSuccess, showError, principal, swap.activeSwapPool]);
 
   const getBalance = () => {
     switch (selectedToken) {
@@ -196,14 +208,17 @@ const TransferContent: React.FC = () => {
 
       <button
         onClick={handleSend}
-        disabled={!isAuthenticated || !amount || Number(amount) <= 0 || !!principalError}
+        disabled={!isAuthenticated || !amount || Number(amount) <= 0 || !!principalError || transferPrimaryStatus === 'pending' || transferSecondaryStatus === 'pending' || transferIcpStatus === 'pending'}
         className={`w-full font-mono text-sm px-4 py-3 rounded transition-all ${
-          !isAuthenticated || !amount || Number(amount) <= 0 || !!principalError
+          !isAuthenticated || !amount || Number(amount) <= 0 || !!principalError || transferPrimaryStatus === 'pending' || transferSecondaryStatus === 'pending' || transferIcpStatus === 'pending'
             ? 'bg-gray-800 text-gray-400 cursor-not-allowed'
             : 'bg-lime-500 text-black font-bold hover:bg-lime-400 cursor-pointer'
         }`}
       >
-        {isAuthenticated ? 'SEND TOKENS' : 'CONNECT WALLET'}
+        {!isAuthenticated ? 'CONNECT WALLET' : 
+         (transferPrimaryStatus === 'pending' || transferSecondaryStatus === 'pending' || transferIcpStatus === 'pending') ? (
+          <LoaderCircle size={14} className="animate-spin mx-auto" />
+        ) : 'SEND TOKENS'}
       </button>
     </div>
   );

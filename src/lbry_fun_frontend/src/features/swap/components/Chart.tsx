@@ -84,11 +84,12 @@ const LineChart: React.FC<ChartProps> = ({
                     {
                         type: 'value',
                         axisLabel: {
-                            color: 'hsl(var(--muted-foreground))'
+                            color: 'hsl(var(--muted-foreground))',
+                            margin: 8
                         },
                         name: yAxisLabel,
                         nameLocation: 'middle',
-                        nameGap: 60,
+                        nameGap: 70,
                         nameTextStyle: {
                             color: '#ccc',
                             fontSize: 14
@@ -122,8 +123,8 @@ const LineChart: React.FC<ChartProps> = ({
                     }
                 ],
                 grid: {
-                    left: '8%',
-                    right: dataYaxis2 ? '8%' : '4%',
+                    left: '12%',
+                    right: dataYaxis2 ? '10%' : '4%',
                     bottom: '10%',
                     top: '10%',
                     containLabel: true

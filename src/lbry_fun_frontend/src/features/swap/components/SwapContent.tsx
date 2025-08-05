@@ -12,7 +12,7 @@ import { Link } from "react-router";
 import { tradingThunks } from "../thunks/tradingThunks";
 import { balanceThunks } from "../thunks/balanceThunks";
 import { analyticsThunks } from "../thunks/analyticsThunks";
-import { flagHandler } from "../swapSlice";
+import { resetOperation } from "../store/swapSlice";
 import { LoaderCircle, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { icp_fee, minimum_icp } from "@/utils/utils";
 import TerminalNotification from "./TerminalNotification";
@@ -32,6 +32,10 @@ const SwapContent: React.FC = () => {
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
   const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
   const swap = useAppSelector((state: RootState) => state.swap);
+  const swapStatus = useAppSelector((state: RootState) => state.swap.operations.swap);
+  const swapError = useAppSelector((state: RootState) => state.swap.operationErrors.swap);
+  const redeemStatus = useAppSelector((state: RootState) => state.swap.operations.redeem);
+  const redeemError = useAppSelector((state: RootState) => state.swap.operationErrors.redeem);
   const { accessState, countdown, launchTime, isTokenLive } = useAccessState();
   const [amount, setAmount] = useState("");
   const [secondaryRatio, setSecondaryRatio] = useState(0.0);
@@ -84,27 +88,29 @@ const SwapContent: React.FC = () => {
       parseFloat((ratio * Number(amount)).toFixed(4))
     );
   }, [swap.secondaryRatio, amount]);
+  // Handle swap operation state changes
   useEffect(() => {
-    if (!isAuthenticated || !principal || !swap.activeSwapPool?.[1].secondary_token_id) return;
-    if (swap.swapSuccess === true) {
-      dispatch(getSecondaryBalance(principal));
-      // Refresh transaction history after successful swap
-      dispatch(fetchTransactionHistory({ userPrincipal: principal, startIndex: 0 }));
-      dispatch(flagHandler());
+    if (swapStatus === 'pending') {
+      // Loading state is already shown from handleSubmit
+    } else if (swapStatus === 'success') {
       hide();
       showSuccess("SUCCESS", "Transaction submitted");
       setAmount("");
       setTentativeSecondary(0);
-    }
-  }, [isAuthenticated, principal, swap.swapSuccess, swap.activeSwapPool, dispatch]);
-  useEffect(() => {
-    if (swap.error) {
+      
+      // Refresh balances after successful swap
+      if (isAuthenticated && principal) {
+        dispatch(getSecondaryBalance(principal));
+        dispatch(fetchTransactionHistory({ userPrincipal: principal, startIndex: 0 }));
+      }
+      
+      // Auto-reset is handled by middleware after 3 seconds
+    } else if (swapStatus === 'error' && swapError) {
       hide();
-      showError(swap.error.title, swap.error.message);
-      dispatch(flagHandler());
-
+      showError(swapError.title, swapError.message);
+      dispatch(resetOperation('swap'));
     }
-  }, [swap])
+  }, [swapStatus, swapError, dispatch, hide, showSuccess, showError, isAuthenticated, principal, swap.activeSwapPool])
   useEffect(() => {
     if (amount == "0" || Number(amount) < minimum_icp) {
       setInputState('error');
@@ -132,14 +138,22 @@ const SwapContent: React.FC = () => {
     setShowRedeemSection(prev => !prev);
   }, []);
 
+  // Handle redeem operation state changes
   useEffect(() => {
-    if (swap.redeeemSuccess === true) {
-      if (isAuthenticated && principal) dispatch(getArchivedBalance(principal));
-      dispatch(flagHandler());
+    if (redeemStatus === 'pending') {
+      setRedeemLoading(true);
+    } else if (redeemStatus === 'success') {
       setRedeemLoading(false);
       showSuccess("Success!", "Transaction Submitted!");
+      if (isAuthenticated && principal) {
+        dispatch(getArchivedBalance(principal));
+      }
+    } else if (redeemStatus === 'error' && redeemError) {
+      setRedeemLoading(false);
+      showError(redeemError.title, redeemError.message);
+      dispatch(resetOperation('redeem'));
     }
-  }, [swap.redeeemSuccess, isAuthenticated, principal, dispatch]);
+  }, [redeemStatus, redeemError, dispatch, showSuccess, showError, isAuthenticated, principal]);
 
   // Show skeleton while critical data is loading
   if (!swap.activeSwapPool || swap.secondaryRatio === null || swap.secondaryRatio === undefined) {
@@ -206,15 +220,15 @@ const SwapContent: React.FC = () => {
                 <button
                   type="button"
                   className={`w-full font-mono text-sm px-4 py-3 rounded transition-all ${
-                    parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swap.loading || !isTokenLive 
+                    parseFloat(amount) === 0 || amount === "" || parseFloat(amount) < minimum_icp || swapStatus === 'pending' || !isTokenLive 
                       ? 'bg-gray-800 text-gray-400 cursor-not-allowed' 
                       : 'bg-lime-500 text-black font-bold hover:bg-lime-400 cursor-pointer'
                   }`}
-                  disabled={parseFloat(amount) === 0 || swap.loading || parseFloat(amount) < minimum_icp || amount === "" || !isTokenLive}
+                  disabled={parseFloat(amount) === 0 || swapStatus === 'pending' || parseFloat(amount) < minimum_icp || amount === "" || !isTokenLive}
                   onClick={handleSubmit}
                   title={!isTokenLive ? "Trading will be enabled after the launch period" : ""}
                 >
-                  {swap.loading ? (
+                  {swapStatus === 'pending' ? (
                     <LoaderCircle size={14} className="animate-spin mx-auto" />
                   ) : !isTokenLive ? (
                     <span>AWAITING LAUNCH</span>
@@ -289,14 +303,14 @@ const SwapContent: React.FC = () => {
                 
                 <button
                   onClick={handleRedeem}
-                  disabled={redeemLoading || swap.loading}
+                  disabled={redeemStatus === 'pending'}
                   className={`w-full font-mono text-sm px-4 py-2 rounded transition-all ${
-                    redeemLoading || swap.loading 
+                    redeemStatus === 'pending' 
                       ? 'bg-gray-800 text-gray-400 cursor-not-allowed' 
                       : 'bg-lime-500 text-black font-bold hover:bg-lime-400 cursor-pointer'
                   }`}
                 >
-                  {redeemLoading ? (
+                  {redeemStatus === 'pending' ? (
                     <LoaderCircle size={14} className="animate-spin mx-auto" />
                   ) : (
                     'REDEEM FUNDS'

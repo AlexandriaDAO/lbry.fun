@@ -57,12 +57,17 @@ export const selectCanisterArchivedBalance = createSelector(
 
 export const selectIsLoading = createSelector(
   [selectSwapState],
-  (swap) => swap.loading
+  (swap) => Object.values(swap.operations).some(status => status === 'pending')
 );
 
 export const selectError = createSelector(
   [selectSwapState],
-  (swap) => swap.error
+  (swap) => {
+    // Return the first error found in operation errors
+    const errors = swap.operationErrors;
+    const errorKey = Object.keys(errors).find(key => errors[key as keyof typeof errors]);
+    return errorKey ? errors[errorKey as keyof typeof errors] : null;
+  }
 );
 
 // Combined selectors

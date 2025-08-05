@@ -25,15 +25,37 @@ export const TerminalExpander: React.FC<TerminalExpanderProps> = ({
   });
   
   const contentRef = useRef<HTMLDivElement>(null);
-  const [maxHeight, setMaxHeight] = useState<string>(() => isExpanded ? '9999px' : '0px');
+  const [maxHeight, setMaxHeight] = useState<string>(() => isExpanded ? 'none' : '0px');
 
   useEffect(() => {
     localStorage.setItem(`terminal_expanded_${terminalId}`, String(isExpanded));
   }, [isExpanded, terminalId]);
 
   useEffect(() => {
-    if (contentRef.current) {
-      setMaxHeight(isExpanded ? `${contentRef.current.scrollHeight}px` : '0px');
+    const updateHeight = () => {
+      if (contentRef.current) {
+        if (isExpanded) {
+          // Use 'none' for expanded state to allow full content display
+          setMaxHeight('none');
+        } else {
+          setMaxHeight('0px');
+        }
+      }
+    };
+
+    updateHeight();
+
+    // Set up ResizeObserver to handle dynamic content changes
+    if (contentRef.current && isExpanded) {
+      const resizeObserver = new ResizeObserver(() => {
+        updateHeight();
+      });
+      
+      resizeObserver.observe(contentRef.current);
+      
+      return () => {
+        resizeObserver.disconnect();
+      };
     }
   }, [isExpanded, children]);
 
@@ -75,8 +97,11 @@ export const TerminalExpander: React.FC<TerminalExpanderProps> = ({
       <div
         ref={contentRef}
         id={`terminal-content-${terminalId}`}
-        className="terminal-expander-content overflow-hidden transition-all duration-300 ease-out"
-        style={{ maxHeight }}
+        className="terminal-expander-content transition-all duration-300 ease-out"
+        style={{ 
+          maxHeight,
+          overflow: isExpanded ? 'visible' : 'hidden'
+        }}
       >
         {children}
       </div>

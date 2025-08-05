@@ -2,38 +2,43 @@ import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/store';
 
 // Loading state selectors
-export const selectSwapLoading = (state: RootState) => state.swap.loading;
+export const selectOperations = (state: RootState) => state.swap.operations;
 export const selectPrimaryLoading = (state: RootState) => state.primary.loading;
 export const selectTokenomicsLoading = (state: RootState) => state.tokenomics.loading;
 
 export const selectNormalizedLoading = createSelector(
-  [selectSwapLoading, selectPrimaryLoading, selectTokenomicsLoading],
-  (swapLoading, primaryLoading, tokenomicsLoading) => ({
-    balances: swapLoading || primaryLoading,
-    swap: swapLoading,
-    burn: swapLoading,
-    stake: swapLoading,
-    unstake: swapLoading,
-    transfer: swapLoading || primaryLoading,
-    claim: swapLoading,
-    redeem: swapLoading,
+  [selectOperations, selectPrimaryLoading, selectTokenomicsLoading],
+  (operations, primaryLoading, tokenomicsLoading) => ({
+    balances: primaryLoading,
+    swap: operations.swap === 'pending',
+    burn: operations.burn === 'pending',
+    stake: operations.stake === 'pending',
+    unstake: operations.unstake === 'pending',
+    transfer: operations.transferPrimary === 'pending' || operations.transferSecondary === 'pending' || primaryLoading,
+    claim: operations.claim === 'pending',
+    redeem: operations.redeem === 'pending',
     logs: tokenomicsLoading,
   })
 );
 
 // Success state selectors
 export const selectNormalizedSuccess = (state: RootState) => ({
-  swap: state.swap.swapSuccess,
-  burn: state.swap.burnSuccess,
-  stake: state.swap.successStake,
-  unstake: state.swap.unstakeSuccess,
-  transfer: state.swap.transferSuccess || state.primary.transferSuccess,
-  claim: state.swap.successClaimReward,
-  redeem: state.swap.redeeemSuccess,
+  swap: state.swap.operations.swap === 'success',
+  burn: state.swap.operations.burn === 'success',
+  stake: state.swap.operations.stake === 'success',
+  unstake: state.swap.operations.unstake === 'success',
+  transfer: state.swap.operations.transferPrimary === 'success' || state.swap.operations.transferSecondary === 'success' || state.primary.transferSuccess,
+  claim: state.swap.operations.claim === 'success',
+  redeem: state.swap.operations.redeem === 'success',
 });
 
 // Error state selectors
-export const selectSwapError = (state: RootState) => state.swap.error;
+export const selectSwapError = (state: RootState) => {
+  // Return the first error found in operation errors
+  const errors = state.swap.operationErrors;
+  const errorKey = Object.keys(errors).find(key => errors[key as keyof typeof errors]);
+  return errorKey ? errors[errorKey as keyof typeof errors] : null;
+};
 export const selectPrimaryError = (state: RootState) => state.primary.error;
 export const selectTokenomicsError = (state: RootState) => state.tokenomics.error;
 

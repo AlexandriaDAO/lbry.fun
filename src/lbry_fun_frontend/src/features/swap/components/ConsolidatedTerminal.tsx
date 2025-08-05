@@ -20,6 +20,7 @@ const ConsolidatedTerminal: React.FC = () => {
     const dispatch = useAppDispatch();
     const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
     const swap = useAppSelector((state: RootState) => state.swap);
+    const operations = useAppSelector((state: RootState) => state.swap.operations);
     const primary = useAppSelector((state: RootState) => state.primary);
     const tokenomics = useAppSelector((state: RootState) => state.tokenomics);
     const { 
@@ -48,17 +49,12 @@ const ConsolidatedTerminal: React.FC = () => {
 
     useEffect(() => {
         if (!isAuthenticated || !principal) return;
-        if (
-            swap.successClaimReward === true ||
-            swap.swapSuccess === true ||
-            swap.burnSuccess === true ||
-            swap.transferSuccess === true ||
-            swap.redeeemSuccess === true ||
-            icpLedgerTransferSuccess === true
-        ) {
+        // Refresh ICP balance when any operation succeeds
+        const anyOperationSuccess = Object.values(operations).some(status => status === 'success');
+        if (anyOperationSuccess || icpLedgerTransferSuccess === true) {
             dispatch(getIcpBal(principal));
         }
-    }, [isAuthenticated, principal, swap, icpLedgerTransferSuccess, dispatch]);
+    }, [isAuthenticated, principal, operations, icpLedgerTransferSuccess, dispatch]);
 
     useEffect(() => {
         if (!isAuthenticated || !principal || !icpLedgerAccountId) return;

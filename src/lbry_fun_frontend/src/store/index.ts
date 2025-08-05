@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import rootReducer from './rootReducer';
 import { requestDeduplicationMiddleware } from '@/features/swap/middleware/requestDeduplication';
+import { operationMiddleware } from '@/features/swap/middleware/operationMiddleware';
 
 export const store = configureStore({
   reducer: rootReducer,
@@ -22,7 +23,7 @@ export const store = configureStore({
           return true;
         },
       },
-    }).concat(requestDeduplicationMiddleware),
+    }).concat(requestDeduplicationMiddleware, operationMiddleware),
   // Redux DevTools configuration with BigInt support
   devTools: process.env.NODE_ENV !== 'production' && {
     // Custom serializer for Redux DevTools

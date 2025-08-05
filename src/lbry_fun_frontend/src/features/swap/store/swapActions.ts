@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { SwapState } from "./swapTypes";
+import { SwapState, OperationStates } from "./swapTypes";
 import { TokenRecordStringified } from "../../token/thunk/getTokenPools.thunk";
 
 // Define the initial state using the SwapState interface
@@ -19,15 +19,6 @@ export const initialState: SwapState = {
   
   // Non-cached data
   maxLbryBurn: 0,
-  swapSuccess: false,
-  redeeemSuccess: false,
-  successStake: false,
-  burnSuccess: false,
-  successClaimReward: false,
-  unstakeSuccess: false,
-  transferSuccess: false,
-  loading: false,
-  error: null,
   spendingBalance: "0",
   logsLoading: false,
   logsError: null,
@@ -40,6 +31,20 @@ export const initialState: SwapState = {
     hasMore: true,
     currentPage: 0
   },
+  
+  // Operation states
+  operations: {
+    swap: 'idle',
+    burn: 'idle',
+    stake: 'idle',
+    unstake: 'idle',
+    claim: 'idle',
+    transferPrimary: 'idle',
+    transferSecondary: 'idle',
+    transferIcp: 'idle',
+    redeem: 'idle',
+  },
+  operationErrors: {},
   
   // Global loading states
   isLoadingCriticalData: false,
@@ -60,15 +65,9 @@ export const initialState: SwapState = {
 
 // Action creators
 export const swapActions = {
-  flagHandler: (state: SwapState) => {
-    state.swapSuccess = false;
-    state.burnSuccess = false;
-    state.successStake = false;
-    state.successClaimReward = false;
-    state.unstakeSuccess = false;
-    state.transferSuccess = false;
-    state.redeeemSuccess = false;
-    state.error = null;
+  resetOperation: (state: SwapState, action: PayloadAction<keyof OperationStates>) => {
+    state.operations[action.payload] = 'idle';
+    state.operationErrors[action.payload] = undefined;
   },
   
   setIsLoadingCriticalData: (state: SwapState, action: PayloadAction<boolean>) => {
@@ -111,6 +110,12 @@ export const swapActions = {
       state.transactionHistory.currentPage = 0;
       state.transactionHistory.hasMore = true;
       state.transactionHistory.lastFetch = null;
+      
+      // Reset all operations when switching pools
+      Object.keys(state.operations).forEach(key => {
+        state.operations[key as keyof OperationStates] = 'idle';
+      });
+      state.operationErrors = {};
     }
     
     state.activeSwapPool = action.payload;

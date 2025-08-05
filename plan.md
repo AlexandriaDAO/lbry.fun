@@ -7,18 +7,17 @@
 
 
 
-- Staking minimum 1 token required in the UI.
 
-
-- Staking reward percent is a fake number in icp_swap
-- Get launch pending to update the state when time runs out.
-- Definitely going to need to display the price chart.
-- Dynamic price feeds from kongswap.
 - y-axis label on graphs 1, 2 and 4
+
+
 - Annual APY fix in logs canister.
 - The logs canister isn't getting real lp data from kongswap (and maybe fake data in other graphs)
-- Since pool creation happens on a timer we need a safer way to make it closer to atomic and with no silent failures.
-- The backend currently accepts any initial parameters without validation.
+
+
+- Definitely going to need to display the price chart.
+- Dynamic price feeds from kongswap.
+- The backend currently accepts any initial parameters without validation. Need to set those.
 
 
 

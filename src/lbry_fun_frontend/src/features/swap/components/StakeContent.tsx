@@ -8,7 +8,7 @@ import { useAccessState } from "../hooks/useAccessState";
 
 import { balanceThunks } from "../thunks/balanceThunks";
 import { stakingThunks } from "../thunks/stakingThunks";
-import { flagHandler } from "../swapSlice";
+import { resetOperation } from "../store/swapSlice";
 
 // Destructure for easier access
 const { getPrimaryBalance, getAccountPrimaryBalance } = balanceThunks;
@@ -25,6 +25,11 @@ const StakeContent = () => {
     const dispatch = useAppDispatch();
 
     const swap = useAppSelector((state: RootState) => state.swap);
+    const stakeStatus = useAppSelector((state: RootState) => state.swap.operations.stake);
+    const stakeError = useAppSelector((state: RootState) => state.swap.operationErrors.stake);
+    const unstakeStatus = useAppSelector((state: RootState) => state.swap.operations.unstake);
+    const claimStatus = useAppSelector((state: RootState) => state.swap.operations.claim);
+    const burnStatus = useAppSelector((state: RootState) => state.swap.operations.burn);
     const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
     const primary = useAppSelector((state: RootState) => state.primary);
     const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
@@ -89,20 +94,36 @@ const StakeContent = () => {
         }
     }, [isAuthenticated, principal, dispatch])
 
+    // Handle stake operation state changes
     useEffect(() => {
-
-        if (swap.successStake === true || swap.unstakeSuccess === true || swap.burnSuccess === true || swap.successClaimReward === true) {
-            dispatch(flagHandler());
-            if (isAuthenticated && principal) dispatch(getPrimaryBalance(principal))
+        if (stakeStatus === 'pending') {
+            // Loading state is already shown from handleSubmit
+        } else if (stakeStatus === 'success') {
             hide();
             showSuccess("SUCCESS", "TRANSACTION SUBMITTED");
-        }
-        if (swap.error) {
+            setAmount("0");
+            
+            // Refresh balance after successful stake
+            if (isAuthenticated && principal) {
+                dispatch(getPrimaryBalance(principal));
+            }
+            
+            // Auto-reset is handled by middleware after 3 seconds
+        } else if (stakeStatus === 'error' && stakeError) {
             hide();
-            showError(swap.error.title, swap.error.message);
-            dispatch(flagHandler());
+            showError(stakeError.title, stakeError.message);
+            dispatch(resetOperation('stake'));
         }
-    }, [isAuthenticated, principal, swap, dispatch])
+    }, [stakeStatus, stakeError, dispatch, hide, showSuccess, showError, isAuthenticated, principal]);
+    
+    // Handle other operations that affect stake view
+    useEffect(() => {
+        if (unstakeStatus === 'success' || claimStatus === 'success' || burnStatus === 'success') {
+            if (isAuthenticated && principal) {
+                dispatch(getPrimaryBalance(principal));
+            }
+        }
+    }, [unstakeStatus, claimStatus, burnStatus, isAuthenticated, principal, dispatch])
 
     const primaryTokenLogoFromState = swap.activeSwapPool?.[1]?.primary_token_logo_base64;
 
@@ -189,12 +210,12 @@ const StakeContent = () => {
                 <div className="terminal-section mt-4">
                     {isAuthenticated ? <button
                         type="button"
-                        className={`terminal-button terminal-button-primary w-full mb-2 ${parseFloat(amount) === 0 || swap.loading || !isTokenLive ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={parseFloat(amount) === 0 || swap.loading === true || !isTokenLive}
+                        className={`terminal-button terminal-button-primary w-full mb-2 ${parseFloat(amount) === 0 || stakeStatus === 'pending' || !isTokenLive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={parseFloat(amount) === 0 || stakeStatus === 'pending' || !isTokenLive}
                         onClick={handleSubmit}
                         title={!isTokenLive ? "Staking will be enabled after the launch period" : ""}
                     >
-                        {swap.loading ? (<>
+                        {stakeStatus === 'pending' ? (<>
                             <LoaderCircle size={14} className="animate animate-spin mx-auto" /> </>) : !isTokenLive ? (
                             <>[STAKING_STARTS_SOON]</>
                         ) : (

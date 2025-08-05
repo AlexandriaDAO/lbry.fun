@@ -138,6 +138,7 @@ Each token launch creates two tokens: Primary (reward) and Secondary (mining).
 
 ## Important Notes
 
+- Do not worry about backwards compatability. This project is not live, so the goal is to make the simplest cleanest solution without regaurd for backwards compatability.
 - Kongswap is deployed locally for liquidity functionality (separate repo)
 - Uses WASM compilation with `ic-wasm` for size optimization
 - All canisters use stable memory for upgrade persistence
