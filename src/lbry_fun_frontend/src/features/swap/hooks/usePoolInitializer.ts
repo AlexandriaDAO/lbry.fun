@@ -46,8 +46,8 @@ export const usePoolInitializer = (): UsePoolInitializerReturn => {
 
   // Handle pool initialization based on URL
   useEffect(() => {
-    // Only redirect to home if no ID in URL and we're on swap page
-    if (!idFromUrl && window.location.pathname.includes('/swap')) {
+    // Only redirect to home if no ID in URL and no active pool on swap page
+    if (!idFromUrl && !activeSwapPool && window.location.pathname.includes('/swap')) {
       navigate('/');
       return;
     }

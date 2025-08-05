@@ -59,7 +59,7 @@ export const MyDeploymentsPage: React.FC = () => {
               key={deployment.id.toString()}
               deployment={deployment}
               onRemove={(id) => dispatch(cleanupDeployment(id))}
-              onViewToken={(tokenId) => navigate(`/swap/${tokenId}`)}
+              onViewToken={(tokenId) => navigate(`/swap?id=${tokenId}`)}
             />
           ))}
         </div>

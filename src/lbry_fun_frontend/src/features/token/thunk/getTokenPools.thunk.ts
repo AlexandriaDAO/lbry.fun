@@ -17,8 +17,12 @@ const getTokenPools = createAsyncThunk<
    const safeResult: [string, TokenRecordStringified][] = result.map(([poolId, record]) => {
         const currentTime = Date.now() * 1000000; // Convert to nanoseconds
         
-        // Calculate isLive status based on status field
-        const isLive = 'Live' in record.status;
+        // Calculate isLive status based on status field AND launch time
+        // A token is live if it has Live status AND current time >= launched_at
+        const hasLiveStatus = 'Live' in record.status;
+        const launchedAtNanos = BigInt(record.launched_at);
+        const currentTimeNanos = BigInt(currentTime);
+        const isLive = hasLiveStatus && currentTimeNanos >= launchedAtNanos;
         
         return [
           poolId.toString(),
@@ -99,6 +103,8 @@ export type TokenRecordStringified = {
   created_time: string;
   launched_at: string;
   launch_delay_seconds: string;
+  threshold_multiplier: number;
+  distribution_interval_seconds: string;
   status: TokenStatus;
   isLive: boolean;
   primary_token_logo_base64?: string;

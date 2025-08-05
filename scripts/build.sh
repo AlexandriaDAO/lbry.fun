@@ -21,7 +21,7 @@ else
 fi
 
 ## xrc first because it's used in init functions of others.
-cargo build --release --target wasml32-unknown-unknown --package xrc
+cargo build --release --target wasm32-unknown-unknown --package xrc
 /home/theseus/.cargo/bin/ic-wasm target/wasm32-unknown-unknown/release/xrc.wasm -o target/wasm32-unknown-unknown/release/xrc.wasm shrink
 candid-extractor target/wasm32-unknown-unknown/release/xrc.wasm > src/xrc/xrc.did
 

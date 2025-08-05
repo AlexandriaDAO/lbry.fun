@@ -7,7 +7,7 @@
 
 
 
-
+- Staking minimum 1 token required in the UI.
 
 
 - Staking reward percent is a fake number in icp_swap
@@ -46,13 +46,15 @@ dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_balance_of '(record { owner 
 # To Topup
 dfx identity use kong_user1
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "r6liw-6vsua-r3a4m-y646g-hsnf6-vnhx5-gugtm-zgmdr-dmokv-vrc6x-qae"; subaccount = null }; amount = (100_000_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "vz6l5-juldl-nazyt-hfogx-whip7-ppasi-hrom7-lcnxn-czdhb-7xvr4-gqe"; subaccount = null }; amount = (100_000_000_000 : nat) })'
 
 dfx identity use default
 
 Orbit Wallet Local: http://werw6-ayaaa-aaaaa-774aa-cai.localhost:4943/en/login
 
 
+
+# To fix Kong
 
 // If you build fresh uses ALEX as token 1. If you just redeploy kong, skip 1 and ICP fills in with 2. 
 ### Add alex as token 1

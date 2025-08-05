@@ -69,11 +69,8 @@ pub async fn check_can_trade() -> Result<(), crate::ExecutionError> {
     let status = match cached {
         Some(s) => s,
         None => {
-            // Get lbry_fun canister ID from config or use default
-            let lbry_fun_canister_id = crate::CONFIGS.with(|c| {
-                c.borrow().get(&()).map(|config| config.icp_ledger_id) // Should have lbry_fun_id field
-                    .unwrap_or_else(|| Principal::from_text("oni4e-oyaaa-aaaap-qp2pq-cai").unwrap())
-            });
+            // Get lbry_fun canister ID - always use the hardcoded value
+            let lbry_fun_canister_id = Principal::from_text("oni4e-oyaaa-aaaap-qp2pq-cai").unwrap();
             
             let (status,): (Result<TokenStatus, String>,) = ic_cdk::call(lbry_fun_canister_id, "get_token_status", (token_id,))
                 .await

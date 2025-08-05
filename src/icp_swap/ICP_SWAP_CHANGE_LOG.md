@@ -1,5 +1,16 @@
 # ICP Swap Change Log
 
+## 2025-08-04: Fixed lbry_fun canister ID for token status checks
+
+### Changes Made:
+1. **utils.rs**:
+   - Fixed bug where `config.icp_ledger_id` was incorrectly used to get lbry_fun canister ID
+   - Now directly uses the correct hardcoded lbry_fun canister ID ("oni4e-oyaaa-aaaap-qp2pq-cai")
+   - This fixes the error: "Canister ryjl3-tyaaa-aaaaa-aaaba-cai has no update method 'get_token_status'"
+
+### Purpose:
+The code was incorrectly trying to call `get_token_status` on the ICP ledger canister instead of the lbry_fun canister.
+
 ## 2025-07-31: Token Status Checking Implementation (Simplified)
 
 ### Changes Made:

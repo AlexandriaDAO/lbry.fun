@@ -4,8 +4,6 @@
   canisterArchivedBal: Number | null | undefined,
   canisterUnClaimedIcp: Number | null | undefined
 ) => {
-  // Removed debug logging
-  
   // Safe number conversion with defaults
   const safeRatio = Number(secondaryRatio) || 0;
   const safeCanisterBal = Number(canisterBal) || 0;
@@ -30,8 +28,6 @@
   // Burning actually increases ICP reserves, so full remaining balance is available
   let actualAvailable = remainingBalance;
   let maxAllowed = actualAvailable * lbryPerIcp;
-  
-  // Calculation complete
   
   // Ensure non-negative result
   if (maxAllowed < 0 || isNaN(maxAllowed)) {

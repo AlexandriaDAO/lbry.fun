@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Lock, Clock, AlertCircle } from 'lucide-react';
 import { AccessState, AccessGuardProps } from '../types/accessControl.types';
 import { TerminalAuthMenu } from '@/features/auth/components/TerminalAuthMenu';
+import { formatCountdown } from '@/utils/tokenStatus';
 
 const AccessGuard: React.FC<AccessGuardProps> = ({ 
   children, 
@@ -44,15 +45,6 @@ const AccessGuard: React.FC<AccessGuardProps> = ({
     );
   }
 
-  // Format countdown display
-  const formatCountdown = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes
-      .toString()
-      .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
 
   // For non-authenticated users, show a terminal-style banner
   if (accessState === AccessState.UNAUTHENTICATED) {

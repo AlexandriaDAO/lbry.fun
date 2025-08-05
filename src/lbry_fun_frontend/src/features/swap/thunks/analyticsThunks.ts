@@ -198,7 +198,7 @@ export const getTokenomicsInfo = createAsyncThunk<
         currentSecondaryThreshold: currentSecondaryThreshold.toString(),
         currentThresholdIndex: Number(currentThresholdIndex),
         totalSecondaryBurned: totalSecondaryBurn.toString(),
-        maxSecondaryThreshold: maxStats[0].toString()
+        maxSecondaryThreshold: maxStats && maxStats.length > 0 ? maxStats[0].toString() : "0"
       };
     } catch (error) {
       console.error("Error fetching tokenomics info:", error instanceof Error ? error.message : "Unknown error");

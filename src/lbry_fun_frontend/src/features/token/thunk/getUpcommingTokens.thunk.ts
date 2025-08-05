@@ -11,7 +11,7 @@ const getUpcomming = createAsyncThunk<
 >("lbry_fun/getUpcomming", async (_, { rejectWithValue }) => {
   try {
     const actor = await getLbryFunActor();
-    const result = await actor.get_upcomming(); // returns [bigint, TokenRecord][]
+    const result = await actor.get_upcoming(); // returns [bigint, TokenRecord][]
 
     // Convert every BigInt to string
     const safeResult: [string, TokenRecordStringified][] = result.map(
@@ -35,9 +35,11 @@ const getUpcomming = createAsyncThunk<
           initial_secondary_burn: record.initial_secondary_burn.toString(),
           initial_reward_per_burn_unit: (BigInt(record.initial_reward_per_burn_unit) / BigInt(100_000_000)).toString(),
           created_time: record.created_time.toString(),
-          pool_created_at: record.pool_created_at.toString(),
-          pool_creation_failed: record.pool_creation_failed,
+          launched_at: record.launched_at.toString(),
           launch_delay_seconds: record.launch_delay_seconds.toString(),
+          threshold_multiplier: record.threshold_multiplier,
+          distribution_interval_seconds: record.distribution_interval_seconds.toString(),
+          status: record.status,
           isLive: false, // Since get_upcomming() already filters for non-live tokens
         },
       ]

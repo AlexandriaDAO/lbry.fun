@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Standard Workflow
 1. First think through the problem, read the codebase for relevant files, and write a plan to appropriate file.
 2. The plan should have a list of todo items that you can check off as you complete them
@@ -51,10 +49,12 @@ This project is a Crypto Token Launchpad built on the Internet Computer Blockcha
 
 Instead of being an LBP, it uses a dual token system. The secondary token is minted with ICP at a constant rate of $0.01 in $ICP, and the primary token is minted/mined by burning the secondary token at varying rates (burning also returns 1/2 the ICP value with the mint, so the 'true cost' of secondary tokens can be thought of as $0.005).
 
-All ICP collected from minting secondary tokens is distributed accordingly (1% of the whole pool every hour):
+All ICP collected from minting secondary tokens is distributed accordingly (1% of the whole pool at the chosen distribution interval, e.g. one hour):
 
 - 1% to buy back and burn $LBRY, which is the secondary token of the parent project of which this is a fork.
 99% → Primary token stakers (will later be replaced with Permanently Locked Kongswap Liquidity)
+
+These percentages are separate, e.g., if the pool has 100 ICP and a distribution interval of 1 hour, then at the next 1 hour mark it will distribute 1 ICP: 0.99 to stakers, and 0.01 to the lbry_fun cansiter to be distributed to the parent project's stakers.
 
 ## Project Architecture
 
