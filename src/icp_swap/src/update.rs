@@ -884,14 +884,10 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
         return Ok("No rewards to distribute".to_string());
     }
     
-    // Calculate 1% of reward pool
+    // Calculate 1% of pool for distribution
     let total_distribution = reward_pool / 100;
     
-    if total_distribution < 1_000_000 {
-        return Ok("Distribution amount too small".to_string());
-    }
-    
-    // Deduct from reward pool first
+    // Update reward pool (remove what we're distributing)
     REWARD_POOL.with(|p| {
         let new_pool = reward_pool.saturating_sub(total_distribution);
         p.borrow_mut().insert((), new_pool);
@@ -907,18 +903,39 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
         f.borrow_mut().insert((), current.saturating_add(alex_portion));
     });
     
-    UNCOLLECTED_LP_FEES.with(|f| {
-        let current = f.borrow().get(&()).unwrap_or(0);
-        f.borrow_mut().insert((), current.saturating_add(lp_portion));
-    });
+    // Distribute lp_portion directly to stakers
+    let total_staked = get_total_primary_staked().await?;
+    if total_staked > 0 {
+        // Collect updates first to avoid borrow checker issues
+        let updates: Vec<(Principal, Stake)> = STAKES.with(|s| {
+            s.borrow()
+                .iter()
+                .map(|(principal, stake)| {
+                    let stake_ratio = (stake.amount as u128) * SCALING_FACTOR / (total_staked as u128);
+                    let icp_reward = ((lp_portion as u128) * stake_ratio) / SCALING_FACTOR;
+                    
+                    let mut updated_stake = stake.clone();
+                    updated_stake.reward_icp = updated_stake.reward_icp.saturating_add(icp_reward);
+                    (principal.clone(), updated_stake)
+                })
+                .collect()
+        });
+        
+        // Apply updates
+        STAKES.with(|s| {
+            for (principal, updated_stake) in updates {
+                s.borrow_mut().insert(principal, updated_stake);
+            }
+        });
+    }
     
     register_info_log(
         caller(),
         "distribute_reward",
-        &format!("Distributed {} from pool of {}", total_distribution, reward_pool)
+        &format!("Distributed {} to ALEX, {} to stakers from pool of {}", alex_portion, lp_portion, reward_pool)
     );
     
-    Ok(format!("Distributed {} from pool of {}", total_distribution, reward_pool))
+    Ok(format!("Distributed {} to ALEX, {} to stakers", alex_portion, lp_portion))
 }
 
 // Legacy distribute_reward_to_stakers function (to be removed when staking is deprecated)

@@ -51,8 +51,8 @@ Instead of being an LBP, it uses a dual token system. The secondary token is min
 
 All ICP collected from minting secondary tokens is distributed accordingly (1% of the whole pool at the chosen distribution interval, e.g. one hour):
 
-- 1% to buy back and burn $LBRY, which is the secondary token of the parent project of which this is a fork.
-99% → Primary token stakers (will later be replaced with Permanently Locked Kongswap Liquidity)
+- 1% to platform fee (for parent project)
+- 99% to Primary Token Stakers
 
 These percentages are separate, e.g., if the pool has 100 ICP and a distribution interval of 1 hour, then at the next 1 hour mark it will distribute 1 ICP: 0.99 to stakers, and 0.01 to the lbry_fun cansiter to be distributed to the parent project's stakers.
 
@@ -122,7 +122,7 @@ Each token launch creates two tokens: Primary (reward) and Secondary (mining).
 
 ### ICP Distribution (1% of pool hourly)
 - 1% → Buy/burn $LBRY (parent project token)
-- 99% → Primary token stakers (will later be replaced with Permanently Locked Kongswap Liquidity)
+- 99% → Primary token stakers 
 
 ## Common Error Patterns & Solutions
 
@@ -138,7 +138,7 @@ Each token launch creates two tokens: Primary (reward) and Secondary (mining).
 
 ## Important Notes
 
-- Do not worry about backwards compatability. This project is not live, so the goal is to make the simplest cleanest solution without regaurd for backwards compatability.
+- Do not worry about backwards compatability. This project is not live, so the goal is to make the simplest cleanest solution without regaurd for backwards compatability. 
 - Kongswap is deployed locally for liquidity functionality (separate repo)
 - Uses WASM compilation with `ic-wasm` for size optimization
 - All canisters use stable memory for upgrade persistence

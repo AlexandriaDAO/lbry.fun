@@ -8,7 +8,6 @@
 
 
 
-- y-axis label on graphs 1, 2 and 4
 
 
 - Annual APY fix in logs canister.
