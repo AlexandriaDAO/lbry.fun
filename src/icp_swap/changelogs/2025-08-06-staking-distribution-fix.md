@@ -1,19 +1,70 @@
 # Staking Distribution Fix - 2025-08-06
 
 ## Summary
-Fixed staking rewards showing 0 ICP by replacing LP fee accumulation with direct proportional distribution to stakers.
+Fixed staking rewards showing 0 ICP by:
+1. Adding swapped ICP to the REWARD_POOL (it was never being funded)
+2. Replacing LP fee accumulation with direct proportional distribution to stakers
 
 ## Problem
+- **Critical Issue**: REWARD_POOL was never being funded - swap operations didn't add ICP to the pool
 - Stakers were not receiving any ICP rewards
-- The 99% portion (of the 1% distribution) was just accumulating in UNCOLLECTED_LP_FEES
-- Stakers could only see 0 ICP rewards despite distributions happening
+- The 99% portion (of the 1% distribution) is now distributed directly to stakers
+- Stakers could only see 0 ICP rewards because the pool was always empty
 
 ## Solution
-Modified the `distribute_reward()` function to directly distribute the LP portion to stakers proportionally based on their stake amount.
+1. Modified the `swap()` function to add all swapped ICP to the REWARD_POOL
+2. Modified the `distribute_reward()` function to directly distribute the LP portion to stakers proportionally based on their stake amount
 
 ## Code Changes
 
 ### File: `/src/icp_swap/src/update.rs`
+
+### Change 1: Fund the REWARD_POOL in swap()
+
+#### Before:
+```rust
+// In swap() function:
+    deposit_icp_in_canister(amount_icp, from_subaccount).await.map_err(|e| 
+        // ... error handling ...
+    )?;
+    register_info_log(
+        caller,
+        "swap",
+        &format!("Successfully deposited {} ICP (e8s) into canister", amount_icp)
+    );
+    let icp_rate_in_cents: u64 = get_current_secondary_ratio().ok_or_else(|| 
+        // ... continues with swap logic
+```
+
+#### After:
+```rust
+// In swap() function:
+    deposit_icp_in_canister(amount_icp, from_subaccount).await.map_err(|e| 
+        // ... error handling ...
+    )?;
+    register_info_log(
+        caller,
+        "swap",
+        &format!("Successfully deposited {} ICP (e8s) into canister", amount_icp)
+    );
+    
+    // Add the deposited ICP to the reward pool for distribution
+    REWARD_POOL.with(|p| {
+        let current = p.borrow().get(&()).unwrap_or(0);
+        let new_total = current.saturating_add(amount_icp);
+        p.borrow_mut().insert((), new_total);
+    });
+    register_info_log(
+        caller,
+        "swap",
+        &format!("Added {} ICP (e8s) to reward pool", amount_icp)
+    );
+    
+    let icp_rate_in_cents: u64 = get_current_secondary_ratio().ok_or_else(|| 
+        // ... continues with swap logic
+```
+
+### Change 2: Distribute to stakers in distribute_reward()
 
 #### Before:
 ```rust
@@ -50,10 +101,7 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
         f.borrow_mut().insert((), current.saturating_add(alex_portion));
     });
     
-    UNCOLLECTED_LP_FEES.with(|f| {
-        let current = f.borrow().get(&()).unwrap_or(0);
-        f.borrow_mut().insert((), current.saturating_add(lp_portion));
-    });
+    // Removed - LP fees now distributed directly to stakers
     
     register_info_log(
         caller(),
@@ -134,19 +182,28 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
 
 ## Key Changes Explained
 
-1. **Removed minimum distribution check**: The 1_000_000 minimum check was removed to allow all distributions
-2. **Direct staker distribution**: Instead of accumulating LP fees, we now directly distribute to stakers
-3. **Proportional calculation**: Each staker receives rewards proportional to their stake using SCALING_FACTOR for precision
-4. **Updated logging**: Now shows both ALEX and staker distributions separately
+1. **Added REWARD_POOL funding**: The swap() function now adds all swapped ICP to the REWARD_POOL
+2. **Removed minimum distribution check**: The 1_000_000 minimum check was removed to allow all distributions
+3. **Direct staker distribution**: Instead of accumulating LP fees, we now directly distribute to stakers
+4. **Proportional calculation**: Each staker receives rewards proportional to their stake using SCALING_FACTOR for precision
+5. **Updated logging**: Now shows both ALEX and staker distributions separately
 
 ## Math Verification
 
+### Funding Phase:
+When users swap 100 ICP:
+- 100 ICP is added to REWARD_POOL
+
+### Distribution Phase (each interval):
 With 100 ICP in pool:
-- `total_distribution` = 100 / 100 = 1 ICP
-- `alex_portion` = 1 / 100 = 0.01 ICP (goes to platform)
-- `lp_portion` = 1 - 0.01 = 0.99 ICP (distributed to stakers)
+- `total_distribution` = 100 / 100 = 1 ICP (1% of pool)
+- `alex_portion` = 1 / 100 = 0.01 ICP (1% of distribution = 0.01% of pool)
+- `lp_portion` = 1 - 0.01 = 0.99 ICP (99% of distribution = 0.99% of pool)
 
 Each staker receives: `(their_stake / total_staked) * 0.99 ICP`
+
+### Result:
+Perfect 99:1 ratio maintained between stakers (0.99% of pool) and platform (0.01% of pool) per interval
 
 ## Testing Status
 - Code compiles successfully with `cargo build --target wasm32-unknown-unknown`
@@ -156,7 +213,8 @@ Each staker receives: `(their_stake / total_staked) * 0.99 ICP`
 - Uses existing `SCALING_FACTOR` constant from utils.rs
 
 ## Impact
-- Stakers now receive their proportional share of rewards immediately upon distribution
-- Platform still receives its 1% fee (0.01% of total pool)
-- No changes to UNCOLLECTED_LP_FEES for backwards compatibility
-- Total distribution remains at 1% of pool per interval as designed
+- **REWARD_POOL now gets funded**: All swapped ICP goes into the reward pool
+- **Stakers now receive rewards**: They get their proportional share (0.99% of pool per interval)
+- **Platform receives its fee**: ALEX stakers get 0.01% of pool per interval via UNCOLLECTED_ALEX_FEES
+- **UNCOLLECTED_LP_FEES removed**: LP fees now distributed directly to stakers
+- **Perfect 99:1 ratio maintained**: Distribution splits correctly between stakers and platform

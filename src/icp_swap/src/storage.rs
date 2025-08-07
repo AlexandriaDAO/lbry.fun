@@ -29,7 +29,7 @@ pub const LOGS_COUNTER_ID: MemoryId = MemoryId::new(9);
 pub const CONFIGS_MEM_ID: MemoryId = MemoryId::new(10);
 pub const LAUNCH_TIME_MEM_ID: MemoryId = MemoryId::new(11);
 pub const UNCOLLECTED_ALEX_FEES_MEM_ID: MemoryId = MemoryId::new(12);
-pub const UNCOLLECTED_LP_FEES_MEM_ID: MemoryId = MemoryId::new(13);
+// Memory ID 13 is intentionally unused (previously UNCOLLECTED_LP_FEES)
 pub const REWARD_POOL_MEM_ID: MemoryId = MemoryId::new(14);
 pub const TOKEN_ID_MEM_ID: MemoryId = MemoryId::new(15);
 
@@ -85,16 +85,14 @@ thread_local! {
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LAUNCH_TIME_MEM_ID)))
     );
     
-    // Uncollected fees for ALEX stakers - survives upgrades
+    // Uncollected fees for ALEX stakers (1% of distributions) - survives upgrades
     pub static UNCOLLECTED_ALEX_FEES: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(UNCOLLECTED_ALEX_FEES_MEM_ID)))
     );
     
-    pub static UNCOLLECTED_LP_FEES: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(UNCOLLECTED_LP_FEES_MEM_ID)))
-    );
+    // The 99% portion is now distributed directly to stakers
     
-    // Segregated reward pool - separate from operational funds
+    // Segregated reward pool - funded by all swap operations
     pub static REWARD_POOL: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(REWARD_POOL_MEM_ID)))
     );
@@ -143,11 +141,6 @@ pub fn get_uncollected_alex_fees_mem() -> StableBTreeMap<(), u64, Memory> {
     })
 }
 
-pub fn get_uncollected_lp_fees_mem() -> StableBTreeMap<(), u64, Memory> {
-    UNCOLLECTED_LP_FEES.with(|_fees_map| {
-        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(UNCOLLECTED_LP_FEES_MEM_ID)))
-    })
-}
 
 pub fn get_reward_pool_mem() -> StableBTreeMap<(), u64, Memory> {
     REWARD_POOL.with(|_pool_map| {
@@ -238,7 +231,6 @@ pub struct ReconciliationStatus {
     // Component breakdown
     pub reward_pool: u64,
     pub uncollected_alex_fees: u64,
-    pub uncollected_lp_fees: u64,
     pub total_staked: u64,
     pub operational_balance: u64,
     

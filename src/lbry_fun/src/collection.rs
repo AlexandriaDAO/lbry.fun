@@ -54,7 +54,6 @@ pub struct TokenCollectionInfo {
 pub struct SystemReconciliationSummary {
     pub total_expected_fees: u64,
     pub total_uncollected_alex: u64,
-    pub total_uncollected_lp: u64,
     pub tokens_with_discrepancies: Vec<Principal>,
     pub timestamp: u64,
 }
@@ -95,7 +94,6 @@ pub struct ReconciliationStatus {
     pub discrepancy_e8s: i64,
     pub reward_pool: u64,
     pub uncollected_alex_fees: u64,
-    pub uncollected_lp_fees: u64,
     pub total_staked: u64,
     pub operational_balance: u64,
     pub timestamp: u64,
@@ -222,7 +220,7 @@ async fn collect_all_fees_internal() -> Result<CollectionSummary, String> {
     // Collect from each token independently
     for token_id in token_ids {
         // Query expected amount
-        let (alex_fees, _lp_fees) = match query_uncollected_fees(token_id).await {
+        let (alex_fees, _) = match query_uncollected_fees(token_id).await {
             Ok(fees) => fees,
             Err(_) => (0, 0),
         };
@@ -468,7 +466,6 @@ pub fn init_reconciliation_timer() {
 #[query]
 pub async fn get_system_reconciliation() -> SystemReconciliationSummary {
     let mut total_uncollected_alex = 0u64;
-    let mut total_uncollected_lp = 0u64;
     let mut tokens_with_discrepancies = Vec::new();
     let mut failed_queries = Vec::new();
     
@@ -481,9 +478,8 @@ pub async fn get_system_reconciliation() -> SystemReconciliationSummary {
     
     for (_token_id, icp_swap_id) in token_records {
         match query_uncollected_fees(icp_swap_id).await {
-            Ok((alex_fees, lp_fees)) => {
+            Ok((alex_fees, _)) => {
                 total_uncollected_alex += alex_fees;
-                total_uncollected_lp += lp_fees;
             }
             Err(e) => {
                 failed_queries.push((icp_swap_id, e.to_string()));
@@ -499,7 +495,6 @@ pub async fn get_system_reconciliation() -> SystemReconciliationSummary {
     SystemReconciliationSummary {
         total_expected_fees: total_uncollected_alex,  // Currently only collecting ALEX fees
         total_uncollected_alex,
-        total_uncollected_lp,
         tokens_with_discrepancies,
         timestamp: ic_cdk::api::time(),
     }

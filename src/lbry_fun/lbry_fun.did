@@ -82,7 +82,6 @@ type ReconciliationStatus = record {
   operational_balance_suspicious : bool;
   canister_id : principal;
   total_staked : nat64;
-  uncollected_lp_fees : nat64;
   icp_balance_expected : nat64;
   discrepancy_e8s : int64;
   icp_balance_actual : nat64;
@@ -124,7 +123,6 @@ type SystemReconciliationSummary = record {
   total_uncollected_alex : nat64;
   total_expected_fees : nat64;
   timestamp : nat64;
-  total_uncollected_lp : nat64;
 };
 type TokenDeploymentResult = record { token_id : nat64; message : text };
 type TokenFailureInfo = record {

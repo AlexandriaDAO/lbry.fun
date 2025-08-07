@@ -153,6 +153,19 @@ pub async fn swap(
         "swap",
         &format!("Successfully deposited {} ICP (e8s) into canister", amount_icp)
     );
+    
+    // Add the deposited ICP to the reward pool for distribution
+    REWARD_POOL.with(|p| {
+        let current = p.borrow().get(&()).unwrap_or(0);
+        let new_total = current.saturating_add(amount_icp);
+        p.borrow_mut().insert((), new_total);
+    });
+    register_info_log(
+        caller,
+        "swap",
+        &format!("Added {} ICP (e8s) to reward pool", amount_icp)
+    );
+    
     let icp_rate_in_cents: u64 = get_current_secondary_ratio().ok_or_else(|| 
         ExecutionError::new_with_log(caller, "swap", ExecutionError::StateError(
             "Exchange rate not yet available. Please try again in a few moments.".to_string()
@@ -897,13 +910,13 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
     let alex_portion = total_distribution / 100;  // 1% of distribution
     let lp_portion = total_distribution - alex_portion; // Remainder for exact accounting
     
-    // Update uncollected fees
+    // Update uncollected fees for ALEX stakers (1% of distribution)
     UNCOLLECTED_ALEX_FEES.with(|f| {
         let current = f.borrow().get(&()).unwrap_or(0);
         f.borrow_mut().insert((), current.saturating_add(alex_portion));
     });
     
-    // Distribute lp_portion directly to stakers
+    // The LP portion (99% of distribution) is distributed directly to stakers
     let total_staked = get_total_primary_staked().await?;
     if total_staked > 0 {
         // Collect updates first to avoid borrow checker issues

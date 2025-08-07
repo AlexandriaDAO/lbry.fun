@@ -7,7 +7,6 @@ use crate::{
     CONFIGS,
     LAUNCH_TIME,
     UNCOLLECTED_ALEX_FEES,
-    UNCOLLECTED_LP_FEES,
     REWARD_POOL,
     ReconciliationStatus,
     ALLOWED_DISCREPANCY_E8S,
@@ -183,7 +182,7 @@ pub fn get_launch_status() -> (bool, Option<u64>) {
 pub fn get_uncollected_fees() -> (u64, u64) {
     (
         UNCOLLECTED_ALEX_FEES.with(|f| f.borrow().get(&()).unwrap_or(0)),
-        UNCOLLECTED_LP_FEES.with(|f| f.borrow().get(&()).unwrap_or(0))
+        0  // LP fees are distributed directly to stakers, not accumulated
     )
 }
 
@@ -205,7 +204,6 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
             discrepancy_e8s: 0,
             reward_pool: 0,
             uncollected_alex_fees: 0,
-            uncollected_lp_fees: 0,
             total_staked: 0,
             operational_balance: 0,
             timestamp: ic_cdk::api::time(),
@@ -218,7 +216,6 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
     // 2. Gather all components of expected balance
     let reward_pool = REWARD_POOL.with(|p| p.borrow().get(&()).unwrap_or(0));
     let uncollected_alex = UNCOLLECTED_ALEX_FEES.with(|f| f.borrow().get(&()).unwrap_or(0));
-    let uncollected_lp = UNCOLLECTED_LP_FEES.with(|f| f.borrow().get(&()).unwrap_or(0));
     
     // 3. Calculate total staked (sum of all user stakes)
     let total_staked = STAKES.with(|stakes| {
@@ -229,7 +226,7 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
     
     // 4. Calculate operational balance (for transfers, fees, etc)
     // This is balance not accounted for in other categories
-    let accounted_balance = reward_pool + uncollected_alex + uncollected_lp + total_staked;
+    let accounted_balance = reward_pool + uncollected_alex + total_staked;
     let operational_balance = if actual_balance > accounted_balance {
         actual_balance - accounted_balance
     } else {
@@ -237,7 +234,7 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
     };
     
     // 5. Expected balance includes all components
-    let expected_balance = reward_pool + uncollected_alex + uncollected_lp + total_staked + operational_balance;
+    let expected_balance = reward_pool + uncollected_alex + total_staked + operational_balance;
     
     // 6. Calculate discrepancy (integer arithmetic only)
     let discrepancy = (actual_balance as i64) - (expected_balance as i64);
@@ -256,7 +253,6 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
         discrepancy_e8s: discrepancy,
         reward_pool,
         uncollected_alex_fees: uncollected_alex,
-        uncollected_lp_fees: uncollected_lp,
         total_staked,
         operational_balance,
         timestamp: ic_cdk::api::time(),

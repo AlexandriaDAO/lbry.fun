@@ -180,8 +180,7 @@ const TreasuryTab: React.FC = () => {
               <span className="terminal-label">Pending Collection:</span>
               <span className="terminal-value text-amber-400">
                 {formatE8sToICP(
-                  tokenReconciliation.reconciliation.uncollected_alex_fees + 
-                  tokenReconciliation.reconciliation.uncollected_lp_fees
+                  tokenReconciliation.reconciliation.uncollected_alex_fees
                 )} ICP
               </span>
             </div>
@@ -292,8 +291,7 @@ const TreasuryTab: React.FC = () => {
               <span className="terminal-label">Platform-wide Pending Fees:</span>
               <span className="terminal-value">
                 {formatE8sToICP(
-                  systemReconciliation.total_uncollected_alex + 
-                  systemReconciliation.total_uncollected_lp
+                  systemReconciliation.total_uncollected_alex
                 )} ICP
               </span>
             </div>
