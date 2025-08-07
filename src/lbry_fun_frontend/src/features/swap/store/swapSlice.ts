@@ -288,5 +288,5 @@ const swapSlice = createSlice({
   },
 });
 
-export const { resetOperation, setActiveSwapPool, resetTransactionHistory, setIsLoadingCriticalData, setIsLoadingSecondaryData } = swapSlice.actions;
+export const { resetOperation, setActiveSwapPool, resetTransactionHistory, setIsLoadingCriticalData, setIsLoadingSecondaryData, setRefreshing } = swapSlice.actions;
 export default swapSlice.reducer;

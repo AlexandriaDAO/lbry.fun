@@ -5,6 +5,7 @@ import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swa
 import { _SERVICE as _SERVICESECONDARY } from '../../../../../../ICRC/ICRC.did'
 import AccessGuard from "./AccessGuard";
 import { useAccessState } from "../hooks/useAccessState";
+import { useRefreshableData } from "@/hooks/useRefreshableData";
 
 import { Link } from "react-router-dom";
 import { tradingThunks } from "../thunks/tradingThunks";
@@ -49,6 +50,21 @@ const BurnContent = () => {
             swap.canisterArchivedBal?.canisterUnClaimedIcp || 0
         );
     }, [swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal]);
+    
+    // Fetcher to refresh the underlying data
+    const fetchBurnData = useCallback(async () => {
+        await Promise.all([
+            dispatch(getCanisterBal()),
+            dispatch(getCanisterArchivedBalance())
+        ]);
+    }, [dispatch]);
+    
+    const { isRefreshing: isRefreshingBurn, refresh } = useRefreshableData(
+        'max-burn',
+        fetchBurnData,
+        [swap.secondaryRatio],
+        { autoRefresh: 10000 } // Refresh every 10s since it's critical
+    );
 
     const handleSubmit = useCallback((event?: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
         event?.preventDefault();
@@ -125,6 +141,7 @@ const BurnContent = () => {
             // Refresh balances after successful burn
             if (isAuthenticated && principal) {
                 dispatch(getSecondaryBalance(principal));
+                dispatch(balanceThunks.getPrimaryBalance(principal)); // Also refresh primary balance
                 dispatch(fetchTransactionHistory({ userPrincipal: principal, startIndex: 0 }));
             }
             
@@ -266,7 +283,13 @@ const BurnContent = () => {
                                 
                                 <div className="flex justify-between items-center">
                                     <span className="terminal-label text-xs">Max Burn Allowed:</span>
-                                    <span className="terminal-primary text-xs">{maxBurnAllowed.toFixed(4)} {secondarySymbol}</span>
+                                    <span 
+                                        className={`terminal-primary text-xs cursor-pointer ${isRefreshingBurn ? 'terminal-blink' : ''}`}
+                                        onClick={refresh}
+                                        title="Click to refresh"
+                                    >
+                                        {maxBurnAllowed.toFixed(4)} {secondarySymbol}
+                                    </span>
                                 </div>
                                 
                                 <div className="border-t border-white/10 pt-3">

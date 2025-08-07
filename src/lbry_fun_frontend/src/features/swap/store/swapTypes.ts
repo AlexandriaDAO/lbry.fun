@@ -31,6 +31,18 @@ export interface CanisterArchived {
   canisterUnClaimedIcp: Number;
 }
 
+export interface RefreshingState {
+  balances: boolean;
+  stakingInfo: boolean;
+  burnDetails: boolean;
+}
+
+export interface LastRefreshState {
+  balances: number | null;
+  stakingInfo: number | null;
+  burnDetails: number | null;
+}
+
 export interface SwapState {
   // Core data
   secondaryRatio: string | null;
@@ -72,4 +84,8 @@ export interface SwapState {
   latestDistributionEvent: SerializedDistributionEvent | null;
   distributionLoading: boolean;
   distributionError: string | null;
+  
+  // Refresh state management
+  refreshing: RefreshingState;
+  lastRefresh: LastRefreshState;
 }

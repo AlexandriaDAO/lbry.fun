@@ -5,6 +5,7 @@ import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import AccessGuard from "./AccessGuard";
 import { useAccessState } from "../hooks/useAccessState";
+import { useRefreshableData } from "@/hooks/useRefreshableData";
 
 import { balanceThunks } from "../thunks/balanceThunks";
 import { stakingThunks } from "../thunks/stakingThunks";
@@ -38,8 +39,27 @@ const StakeContent = () => {
     const [amount, setAmount] = useState("0");
     const { notification, showLoading, showSuccess, showError, hide } = useTerminalNotification();
     const [userEstimateReward, setUserEstimatedReward] = useState(0);
-    const [apr, setApr] = useState("0");
-    const [annualizedApr, setAnnualizedApr] = useState("0");
+    
+    // Memoize fetcher for staking info
+    const fetchStaking = useCallback(
+        async () => {
+            // We need to fetch staking info - let me check what thunk to call
+            if (!isAuthenticated || !principal) return;
+            await Promise.all([
+                dispatch(stakingThunks.getStakedInfo(principal)),
+                dispatch(stakingThunks.getAllStakesInfo()),
+                dispatch(stakingThunks.getStakersCount())
+            ]);
+        },
+        [dispatch, principal, isAuthenticated]
+    );
+    
+    const { isRefreshing: isRefreshingStake } = useRefreshableData(
+        'staking-info',
+        fetchStaking,
+        [principal],
+        { autoRefresh: 60000 } // Every minute
+    );
 
     const handleSubmit = useCallback((event: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
@@ -69,23 +89,17 @@ const StakeContent = () => {
     }, [primary.primaryBal, primary.primaryFee]);
 
     useEffect(() => {
-        const estimatedUserRewardIcp = Number(swap.stakeInfo.stakedPrimary) * swap.averageAPY;
-        setUserEstimatedReward(estimatedUserRewardIcp);
-
-        const estimatedRewardIcp = Number(swap.totalStaked) * swap.averageAPY;
-        const stakedUsd = Number(swap.totalStaked) * Number(primary.primaryPriceUsd);
-
-        // Check if `stakedUsd` is valid before dividing
-        if (stakedUsd > 0) {
-            const hourlyAprPercentage = ((estimatedRewardIcp * Number(icpLedger.icpPrice)) / stakedUsd) * 100;
-            const annualAprPercentage = hourlyAprPercentage * 24 * 365; // Convert hourly to annual
-            setApr(hourlyAprPercentage.toFixed(4) + "%");
-            setAnnualizedApr(annualAprPercentage.toFixed(2) + "%");
+        // Calculate estimated user reward based on their stake and APY
+        if (swap.averageAPY && swap.stakeInfo.stakedPrimary && swap.distributionInterval) {
+            const stakedAmount = Number(swap.stakeInfo.stakedPrimary);
+            const apyDecimal = swap.averageAPY / 100; // Convert percentage to decimal
+            const distributionsPerYear = (365 * 24 * 3600) / swap.distributionInterval;
+            const rewardPerDistribution = (stakedAmount * apyDecimal) / distributionsPerYear;
+            setUserEstimatedReward(rewardPerDistribution);
         } else {
-            setApr(''); // Fallback value if division by zero
-            setAnnualizedApr('');
+            setUserEstimatedReward(0);
         }
-    }, [primary.primaryPriceUsd, icpLedger.icpPrice, swap.averageAPY, swap.stakeInfo.stakedPrimary]);
+    }, [swap.averageAPY, swap.stakeInfo.stakedPrimary, swap.distributionInterval]);
 
 
     useEffect(() => {
@@ -103,9 +117,11 @@ const StakeContent = () => {
             showSuccess("SUCCESS", "TRANSACTION SUBMITTED");
             setAmount("0");
             
-            // Refresh balance after successful stake
+            // Refresh balance and staking info after successful stake
             if (isAuthenticated && principal) {
                 dispatch(getPrimaryBalance(principal));
+                dispatch(stakingThunks.getStakedInfo(principal)); // Refresh user's staking info
+                dispatch(stakingThunks.getAllStakesInfo()); // Refresh total staked
             }
             
             // Auto-reset is handled by middleware after 3 seconds
@@ -156,23 +172,39 @@ const StakeContent = () => {
 
                 <div className="terminal-section-minimal">
                     <div className="terminal-row">
-                        <span className="terminal-label">staked:</span>
-                        <span className="terminal-primary">{swap.stakeInfo.stakedPrimary} {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span>
+                        <span className="terminal-label">staked_amount:</span>
+                        <span className="terminal-primary">{swap.stakeInfo.stakedPrimary} {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_symbol}</span>
                     </div>
                     <div className="terminal-row">
-                        <span className="terminal-label">estimated_returns:</span>
-                        <div className="text-right">
-                            <span className="terminal-value">{apr}</span>
-                            <span className="terminal-accent ml-1">[hourly]</span>
-                        </div>
+                        <span className="terminal-label">reward_interval:</span>
+                        <span className="terminal-accent">
+                            {swap.distributionInterval ? 
+                                `[EVERY ${swap.distributionInterval < 3600 ? 
+                                    `${Math.floor(swap.distributionInterval / 60)} MINUTE${Math.floor(swap.distributionInterval / 60) > 1 ? 'S' : ''}` :
+                                    swap.distributionInterval < 86400 ?
+                                    `${Math.floor(swap.distributionInterval / 3600)} HOUR${Math.floor(swap.distributionInterval / 3600) > 1 ? 'S' : ''}` :
+                                    `${Math.floor(swap.distributionInterval / 86400)} DAY${Math.floor(swap.distributionInterval / 86400) > 1 ? 'S' : ''}`
+                                }]` : 
+                                '[LOADING...]'
+                            }
+                        </span>
                     </div>
                     <div className="terminal-row">
-                        <span className="terminal-label">annualized_apr:</span>
-                        <span className="terminal-accent">{annualizedApr}</span>
+                        <span className="terminal-label">current_apy:</span>
+                        <span className="terminal-value">
+                            {swap.averageAPY !== null && swap.averageAPY !== undefined ? 
+                                swap.averageAPY > 1000000 ? 
+                                    `${swap.averageAPY.toExponential(2)}%` : 
+                                    `${swap.averageAPY.toFixed(2)}%` : 
+                                '0.00%'
+                            }
+                        </span>
                     </div>
                     <div className="terminal-row">
                         <span className="terminal-label">total_staked:</span>
-                        <span className="terminal-value">{swap.totalStaked} {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span>
+                        <span className={`terminal-value ${isRefreshingStake ? 'opacity-50' : ''}`}>
+                            {swap.totalStaked} {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_symbol}
+                        </span>
                     </div>
                     <div className="terminal-row">
                         <span className="terminal-label">stakers:</span>

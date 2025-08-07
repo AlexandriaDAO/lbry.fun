@@ -397,11 +397,8 @@ export const getAverageApy = createAsyncThunk<
     // Calculate APY percentage
     const apy = (annualRewardValueUsd / primaryTokenPriceUsd) * 100;
 
-    // Sanity check - APY shouldn't be unreasonably high
-    if (apy > 10000) { // 10,000% APY seems unrealistic
-      console.warn(`Calculated APY seems too high: ${apy}%, capping at 9999.99%`);
-      return { apy: 9999.99, distributionInterval: distributionIntervalSeconds };
-    }
+    // Don't cap the APY - on test networks with cheap tokens and fast distribution, 
+    // extremely high APYs are actually correct
 
     return { apy: isNaN(apy) ? 0 : apy, distributionInterval: distributionIntervalSeconds };
   } catch (error) {

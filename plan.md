@@ -1,8 +1,73 @@
-- Start testing in full, ensuring the 1% actually goes back to buying and burning lbry, and the system conserves all ICP.
+Refresh states prompt:
 
-- started with 1000 icp.
-  - 5 icp to launch
-  - 
+
+I want to he able to refresh my icp balance at the top: 
+```
+[CONNECTED]951.7645 ICP
+```
+
+I'm already able to refresh my wallet assets which is nice, but I want the button to look better. Right now it just spins on hover but doesn't actually indicate when it's clicked or when it has been put into effect or when it's loading or when it finished the refresh. All those subtlties of a nice refresh button would be really helpful here: 
+```
+> wallet_assets
+icp_balance:
+951.7645[$3807.0580]
+asdf:
+0.0000[$0.0000]
+fdsa:
+99899.9999[$999.0000]
+```
+
+We should be able to refresh the max_burn_allowed here in this UI component: 
+```
+Burn Details
+Network Fee:0.0001 FDSA
+Max Burn Allowed:86352.4000 FDSA
+Exchange Rate:1 FDSA = 0.1050 ASDF
+ICP Return Rate:1000.0000 FDSA = 0.5 ICP
+```
+
+And it should be here for all the staking info, or at least the amount pending. And : 
+>> stake_interface
+staked_amount:10.4998 ASDF
+reward_interval:[EVERY 1 HOUR]
+current_apy:0.00%
+total_staked:10.4998 ASDF
+stakers:1
+
+Same thing with this area in staking terminal.
+```
+staked_amount:10 ASDF
+reward_interval:[EVERY 1 HOUR]
+current_apy:0.00%0
+total_staked:10.4998 ASDF
+stakers:1
+```
+
+
+
+The thing is I don't want to make messy and wordy state management. I still want to keep an architecture that's as clean and robust as possible, and I don't know the best way to go about making these update without adding so much code. Ideally it stays as a neat and clean replacement to existing state management but I don't know how practical it is.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

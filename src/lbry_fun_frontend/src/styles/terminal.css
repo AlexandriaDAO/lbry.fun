@@ -39,12 +39,17 @@
   }
 }
 
-/* Terminal Effect Classes */
-.terminal-blink {
-  animation: blink 1s infinite;
+@keyframes terminal-refresh-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
-.terminal-blink::after {
+/* Terminal Effect Classes */
+.terminal-blink {
+  animation: terminal-refresh-blink 1s infinite;
+}
+
+.terminal-cursor-blink::after {
   content: '_';
   animation: blink 1s infinite;
 }

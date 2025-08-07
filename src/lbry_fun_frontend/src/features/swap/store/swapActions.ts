@@ -60,7 +60,19 @@ export const initialState: SwapState = {
   distributionEvents: [],
   latestDistributionEvent: null,
   distributionLoading: false,
-  distributionError: null
+  distributionError: null,
+  
+  // Refresh state management
+  refreshing: {
+    balances: false,
+    stakingInfo: false,
+    burnDetails: false,
+  },
+  lastRefresh: {
+    balances: null,
+    stakingInfo: null,
+    burnDetails: null,
+  }
 };
 
 // Action creators
@@ -68,6 +80,13 @@ export const swapActions = {
   resetOperation: (state: SwapState, action: PayloadAction<keyof OperationStates>) => {
     state.operations[action.payload] = 'idle';
     state.operationErrors[action.payload] = undefined;
+  },
+  
+  setRefreshing: (state: SwapState, action: PayloadAction<{ key: keyof SwapState['refreshing']; value: boolean }>) => {
+    state.refreshing[action.payload.key] = action.payload.value;
+    if (!action.payload.value) {
+      state.lastRefresh[action.payload.key] = Date.now();
+    }
   },
   
   setIsLoadingCriticalData: (state: SwapState, action: PayloadAction<boolean>) => {

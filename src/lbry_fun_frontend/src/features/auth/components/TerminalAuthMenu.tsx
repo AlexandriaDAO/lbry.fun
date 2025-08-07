@@ -1,19 +1,36 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
+import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useLogout } from '@/hooks/useLogout';
 import CopyHelper from '@/features/swap/components/CopyHelper';
 import { TerminalAuthModal } from './TerminalAuthModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPowerOff, faWallet } from '@fortawesome/free-solid-svg-icons';
 import { useIcpBalance } from '@/hooks/useIcpBalance';
+import { useRefreshableData } from '@/hooks/useRefreshableData';
+import getIcpBal from '@/features/icp-ledger/thunks/getIcpBal';
 
 const TerminalAuthMenu: React.FC = () => {
   const logout = useLogout();
+  const dispatch = useAppDispatch();
   const [showAuthModal, setShowAuthModal] = React.useState(false);
   
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const principal = useAppSelector((state) => state.auth.principal);
   const { balance } = useIcpBalance();
+  
+  // Memoize fetcher to prevent recreating every render
+  const fetchBalance = useCallback(
+    () => dispatch(getIcpBal(principal!)),
+    [dispatch, principal]
+  );
+  
+  const { isRefreshing, refresh } = useRefreshableData(
+    'icp-balance',
+    fetchBalance,
+    [principal],
+    { autoRefresh: 30000 } // Auto-refresh every 30s
+  );
 
   const formatPrincipal = (p: string | null) => {
     if (!p) return 'unknown';
@@ -41,7 +58,13 @@ const TerminalAuthMenu: React.FC = () => {
   return (
     <div className="flex items-center gap-4">
       <span className="terminal-status-live">[CONNECTED]</span>
-      <span className="terminal-primary">{balance || "0.00"} ICP</span>
+      <span 
+        className={`terminal-primary cursor-pointer ${isRefreshing ? 'opacity-50' : ''}`}
+        onClick={refresh}
+        title="Click to refresh"
+      >
+        {balance || "0.00"} ICP
+      </span>
       <div className="flex items-center gap-2">
         <span className="hex-address">{formatPrincipal(principal)}</span>
         {principal && <CopyHelper account={principal} />}

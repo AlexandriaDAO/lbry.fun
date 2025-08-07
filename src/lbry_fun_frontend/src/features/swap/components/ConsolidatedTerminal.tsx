@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import getIcpBal from "@/features/icp-ledger/thunks/getIcpBal";
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { RootState } from "@/store";
 import { balanceThunks } from "../thunks/balanceThunks";
 import { TerminalExpander } from "./TerminalExpander";
+import { useRefreshableData } from "@/hooks/useRefreshableData";
 
 // Destructure for easier access
 const { getPrimaryBalance, getSecondaryBalance } = balanceThunks;
@@ -33,13 +34,21 @@ const ConsolidatedTerminal: React.FC = () => {
     const [formattedPrincipal, setFormattedPrincipal] = useState("");
     const [formattedAccountId, setFormattedAccountId] = useState("");
 
-    const handleRefresh = () => {
+    // Memoize the batch fetcher
+    const fetchAllBalances = useCallback(async () => {
         if (!isAuthenticated || !principal) return;
-        dispatch(getIcpBal(principal));
-        dispatch(getPrimaryBalance(principal));
-        dispatch(getSecondaryBalance(principal));
-        toast.info("[REFRESHING] BALANCE UPDATE IN PROGRESS")
-    }
+        await Promise.all([
+            dispatch(getIcpBal(principal)),
+            dispatch(getPrimaryBalance(principal)),
+            dispatch(getSecondaryBalance(principal))
+        ]);
+    }, [dispatch, principal, isAuthenticated]);
+    
+    const { refresh: refreshAll, isRefreshing } = useRefreshableData(
+        'wallet-assets',
+        fetchAllBalances,
+        [principal]
+    );
 
     useEffect(() => {
         if (isAuthenticated && principal) {
@@ -156,8 +165,13 @@ const ConsolidatedTerminal: React.FC = () => {
                         <FontAwesomeIcon 
                             role="button" 
                             icon={faRotate} 
-                            onClick={handleRefresh} 
-                            className="text-pink-500 hover:text-pink-400 cursor-pointer text-xs hover:animate-spin"
+                            onClick={refreshAll} 
+                            className={`cursor-pointer text-xs transition-all ${
+                                isRefreshing 
+                                    ? 'animate-spin text-cyan-400' 
+                                    : 'text-pink-500 hover:text-pink-400 hover:rotate-180'
+                            }`}
+                            title={isRefreshing ? 'Refreshing...' : 'Click to refresh'}
                         />
                     </div>
                     
