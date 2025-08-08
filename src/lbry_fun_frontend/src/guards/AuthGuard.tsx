@@ -11,6 +11,7 @@ import {
 	setAuthLoading, 
 	setAuthInitialized 
 } from "@/features/auth/authSlice";
+import { clearAuthCaches } from "@/features/auth/utils/authUtils";
 
 const AuthGuard = () => {
 	const { 
@@ -49,9 +50,12 @@ const AuthGuard = () => {
 			}
 			
 			if (isActuallyAuthenticated) {
+				// Clear caches to ensure actors are recreated with new identity
+				clearAuthCaches();
 				dispatch(setAuthSuccess(principalIdFromII!)); 
 			} else {
 				dispatch(clearAuth()); 
+				clearAuthCaches();
 			}
 			dispatch(setAuthInitialized(true));
 			
@@ -63,11 +67,14 @@ const AuthGuard = () => {
 		} else {
 			if (isActuallyAuthenticated) {
 				if (!isAuthenticated || principal !== principalIdFromII) {
+					// Clear caches when principal changes to ensure fresh actors
+					clearAuthCaches();
 					dispatch(setAuthSuccess(principalIdFromII!));
 				}
 			} else { 
 				if (isAuthenticated) {
 					dispatch(clearAuth());
+					clearAuthCaches();
 				}
 			}
 			

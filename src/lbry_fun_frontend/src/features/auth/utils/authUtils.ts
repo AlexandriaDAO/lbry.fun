@@ -100,9 +100,12 @@ const wrapActorWithErrorHandler = <T>(actor: T): T => {
 
 const getActor = async <T>(
   canisterId: string,
-  createActorFn: (canisterId: string, options: { agent: HttpAgent }) => T,
-  defaultActor: T
+  createActorFn: (canisterId: string, options: { agent: HttpAgent }) => T
 ): Promise<T> => {
+  if (!canisterId) {
+    throw new Error("[authUtils.getActor] Canister ID cannot be null or empty.");
+  }
+
   try {
     const client = await getAuthClient();
     const isAuthenticated = await client.isAuthenticated();
@@ -116,49 +119,46 @@ const getActor = async <T>(
       return actorCache.get(actorCacheKey) as T;
     }
 
-    if (isAuthenticated) {
-      const identity = client.getIdentity();
-      
-      // Check agent cache
-      let agent: HttpAgent;
-      const agentCacheKey = principalString;
-      
-      if (agentCache.has(agentCacheKey)) {
-        agent = agentCache.get(agentCacheKey)!;
-      } else {
-        agent = await HttpAgent.create({
-          identity,
-          host: isLocalDevelopment
-            ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943` // Local development URL - hardcoded II canister ID
-            : "https://identity.ic0.app",
-        });
-        
-        agentCache.set(agentCacheKey, agent);
+    let agent: HttpAgent;
+    const agentCacheKey = principalString;
+    
+    if (agentCache.has(agentCacheKey)) {
+      agent = agentCache.get(agentCacheKey)!;
+    } else {
+      const agentOptions: { identity?: Identity; host?: string } = {};
+      agentOptions.host = isLocalDevelopment
+        ? `http://localhost:4943`
+        : "https://ic0.app";
 
-        // Fetch root key for certificate validation during development
-        // dangerous on mainnet
-        if (isLocalDevelopment && !agentsFetchedRootKey.has(agent)) {
-          await agent.fetchRootKey().catch((err) => {
-            console.warn(
-              "Unable to fetch root key. Check to ensure that your local replica is running"
-            );
-            console.error(err);
-          });
-          agentsFetchedRootKey.add(agent);
-        }
+      if (isAuthenticated) {
+        agentOptions.identity = client.getIdentity();
       }
-
-      const actor = createActorFn(canisterId, { agent });
-      const wrappedActor = wrapActorWithErrorHandler(actor);
       
-      // Cache the actor
-      actorCache.set(actorCacheKey, wrappedActor);
-      return wrappedActor;
+      agent = new HttpAgent(agentOptions);
+      agentCache.set(agentCacheKey, agent);
+
+      // Fetch root key for new agent if in development
+      if (isLocalDevelopment && !agentsFetchedRootKey.has(agent)) {
+        await agent.fetchRootKey().catch((err) => {
+          console.warn(
+            "Unable to fetch root key. Check to ensure that your local replica is running"
+          );
+          console.error(err);
+        });
+        agentsFetchedRootKey.add(agent);
+      }
     }
+
+    const actor = createActorFn(canisterId, { agent });
+    const wrappedActor = wrapActorWithErrorHandler(actor);
+    
+    // Cache the actor
+    actorCache.set(actorCacheKey, wrappedActor);
+    return wrappedActor;
   } catch (error) {
-    console.error(`Error initializing actor for ${canisterId}:`, error);
+    console.error(`[authUtils.getActor] Error initializing actor for ${canisterId}:`, error);
+    throw error; // Rethrow so the caller knows something went wrong
   }
-  return defaultActor;
 };
 
 
@@ -213,7 +213,7 @@ export const getActorSwap = async (canisterId:string) => {
 };
 
 export const getIcpLedgerActor = () =>
-  getActor(icp_ledger_canister_id, createActorIcpLedger, icp_ledger_canister);
+  getActor(icp_ledger_canister_id, createActorIcpLedger);
 
 export const getTokenomicsActor = async (canisterId:string) => {
   // Use the same caching pattern as getActor
@@ -314,14 +314,14 @@ export const getICRCActor = async (canisterId:string) => {
 };
 
 
-export const getLogs = () => getActor(log_canister_id, createActorLogs, logs);
+export const getLogs = () => getActor(log_canister_id, createActorLogs);
 export const getLbryFunActor = () => {
   if (!lbry_fun_canister_id) {
     console.error("CANISTER_ID_LBRY_FUN is not defined in environment variables");
   } else {
     console.log("Using LBRY_FUN canister ID:", lbry_fun_canister_id);
   }
-  return getActor(lbry_fun_canister_id, createActorLbryFun, lbry_fun);
+  return getActor(lbry_fun_canister_id, createActorLbryFun);
 };
 
 // Helper function to check if user is authenticated

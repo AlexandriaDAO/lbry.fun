@@ -113,62 +113,110 @@ if [ ! -z "$ICP_SWAP" ] && [ "$ICP_SWAP" != "not-deployed" ]; then
     
     # Get detailed stake information
     echo ""
-    echo -e "  ${YELLOW}--- Per-Staker Breakdown ---${NC}"
+    echo -e "  ${YELLOW}--- Staking Details ---${NC}"
+    
+    # Get all stakes from the canister
     stakes_raw=$(dfx canister call $ICP_SWAP get_all_stakes 2>/dev/null)
     
-    # Parse stakes to show staked amounts and unclaimed rewards
+    # Initialize totals
     total_staked_amount=0
     total_unclaimed_rewards=0
     
-    # Extract staked amounts and rewards from the response
-    # This is a simplified parser - in production you'd want proper JSON parsing
-    staked_amounts=$(echo "$stakes_raw" | grep -oE '"amount": "[0-9]+"' | grep -oE '[0-9]+')
-    reward_amounts=$(echo "$stakes_raw" | grep -oE '"reward_icp": "[0-9]+"' | grep -oE '[0-9]+')
-    
-    if [ ! -z "$staked_amounts" ]; then
-        for amount in $staked_amounts; do
-            total_staked_amount=$((total_staked_amount + amount))
-        done
+    # Check if we have any stakes
+    if echo "$stakes_raw" | grep -q "record"; then
+        # Count number of stakers
+        num_stakers=$(echo "$stakes_raw" | grep -c "principal")
+        echo -e "  ${GREEN}Active Stakers:${NC} $num_stakers"
+        echo ""
+        
+        # Get each principal's stake individually to avoid parsing issues
+        # First, extract just the principals from the all_stakes response
+        principals=$(echo "$stakes_raw" | grep -oE 'principal "[^"]+"' | cut -d'"' -f2)
+        
+        if [ ! -z "$principals" ]; then
+            for principal in $principals; do
+                # Get the stake info for this specific principal
+                stake_info=$(dfx canister call $ICP_SWAP get_stake "(principal \"$principal\")" 2>/dev/null)
+                
+                # Check if stake exists (not empty opt)
+                if echo "$stake_info" | grep -q "opt record"; then
+                    # Parse the three fields from the record
+                    # Format: opt record { field1 = timestamp : nat64; field2 = reward : nat; field3 = amount : nat64; }
+                    # The order of fields may vary, so we look for specific patterns
+                    
+                    # Find the stake amount (last nat64 field typically)
+                    amount=$(echo "$stake_info" | sed 's/;/\n/g' | grep 'nat64' | tail -1 | grep -oE '[0-9_]+' | head -1 | tr -d '_')
+                    
+                    # Find the reward (nat field, not nat64)
+                    reward=$(echo "$stake_info" | sed 's/;/\n/g' | grep 'nat[^6]' | grep -oE '[0-9_]+' | head -1 | tr -d '_')
+                    
+                    # Skip if we couldn't parse the values
+                    if [ -z "$amount" ]; then amount=0; fi
+                    if [ -z "$reward" ]; then reward=0; fi
+                    
+                    # Convert to ICP/tokens for display using bc (handles large numbers)
+                    amount_tokens=$(echo "scale=4; $amount / 100000000" | bc 2>/dev/null || echo "0")
+                    reward_icp=$(echo "scale=8; $reward / 100000000" | bc 2>/dev/null || echo "0")
+                    
+                    # Add to totals using bc for large number arithmetic
+                    total_staked_amount=$(echo "$total_staked_amount + $amount" | bc 2>/dev/null || echo "$total_staked_amount")
+                    total_unclaimed_rewards=$(echo "$total_unclaimed_rewards + $reward" | bc 2>/dev/null || echo "$total_unclaimed_rewards")
+                    
+                    # Display individual staker info (only if they have a stake or reward)
+                    if [ "$amount" != "0" ] || [ "$reward" != "0" ]; then
+                        # Truncate principal for display
+                        short_principal=$(echo "$principal" | cut -c1-5)...$(echo "$principal" | rev | cut -c1-3 | rev)
+                        echo -e "  ${BLUE}Staker $short_principal:${NC}"
+                        echo -e "    Staked: $amount_tokens primary tokens"
+                        echo -e "    Unclaimed Reward: $reward_icp ICP"
+                    fi
+                fi
+            done
+        fi
+        echo ""
+    else
+        echo -e "  ${YELLOW}No active stakes found${NC}"
+        echo ""
     fi
     
-    if [ ! -z "$reward_amounts" ]; then
-        for reward in $reward_amounts; do
-            total_unclaimed_rewards=$((total_unclaimed_rewards + reward))
-        done
-    fi
-    
-    staked_icp=$(echo "scale=8; $total_staked_amount / 100000000" | bc)
+    # Note: total_staked_amount is actually in PRIMARY tokens (not ICP)
+    # So we shouldn't label it as ICP
+    staked_tokens=$(echo "scale=4; $total_staked_amount / 100000000" | bc)
     unclaimed_rewards_icp=$(echo "scale=8; $total_unclaimed_rewards / 100000000" | bc)
     
-    echo -e "  ${GREEN}Total Staked by Users:${NC} $total_staked_amount e8s (${staked_icp} ICP)"
-    echo -e "  ${GREEN}Total Unclaimed Rewards (not yet transferred):${NC} $total_unclaimed_rewards e8s (${unclaimed_rewards_icp} ICP)"
-    echo -e "  ${YELLOW}Note: Unclaimed rewards must be claimed via claim_icp_reward()${NC}"
+    echo -e "  ${YELLOW}--- Totals ---${NC}"
+    echo -e "  ${GREEN}Total Primary Tokens Staked:${NC} ${staked_tokens} tokens"
+    echo -e "  ${GREEN}Total Unclaimed ICP Rewards:${NC} ${unclaimed_rewards_icp} ICP"
+    echo -e "  ${YELLOW}Note: These rewards are claimable via claim_icp_reward()${NC}"
     
     # Calculate operational balance (for transfers, fees, etc)
-    # Operational = Total - (reward_pool + alex_fees + unclaimed_rewards + archived + staked_amounts)
-    operational=$((icp_swap_balance - reward_pool - alex_fees - total_unclaimed_rewards - total_archived - total_staked_amount))
+    # Operational = Total - (reward_pool + alex_fees + unclaimed_rewards + archived)
+    # Note: We don't subtract staked_amounts because those are PRIMARY tokens held by the canister, not ICP
+    operational=$((icp_swap_balance - reward_pool - alex_fees - total_unclaimed_rewards - total_archived))
     operational_icp=$(echo "scale=8; $operational / 100000000" | bc)
     echo ""
     echo -e "  ${GREEN}Operational Balance:${NC} $operational e8s (${operational_icp} ICP)"
     
     echo ""
-    echo -e "  ${BLUE}--- Complete ICP Breakdown ---${NC}"
-    echo -e "  Total in Canister: ${swap_icp} ICP"
-    echo -e "    ├─ User Staked Amounts: ${staked_icp} ICP"
+    echo -e "  ${BLUE}--- ICP Breakdown in Canister ---${NC}"
+    echo -e "  ${GREEN}Total ICP in Canister:${NC} ${swap_icp} ICP"
     echo -e "    ├─ Unclaimed Rewards: ${unclaimed_rewards_icp} ICP"
-    echo -e "    ├─ Reward Pool (pending distribution): ${reward_pool_icp} ICP"
-    echo -e "    ├─ ALEX Fees (uncollected): ${alex_fees_icp} ICP"
-    echo -e "    ├─ Archived Balance (failed transfers): ${total_archived_icp} ICP"
-    echo -e "    └─ Operational (for swaps/fees): ${operational_icp} ICP"
+    echo -e "    ├─ Reward Pool (next distribution): ${reward_pool_icp} ICP"
+    echo -e "    ├─ Platform Fees (1% for LBRY): ${alex_fees_icp} ICP"
+    echo -e "    ├─ Archived (failed transfers): ${total_archived_icp} ICP"
+    echo -e "    └─ Operational (for fees): ${operational_icp} ICP"
+    echo ""
+    echo -e "  ${BLUE}--- Primary Tokens in Canister ---${NC}"
+    echo -e "  ${GREEN}Total Staked:${NC} ${staked_tokens} primary tokens"
     
-    # Verify the breakdown adds up
-    total_accounted=$((reward_pool + alex_fees + total_unclaimed_rewards + total_archived + total_staked_amount + operational))
-    if [ "$total_accounted" -eq "$icp_swap_balance" ]; then
-        echo -e "  ${GREEN}✓ Balance fully reconciled - all ICP accounted for${NC}"
+    # Verify the ICP breakdown adds up (not including staked primary tokens)
+    total_icp_accounted=$((reward_pool + alex_fees + total_unclaimed_rewards + total_archived + operational))
+    if [ "$total_icp_accounted" -eq "$icp_swap_balance" ]; then
+        echo -e "  ${GREEN}✓ ICP Balance reconciled - all ICP accounted for${NC}"
     else
-        difference=$((icp_swap_balance - total_accounted))
+        difference=$((icp_swap_balance - total_icp_accounted))
         diff_icp=$(echo "scale=8; $difference / 100000000" | bc)
-        echo -e "  ${RED}✗ Reconciliation discrepancy: ${diff_icp} ICP${NC}"
+        echo -e "  ${RED}✗ ICP Reconciliation issue: ${diff_icp} ICP unaccounted${NC}"
     fi
     echo ""
 fi
