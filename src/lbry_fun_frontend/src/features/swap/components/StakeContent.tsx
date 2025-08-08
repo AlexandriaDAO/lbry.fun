@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRotate } from "@fortawesome/free-solid-svg-icons";
 
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
@@ -166,8 +168,20 @@ const StakeContent = () => {
                 `}
             </style>
             <div className="terminal-pure">
-                <div className="terminal-header">
-                    <span className="terminal-prompt">&gt;&gt;</span> stake_interface
+                <div className="terminal-header flex justify-between items-center">
+                    <div>
+                        <span className="terminal-prompt">&gt;&gt;</span> stake_interface
+                    </div>
+                    <FontAwesomeIcon 
+                        icon={faRotate}
+                        className={`cursor-pointer text-xs transition-all ${
+                            isRefreshingStake 
+                                ? 'animate-spin text-cyan-400' 
+                                : 'text-pink-500 hover:text-pink-400 hover:rotate-180'
+                        }`}
+                        onClick={() => fetchStaking()}
+                        title={isRefreshingStake ? 'Refreshing...' : 'Refresh staking info'}
+                    />
                 </div>
 
                 <div className="terminal-section-minimal">

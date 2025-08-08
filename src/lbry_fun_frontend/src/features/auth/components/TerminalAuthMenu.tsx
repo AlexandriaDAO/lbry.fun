@@ -5,7 +5,7 @@ import { useLogout } from '@/hooks/useLogout';
 import CopyHelper from '@/features/swap/components/CopyHelper';
 import { TerminalAuthModal } from './TerminalAuthModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPowerOff, faWallet } from '@fortawesome/free-solid-svg-icons';
+import { faPowerOff, faWallet, faRotate } from '@fortawesome/free-solid-svg-icons';
 import { useIcpBalance } from '@/hooks/useIcpBalance';
 import { useRefreshableData } from '@/hooks/useRefreshableData';
 import getIcpBal from '@/features/icp-ledger/thunks/getIcpBal';
@@ -58,13 +58,19 @@ const TerminalAuthMenu: React.FC = () => {
   return (
     <div className="flex items-center gap-4">
       <span className="terminal-status-live">[CONNECTED]</span>
-      <span 
-        className={`terminal-primary cursor-pointer ${isRefreshing ? 'opacity-50' : ''}`}
-        onClick={refresh}
-        title="Click to refresh"
-      >
+      <span className={`terminal-primary ${isRefreshing ? 'opacity-50' : ''}`}>
         {balance || "0.00"} ICP
       </span>
+      <FontAwesomeIcon 
+        icon={faRotate}
+        className={`cursor-pointer text-xs transition-all ${
+          isRefreshing 
+            ? 'animate-spin text-cyan-400' 
+            : 'text-pink-500 hover:text-pink-400 hover:rotate-180'
+        }`}
+        onClick={refresh}
+        title={isRefreshing ? 'Refreshing...' : 'Refresh balance'}
+      />
       <div className="flex items-center gap-2">
         <span className="hex-address">{formatPrincipal(principal)}</span>
         {principal && <CopyHelper account={principal} />}

@@ -940,6 +940,10 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
                 s.borrow_mut().insert(principal, updated_stake);
             }
         });
+        
+        // Update the global unclaimed amount to match the sum of all stake rewards
+        // This ensures sub_to_unclaimed_amount won't underflow when users claim
+        add_to_unclaimed_amount(lp_portion as u128)?;
     }
     
     register_info_log(

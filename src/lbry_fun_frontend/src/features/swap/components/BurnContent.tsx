@@ -13,6 +13,8 @@ import { balanceThunks } from "../thunks/balanceThunks";
 import { analyticsThunks } from "../thunks/analyticsThunks";
 import { resetOperation } from "../store/swapSlice";
 import { LoaderCircle } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRotate } from "@fortawesome/free-solid-svg-icons";
 import getCanisterBal from "@/features/icp-ledger/thunks/getCanisterBal";
 import TerminalNotification from "./TerminalNotification";
 import { useTerminalNotification } from "../hooks/useTerminalNotification";
@@ -274,7 +276,19 @@ const BurnContent = () => {
                     {/* Right Column - Transaction Details */}
                     <div>
                         <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
-                            <h3 className="text-sm font-semibold mb-4">Burn Details</h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-sm font-semibold">Burn Details</h3>
+                                <FontAwesomeIcon 
+                                    icon={faRotate}
+                                    className={`cursor-pointer text-xs transition-all ${
+                                        isRefreshingBurn 
+                                            ? 'animate-spin text-cyan-400' 
+                                            : 'text-pink-500 hover:text-pink-400 hover:rotate-180'
+                                    }`}
+                                    onClick={refresh}
+                                    title={isRefreshingBurn ? 'Refreshing...' : 'Refresh burn details'}
+                                />
+                            </div>
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center">
                                     <span className="terminal-label text-xs">Network Fee:</span>
@@ -283,11 +297,7 @@ const BurnContent = () => {
                                 
                                 <div className="flex justify-between items-center">
                                     <span className="terminal-label text-xs">Max Burn Allowed:</span>
-                                    <span 
-                                        className={`terminal-primary text-xs cursor-pointer ${isRefreshingBurn ? 'terminal-blink' : ''}`}
-                                        onClick={refresh}
-                                        title="Click to refresh"
-                                    >
+                                    <span className={`terminal-primary text-xs ${isRefreshingBurn ? 'terminal-blink' : ''}`}>
                                         {maxBurnAllowed.toFixed(4)} {secondarySymbol}
                                     </span>
                                 </div>

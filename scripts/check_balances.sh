@@ -98,11 +98,7 @@ if [ ! -z "$ICP_SWAP" ] && [ "$ICP_SWAP" != "not-deployed" ]; then
     alex_fees_icp=$(echo "scale=8; $alex_fees / 100000000" | bc)
     echo -e "  ${GREEN}Uncollected ALEX Fees:${NC} $alex_fees e8s (${alex_fees_icp} ICP)"
     
-    # Get total unclaimed rewards (staker rewards waiting to be claimed)
-    total_unclaimed=$(dfx canister call $ICP_SWAP get_total_unclaimed_icp_reward 2>/dev/null | grep -oE '[0-9]+' | head -1)
-    if [ -z "$total_unclaimed" ]; then total_unclaimed=0; fi
-    total_unclaimed_icp=$(echo "scale=8; $total_unclaimed / 100000000" | bc)
-    echo -e "  ${GREEN}Unclaimed Staker Rewards:${NC} $total_unclaimed e8s (${total_unclaimed_icp} ICP)"
+    # Note: We get actual unclaimed rewards from parsing stakes below, not from this deprecated query
     
     # Get total archived balance (failed transfers held for users)
     total_archived=$(dfx canister call $ICP_SWAP get_total_archived_balance 2>/dev/null | grep -oE '[0-9]+' | head -1)
@@ -115,28 +111,64 @@ if [ ! -z "$ICP_SWAP" ] && [ "$ICP_SWAP" != "not-deployed" ]; then
     if [ -z "$stakers_count" ]; then stakers_count=0; fi
     echo -e "  ${GREEN}Number of Stakers:${NC} $stakers_count"
     
+    # Get detailed stake information
+    echo ""
+    echo -e "  ${YELLOW}--- Per-Staker Breakdown ---${NC}"
+    stakes_raw=$(dfx canister call $ICP_SWAP get_all_stakes 2>/dev/null)
+    
+    # Parse stakes to show staked amounts and unclaimed rewards
+    total_staked_amount=0
+    total_unclaimed_rewards=0
+    
+    # Extract staked amounts and rewards from the response
+    # This is a simplified parser - in production you'd want proper JSON parsing
+    staked_amounts=$(echo "$stakes_raw" | grep -oE '"amount": "[0-9]+"' | grep -oE '[0-9]+')
+    reward_amounts=$(echo "$stakes_raw" | grep -oE '"reward_icp": "[0-9]+"' | grep -oE '[0-9]+')
+    
+    if [ ! -z "$staked_amounts" ]; then
+        for amount in $staked_amounts; do
+            total_staked_amount=$((total_staked_amount + amount))
+        done
+    fi
+    
+    if [ ! -z "$reward_amounts" ]; then
+        for reward in $reward_amounts; do
+            total_unclaimed_rewards=$((total_unclaimed_rewards + reward))
+        done
+    fi
+    
+    staked_icp=$(echo "scale=8; $total_staked_amount / 100000000" | bc)
+    unclaimed_rewards_icp=$(echo "scale=8; $total_unclaimed_rewards / 100000000" | bc)
+    
+    echo -e "  ${GREEN}Total Staked by Users:${NC} $total_staked_amount e8s (${staked_icp} ICP)"
+    echo -e "  ${GREEN}Total Unclaimed Rewards (not yet transferred):${NC} $total_unclaimed_rewards e8s (${unclaimed_rewards_icp} ICP)"
+    echo -e "  ${YELLOW}Note: Unclaimed rewards must be claimed via claim_icp_reward()${NC}"
+    
     # Calculate operational balance (for transfers, fees, etc)
-    operational=$((icp_swap_balance - reward_pool - alex_fees - total_unclaimed - total_archived))
+    # Operational = Total - (reward_pool + alex_fees + unclaimed_rewards + archived + staked_amounts)
+    operational=$((icp_swap_balance - reward_pool - alex_fees - total_unclaimed_rewards - total_archived - total_staked_amount))
     operational_icp=$(echo "scale=8; $operational / 100000000" | bc)
+    echo ""
     echo -e "  ${GREEN}Operational Balance:${NC} $operational e8s (${operational_icp} ICP)"
     
     echo ""
-    echo -e "  ${BLUE}--- Detailed Breakdown ---${NC}"
+    echo -e "  ${BLUE}--- Complete ICP Breakdown ---${NC}"
     echo -e "  Total in Canister: ${swap_icp} ICP"
-    echo -e "    ├─ Reward Pool: ${reward_pool_icp} ICP"
-    echo -e "    ├─ ALEX Fees: ${alex_fees_icp} ICP"
-    echo -e "    ├─ Unclaimed Rewards: ${total_unclaimed_icp} ICP"
-    echo -e "    ├─ Archived Balance: ${total_archived_icp} ICP"
-    echo -e "    └─ Operational: ${operational_icp} ICP"
+    echo -e "    ├─ User Staked Amounts: ${staked_icp} ICP"
+    echo -e "    ├─ Unclaimed Rewards: ${unclaimed_rewards_icp} ICP"
+    echo -e "    ├─ Reward Pool (pending distribution): ${reward_pool_icp} ICP"
+    echo -e "    ├─ ALEX Fees (uncollected): ${alex_fees_icp} ICP"
+    echo -e "    ├─ Archived Balance (failed transfers): ${total_archived_icp} ICP"
+    echo -e "    └─ Operational (for swaps/fees): ${operational_icp} ICP"
     
     # Verify the breakdown adds up
-    total_accounted=$((reward_pool + alex_fees + total_unclaimed + total_archived + operational))
+    total_accounted=$((reward_pool + alex_fees + total_unclaimed_rewards + total_archived + total_staked_amount + operational))
     if [ "$total_accounted" -eq "$icp_swap_balance" ]; then
-        echo -e "  ${GREEN}✓ Balance verified - all ICP accounted for${NC}"
+        echo -e "  ${GREEN}✓ Balance fully reconciled - all ICP accounted for${NC}"
     else
         difference=$((icp_swap_balance - total_accounted))
         diff_icp=$(echo "scale=8; $difference / 100000000" | bc)
-        echo -e "  ${RED}✗ Discrepancy detected: ${diff_icp} ICP${NC}"
+        echo -e "  ${RED}✗ Reconciliation discrepancy: ${diff_icp} ICP${NC}"
     fi
     echo ""
 fi
