@@ -5,6 +5,7 @@ import { setActiveDeploymentId } from '@/store/slices/deploymentSlice';
 import { initializeDeployments } from '@/features/token/thunk/deploymentThunks';
 import { clearAuth, setAuthInitialized } from '@/features/auth/authSlice';
 import { useInternetIdentity } from 'ic-use-internet-identity';
+import { clearAuthCaches } from '@/features/auth/utils/authUtils';
 
 const AppInitializer: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -37,6 +38,7 @@ const AppInitializer: React.FC = () => {
     if (uiShowsAuthenticated && !hasValidIdentity) {
       console.warn('[AppInitializer] Session expired - clearing auth state');
       dispatch(clearAuth());
+      clearAuthCaches(); // Clear all cached actors and agents
       // Force page reload to clear any cached actor state
       window.location.reload();
     }
@@ -56,6 +58,7 @@ const AppInitializer: React.FC = () => {
       if (uiShowsAuthenticated && !hasValidIdentity) {
         console.warn('[AppInitializer] Periodic check: Session expired - clearing auth state');
         dispatch(clearAuth());
+        clearAuthCaches(); // Clear all cached actors and agents
       }
     };
     

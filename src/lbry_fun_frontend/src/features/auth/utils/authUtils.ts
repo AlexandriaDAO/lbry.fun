@@ -41,19 +41,30 @@ const log_canister_id = process.env.CANISTER_ID_LOGS!;
 const icp_swap_factory_canister_id = "ggzvv-5qaaa-aaaag-qck7a-cai";
 const lbry_fun_canister_id = process.env.CANISTER_ID_LBRY_FUN!;
 
+// --- Caching Variables ---
+let authClientInstance: AuthClient | null = null;
+const agentCache = new Map<string, HttpAgent>();
+const actorCache = new Map<string, any>();
+const agentsFetchedRootKey = new WeakSet<HttpAgent>();
+// --- End Caching Variables ---
+
 export const getPrincipal = (client: AuthClient): string =>
   client.getIdentity().getPrincipal().toString();
 
 export const getAuthClient = async (): Promise<AuthClient> => {
-  // create new client each time inspired by default react app
-  // https://gitlab.com/kurdy/dfx_base/-/blob/main/src/dfx_base_frontend/src/services/auth.ts?ref_type=heads
+  // Use cached instance if available to maintain consistency with ic-use-internet-identity
+  if (authClientInstance) {
+    return authClientInstance;
+  }
+  authClientInstance = await AuthClient.create();
+  return authClientInstance;
+};
 
-  // reason for creating new client each time is
-  // if the user login has expired it will SPA will not know
-  // as same client's ( isAuthenticated ) will always return true even if user session is expired
-  const authClient = await AuthClient.create();
-
-  return authClient;
+// Clear all caches when logging out or session expires
+export const clearAuthCaches = () => {
+  authClientInstance = null;
+  agentCache.clear();
+  actorCache.clear();
 };
 
 // Helper function to wrap actors with identity expiration handling
@@ -73,6 +84,7 @@ const wrapActorWithErrorHandler = <T>(actor: T): T => {
                 // Clear auth and reload
                 const authClient = await getAuthClient();
                 await authClient.logout();
+                clearAuthCaches();
                 window.location.reload();
               }, 2000);
               throw error;
@@ -93,33 +105,55 @@ const getActor = async <T>(
 ): Promise<T> => {
   try {
     const client = await getAuthClient();
-    if (await client.isAuthenticated()) {
+    const isAuthenticated = await client.isAuthenticated();
+    const principalString = isAuthenticated
+      ? client.getIdentity().getPrincipal().toString()
+      : "ANONYMOUS";
+
+    // Check actor cache first
+    const actorCacheKey = `${canisterId}_${principalString}`;
+    if (actorCache.has(actorCacheKey)) {
+      return actorCache.get(actorCacheKey) as T;
+    }
+
+    if (isAuthenticated) {
       const identity = client.getIdentity();
-
-      const agent = await HttpAgent.create({
-        identity,
-        host: isLocalDevelopment
-          ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943` // Local development URL - hardcoded II canister ID
-          : "https://identity.ic0.app", // Default to mainnet if neither condition is true
-      });
-
-      // Fetch root key for certificate validation during development
-      // dangerous on mainnet
-      if (isLocalDevelopment) {
-        await agent.fetchRootKey().catch((err) => {
-          console.warn(
-            "Unable to fetch root key. Check to ensure that your local replica is running"
-          );
-          console.error(err);
+      
+      // Check agent cache
+      let agent: HttpAgent;
+      const agentCacheKey = principalString;
+      
+      if (agentCache.has(agentCacheKey)) {
+        agent = agentCache.get(agentCacheKey)!;
+      } else {
+        agent = await HttpAgent.create({
+          identity,
+          host: isLocalDevelopment
+            ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943` // Local development URL - hardcoded II canister ID
+            : "https://identity.ic0.app",
         });
+        
+        agentCache.set(agentCacheKey, agent);
+
+        // Fetch root key for certificate validation during development
+        // dangerous on mainnet
+        if (isLocalDevelopment && !agentsFetchedRootKey.has(agent)) {
+          await agent.fetchRootKey().catch((err) => {
+            console.warn(
+              "Unable to fetch root key. Check to ensure that your local replica is running"
+            );
+            console.error(err);
+          });
+          agentsFetchedRootKey.add(agent);
+        }
       }
 
-      const actor = createActorFn(canisterId, {
-        agent,
-      });
-
-      // Wrap actor with error handler
-      return wrapActorWithErrorHandler(actor);
+      const actor = createActorFn(canisterId, { agent });
+      const wrappedActor = wrapActorWithErrorHandler(actor);
+      
+      // Cache the actor
+      actorCache.set(actorCacheKey, wrappedActor);
+      return wrappedActor;
     }
   } catch (error) {
     console.error(`Error initializing actor for ${canisterId}:`, error);
@@ -130,115 +164,153 @@ const getActor = async <T>(
 
 
 export const getActorSwap = async (canisterId:string) => {
-  // For dynamically spawned canisters, always create a new actor
-  // Don't fall back to the template actor which may be undefined
+  // Use the same caching pattern as getActor
   const client = await getAuthClient();
-  if (await client.isAuthenticated()) {
-    const identity = client.getIdentity();
-    const agent = await HttpAgent.create({
-      identity,
-      host: isLocalDevelopment
-        ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943` // hardcoded II canister ID
-        : "https://identity.ic0.app",
-    });
+  const isAuthenticated = await client.isAuthenticated();
+  const principalString = isAuthenticated
+    ? client.getIdentity().getPrincipal().toString()
+    : "ANONYMOUS";
+
+  // Check actor cache first
+  const actorCacheKey = `swap_${canisterId}_${principalString}`;
+  if (actorCache.has(actorCacheKey)) {
+    return actorCache.get(actorCacheKey);
+  }
+
+  let agent: HttpAgent;
+  const agentCacheKey = principalString;
+  
+  if (agentCache.has(agentCacheKey)) {
+    agent = agentCache.get(agentCacheKey)!;
+  } else {
+    const agentOptions: any = {};
+    if (isAuthenticated) {
+      agentOptions.identity = client.getIdentity();
+      agentOptions.host = isLocalDevelopment
+        ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`
+        : "https://identity.ic0.app";
+    } else {
+      agentOptions.host = isLocalDevelopment
+        ? `http://localhost:4943`
+        : "https://ic0.app";
+    }
     
-    if (isLocalDevelopment) {
+    agent = await HttpAgent.create(agentOptions);
+    agentCache.set(agentCacheKey, agent);
+    
+    if (isLocalDevelopment && !agentsFetchedRootKey.has(agent)) {
       await agent.fetchRootKey().catch((err) => {
         console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
         console.error(err);
       });
+      agentsFetchedRootKey.add(agent);
     }
-    
-    return wrapActorWithErrorHandler(createActorSwap(canisterId, { agent }));
   }
   
-  // For unauthenticated access, create actor with anonymous identity
-  const agent = await HttpAgent.create({
-    host: isLocalDevelopment
-      ? `http://localhost:4943`
-      : "https://ic0.app",
-  });
-  
-  if (isLocalDevelopment) {
-    await agent.fetchRootKey().catch(() => {});
-  }
-  
-  return wrapActorWithErrorHandler(createActorSwap(canisterId, { agent }));
+  const actor = wrapActorWithErrorHandler(createActorSwap(canisterId, { agent }));
+  actorCache.set(actorCacheKey, actor);
+  return actor;
 };
 
 export const getIcpLedgerActor = () =>
   getActor(icp_ledger_canister_id, createActorIcpLedger, icp_ledger_canister);
 
 export const getTokenomicsActor = async (canisterId:string) => {
-  // For dynamically spawned canisters, always create a new actor
+  // Use the same caching pattern as getActor
   const client = await getAuthClient();
-  if (await client.isAuthenticated()) {
-    const identity = client.getIdentity();
-    const agent = await HttpAgent.create({
-      identity,
-      host: isLocalDevelopment
-        ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943` // hardcoded II canister ID
-        : "https://identity.ic0.app",
-    });
+  const isAuthenticated = await client.isAuthenticated();
+  const principalString = isAuthenticated
+    ? client.getIdentity().getPrincipal().toString()
+    : "ANONYMOUS";
+
+  // Check actor cache first
+  const actorCacheKey = `tokenomics_${canisterId}_${principalString}`;
+  if (actorCache.has(actorCacheKey)) {
+    return actorCache.get(actorCacheKey);
+  }
+
+  let agent: HttpAgent;
+  const agentCacheKey = principalString;
+  
+  if (agentCache.has(agentCacheKey)) {
+    agent = agentCache.get(agentCacheKey)!;
+  } else {
+    const agentOptions: any = {};
+    if (isAuthenticated) {
+      agentOptions.identity = client.getIdentity();
+      agentOptions.host = isLocalDevelopment
+        ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`
+        : "https://identity.ic0.app";
+    } else {
+      agentOptions.host = isLocalDevelopment
+        ? `http://localhost:4943`
+        : "https://ic0.app";
+    }
     
-    if (isLocalDevelopment) {
+    agent = await HttpAgent.create(agentOptions);
+    agentCache.set(agentCacheKey, agent);
+    
+    if (isLocalDevelopment && !agentsFetchedRootKey.has(agent)) {
       await agent.fetchRootKey().catch((err) => {
         console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
         console.error(err);
       });
+      agentsFetchedRootKey.add(agent);
     }
-    
-    return wrapActorWithErrorHandler(createActorTokenomics(canisterId, { agent }));
   }
   
-  // For unauthenticated access, create actor with anonymous identity
-  const agent = await HttpAgent.create({
-    host: isLocalDevelopment
-      ? `http://localhost:4943`
-      : "https://ic0.app",
-  });
-  
-  if (isLocalDevelopment) {
-    await agent.fetchRootKey().catch(() => {});
-  }
-  
-  return wrapActorWithErrorHandler(createActorTokenomics(canisterId, { agent }));
+  const actor = wrapActorWithErrorHandler(createActorTokenomics(canisterId, { agent }));
+  actorCache.set(actorCacheKey, actor);
+  return actor;
 };
 
 export const getICRCActor = async (canisterId:string) => {
-  // For dynamically spawned canisters, always create a new actor
+  // Use the same caching pattern as getActor
   const client = await getAuthClient();
-  if (await client.isAuthenticated()) {
-    const identity = client.getIdentity();
-    const agent = await HttpAgent.create({
-      identity,
-      host: isLocalDevelopment
-        ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943` // hardcoded II canister ID
-        : "https://identity.ic0.app",
-    });
+  const isAuthenticated = await client.isAuthenticated();
+  const principalString = isAuthenticated
+    ? client.getIdentity().getPrincipal().toString()
+    : "ANONYMOUS";
+
+  // Check actor cache first
+  const actorCacheKey = `icrc_${canisterId}_${principalString}`;
+  if (actorCache.has(actorCacheKey)) {
+    return actorCache.get(actorCacheKey);
+  }
+
+  let agent: HttpAgent;
+  const agentCacheKey = principalString;
+  
+  if (agentCache.has(agentCacheKey)) {
+    agent = agentCache.get(agentCacheKey)!;
+  } else {
+    const agentOptions: any = {};
+    if (isAuthenticated) {
+      agentOptions.identity = client.getIdentity();
+      agentOptions.host = isLocalDevelopment
+        ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`
+        : "https://identity.ic0.app";
+    } else {
+      agentOptions.host = isLocalDevelopment
+        ? `http://localhost:4943`
+        : "https://ic0.app";
+    }
     
-    if (isLocalDevelopment) {
+    agent = await HttpAgent.create(agentOptions);
+    agentCache.set(agentCacheKey, agent);
+    
+    if (isLocalDevelopment && !agentsFetchedRootKey.has(agent)) {
       await agent.fetchRootKey().catch((err) => {
         console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
         console.error(err);
       });
+      agentsFetchedRootKey.add(agent);
     }
-    
-    return wrapActorWithErrorHandler(createActorICRC(canisterId, { agent }));
   }
   
-  // For unauthenticated access, create actor with anonymous identity
-  const agent = await HttpAgent.create({
-    host: isLocalDevelopment
-      ? `http://localhost:4943`
-      : "https://ic0.app",
-  });
-  
-  if (isLocalDevelopment) {
-    await agent.fetchRootKey().catch(() => {});
-  }
-  
-  return wrapActorWithErrorHandler(createActorICRC(canisterId, { agent }));
+  const actor = wrapActorWithErrorHandler(createActorICRC(canisterId, { agent }));
+  actorCache.set(actorCacheKey, actor);
+  return actor;
 };
 
 
