@@ -23,6 +23,7 @@ import { useTerminalNotification } from "../hooks/useTerminalNotification";
 import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
 import { RootState } from "@/store";
 import UnifiedSkeleton from "./UnifiedSkeleton";
+import { formatDistributionInterval } from '../utils/distributionUtils';
 
 const StakeContent = () => {
     const dispatch = useAppDispatch();
@@ -193,12 +194,7 @@ const StakeContent = () => {
                         <span className="terminal-label">reward_interval:</span>
                         <span className="terminal-accent">
                             {swap.distributionInterval ? 
-                                `[EVERY ${swap.distributionInterval < 3600 ? 
-                                    `${Math.floor(swap.distributionInterval / 60)} MINUTE${Math.floor(swap.distributionInterval / 60) > 1 ? 'S' : ''}` :
-                                    swap.distributionInterval < 86400 ?
-                                    `${Math.floor(swap.distributionInterval / 3600)} HOUR${Math.floor(swap.distributionInterval / 3600) > 1 ? 'S' : ''}` :
-                                    `${Math.floor(swap.distributionInterval / 86400)} DAY${Math.floor(swap.distributionInterval / 86400) > 1 ? 'S' : ''}`
-                                }]` : 
+                                `[EVERY ${formatDistributionInterval(swap.distributionInterval)}]` : 
                                 '[LOADING...]'
                             }
                         </span>

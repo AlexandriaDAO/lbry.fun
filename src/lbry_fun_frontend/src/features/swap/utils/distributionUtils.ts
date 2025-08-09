@@ -27,10 +27,55 @@ export const formatLpProvisionStatus = (status: LpProvisionStatus): {
 };
 
 export const getNextDistributionTime = (intervalSeconds: bigint): Date => {
+  // Guard against invalid intervals
+  const interval = Number(intervalSeconds);
+  if (!interval || interval <= 0) {
+    console.error(`Invalid interval for next distribution: ${interval}s, using default`);
+    const defaultInterval = 3600; // 1 hour default
+    const intervalMs = defaultInterval * 1000;
+    const now = Date.now();
+    const nextTime = Math.ceil(now / intervalMs) * intervalMs;
+    return new Date(nextTime);
+  }
+  
   const now = Date.now();
-  const intervalMs = Number(intervalSeconds) * 1000;
+  const intervalMs = interval * 1000;
   const nextTime = Math.ceil(now / intervalMs) * intervalMs;
   return new Date(nextTime);
+};
+
+export const formatDistributionInterval = (seconds: number): string => {
+  // Guard against invalid values
+  if (!seconds || seconds <= 0) {
+    return 'INVALID INTERVAL';
+  }
+  
+  if (seconds < 60) {
+    return `${seconds} SECOND${seconds !== 1 ? 'S' : ''}`;
+  } else if (seconds < 3600) {
+    const minutes = seconds / 60;
+    // Handle partial minutes (e.g., 90 seconds = 1.5 minutes)
+    if (minutes % 1 !== 0 && seconds < 120) {
+      return `${seconds} SECONDS`;
+    }
+    return `${Math.floor(minutes)} MINUTE${Math.floor(minutes) !== 1 ? 'S' : ''}`;
+  } else if (seconds < 86400) {
+    const hours = seconds / 3600;
+    // Handle partial hours (e.g., 5400 seconds = 1.5 hours)
+    if (hours % 1 !== 0) {
+      const decimalHours = hours.toFixed(1);
+      return `${decimalHours} HOURS`;
+    }
+    return `${Math.floor(hours)} HOUR${Math.floor(hours) !== 1 ? 'S' : ''}`;
+  } else {
+    const days = seconds / 86400;
+    // Handle partial days
+    if (days % 1 !== 0) {
+      const decimalDays = days.toFixed(1);
+      return `${decimalDays} DAYS`;
+    }
+    return `${Math.floor(days)} DAY${Math.floor(days) !== 1 ? 'S' : ''}`;
+  }
 };
 
 export const formatTimestamp = (timestamp: bigint): string => {

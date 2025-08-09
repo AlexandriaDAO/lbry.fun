@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAppSelector } from '@/store/hooks/useAppSelector';
 import type { DistributionSummary } from '../../types/distributionTypes';
 import { formatDistributionAmount, formatCountdown, getNextDistributionTime } from '../../utils/distributionUtils';
 
@@ -8,10 +9,12 @@ interface DistributionOverviewProps {
 
 const DistributionOverview: React.FC<DistributionOverviewProps> = ({ summary }) => {
   const [countdown, setCountdown] = useState<string>('--');
+  const distributionInterval = useAppSelector(state => state.swap.distributionInterval);
 
   useEffect(() => {
-    // Assuming 1-hour intervals (3600 seconds)
-    const nextDistTime = getNextDistributionTime(3600n);
+    // Use actual interval from state, fallback to 3600 if not loaded
+    const intervalSeconds = distributionInterval || 3600;
+    const nextDistTime = getNextDistributionTime(BigInt(intervalSeconds));
     
     const updateCountdown = () => {
       setCountdown(formatCountdown(nextDistTime));
@@ -21,7 +24,7 @@ const DistributionOverview: React.FC<DistributionOverviewProps> = ({ summary }) 
     const interval = setInterval(updateCountdown, 1000);
 
     return () => clearInterval(interval);
-  }, [summary.total_cycles]);
+  }, [summary.total_cycles, distributionInterval]);
 
   return (
     <div className="terminal-pure mb-6">

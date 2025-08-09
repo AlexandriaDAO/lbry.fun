@@ -96,7 +96,7 @@ export const getAllLogs = createAsyncThunk(
           totalPrimaryStaked: response.map(log => Number(log[1].total_primary_staked) / E8S),
           stakerCount: response.map(log => Number(log[1].staker_count)),
           apy: null, // Will be null until we have market pricing for true APY calculation
-          hourlyIcpRewards: response.map(log => Number(log[1].apy) / E8S), // Convert from e8s to ICP per token per hour
+          hourlyIcpRewards: response.map(log => Number(log[1].apy) / E8S), // Convert from e8s to ICP per token per distribution interval
         };
         
         return processedData;

@@ -26,15 +26,35 @@ export const getHealthColor = (status: 'healthy' | 'warning' | 'error'): string 
   return colors[status];
 };
 
-export const calculateTimeUntilNextDistribution = (lastDistribution: bigint): string => {
+export const calculateTimeUntilNextDistribution = (
+  lastDistribution: bigint,
+  intervalSeconds: number = 3600
+): string => {
+  // Guard against invalid intervals
+  if (!intervalSeconds || intervalSeconds <= 0) {
+    console.error(`Invalid interval: ${intervalSeconds}s, using default`);
+    intervalSeconds = 3600;
+  }
+  
   const now = Date.now() * 1_000_000; // Convert to nanoseconds
   const timeSinceLastDistribution = now - Number(lastDistribution);
-  const hourInNanos = 60 * 60 * 1_000_000_000;
-  const timeUntilNext = hourInNanos - (timeSinceLastDistribution % hourInNanos);
+  const intervalNanos = intervalSeconds * 1_000_000_000;
+  const timeUntilNext = intervalNanos - (timeSinceLastDistribution % intervalNanos);
   
   const minutes = Math.floor(timeUntilNext / (60 * 1_000_000_000));
-  if (minutes < 60) {
-    return `In ~${minutes} minutes`;
+  const hours = Math.floor(minutes / 60);
+  
+  if (minutes < 1) {
+    return 'Less than 1 minute';
+  } else if (minutes < 60) {
+    return `In ~${minutes} minute${minutes > 1 ? 's' : ''}`;
+  } else if (hours < 24) {
+    const remainingMins = minutes % 60;
+    return remainingMins > 0 
+      ? `In ~${hours}h ${remainingMins}m`
+      : `In ~${hours} hour${hours > 1 ? 's' : ''}`;
+  } else {
+    const days = Math.floor(hours / 24);
+    return `In ~${days} day${days > 1 ? 's' : ''}`;
   }
-  return 'In ~1 hour';
 };

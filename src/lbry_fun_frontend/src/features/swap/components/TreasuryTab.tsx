@@ -33,7 +33,7 @@ interface TreasuryState {
 }
 
 const TreasuryTab: React.FC = () => {
-  const { activeSwapPool } = useAppSelector(state => state.swap);
+  const { activeSwapPool, distributionInterval } = useAppSelector(state => state.swap);
   const [systemReconciliation, setSystemReconciliation] = useState<SystemReconciliationSummary | null>(null);
   const [collectionMetrics, setCollectionMetrics] = useState<CollectionMetrics | null>(null);
   const [tokenHealth, setTokenHealth] = useState<TokenHealthSummary | null>(null);
@@ -265,7 +265,10 @@ const TreasuryTab: React.FC = () => {
             <div className="terminal-row">
               <span className="terminal-label">Next Distribution:</span>
               <span className="terminal-value">
-                {calculateTimeUntilNextDistribution(collectionMetrics.last_successful_collection)}
+                {calculateTimeUntilNextDistribution(
+                  collectionMetrics.last_successful_collection,
+                  distributionInterval || 3600
+                )}
               </span>
             </div>
             {collectionMetrics.failed_collections_24h > 0 && (

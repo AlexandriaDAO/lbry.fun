@@ -944,6 +944,36 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
         // Update the global unclaimed amount to match the sum of all stake rewards
         // This ensures sub_to_unclaimed_amount won't underflow when users claim
         add_to_unclaimed_amount(lp_portion as u128)?;
+        
+        // Track APY for historical data
+        let intervals = get_distribution_interval();
+        let index = intervals % MAX_DAYS;
+        
+        // Calculate ICP reward per primary token for APY tracking
+        let icp_reward_per_primary = ((lp_portion as u128) * SCALING_FACTOR) / (total_staked as u128);
+        
+        APY.with(|apy| {
+            let mut apy_map = apy.borrow_mut();
+            let mut daily_values = apy_map.get(&index).unwrap_or_default();
+            daily_values.values.insert(index, icp_reward_per_primary);
+            apy_map.insert(index, daily_values);
+        });
+        
+        // Increment distribution counter
+        add_to_distribution_intervals(1)?;
+    } else {
+        // Even if no stakers, we still need to track distributions for APY
+        let intervals = get_distribution_interval();
+        let index = intervals % MAX_DAYS;
+        
+        APY.with(|apy| {
+            let mut apy_map = apy.borrow_mut();
+            let mut daily_values = apy_map.get(&index).unwrap_or_default();
+            daily_values.values.insert(index, 0u128); // 0 reward when no stakers
+            apy_map.insert(index, daily_values);
+        });
+        
+        add_to_distribution_intervals(1)?;
     }
     
     register_info_log(

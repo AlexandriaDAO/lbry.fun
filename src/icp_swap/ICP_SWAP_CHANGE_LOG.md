@@ -1,5 +1,23 @@
 # ICP Swap Change Log
 
+## 2025-08-09: Restored APY Tracking in distribute_reward()
+
+### Changes Made:
+1. **update.rs - distribute_reward() function**:
+   - Added APY value tracking that was missing after reward pool refactor
+   - Now stores `icp_reward_per_primary` in the APY map for historical tracking
+   - Increments distribution interval counter with `add_to_distribution_intervals(1)`
+   - Handles both cases: when stakers exist (stores actual rate) and when no stakers (stores 0)
+   - Uses rolling 30-day window (index = intervals % MAX_DAYS)
+
+### Purpose:
+The APY tracking was lost when the distribution system was refactored from ALEX-based to PRIMARY-based rewards with the new reward pool system. This caused `get_all_apy_values()` to return an empty array, breaking APY calculations in the frontend.
+
+### Technical Details:
+- Calculates `icp_reward_per_primary = (lp_portion * SCALING_FACTOR) / total_staked`
+- Stores in APY map at index `intervals % 30` for rolling window
+- Maintains compatibility with frontend APY calculation logic
+
 ## 2025-08-04: Fixed lbry_fun canister ID for token status checks
 
 ### Changes Made:

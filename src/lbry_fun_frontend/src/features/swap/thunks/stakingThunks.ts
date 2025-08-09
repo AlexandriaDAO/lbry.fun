@@ -341,14 +341,13 @@ export const getAverageApy = createAsyncThunk<
       return { apy: 0, distributionInterval: 3600 };
     }
 
-    // Get distribution interval from config - handle edge cases
-    let distributionIntervalSeconds = 3600; // Default to 1 hour
+    // Get distribution interval from config - trust backend values
+    let distributionIntervalSeconds = 3600; // Default only if not provided
     if (config && config.length > 0 && config[0]?.distribution_interval_seconds) {
       distributionIntervalSeconds = Number(config[0].distribution_interval_seconds);
-      // Validate interval is reasonable (between 1 minute and 1 day)
+      // Log unusual values but don't override
       if (distributionIntervalSeconds < 60 || distributionIntervalSeconds > 86400) {
-        console.warn(`Unusual distribution interval: ${distributionIntervalSeconds}s, using default`);
-        distributionIntervalSeconds = 3600;
+        console.info(`Non-standard distribution interval: ${distributionIntervalSeconds}s`);
       }
     }
     

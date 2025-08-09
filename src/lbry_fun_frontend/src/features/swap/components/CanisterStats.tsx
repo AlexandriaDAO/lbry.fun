@@ -81,7 +81,7 @@ const ICP_SWAP_FUNCTIONS: QueryFunction[] = [
   {
     name: 'get_current_staking_reward_percentage',
     label: 'Staking APR Base',
-    description: 'The percentage of the ICP pool distributed hourly to stakers'
+    description: 'The percentage of the ICP pool distributed per interval to stakers'
   },
   {
     name: 'get_all_stakes',
