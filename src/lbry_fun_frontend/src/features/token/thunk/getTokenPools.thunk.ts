@@ -46,6 +46,8 @@ const getTokenPools = createAsyncThunk<
             created_time: record.created_time.toString(),
             launched_at: record.launched_at.toString(),
             launch_delay_seconds: record.launch_delay_seconds.toString(),
+            threshold_multiplier: record.threshold_multiplier,
+            distribution_interval_seconds: record.distribution_interval_seconds.toString(),
             status: record.status,
             isLive: isLive,
           },

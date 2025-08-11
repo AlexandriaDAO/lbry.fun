@@ -22,6 +22,7 @@ const StakedInfo: React.FC<StakedInfoProps> = ({ userEstimateReward }) => {
     const unstakeStatus = useAppSelector((state: RootState) => state.swap.operations.unstake);
     const claimStatus = useAppSelector((state: RootState) => state.swap.operations.claim);
     const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+    const tvlData = useAppSelector((state: RootState) => state.lbryFun.tvlData);
 
     useEffect(() => {
         if(isAuthenticated && principal) dispatch(getStakedInfo(principal));
@@ -29,6 +30,17 @@ const StakedInfo: React.FC<StakedInfoProps> = ({ userEstimateReward }) => {
         dispatch(getAllStakesInfo());
         dispatch(getAverageApy());
     }, [isAuthenticated, principal, dispatch])
+    
+    // Recalculate APY when TVL data becomes available
+    useEffect(() => {
+        if (swap.activeSwapPool && tvlData && Object.keys(tvlData).length > 0) {
+            const poolId = swap.activeSwapPool[0];
+            if (tvlData[poolId]) {
+                // TVL data is now available, recalculate APY
+                dispatch(getAverageApy());
+            }
+        }
+    }, [tvlData, swap.activeSwapPool, dispatch])
     useEffect(() => {
         // Refresh staking info when any staking operation succeeds
         if (stakeStatus === 'success' || unstakeStatus === 'success' || claimStatus === 'success') {

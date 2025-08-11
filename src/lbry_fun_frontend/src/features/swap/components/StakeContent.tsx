@@ -38,11 +38,40 @@ const StakeContent = () => {
     const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
     const primary = useAppSelector((state: RootState) => state.primary);
     const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
+    const lbryFun = useAppSelector((state: RootState) => state.lbryFun);
     const { accessState, countdown, launchTime, isTokenLive } = useAccessState();
 
     const [amount, setAmount] = useState("0");
     const { notification, showLoading, showSuccess, showError, hide } = useTerminalNotification();
     const [userEstimateReward, setUserEstimatedReward] = useState(0);
+    
+    // Calculate token price from pool data
+    const calculateTokenPrice = () => {
+        if (!swap.activeSwapPool) return { priceInIcp: 0, priceInUsd: 0 };
+        
+        const poolId = swap.activeSwapPool[0];
+        const poolData = lbryFun.tvlData[poolId];
+        
+        if (!poolData || !poolData.balance_0 || !poolData.balance_1) {
+            return { priceInIcp: 0, priceInUsd: 0 };
+        }
+        
+        const E8S = 100_000_000;
+        // For ASDF_ICP pools, balance_0 is the primary token, balance_1 is ICP
+        const primaryTokensInPool = Number(poolData.balance_0) / E8S;
+        const icpInPool = Number(poolData.balance_1) / E8S;
+        
+        if (primaryTokensInPool === 0 || icpInPool === 0) {
+            return { priceInIcp: 0, priceInUsd: 0 };
+        }
+        
+        const priceInIcp = icpInPool / primaryTokensInPool;
+        const priceInUsd = priceInIcp * Number(icpLedger.icpPrice);
+        
+        return { priceInIcp, priceInUsd };
+    };
+    
+    const { priceInIcp, priceInUsd } = calculateTokenPrice();
     
     // Memoize fetcher for staking info
     const fetchStaking = useCallback(
@@ -208,6 +237,15 @@ const StakeContent = () => {
                                     `${swap.averageAPY.toFixed(2)}%` : 
                                 '0.00%'
                         }
+                    />
+                    <TerminalRow 
+                        label="token_price" 
+                        value={
+                            priceInUsd > 0 ? 
+                                `$${priceInUsd < 0.01 ? priceInUsd.toExponential(2) : priceInUsd.toFixed(4)}` : 
+                                'NO LIQUIDITY'
+                        }
+                        unit={priceInIcp > 0 ? `(${priceInIcp.toFixed(6)} ICP)` : ''}
                     />
                     <TerminalRow 
                         label="total_staked" 

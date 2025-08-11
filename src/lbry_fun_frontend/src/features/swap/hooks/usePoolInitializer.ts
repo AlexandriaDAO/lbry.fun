@@ -5,6 +5,7 @@ import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { RootState } from '@/store';
 import { setActiveSwapPool } from '../store/swapSlice';
 import getTokenPools from '@/features/token/thunk/getTokenPools.thunk';
+import getPoolsTvl from '@/features/token/thunk/getPoolsTvl.thunk';
 import fetchTokenLogosForPool from '@/features/token/thunk/fetchTokenLogosForPoolThunk';
 import { fetchTokenomicsCurrentState } from '../thunks/tokenomicsThunks';
 
@@ -89,6 +90,9 @@ export const usePoolInitializer = (): UsePoolInitializerReturn => {
         if (poolData.tokenomics_canister_id) {
           dispatch(fetchTokenomicsCurrentState(poolData.tokenomics_canister_id));
         }
+        
+        // Load TVL data for this specific pool
+        dispatch(getPoolsTvl([pool]));
       }
       setPoolInitState(PoolInitState.READY);
     } else if (lbryFunSuccess && tokenPools.length > 0) {

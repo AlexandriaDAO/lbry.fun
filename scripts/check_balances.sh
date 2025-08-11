@@ -12,7 +12,7 @@ NC='\033[0m'
 
 # Configuration
 USER_PRINCIPAL="c5uww-7b3td-uj2rq-53mpf-ujzzj-x3tnd-6ji2t-ahxek-ljrsf-h3loo-hqe"
-ICP_SWAP="5lpoa-qx777-77773-aaacq-cai"
+ICP_SWAP="645cs-bp777-77773-aaaka-cai"
 LBRY_FUN="oni4e-oyaaa-aaaap-qp2pq-cai"
 ICP_LEDGER="ryjl3-tyaaa-aaaaa-aaaba-cai"
 
@@ -111,23 +111,9 @@ fi
 echo ""
 
 echo -e "${BLUE}=========================================${NC}"
-echo -e "${BLUE}         GRAND TOTAL CHECK${NC}"
+echo -e "${BLUE}            SUMMARY${NC}"
 echo -e "${BLUE}=========================================${NC}"
 echo ""
 
-echo -e "Starting ICP:                ${YELLOW}1000.00000000 ICP${NC}"
-echo -e "Current Total (from ledger): ${GREEN}$(printf "%.8f" $ledger_total) ICP${NC}"
-
-# Calculate missing (in E8S for precision)
-missing_e8s=$((100000000000 - ledger_total_e8s))
-missing=$(echo "scale=8; $missing_e8s / 100000000" | bc)
-
-echo ""
-if (( $(echo "$missing_e8s < 10000000" | bc -l) )); then
-    echo -e "${GREEN}✓ All ICP accounted for (within 0.1 ICP)${NC}"
-else
-    echo -e "${YELLOW}Missing: $(printf "%.8f" $missing) ICP${NC}"
-    num_transfers=$(echo "$missing_e8s / 10000" | bc)
-    echo -e "${YELLOW}(likely transfer fees: ~$num_transfers transfers at 0.0001 ICP each)${NC}"
-fi
+echo -e "Total ICP across all accounts: ${GREEN}$(printf "%.8f" $ledger_total) ICP${NC}"
 echo ""

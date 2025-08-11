@@ -1,19 +1,15 @@
 - Duplicate logs stored in ICPSwap for the same init/burn/stake/etc. funcs
 
 
-
+- Add a version number to the launches.
 - Annual APY fix in logs canister.
 - The logs canister isn't getting real lp data from kongswap (and maybe fake data in other graphs)
 
 
-- Definitely going to need to display the price chart.
-- Dynamic price feeds from kongswap.
+- Show 'my holdings'/stakes. Need a scalable plan for this.
+- Display price from ICP SWAP
 - The backend currently accepts any initial parameters without validation. Need to set those.
 
-
-
-// Quick terminal UI grevances from testing things.
-- The swap does not give you proper estimates for secondary tokens
 
 
 
@@ -30,7 +26,7 @@
 
 
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "c5uww-7b3td-uj2rq-53mpf-ujzzj-x3tnd-6ji2t-ahxek-ljrsf-h3loo-hqe"; subaccount = null }; amount = (100_000_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "c5uww-7b3td-uj2rq-53mpf-ujzzj-x3tnd-6ji2t-ahxek-ljrsf-h3loo-hqe"; subaccount = null }; amount = (10_000_000_000_000 : nat) })'
 
 dfx identity use default
 
@@ -80,14 +76,3 @@ NVkSolD-1AJcJ0BMfEASJjIuak3Y6CvDJZ4XOIUbU9g
 93mQRQG7zpvKQj3sUaDlNu_dOWFmb3-vp2Myu8sw03I 09/2022
 QXvFGeh4LaqKQD7pxNOjs48FmFEjSAhhzxgvBairAFc
 bqQgrxMXYFJXTqS5EF_XgmHUYyLNPXUv5Ze_c0RlW18 
-
-
-
-
-
-
-
-
-
-
-

@@ -336,19 +336,24 @@ export const getAverageApy = createAsyncThunk<
       actor.get_config()
     ]);
 
+    console.log('APY Debug - Raw values:', {
+      apyValuesCount: apyValues.length,
+      firstValue: apyValues[0],
+      lastValue: apyValues[apyValues.length - 1],
+      scalingFactor: scalingFactor.toString()
+    });
+
     // If no APY values yet, return 0
     if (apyValues.length === 0) {
       return { apy: 0, distributionInterval: 3600 };
     }
 
-    // Get distribution interval from config - trust backend values
-    let distributionIntervalSeconds = 3600; // Default only if not provided
-    if (config && config.length > 0 && config[0]?.distribution_interval_seconds) {
-      distributionIntervalSeconds = Number(config[0].distribution_interval_seconds);
-      // Log unusual values but don't override
-      if (distributionIntervalSeconds < 60 || distributionIntervalSeconds > 86400) {
-        console.info(`Non-standard distribution interval: ${distributionIntervalSeconds}s`);
-      }
+    // Get distribution interval from TokenRecord (the actual source of truth)
+    const distributionIntervalSeconds = Number(tokenRecord.distribution_interval_seconds);
+    
+    // Log the actual interval being used
+    if (distributionIntervalSeconds < 60 || distributionIntervalSeconds > 86400) {
+      console.info(`Non-standard distribution interval: ${distributionIntervalSeconds}s`);
     }
     
     // Calculate average reward per distribution
@@ -357,6 +362,14 @@ export const getAverageApy = createAsyncThunk<
       BigInt(0)
     );
     const avgRewardPerDistribution = Number(sum) / apyValues.length / Number(scalingFactor);
+    
+    console.log('APY Debug - Calculation:', {
+      sum: sum.toString(),
+      avgRewardPerDistribution,
+      distributionIntervalSeconds,
+      poolId,
+      hasPoolData: !!state.lbryFun.tvlData[poolId]
+    });
 
     // Calculate distributions per year
     const secondsPerYear = 365 * 24 * 3600;
@@ -369,17 +382,19 @@ export const getAverageApy = createAsyncThunk<
     const icpPriceUsd = Number(state.icpLedger.icpPrice) || 10.0; // Default to $10 if not available
 
     // Get pool data for primary token price
-    const poolData = state.token.tvlData[poolId];
+    const poolData = state.lbryFun.tvlData[poolId];
     if (!poolData) {
       // If no pool data, return ICP-based APY without USD conversion
       // This is a rough estimate assuming 1 primary token = 1 ICP
+      console.log('APY Debug - No pool data, using ICP estimate');
       return { apy: (annualIcpPerToken * 100), distributionInterval: distributionIntervalSeconds };
     }
 
     // Calculate primary token price from pool ratio
     const E8S = 100_000_000;
-    const icpInPool = Number(poolData.balance_0) / E8S;
-    const primaryTokensInPool = Number(poolData.balance_1) / E8S;
+    // For TOKEN_ICP pools, balance_0 is the primary token, balance_1 is ICP
+    const primaryTokensInPool = Number(poolData.balance_0) / E8S;
+    const icpInPool = Number(poolData.balance_1) / E8S;
     
     if (primaryTokensInPool === 0 || icpInPool === 0) {
       // No liquidity in pool yet
@@ -395,6 +410,14 @@ export const getAverageApy = createAsyncThunk<
 
     // Calculate APY percentage
     const apy = (annualRewardValueUsd / primaryTokenPriceUsd) * 100;
+    
+    console.log('APY Debug - Final:', {
+      primaryTokenPriceInIcp,
+      primaryTokenPriceUsd,
+      annualRewardValueUsd,
+      apy,
+      isNaN: isNaN(apy)
+    });
 
     // Don't cap the APY - on test networks with cheap tokens and fast distribution, 
     // extremely high APYs are actually correct
