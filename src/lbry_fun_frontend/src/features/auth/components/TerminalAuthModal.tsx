@@ -32,9 +32,9 @@ const TerminalAuthModal: React.FC<TerminalAuthModalProps> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-      <div className="terminal-pure max-w-md w-full mx-4 p-6">
+      <div className="bg-black border border-white/30 font-mono text-sm p-3 max-w-md w-full mx-4 p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="terminal-header">WALLET CONNECTION</h2>
+          <h2 className="font-mono font-bold text-white mb-1 text-sm uppercase">WALLET CONNECTION</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-white"
@@ -49,12 +49,12 @@ const TerminalAuthModal: React.FC<TerminalAuthModalProps> = ({ onClose }) => {
             <p className="mb-4 text-gray-400">Select wallet provider:</p>
             <button
               onClick={handleConnect}
-              className="terminal-button-primary w-full mb-2"
+              className="bg-lime-500 text-black border-0 font-bold hover:bg-lime-400 font-mono text-sm px-4 py-2 w-full w-full mb-2"
             >
               &gt; internet_identity
             </button>
             {error && (
-              <p className="terminal-error mt-2">{error}</p>
+              <p className="text-red-500 font-bold uppercase mt-2">{error}</p>
             )}
           </>
         ) : (

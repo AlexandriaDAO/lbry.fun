@@ -13,17 +13,17 @@ const SwapPageWrapper: React.FC<SwapPageWrapperProps> = ({ children }) => {
   const renderInfoBanner = () => {
     if (accessState === AccessState.UNAUTHENTICATED) {
       return (
-        <div className="terminal-info mb-4">
-          <div className="terminal-header mb-2">
-            <span className="terminal-prompt">&gt;</span> <span className="terminal-status">[info]</span>
+        <div className=" mb-4">
+          <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-2">
+            <span className="text-pink-500">&gt;</span> <span className="text-yellow-400">[info]</span>
           </div>
-          <div className="terminal-row">
-            <span className="terminal-label">mode:</span>
-            <span className="terminal-value">read_only</span>
+          <div className="flex justify-between items-center py-0.5">
+            <span className="text-gray-400 text-xs">mode:</span>
+            <span className="text-white text-sm">read_only</span>
           </div>
-          <div className="terminal-row">
-            <span className="terminal-label">note:</span>
-            <span className="terminal-value">connect_wallet_to_enable_trading</span>
+          <div className="flex justify-between items-center py-0.5">
+            <span className="text-gray-400 text-xs">note:</span>
+            <span className="text-white text-sm">connect_wallet_to_enable_trading</span>
           </div>
         </div>
       );
@@ -37,17 +37,17 @@ const SwapPageWrapper: React.FC<SwapPageWrapperProps> = ({ children }) => {
       };
 
       return (
-        <div className="terminal-warning mb-4">
-          <div className="terminal-header mb-2">
-            <span className="terminal-prompt">&gt;</span> <span className="terminal-status">[launch_pending]</span>
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded p-4 mb-4">
+          <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-2">
+            <span className="text-pink-500">&gt;</span> <span className="text-yellow-400">[launch_pending]</span>
           </div>
-          <div className="terminal-row">
-            <span className="terminal-label">time_remaining:</span>
-            <span className="terminal-primary">{formatCountdown(countdown || 0)}</span>
+          <div className="flex justify-between items-center py-0.5">
+            <span className="text-gray-400 text-xs">time_remaining:</span>
+            <span className="text-lime-500 font-bold text-sm">{formatCountdown(countdown || 0)}</span>
           </div>
-          <div className="terminal-row">
-            <span className="terminal-label">launch_date:</span>
-            <span className="terminal-value">
+          <div className="flex justify-between items-center py-0.5">
+            <span className="text-gray-400 text-xs">launch_date:</span>
+            <span className="text-white text-sm">
               {launchTime.toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',

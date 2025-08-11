@@ -63,6 +63,7 @@ const TerminalCreateToken: React.FC = () => {
     message?: string;
   }>({ type: 'idle' });
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showFullAnalysis, setShowFullAnalysis] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeploymentModal, setShowDeploymentModal] = useState(false);
 
@@ -334,35 +335,35 @@ const TerminalCreateToken: React.FC = () => {
   ];
 
   return (
-    <div className="terminal-form">
+    <div className="bg-black border border-white/30 font-mono text-sm p-4">
       {/* Header */}
-      <div className="terminal-header">
-        <span className="terminal-prompt">&gt;&gt;</span> create_new_token
-        <span className="terminal-status float-right">[FORM MODE]</span>
+      <div className="font-mono font-bold text-white mb-1 text-sm uppercase">
+        <span className="text-pink-500">&gt;&gt;</span> create_new_token
+        <span className="text-gray-400 text-xs float-right">[FORM MODE]</span>
       </div>
 
       {/* How it works */}
-      <details className="terminal-section">
-        <summary className="terminal-command cursor-pointer">
-          <span className="terminal-prompt">&gt;</span> how_it_works
+      <details className="font-mono text-sm mb-4">
+        <summary className="text-white font-mono text-sm py-2 hover:text-pink-500 cursor-pointer transition-colors">
+          <span className="text-pink-500">&gt;</span> how_it_works
         </summary>
-        <div className="p-4 text-xs space-y-2">
+        <div className="pl-4 pt-2 text-xs space-y-2">
           <div>
-            <span className="terminal-label">secondary_tokens:</span>
+            <span className="text-gray-400 text-xs">secondary_tokens:</span>
             <div className="pl-4">
               - mint at fixed rate: $0.01 in ICP
               - burn to create primary tokens + recover 50% ICP
             </div>
           </div>
           <div>
-            <span className="terminal-label">primary_tokens:</span>
+            <span className="text-gray-400 text-xs">primary_tokens:</span>
             <div className="pl-4">
               - no fixed price; created by burning secondary
               - minting difficulty increases each epoch
             </div>
           </div>
           <div>
-            <span className="terminal-label">icp_revenue_flow:</span>
+            <span className="text-gray-400 text-xs">icp_revenue_flow:</span>
             <div className="pl-4">
               - every interval, 1% of ICP pool distributed:
               - 1% to ALEX stakers wallet
@@ -376,11 +377,11 @@ const TerminalCreateToken: React.FC = () => {
 
       <form onSubmit={handleSubmit}>
         {/* Primary and Secondary Token Sections */}
-        <div className="terminal-split">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Primary Token */}
-          <div className="terminal-section">
-            <div className="terminal-section-header">
-              <span className="terminal-prompt">&gt;</span> primary_token_config
+          <div className="font-mono text-sm">
+            <div className="font-mono font-bold text-white mb-3 text-sm uppercase">
+              <span className="text-pink-500">&gt;</span> primary_token_config
             </div>
             
             <TerminalInput
@@ -424,9 +425,9 @@ const TerminalCreateToken: React.FC = () => {
           </div>
 
           {/* Secondary Token */}
-          <div className="terminal-section">
-            <div className="terminal-section-header">
-              <span className="terminal-prompt">&gt;</span> secondary_token_config
+          <div className="font-mono text-sm">
+            <div className="font-mono font-bold text-white mb-3 text-sm uppercase">
+              <span className="text-pink-500">&gt;</span> secondary_token_config
             </div>
             
             <TerminalInput
@@ -467,18 +468,21 @@ const TerminalCreateToken: React.FC = () => {
           </div>
         </div>
 
+        {/* Divider */}
+        <div className="border-t border-white/10 my-6"></div>
+
         {/* Token Parameters */}
-        <div className="terminal-section">
-          <div className="terminal-section-header">
-            <span className="terminal-prompt">&gt;</span> token_parameters
+        <div className="font-mono text-sm">
+          <div className="font-mono font-bold text-white mb-3 text-sm uppercase">
+            <span className="text-pink-500">&gt;</span> token_parameters
           </div>
 
-          <div className="terminal-grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Hard Cap */}
             <div>
               <div className="flex items-center mb-1">
-                <span className="terminal-label">hard_cap</span>
-                <span className="terminal-error ml-1">*</span>
+                <span className="text-gray-400 text-xs">hard_cap</span>
+                <span className="text-red-400 ml-1">*</span>
                 <TooltipIcon 
                   text="The absolute maximum number of Primary Tokens that can ever exist. This includes initial minting and all tokens from the burning schedule."
                 />
@@ -498,7 +502,7 @@ const TerminalCreateToken: React.FC = () => {
                 max={100000000000}
                 step={1000000}
               />
-              <div className="terminal-helper text-xs mt-1 text-gray-500">
+              <div className="text-gray-600 text-xs mt-1 font-mono text-xs mt-1 text-gray-500">
                 = {formatSupplyDisplay(form.primary_max_supply)} tokens
               </div>
             </div>
@@ -506,8 +510,8 @@ const TerminalCreateToken: React.FC = () => {
             {/* Initial Reward per Burn Unit */}
             <div>
               <div className="flex items-center mb-1">
-                <span className="terminal-label">initial_reward_per_burn_unit</span>
-                <span className="terminal-error ml-1">*</span>
+                <span className="text-gray-400 text-xs">initial_reward_per_burn_unit</span>
+                <span className="text-red-400 ml-1">*</span>
                 <TooltipIcon
                   text="The number of Primary Tokens that will be minted when the 'Burn Unit' is met for the first time. This sets the starting rate for the entire minting schedule."
                 />
@@ -535,8 +539,8 @@ const TerminalCreateToken: React.FC = () => {
             {/* Burn Unit */}
             <div>
               <div className="flex items-center mb-1">
-                <span className="terminal-label">burn_unit</span>
-                <span className="terminal-error ml-1">*</span>
+                <span className="text-gray-400 text-xs">burn_unit</span>
+                <span className="text-red-400 ml-1">*</span>
                 <TooltipIcon 
                   text="The amount of Secondary Tokens that need to be burned to complete the FIRST epoch of the Primary Token minting schedule. Subsequent epochs will require more burns."
                 />
@@ -558,15 +562,15 @@ const TerminalCreateToken: React.FC = () => {
                 helperText={form.initial_secondary_burn ? `initial_valuation: $${(parseInt(form.initial_secondary_burn) * 0.005).toLocaleString()} USD` : ''}
               />
               {form.initial_secondary_burn && parseInt(form.initial_secondary_burn) * 0.005 < 5000 && (
-                <div className="terminal-warning">[WARN] Initial valuation below $5,000 threshold - vulnerable to bot attacks</div>
+                <div className="text-yellow-500 text-xs mt-1 font-mono">[WARN] Initial valuation below $5,000 threshold - vulnerable to bot attacks</div>
               )}
             </div>
 
             {/* Halving Step */}
             <div>
               <div className="flex items-center mb-1">
-                <span className="terminal-label">halving_step (%)</span>
-                <span className="terminal-error ml-1">*</span>
+                <span className="text-gray-400 text-xs">halving_step (%)</span>
+                <span className="text-red-400 ml-1">*</span>
                 <TooltipIcon
                   text="The percentage by which the minting reward is multiplied each epoch. A value < 50% causes tokens minted per epoch to decrease (front-loaded). A value > 50% causes tokens minted per epoch to increase (back-loaded)."
                 />
@@ -593,8 +597,8 @@ const TerminalCreateToken: React.FC = () => {
             {/* Threshold Multiplier */}
             <div>
               <div className="flex items-center mb-1">
-                <span className="terminal-label">threshold_multiplier (x)</span>
-                <span className="terminal-error ml-1">*</span>
+                <span className="text-gray-400 text-xs">threshold_multiplier (x)</span>
+                <span className="text-red-400 ml-1">*</span>
                 <TooltipIcon
                   text="The multiplier for burn threshold progression between epochs. 2x means each epoch requires double the burns of the previous. Higher values create faster progression, lower values create slower progression."
                 />
@@ -620,20 +624,22 @@ const TerminalCreateToken: React.FC = () => {
           </div>
 
           {/* Distribution Interval - Advanced */}
-          <div className="mt-4">
+          <div className="mt-6 font-mono">
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-gray-600 text-xs font-mono hover:text-gray-400 transition-colors flex items-center"
+              className="flex items-center justify-between w-full text-left text-xs text-gray-400 hover:text-white transition-colors border-t border-white/10 pt-4"
             >
-              <span className="mr-2">{showAdvanced ? '▼' : '▶'}</span>
-              <span className="terminal-label">advanced_settings</span>
+              <span>
+                <span className="text-pink-500">&gt;</span> advanced_settings
+              </span>
+              <span className="ml-2">{showAdvanced ? '[-]' : '[+]'}</span>
             </button>
             
             {showAdvanced && (
-              <div className="terminal-advanced mt-3">
+              <div className="mt-4 space-y-3">
                 <div className="flex items-center mb-1">
-                  <span className="terminal-label">distribution_interval</span>
+                  <span className="text-gray-400 text-xs">distribution_interval</span>
                   <TooltipIcon
                     text="Controls how often rewards are distributed. Every interval, exactly 1% of the total ICP pool is split: 1% to ALEX stakers wallet, 99% to locked kongswap liquidity. DEFAULT: 1 hour. WARNING: Only change if you understand the implications."
                   />
@@ -644,10 +650,10 @@ const TerminalCreateToken: React.FC = () => {
                   onChange={(v) => updateForm('distribution_interval_seconds', v)}
                   options={distributionIntervalOptions}
                 />
-                <div className="terminal-helper mt-1">[WARN] Advanced setting - Default (1 hour) recommended. Cannot be changed after creation.</div>
+                <div className="text-gray-600 text-xs mt-1 font-mono mt-1">[WARN] Advanced setting - Default (1 hour) recommended. Cannot be changed after creation.</div>
                 
                 <div className="flex items-center mb-1 mt-4">
-                  <span className="terminal-label">launch_delay</span>
+                  <span className="text-gray-400 text-xs">launch_delay</span>
                   <TooltipIcon
                     text="Time delay before trading opens after token creation. During this period, only the creator can view token details. DEFAULT: 24 hours. Min: 1 second, Max: 30 days."
                   />
@@ -658,7 +664,7 @@ const TerminalCreateToken: React.FC = () => {
                   onChange={(v) => updateForm('launch_delay_seconds', v)}
                   options={launchDelayOptions}
                 />
-                <div className="terminal-helper mt-1">[INFO] Trading will be enabled after this delay. Default (24 hours) prevents bot sniping.</div>
+                <div className="text-gray-600 text-xs mt-1 font-mono mt-1">[INFO] Trading will be enabled after this delay. Default (24 hours) prevents bot sniping.</div>
               </div>
             )}
           </div>
@@ -667,16 +673,16 @@ const TerminalCreateToken: React.FC = () => {
         {/* Parameter Validation Warnings */}
         {(form.initial_reward_per_burn_unit && form.primary_max_supply && 
           parseInt(form.initial_reward_per_burn_unit) > (parseInt(form.primary_max_supply) - parseInt(form.tge_allocation || '1')) * 0.1) && (
-          <div className="terminal-warning">
+          <div className="bg-yellow-900/20 border border-yellow-500/30 text-yellow-400 p-3 font-mono text-sm">
             [WARN] High reward exceeds 10% of remaining supply - enables unfair launches where bots can monopolize early epochs. Reduce initial reward to ensure at least 3 meaningful distribution epochs.
           </div>
         )}
 
+        {/* Divider */}
+        <div className="border-t border-white/10 my-6"></div>
+
         {/* Tokenomics Preview */}
-        <div className="terminal-section">
-          <div className="terminal-section-header">
-            <span className="terminal-prompt">&gt;</span> tokenomics_preview
-          </div>
+        <div className="font-mono text-sm">
           <UnifiedTokenomicsGraphsV2
             primaryMaxSupply={form.primary_max_supply}
             tgeAllocation={form.tge_allocation}
@@ -687,9 +693,10 @@ const TerminalCreateToken: React.FC = () => {
           />
         </div>
 
+
         {/* Cost transparency display */}
-        <div className="terminal-info mb-4">
-          <div className="terminal-label">Deployment Cost:</div>
+        <div className="bg-blue-900/20 border border-blue-500/30 text-blue-400 p-3 font-mono text-sm mb-4">
+          <div className="text-gray-400 text-xs">Deployment Cost:</div>
           <div className="text-sm">
             <span>Total: 5.0 ICP</span>
             <span className="ml-4 text-xs text-gray-400">
@@ -699,24 +706,24 @@ const TerminalCreateToken: React.FC = () => {
         </div>
 
         {/* Submit Commands */}
-        <div className="terminal-commands">
+        <div className="flex gap-4">
           <button
             type="submit"
-            className="terminal-command"
+            className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10"
             disabled={Object.keys(errors).length > 0 || status.type === 'loading' || isSubmitting}
           >
             &gt; execute_token_creation
           </button>
           <button
             type="button"
-            className="terminal-command"
+            className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10"
             onClick={() => navigate('/deployments')}
           >
             &gt; view_deployment_history
           </button>
           <button
             type="button"
-            className="terminal-command"
+            className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10"
             onClick={() => dispatch(setActiveTokenView('TokenPools'))}
           >
             &gt; cancel

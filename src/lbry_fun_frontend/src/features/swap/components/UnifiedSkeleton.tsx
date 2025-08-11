@@ -11,9 +11,9 @@ const UnifiedSkeleton: React.FC<UnifiedSkeletonProps> = ({ variant, rows = 3, cl
     // Terminal skeleton variant (replaces TerminalSkeleton)
     if (variant === 'terminal') {
         return (
-            <div className={`terminal-container ${className}`}>
-                <div className="terminal-header mb-6">
-                    <span className="terminal-prompt">&gt;</span> 
+            <div className={`bg-black border border-white/30 font-mono text-sm p-4 ${className}`}>
+                <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-6">
+                    <span className="text-pink-500">&gt;</span> 
                     <span className="animate-pulse">loading_terminal...</span>
                 </div>
                 
@@ -21,7 +21,7 @@ const UnifiedSkeleton: React.FC<UnifiedSkeletonProps> = ({ variant, rows = 3, cl
                     <LoaderCircle className="animate-spin text-primary" size={48} />
                 </div>
                 
-                <div className="terminal-footer mt-6 text-center">
+                <div className=" mt-6 text-center">
                     <span className="text-muted-foreground text-xs">
                         initializing components...
                     </span>
@@ -82,44 +82,44 @@ const UnifiedSkeleton: React.FC<UnifiedSkeletonProps> = ({ variant, rows = 3, cl
     if (variant === 'swap') {
         return (
             <div className={`bg-card border border-border rounded-lg p-6 ${className}`}>
-                <div className="terminal-header mb-6">
-                    <span className="terminal-prompt">&gt;</span> <span className="animate-pulse">loading_interface...</span>
+                <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-6">
+                    <span className="text-pink-500">&gt;</span> <span className="animate-pulse">loading_interface...</span>
                 </div>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Left Column - Swap Form Skeleton */}
                     <div>
                         <div className="mb-6">
-                            <div className="terminal-header mb-3">
-                                <span className="terminal-prompt">&gt;&gt;</span> <span className="animate-pulse">input</span>
+                            <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-3">
+                                <span className="text-pink-500">&gt;&gt;</span> <span className="animate-pulse">input</span>
                             </div>
                             
                             <div className="bg-black border border-white/30 p-4 mb-3 animate-pulse">
                                 <div className="flex justify-between items-center">
-                                    <span className="terminal-label">icp_amount:</span>
+                                    <span className="text-gray-400 text-xs">icp_amount:</span>
                                     <div className="h-4 w-20 bg-gray-700 rounded"></div>
                                 </div>
                             </div>
                             
                             <div className="flex justify-between items-center mb-2">
-                                <span className="terminal-label">balance:</span>
+                                <span className="text-gray-400 text-xs">balance:</span>
                                 <div className="h-4 w-16 bg-gray-700 rounded animate-pulse"></div>
                             </div>
                         </div>
 
                         <div className="mb-6">
-                            <div className="terminal-header mb-3">
-                                <span className="terminal-prompt">&gt;&gt;</span> <span className="animate-pulse">output</span>
+                            <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-3">
+                                <span className="text-pink-500">&gt;&gt;</span> <span className="animate-pulse">output</span>
                             </div>
                             
                             <div className="bg-black border border-white/30 p-4">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="terminal-label">receive:</span>
+                                    <span className="text-gray-400 text-xs">receive:</span>
                                     <div className="h-4 w-24 bg-gray-700 rounded animate-pulse"></div>
                                 </div>
                                 
                                 <div className="flex justify-between items-center">
-                                    <span className="terminal-label">balance:</span>
+                                    <span className="text-gray-400 text-xs">balance:</span>
                                     <div className="h-4 w-20 bg-gray-700 rounded animate-pulse"></div>
                                 </div>
                             </div>
@@ -133,8 +133,8 @@ const UnifiedSkeleton: React.FC<UnifiedSkeletonProps> = ({ variant, rows = 3, cl
                     {/* Right Column - Transaction Details Skeleton */}
                     <div>
                         <div className="bg-black border border-white/30 p-4 animate-pulse">
-                            <div className="terminal-header mb-4">
-                                <span className="terminal-prompt">&gt;&gt;</span> transaction_details
+                            <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-4">
+                                <span className="text-pink-500">&gt;&gt;</span> transaction_details
                             </div>
                             
                             {[1, 2, 3, 4].map((index) => (

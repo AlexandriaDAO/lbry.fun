@@ -99,7 +99,7 @@ const SwapMainConsolidated = () => {
                     </>
                 ) : (
                     <>
-                        <div className="terminal-pure p-4 mb-4">
+                        <div className="bg-black border border-white/30 font-mono text-sm p-3 p-4 mb-4">
                             <ConsolidatedTerminal />
                         </div>
                         <div className="flex flex-col items-center justify-center min-h-[200px]">

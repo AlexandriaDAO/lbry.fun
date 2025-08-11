@@ -24,6 +24,7 @@ import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
 import { RootState } from "@/store";
 import UnifiedSkeleton from "./UnifiedSkeleton";
 import { formatDistributionInterval } from '../utils/distributionUtils';
+// import { TerminalRow, TerminalInput, TerminalButton, TerminalSection } from '@/components/terminal';
 
 const StakeContent = () => {
     const dispatch = useAppDispatch();
@@ -168,115 +169,102 @@ const StakeContent = () => {
                 }
                 `}
             </style>
-            <div className="terminal-pure">
-                <div className="terminal-header flex justify-between items-center">
-                    <div>
-                        <span className="terminal-prompt">&gt;&gt;</span> stake_interface
-                    </div>
-                    <FontAwesomeIcon 
-                        icon={faRotate}
-                        className={`cursor-pointer text-xs transition-all ${
-                            isRefreshingStake 
-                                ? 'animate-spin text-cyan-400' 
-                                : 'text-pink-500 hover:text-pink-400 hover:rotate-180'
-                        }`}
-                        onClick={() => fetchStaking()}
-                        title={isRefreshingStake ? 'Refreshing...' : 'Refresh staking info'}
+            <div className="p-4 space-y-4">
+                {/* Stats section */}
+                <TerminalSection 
+                    title="STAKE_INTERFACE"
+                    rightElement={
+                        <FontAwesomeIcon 
+                            icon={faRotate}
+                            className={`cursor-pointer text-xs transition-all ${
+                                isRefreshingStake 
+                                    ? 'animate-spin text-cyan-400' 
+                                    : 'text-pink-500 hover:text-pink-400 hover:rotate-180'
+                            }`}
+                            onClick={() => fetchStaking()}
+                            title={isRefreshingStake ? 'Refreshing...' : 'Refresh staking info'}
+                        />
+                    }
+                >
+                    <TerminalRow 
+                        label="staked_amount" 
+                        value={swap.stakeInfo.stakedPrimary} 
+                        unit={swap.activeSwapPool?.[1]?.primary_token_symbol}
+                        accent
                     />
-                </div>
-
-                <div className="terminal-section-minimal">
-                    <div className="terminal-row">
-                        <span className="terminal-label">staked_amount:</span>
-                        <span className="terminal-primary">{swap.stakeInfo.stakedPrimary} {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_symbol}</span>
-                    </div>
-                    <div className="terminal-row">
-                        <span className="terminal-label">reward_interval:</span>
-                        <span className="terminal-accent">
-                            {swap.distributionInterval ? 
-                                `[EVERY ${formatDistributionInterval(swap.distributionInterval)}]` : 
-                                '[LOADING...]'
-                            }
-                        </span>
-                    </div>
-                    <div className="terminal-row">
-                        <span className="terminal-label">current_apy:</span>
-                        <span className="terminal-value">
-                            {swap.averageAPY !== null && swap.averageAPY !== undefined ? 
+                    <TerminalRow 
+                        label="reward_interval" 
+                        value={swap.distributionInterval ? 
+                            `[EVERY ${formatDistributionInterval(swap.distributionInterval)}]` : 
+                            '[LOADING...]'
+                        }
+                    />
+                    <TerminalRow 
+                        label="current_apy" 
+                        value={
+                            swap.averageAPY !== null && swap.averageAPY !== undefined ? 
                                 swap.averageAPY > 1000000 ? 
                                     `${swap.averageAPY.toExponential(2)}%` : 
                                     `${swap.averageAPY.toFixed(2)}%` : 
                                 '0.00%'
-                            }
-                        </span>
-                    </div>
-                    <div className="terminal-row">
-                        <span className="terminal-label">total_staked:</span>
-                        <span className={`terminal-value ${isRefreshingStake ? 'opacity-50' : ''}`}>
-                            {swap.totalStaked} {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_symbol}
-                        </span>
-                    </div>
-                    <div className="terminal-row">
-                        <span className="terminal-label">stakers:</span>
-                        <span className="terminal-value">{swap.totalStakers}</span>
-                    </div>
-                </div>
+                        }
+                    />
+                    <TerminalRow 
+                        label="total_staked" 
+                        value={swap.totalStaked} 
+                        unit={swap.activeSwapPool?.[1]?.primary_token_symbol}
+                        accent
+                    />
+                    <TerminalRow 
+                        label="stakers" 
+                        value={swap.totalStakers}
+                    />
+                </TerminalSection>
 
-                <div className="terminal-section mt-4">
-                    <div className="terminal-header mb-2">
-                        <span className="terminal-prompt">&gt;</span> stake_amount
+                {/* Stake amount input */}
+                <TerminalSection title="STAKE_AMOUNT">
+                    <TerminalRow label="amount">
+                        <TerminalInput
+                            type='number'
+                            min={0}
+                            value={amount}
+                            onChange={handleAmountChange}
+                            step="any"
+                            placeholder="0"
+                        />
+                    </TerminalRow>
+                    <div className="mb-4">
+                        <TerminalRow label="available_balance">
+                            <div className="flex items-center gap-2">
+                                <span className="text-white text-sm">{primary.primaryBal || '0.0000'} {swap.activeSwapPool?.[1]?.primary_token_symbol}</span>
+                                <button className='text-gray-600 text-xs hover:text-white' onClick={handleMaxPrimary}>[max]</button>
+                            </div>
+                        </TerminalRow>
                     </div>
-                    <div className="terminal-input-container mb-2">
-                        <div className="terminal-row">
-                            <span className="terminal-label">amount:</span>
-                            <input
-                                className='terminal-input text-right'
-                                type='number'
-                                min={0}
-                                value={amount}
-                                onChange={handleAmountChange}
-                                step="any"
-                                placeholder="0.0000"
-                            />
+
+                    {isAuthenticated ? (
+                        <TerminalButton
+                            primary
+                            disabled={parseFloat(amount) === 0 || stakeStatus === 'pending' || !isTokenLive}
+                            onClick={handleSubmit}
+                            loading={stakeStatus === 'pending'}
+                            title={!isTokenLive ? "Staking will be enabled after the launch period" : ""}
+                        >
+                            {!isTokenLive ? '[STAKING_STARTS_SOON]' : '[STAKE]'}
+                        </TerminalButton>
+                    ) : (
+                        <div className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 w-full flex items-center justify-center">
+                            <TerminalAuthMenu />
                         </div>
+                    )}
+                    <div className="text-xs text-gray-600">
+                        <span className="text-pink-500">*</span>
+                        <span className="ml-1">check redeem page if transaction fails</span>
                     </div>
-                    <div className="terminal-row mb-2">
-                        <span className="terminal-label">available_balance:</span>
-                        <div className="flex items-center">
-                            <span className="terminal-value">{primary.primaryBal || '0'} {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span>
-                            <Link to="" role="button" className='terminal-accent ml-2 hover:text-white' onClick={handleMaxPrimary} >[max]</Link>
-                        </div>
-                    </div>
-                </div>
+                </TerminalSection>
 
-                <div className="terminal-section mt-4">
-                    {isAuthenticated ? <button
-                        type="button"
-                        className={`terminal-button terminal-button-primary w-full mb-2 ${parseFloat(amount) === 0 || stakeStatus === 'pending' || !isTokenLive ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={parseFloat(amount) === 0 || stakeStatus === 'pending' || !isTokenLive}
-                        onClick={handleSubmit}
-                        title={!isTokenLive ? "Staking will be enabled after the launch period" : ""}
-                    >
-                        {stakeStatus === 'pending' ? (<>
-                            <LoaderCircle size={14} className="animate animate-spin mx-auto" /> </>) : !isTokenLive ? (
-                            <>[STAKING_STARTS_SOON]</>
-                        ) : (
-                            <>[STAKE]</>
-                        )}
-                    </button> : <div
-                        className="terminal-button w-full mb-2 flex items-center justify-center"
-                    >
-                        <TerminalAuthMenu />
-                    </div>}
-                    <div className="terminal-row">
-                        <span className="terminal-status text-xs">*</span>
-                        <span className="terminal-accent text-xs">check redeem page if transaction fails</span>
-                    </div>
-                </div>
-
-                <div className="terminal-section mt-4">
-                    <StakedInfo userEstimateReward={userEstimateReward} />
-                </div>
+                {/* User stake info */}
+                <StakedInfo userEstimateReward={userEstimateReward} />
                 <TerminalNotification 
                     type={notification.type}
                     isOpen={notification.isOpen}

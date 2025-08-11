@@ -70,10 +70,10 @@ export const AnalyticsTerminal: React.FC = React.memo(() => {
           ))}
         </div>
 
-        <div className="terminal-divider-single" />
+        <div className="border-b border-white/20 my-3" />
 
         {/* Active View Content */}
-        <div className="terminal-section">
+        <div className="">
           {renderActiveView()}
         </div>
       </div>

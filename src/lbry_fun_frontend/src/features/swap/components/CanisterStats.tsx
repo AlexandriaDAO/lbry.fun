@@ -272,21 +272,21 @@ export const CanisterStats: React.FC<CanisterStatsProps> = ({
         variant="outline"
         scale="sm"
         onClick={() => setIsOpen(true)}
-        className="terminal-button"
+        className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10"
       >
         <FontAwesomeIcon icon={faChartBar} className="mr-2" />
         Get Stats
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="terminal-pure max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="bg-black border border-white/30 font-mono text-sm p-3 max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle className="terminal-header">
-              <span className="terminal-prompt">&gt;</span> {canisterName} QUERY FUNCTIONS
+            <DialogTitle className="font-mono font-bold text-white mb-1 text-sm uppercase">
+              <span className="text-pink-500">&gt;</span> {canisterName} QUERY FUNCTIONS
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto terminal-section p-2">
+          <div className="flex-1 overflow-y-auto border-t border-white/30 mt-2 pt-1 p-2">
             <div className="space-y-2">
               {functions.map((func) => {
                 const result = results[func.name];
@@ -294,7 +294,7 @@ export const CanisterStats: React.FC<CanisterStatsProps> = ({
                 const hasResult = result && !result.loading && result.value !== null;
                 
                 return (
-                  <div key={func.name} className="terminal-info p-4 mb-4">
+                  <div key={func.name} className="bg-black border border-white/30 p-3 font-mono text-sm p-4 mb-4">
                     <div className="grid grid-cols-[1fr,auto] gap-4">
                       <div className="space-y-2">
                         {/* Function Header */}
@@ -323,7 +323,7 @@ export const CanisterStats: React.FC<CanisterStatsProps> = ({
                           scale="sm"
                           onClick={() => queryFunction(func)}
                           disabled={isLoading || (func.requiresAuth && !principal)}
-                          className="terminal-button"
+                          className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10"
                         >
                           <FontAwesomeIcon 
                             icon={isLoading ? faSpinner : faPlay} 

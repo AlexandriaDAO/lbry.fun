@@ -36,13 +36,13 @@ const TokenomicsTab: React.FC = () => {
     // Render states
     if (!poolData) {
         return (
-            <div className="terminal-pure">
-                <div className="terminal-header">
-                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics
+            <div className="bg-black border border-white/30 font-mono text-sm p-3">
+                <div className="font-mono font-bold text-white mb-1 text-sm uppercase">
+                    <span className="text-pink-500">&gt;&gt;</span> tokenomics
                 </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">status:</span>
-                    <span className="terminal-accent">no_active_pool_selected</span>
+                <div className="flex justify-between items-center py-0.5">
+                    <span className="text-gray-400 text-xs">status:</span>
+                    <span className="text-gray-600 text-xs">no_active_pool_selected</span>
                 </div>
             </div>
         );
@@ -50,13 +50,13 @@ const TokenomicsTab: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="terminal-pure">
-                <div className="terminal-header">
-                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics
+            <div className="bg-black border border-white/30 font-mono text-sm p-3">
+                <div className="font-mono font-bold text-white mb-1 text-sm uppercase">
+                    <span className="text-pink-500">&gt;&gt;</span> tokenomics
                 </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">status:</span>
-                    <span className="terminal-primary">loading...</span>
+                <div className="flex justify-between items-center py-0.5">
+                    <span className="text-gray-400 text-xs">status:</span>
+                    <span className="text-lime-500 font-bold text-sm">loading...</span>
                     <LoaderCircle className="w-4 h-4 animate-spin inline-block ml-2" />
                 </div>
             </div>
@@ -65,13 +65,13 @@ const TokenomicsTab: React.FC = () => {
 
     if (error) {
         return (
-            <div className="terminal-pure">
-                <div className="terminal-header">
-                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics
+            <div className="bg-black border border-white/30 font-mono text-sm p-3">
+                <div className="font-mono font-bold text-white mb-1 text-sm uppercase">
+                    <span className="text-pink-500">&gt;&gt;</span> tokenomics
                 </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">error:</span>
-                    <span className="terminal-error">{error}</span>
+                <div className="flex justify-between items-center py-0.5">
+                    <span className="text-gray-400 text-xs">error:</span>
+                    <span className="text-red-400">{error}</span>
                 </div>
             </div>
         );
@@ -79,13 +79,13 @@ const TokenomicsTab: React.FC = () => {
 
     if (!graphData) {
         return (
-            <div className="terminal-pure">
-                <div className="terminal-header">
-                    <span className="terminal-prompt">&gt;&gt;</span> tokenomics
+            <div className="bg-black border border-white/30 font-mono text-sm p-3">
+                <div className="font-mono font-bold text-white mb-1 text-sm uppercase">
+                    <span className="text-pink-500">&gt;&gt;</span> tokenomics
                 </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">status:</span>
-                    <span className="terminal-accent">no_data_available</span>
+                <div className="flex justify-between items-center py-0.5">
+                    <span className="text-gray-400 text-xs">status:</span>
+                    <span className="text-gray-600 text-xs">no_data_available</span>
                 </div>
             </div>
         );
@@ -185,14 +185,14 @@ const TokenomicsTab: React.FC = () => {
             </div>
             
             {/* Copy Graph Data Button */}
-            <div className="terminal-section bg-black border border-white/30 p-3 font-mono mt-8">
-                <div className="terminal-row justify-end">
+            <div className=" bg-black border border-white/30 p-3 font-mono mt-8">
+                <div className="flex justify-between items-center py-0.5 justify-end">
                     <button 
                         type="button"
                         onClick={copyToClipboard}
-                        className="terminal-button text-xs hover:bg-white/10 px-3 py-1 border border-white/30"
+                        className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 text-xs hover:bg-white/10 px-3 py-1 border border-white/30"
                     >
-                        <span className="terminal-prompt">&gt;</span> {copySuccess ? 'copied_to_clipboard' : 'copy_graph_data'}
+                        <span className="text-pink-500">&gt;</span> {copySuccess ? 'copied_to_clipboard' : 'copy_graph_data'}
                     </button>
                 </div>
             </div>

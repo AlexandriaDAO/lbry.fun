@@ -133,10 +133,10 @@ const TreasuryTab: React.FC = () => {
 
   if (error && !Object.values(dataLoadStatus).some(v => v)) {
     return (
-      <div className="terminal-section">
-        <div className="terminal-status text-red-400">[ERROR]</div>
+      <div className="border-t border-white/30 mt-2 pt-1">
+        <div className="text-pink-500 text-xs uppercase text-red-400">[ERROR]</div>
         <p className="mt-2 text-gray-400">{error}</p>
-        <button onClick={handleRefresh} className="mt-4 terminal-button">
+        <button onClick={handleRefresh} className="mt-4 bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10">
           Retry
         </button>
       </div>
@@ -150,7 +150,7 @@ const TreasuryTab: React.FC = () => {
         <button
           onClick={handleRefresh}
           disabled={!canRefresh}
-          className={`terminal-button flex items-center gap-2 ${!canRefresh ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 flex items-center gap-2 ${!canRefresh ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
           Refresh
@@ -159,35 +159,35 @@ const TreasuryTab: React.FC = () => {
 
       {/* Token Treasury - Priority 1 */}
       {dataLoadStatus.token && tokenReconciliation && (
-        <div className="terminal-section">
-          <div className="terminal-header mb-3">
-            <span className="terminal-prompt">&gt;&gt;</span> TOKEN TREASURY
+        <div className="border-t border-white/30 mt-2 pt-1">
+          <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-3">
+            <span className="text-pink-500">&gt;&gt;</span> TOKEN TREASURY
           </div>
           <div className="space-y-2">
-            <div className="terminal-row">
-              <span className="terminal-label">Reward Pool (Awaiting Distribution):</span>
-              <span className="terminal-value text-lime-400">
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">Reward Pool (Awaiting Distribution):</span>
+              <span className="text-white text-sm text-lime-400">
                 {formatE8sToICP(tokenReconciliation.reconciliation.reward_pool)} ICP
               </span>
             </div>
-            <div className="terminal-row">
-              <span className="terminal-label">Reserved for Stakers:</span>
-              <span className="terminal-value">
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">Reserved for Stakers:</span>
+              <span className="text-white text-sm">
                 {formatE8sToICP(tokenReconciliation.reconciliation.total_staked)} ICP
               </span>
             </div>
-            <div className="terminal-row">
-              <span className="terminal-label">Pending Collection:</span>
-              <span className="terminal-value text-amber-400">
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">Pending Collection:</span>
+              <span className="text-white text-sm text-amber-400">
                 {formatE8sToICP(
                   tokenReconciliation.reconciliation.uncollected_alex_fees
                 )} ICP
               </span>
             </div>
             {tokenReconciliation.reconciliation.requires_attention && (
-              <div className="terminal-row">
-                <span className="terminal-label">Status:</span>
-                <span className="terminal-value text-red-400">⚠️ Attention Required</span>
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-gray-400 text-xs">Status:</span>
+                <span className="text-white text-sm text-red-400">⚠️ Attention Required</span>
               </div>
             )}
             
@@ -235,25 +235,25 @@ const TreasuryTab: React.FC = () => {
       
       {/* Distribution Metrics - Priority 2 */}
       {dataLoadStatus.metrics && collectionMetrics && (
-        <div className="terminal-section">
-          <div className="terminal-header mb-3">
-            <span className="terminal-prompt">&gt;&gt;</span> DISTRIBUTION METRICS
+        <div className="border-t border-white/30 mt-2 pt-1">
+          <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-3">
+            <span className="text-pink-500">&gt;&gt;</span> DISTRIBUTION METRICS
           </div>
           <div className="space-y-2">
-            <div className="terminal-row">
-              <span className="terminal-label">Total ICP Distributed:</span>
-              <span className="terminal-value">
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">Total ICP Distributed:</span>
+              <span className="text-white text-sm">
                 {formatE8sToICP(collectionMetrics.total_accumulated_icp)} ICP
               </span>
             </div>
-            <div className="terminal-row">
-              <span className="terminal-label">Total LBRY Burned:</span>
-              <span className="terminal-value">
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">Total LBRY Burned:</span>
+              <span className="text-white text-sm">
                 {formatE8sToICP(collectionMetrics.total_burned_lbry)} LBRY
               </span>
             </div>
-            <div className="terminal-row">
-              <span className="terminal-label">Collection Efficiency:</span>
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">Collection Efficiency:</span>
               <span className={`terminal-value ${
                 collectionMetrics.collection_efficiency_basis_points > 9000 
                   ? 'text-lime-400' 
@@ -262,9 +262,9 @@ const TreasuryTab: React.FC = () => {
                 {formatBasisPoints(collectionMetrics.collection_efficiency_basis_points)}
               </span>
             </div>
-            <div className="terminal-row">
-              <span className="terminal-label">Next Distribution:</span>
-              <span className="terminal-value">
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">Next Distribution:</span>
+              <span className="text-white text-sm">
                 {calculateTimeUntilNextDistribution(
                   collectionMetrics.last_successful_collection,
                   distributionInterval || 3600
@@ -272,9 +272,9 @@ const TreasuryTab: React.FC = () => {
               </span>
             </div>
             {collectionMetrics.failed_collections_24h > 0 && (
-              <div className="terminal-row">
-                <span className="terminal-label">Failed Collections (24h):</span>
-                <span className="terminal-value text-amber-400">
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-gray-400 text-xs">Failed Collections (24h):</span>
+                <span className="text-white text-sm text-amber-400">
                   {collectionMetrics.failed_collections_24h}
                 </span>
               </div>
@@ -285,37 +285,37 @@ const TreasuryTab: React.FC = () => {
       
       {/* System Overview - Priority 3 */}
       {dataLoadStatus.system && systemReconciliation && tokenHealth && (
-        <div className="terminal-section">
-          <div className="terminal-header mb-3">
-            <span className="terminal-prompt">&gt;&gt;</span> SYSTEM OVERVIEW
+        <div className="border-t border-white/30 mt-2 pt-1">
+          <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-3">
+            <span className="text-pink-500">&gt;&gt;</span> SYSTEM OVERVIEW
           </div>
           <div className="space-y-2">
-            <div className="terminal-row">
-              <span className="terminal-label">Platform-wide Pending Fees:</span>
-              <span className="terminal-value">
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">Platform-wide Pending Fees:</span>
+              <span className="text-white text-sm">
                 {formatE8sToICP(
                   systemReconciliation.total_uncollected_alex
                 )} ICP
               </span>
             </div>
-            <div className="terminal-row">
-              <span className="terminal-label">Healthy Tokens:</span>
-              <span className="terminal-value text-lime-400">
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">Healthy Tokens:</span>
+              <span className="text-white text-sm text-lime-400">
                 {tokenHealth.healthy_tokens} / {tokenHealth.healthy_tokens + tokenHealth.unhealthy_tokens}
               </span>
             </div>
             {tokenHealth.stagnant_tokens.length > 0 && (
-              <div className="terminal-row">
-                <span className="terminal-label">Stagnant Tokens:</span>
-                <span className="terminal-value text-amber-400">
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-gray-400 text-xs">Stagnant Tokens:</span>
+                <span className="text-white text-sm text-amber-400">
                   {tokenHealth.stagnant_tokens.length}
                 </span>
               </div>
             )}
             {systemReconciliation.tokens_with_discrepancies.length > 0 && (
-              <div className="terminal-row">
-                <span className="terminal-label">Tokens with Discrepancies:</span>
-                <span className="terminal-value text-red-400">
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-gray-400 text-xs">Tokens with Discrepancies:</span>
+                <span className="text-white text-sm text-red-400">
                   {systemReconciliation.tokens_with_discrepancies.length}
                 </span>
               </div>

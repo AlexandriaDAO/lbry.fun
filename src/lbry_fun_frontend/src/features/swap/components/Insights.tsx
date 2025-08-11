@@ -123,26 +123,26 @@ const Insights: React.FC = () => {
                         </div>
                         <div className="terminal-info">
                             <div className="terminal-row">
-                                <span className="terminal-label">primary_staked:</span>
-                                <span className="terminal-value">{formatNumber(summaryData.totalPrimaryStaked)}</span>
+                                <span className="text-gray-400 text-xs">primary_staked:</span>
+                                <span className="text-white text-sm">{formatNumber(summaryData.totalPrimaryStaked)}</span>
                             </div>
                         </div>
                         <div className="terminal-info">
                             <div className="terminal-row">
-                                <span className="terminal-label">stakers:</span>
-                                <span className="terminal-value">{summaryData.stakerCount}</span>
+                                <span className="text-gray-400 text-xs">stakers:</span>
+                                <span className="text-white text-sm">{summaryData.stakerCount}</span>
                             </div>
                         </div>
                         <div className="terminal-info">
                             <div className="terminal-row">
-                                <span className="terminal-label">icp_in_lp:</span>
-                                <span className="terminal-value">{formatNumber(summaryData.icpInLpTreasury)}</span>
+                                <span className="text-gray-400 text-xs">icp_in_lp:</span>
+                                <span className="text-white text-sm">{formatNumber(summaryData.icpInLpTreasury)}</span>
                             </div>
                         </div>
                         <div className="terminal-info">
                             <div className="terminal-row">
-                                <span className="terminal-label">hourly_icp_rewards:</span>
-                                <span className="terminal-primary">{summaryData.hourlyIcpRewards.toFixed(6)} ICP</span>
+                                <span className="text-gray-400 text-xs">hourly_icp_rewards:</span>
+                                <span className="text-lime-500 font-bold text-sm">{summaryData.hourlyIcpRewards.toFixed(6)} ICP</span>
                                 <TooltipIcon text="ICP rewards earned per primary token per hour" />
                             </div>
                         </div>
@@ -201,13 +201,13 @@ const Insights: React.FC = () => {
             {poolData?.[1]?.icp_swap_canister_id && (
                 <Suspense fallback={<UnifiedSkeleton variant="card" rows={10} />}>
                     <div className="mt-12">
-                        <div className="terminal-pure mb-6">
-                            <div className="terminal-header">
-                                <span className="terminal-prompt">&gt;&gt;</span> distribution_tracking
+                        <div className="bg-black border border-white/30 font-mono text-sm p-3 mb-6">
+                            <div className="font-mono font-bold text-white mb-1 text-sm uppercase">
+                                <span className="text-pink-500">&gt;&gt;</span> distribution_tracking
                             </div>
-                            <div className="terminal-row">
-                                <span className="terminal-label">protocol:</span>
-                                <span className="terminal-accent">1%_alexandria | 99%_locked_lp</span>
+                            <div className="flex justify-between items-center py-0.5">
+                                <span className="text-gray-400 text-xs">protocol:</span>
+                                <span className="text-gray-600 text-xs">1%_alexandria | 99%_locked_lp</span>
                             </div>
                         </div>
                         <DistributionTracker icpSwapCanisterId={poolData[1].icp_swap_canister_id} />

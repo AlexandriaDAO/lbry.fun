@@ -213,30 +213,30 @@ const UnifiedTransaction: React.FC<UnifiedTransactionProps> = ({
     // Detail view
     if (view === 'detail' && transaction) {
         return (
-            <div className="terminal-container">
-                <div className="terminal-header mb-4">
-                    <span className="terminal-prompt">&gt;&gt;</span> transaction_details
+            <div className="bg-black border border-white/30 font-mono text-sm p-4">
+                <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-4">
+                    <span className="text-pink-500">&gt;&gt;</span> transaction_details
                 </div>
-                <div className="terminal-info">
-                    <div className="terminal-row">
-                        <span className="terminal-label">tx_id:</span>
+                <div className="">
+                    <div className="flex justify-between items-center py-0.5">
+                        <span className="text-gray-400 text-xs">tx_id:</span>
                         <span className="hex-address">{transaction.id}</span>
                     </div>
-                    <div className="terminal-row">
-                        <span className="terminal-label">type:</span>
-                        <span className="terminal-value">{transaction.kind}</span>
+                    <div className="flex justify-between items-center py-0.5">
+                        <span className="text-gray-400 text-xs">type:</span>
+                        <span className="text-white text-sm">{transaction.kind}</span>
                     </div>
-                    <div className="terminal-row">
-                        <span className="terminal-label">status:</span>
-                        <span className="terminal-value">{transaction.status}</span>
+                    <div className="flex justify-between items-center py-0.5">
+                        <span className="text-gray-400 text-xs">status:</span>
+                        <span className="text-white text-sm">{transaction.status}</span>
                     </div>
-                    <div className="terminal-row">
-                        <span className="terminal-label">amount:</span>
-                        <span className="terminal-value">{transaction.amount} {transaction.token}</span>
+                    <div className="flex justify-between items-center py-0.5">
+                        <span className="text-gray-400 text-xs">amount:</span>
+                        <span className="text-white text-sm">{transaction.amount} {transaction.token}</span>
                     </div>
-                    <div className="terminal-row">
-                        <span className="terminal-label">timestamp:</span>
-                        <span className="terminal-value">{formatTimestamp(transaction.timestamp)}</span>
+                    <div className="flex justify-between items-center py-0.5">
+                        <span className="text-gray-400 text-xs">timestamp:</span>
+                        <span className="text-white text-sm">{formatTimestamp(transaction.timestamp)}</span>
                     </div>
                 </div>
             </div>

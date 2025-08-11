@@ -107,8 +107,8 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
     switch (uiState.status) {
       case 'deploying':
         return (
-          <div className="terminal-content">
-            <div className="terminal-info mb-4">
+          <div>
+            <div className="bg-black border border-white/30 p-3 font-mono text-sm mb-4">
               [INFO] Deployment in progress
             </div>
             
@@ -128,31 +128,31 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
         const isPoolFailure = uiState.message.includes('Pool creation');
         
         return (
-          <div className="terminal-content">
-            <div className="terminal-error mb-3">
+          <div>
+            <div className="text-red-500 font-bold uppercase mb-3">
               [ERROR] {uiState.message}
             </div>
             
             {localError && (
-              <div className="terminal-error mb-3 text-sm">
+              <div className="text-red-500 font-bold uppercase mb-3 text-sm">
                 {localError}
               </div>
             )}
             
-            <div className="terminal-info mb-3">
+            <div className="bg-black border border-white/30 p-3 font-mono text-sm mb-3">
               <div className="mb-2">Deployment Details:</div>
               <div className="text-xs">
-                <span className="terminal-label">ID:</span> {effectiveDeploymentId}
+                <span className="text-gray-400 text-xs">ID:</span> {effectiveDeploymentId}
               </div>
               <div className="text-xs">
-                <span className="terminal-label">Created:</span> {
+                <span className="text-gray-400 text-xs">Created:</span> {
                   new Date(Number(deployment.created_at / 1_000_000n)).toLocaleString()
                 }
               </div>
             </div>
             
             {isPoolFailure && (
-              <div className="terminal-warning mb-3">
+              <div className="bg-yellow-500/10 border border-yellow-500/30 p-3 font-mono text-sm mb-3">
                 Your tokens were created but the liquidity pool could not be established.
                 The deployment has been rolled back.
               </div>
@@ -161,7 +161,7 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
             {uiState.isRecoverable && (
               <button 
                 onClick={handleRecover} 
-                className="terminal-command"
+                className="text-lime-500 font-mono text-sm cursor-pointer hover:bg-white/10 px-2 py-1"
               >
                 &gt; recover_deployment (4 ICP refund)
               </button>
@@ -171,15 +171,15 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
         
       case 'live':
         return (
-          <div className="terminal-content">
-            <div className="terminal-success mb-3">
+          <div>
+            <div className="text-lime-500 font-bold uppercase mb-3">
               [SUCCESS] Token deployment completed!
             </div>
-            <div className="terminal-info">
+            <div className="bg-black border border-white/30 p-3 font-mono text-sm">
               <div className="mb-2">Your token is now live!</div>
               {deployment.token_id?.[0] && (
                 <div className="text-xs">
-                  <span className="terminal-label">Token ID:</span> {deployment.token_id[0].toString()}
+                  <span className="text-gray-400 text-xs">Token ID:</span> {deployment.token_id[0].toString()}
                 </div>
               )}
             </div>
@@ -194,12 +194,12 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
   if (!isOpen) return null;
   
   return (
-    <div className="terminal-modal-overlay">
-      <div className="terminal-modal">
-        <div className="terminal-header">
-          <span className="terminal-prompt">&gt;&gt;</span> deployment_status
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+      <div className="bg-black border border-white/30 p-6 max-w-2xl w-full">
+        <div className="font-mono font-bold text-white mb-1 text-sm uppercase">
+          <span className="text-pink-500">&gt;&gt;</span> deployment_status
           {effectiveDeploymentId && (
-            <span className="terminal-status float-right">
+            <span className="text-pink-500 text-xs uppercase float-right">
               [{uiState?.status.toUpperCase()}]
             </span>
           )}
@@ -207,11 +207,11 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
         
         {renderContent()}
         
-        <div className="terminal-commands mt-4">
+        <div className="flex gap-4 mt-6 pt-4 border-t border-white/30 mt-4">
           {uiState?.status !== 'live' && (
             <button
               onClick={onClose}
-              className="terminal-command"
+              className="text-lime-500 font-mono text-sm cursor-pointer hover:bg-white/10 px-2 py-1"
             >
               &gt; hide_modal (continue in background)
             </button>

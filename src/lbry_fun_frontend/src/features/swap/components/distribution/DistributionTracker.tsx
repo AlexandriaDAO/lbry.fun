@@ -48,12 +48,12 @@ const DistributionTracker: React.FC<DistributionTrackerProps> = ({ icpSwapCanist
 
   if (distributionError) {
     return (
-      <div className="terminal-pure mb-6">
-        <div className="terminal-header mb-2">
-          <span className="terminal-prompt">&gt;</span> distribution_error
+      <div className="bg-black border border-white/30 font-mono text-sm p-3 mb-6">
+        <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-2">
+          <span className="text-pink-500">&gt;</span> distribution_error
         </div>
-        <div className="terminal-row">
-          <span className="terminal-error">{distributionError}</span>
+        <div className="flex justify-between items-center py-0.5">
+          <span className="text-red-400">{distributionError}</span>
         </div>
       </div>
     );
@@ -61,12 +61,12 @@ const DistributionTracker: React.FC<DistributionTrackerProps> = ({ icpSwapCanist
 
   if (!distributionSummary) {
     return (
-      <div className="terminal-pure mb-6">
-        <div className="terminal-header mb-2">
-          <span className="terminal-prompt">&gt;</span> distribution_status
+      <div className="bg-black border border-white/30 font-mono text-sm p-3 mb-6">
+        <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-2">
+          <span className="text-pink-500">&gt;</span> distribution_status
         </div>
-        <div className="terminal-row">
-          <span className="terminal-accent">no_distribution_data_available</span>
+        <div className="flex justify-between items-center py-0.5">
+          <span className="text-gray-600 text-xs">no_distribution_data_available</span>
         </div>
       </div>
     );

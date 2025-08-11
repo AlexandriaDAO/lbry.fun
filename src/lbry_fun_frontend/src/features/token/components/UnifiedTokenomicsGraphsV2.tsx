@@ -26,6 +26,11 @@ interface UnifiedTokenomicsGraphsV2Props {
   
   // Optional: Pre-calculated schedule data (to avoid duplicate preview calls)
   preCalculatedSchedule?: TokenomicsSchedule | null;
+  
+  // Display mode options
+  compactMode?: boolean;              // Show only essential elements
+  showGraphs?: boolean;                // Whether to show graphs section
+  showMetricsOnly?: boolean;           // Show only metrics, no graphs
 }
 
 const E8S = 100_000_000;
@@ -40,6 +45,9 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
   deployedSchedule,
   currentState,
   preCalculatedSchedule,
+  compactMode = false,
+  showGraphs = true,
+  showMetricsOnly = false,
 }) => {
   const dispatch = useAppDispatch();
   const [scheduleData, setScheduleData] = useState<TokenomicsSchedule | null>(null);
@@ -47,6 +55,8 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showAdvancedWarnings, setShowAdvancedWarnings] = useState(false);
+  const [showAllGraphs, setShowAllGraphs] = useState(!compactMode);
 
   // Validate parameters and generate warnings
   useEffect(() => {
@@ -306,86 +316,100 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
 
   const hasData = graphData.cumulativeSupplyData.yAxis.length > 0;
 
-  return (
-    <>
-      {warnings.length > 0 && (
-        <div className="terminal-section bg-black border border-yellow-500/30 p-3 font-mono mb-4">
-          <div className="terminal-warning mb-2">[PARAMETER_WARNINGS]</div>
-          <div className="space-y-1">
-            {warnings.map((warning, index) => (
-              <div key={index} className="text-yellow-500 text-xs pl-4">
-                <span className="terminal-prompt">&gt;</span> {warning}
-              </div>
-            ))}
+  // Render metrics section (always shown)
+  const renderMetrics = () => (
+    <div className={`border border-white/30 ${compactMode ? 'p-2' : 'p-4'} font-mono ${!showMetricsOnly ? 'mb-6' : ''} overflow-hidden`}>
+        <div className={`grid ${compactMode ? 'grid-cols-1 gap-y-1' : 'grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2'}`}>
+          <div className="flex justify-between gap-x-2">
+            <span className="text-gray-400 text-xs whitespace-nowrap">minting_epochs:</span>
+            <span className="text-white text-xs sm:text-sm text-right">{graphData.summaryData?.epochs}</span>
           </div>
-        </div>
-      )}
-      {graphData.summaryData?.supplyCapped && (
-        <div className="terminal-section bg-black border border-cyan-400/30 p-3 font-mono mb-4">
-          <div className="terminal-status text-cyan-400">[SUPPLY_CAP_REACHED]</div>
-          <div className="text-cyan-400 text-xs mt-2">
-            The maximum supply of <span className="terminal-value">{Number(primaryMaxSupply).toLocaleString()}</span> tokens will be reached.
-            The final epoch may be partial to exactly hit this cap.
+          <div className="flex justify-between gap-x-2">
+            <span className="text-gray-400 text-xs whitespace-nowrap">initial_mint_cost:</span>
+            <span className="text-lime-500 font-bold text-xs sm:text-sm text-right">${graphData.summaryData?.initialMintCost?.toFixed(4)}</span>
           </div>
-        </div>
-      )}
-      {graphData.summaryData?.floorRateEpoch && graphData.summaryData.floorRateEpoch > 0 && (
-        <div className="terminal-section bg-black border border-purple-500/30 p-3 font-mono mb-4">
-          <div className="terminal-status text-purple-400">[MINT_RATE_FLOOR_REACHED]</div>
-          <div className="text-purple-400 text-xs mt-2">
-            The mint rate reaches its minimum floor at <span className="terminal-value">Epoch {graphData.summaryData.floorRateEpoch}</span>.
-            After this point, tokens will continue minting at the floor rate of <span className="terminal-value">{graphData.summaryData.minMintRate.toFixed(6)}</span> primary per secondary.
-            This causes the exponential growth visible in later epochs.
+          <div className="flex justify-between gap-x-2">
+            <span className="text-gray-400 text-xs whitespace-nowrap">final_mint_cost:</span>
+            <span className="text-lime-500 font-bold text-xs sm:text-sm text-right">${graphData.summaryData?.finalMintCost?.toFixed(4)}</span>
           </div>
-        </div>
-      )}
-      <div className="terminal-section text-center my-4">
-        <div className="terminal-header font-mono">
-          <span className="terminal-prompt">&gt;&gt;</span> tokenomics_simulation
-          <div className="text-xs text-gray-600 mt-1">These graphs show how your token distribution will work over time.</div>
-        </div>
-      </div>
-      <div className="terminal-section bg-black border border-white/30 p-4 font-mono mb-8">
-        <div className="terminal-section-header mb-4">
-          <span className="terminal-prompt">&gt;</span> key_metrics_summary
-        </div>
-        <div className="space-y-1">
-          <div className="terminal-row">
-            <span className="terminal-label">minting_epochs:</span>
-            <span className="terminal-value">{graphData.summaryData?.epochs}</span>
+          <div className="flex justify-between gap-x-2">
+            <span className="text-gray-400 text-xs whitespace-nowrap">total_valuation:</span>
+            <span className="text-lime-500 font-bold text-xs sm:text-sm text-right truncate">${graphData.summaryData?.totalMintingValuation?.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
           </div>
-          <div className="terminal-row">
-            <span className="terminal-label">initial_mint_cost:</span>
-            <span className="terminal-primary">${graphData.summaryData?.initialMintCost?.toFixed(4)}</span>
-          </div>
-          <div className="terminal-row">
-            <span className="terminal-label">final_mint_cost:</span>
-            <span className="terminal-primary">${graphData.summaryData?.finalMintCost?.toFixed(4)}</span>
-          </div>
-          <div className="terminal-row">
-            <span className="terminal-label">total_minting_valuation:</span>
-            <span className="terminal-primary">${graphData.summaryData?.totalMintingValuation?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          </div>
-          <div className="terminal-row">
-            <span className="terminal-label">distribution_type:</span>
-            <span className="terminal-value">
+          <div className="flex justify-between gap-x-2">
+            <span className="text-gray-400 text-xs whitespace-nowrap">distribution_type:</span>
+            <span className="text-white text-xs sm:text-sm text-right">
               {graphData.summaryData?.epochs <= 5 ? 'quick' : 
                graphData.summaryData?.epochs <= 12 ? 'balanced' : 
                'extended'}
             </span>
           </div>
           {graphData.summaryData?.floorRateEpoch && graphData.summaryData.floorRateEpoch > 0 && (
-            <div className="terminal-row">
-              <span className="terminal-label">floor_rate_reached_at:</span>
-              <span className="terminal-accent">epoch_{graphData.summaryData.floorRateEpoch}</span>
+            <div className="flex justify-between gap-x-2">
+              <span className="text-gray-400 text-xs whitespace-nowrap">floor_rate_at:</span>
+              <span className="text-gray-600 text-xs text-right">epoch_{graphData.summaryData.floorRateEpoch}</span>
             </div>
           )}
         </div>
+        
+        {/* Advanced metrics section - collapsible */}
+        {(graphData.summaryData?.supplyCapped || (graphData.summaryData?.floorRateEpoch && graphData.summaryData.floorRateEpoch > 0)) && (
+          <div className="border border-white/10 p-3 font-mono mt-3">
+            <button
+              type="button"
+              onClick={() => setShowAdvancedWarnings(!showAdvancedWarnings)}
+              className="flex items-center justify-between w-full text-left text-xs text-gray-400 hover:text-white transition-colors"
+            >
+              <span>
+                <span className="text-pink-500">&gt;</span> advanced_metrics
+              </span>
+              <span className="ml-2">{showAdvancedWarnings ? '[-]' : '[+]'}</span>
+            </button>
+            {showAdvancedWarnings && (
+              <div className="mt-3 space-y-2">
+                {graphData.summaryData?.supplyCapped && (
+                  <div className="border border-cyan-400/30 p-3">
+                    <div className="text-cyan-400 text-xs uppercase">[SUPPLY_CAP_REACHED]</div>
+                    <div className="text-cyan-400 text-xs mt-1">
+                      The maximum supply of <span className="text-white">{Number(primaryMaxSupply).toLocaleString()}</span> tokens will be reached. The final epoch may be partial to exactly hit this cap.
+                    </div>
+                  </div>
+                )}
+                {graphData.summaryData?.floorRateEpoch && graphData.summaryData.floorRateEpoch > 0 && (
+                  <div className="border border-purple-500/30 p-3">
+                    <div className="text-purple-400 text-xs uppercase">[MINT_RATE_FLOOR_REACHED]</div>
+                    <div className="text-purple-400 text-xs mt-1">
+                      The mint rate reaches its minimum floor at <span className="text-white">Epoch {graphData.summaryData.floorRateEpoch}</span>. After this point, tokens will continue minting at the floor rate of <span className="text-white">{graphData.summaryData.minMintRate.toFixed(6)}</span> primary per secondary. This causes the exponential growth visible in later epochs.
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Copy button - integrated with metrics */}
+        <div className="flex justify-end mt-3">
+          <button 
+            type="button"
+            onClick={copyToClipboard}
+            className="text-white font-mono text-xs px-3 py-1 border border-white/30 hover:bg-white/10 transition-colors"
+          >
+            <span className="text-pink-500">&gt;</span> {copySuccess ? 'copied_to_clipboard' : 'copy_graph_data'}
+          </button>
+        </div>
       </div>
+  );
+
+  // Render graphs section
+  const renderGraphs = () => {
+    if (!showGraphs || showMetricsOnly) return null;
+    
+    return (
       <div className="space-y-8 mt-10 md:grid md:grid-cols-2 md:gap-x-8 md:space-y-0">
-        <div className="terminal-graph">
-          <div className="terminal-section-header mb-4">
-            <span className="terminal-prompt">&gt;</span> cumulative_primary_supply_vs_burn
+        <div className="p-4 font-mono border border-white/10">
+          <div className="text-white text-sm uppercase mb-2 mb-4">
+            <span className="text-pink-500">&gt;</span> cumulative_primary_supply_vs_burn
             <TooltipIcon text="This graph shows the total amount of Primary Token that will be minted as more Secondary Tokens are burned. Look for how quickly the supply hard cap is reached. A steeper curve means faster minting in early stages. The line flattens when the supply Hard Cap is hit. Note: If you see a 'hockey stick' pattern with rapid growth in later epochs, this indicates the mint rate has reached its minimum floor while burn thresholds continue doubling." />
           </div>
           {hasData && graphData.cumulativeSupplyData ? (
@@ -401,15 +425,15 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
               currentPositionLabel={currentPositions ? "We are here" : undefined}
             />
           ) : (
-            <div className="terminal-row">
-              <span className="terminal-label">status:</span>
-              <span className="terminal-accent">awaiting_data</span>
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">status:</span>
+              <span className="text-gray-600 text-xs">awaiting_data</span>
             </div>
           )}
         </div>
-        <div className="terminal-graph">
-          <div className="terminal-section-header mb-4">
-              <span className="terminal-prompt">&gt;</span> primary_tokens_minted_per_epoch
+        <div className="p-4 font-mono border border-white/10">
+          <div className="text-white text-sm uppercase mb-2 mb-4">
+              <span className="text-pink-500">&gt;</span> primary_tokens_minted_per_epoch
               <TooltipIcon text="This chart displays how many new Primary Tokens are created at each burn epoch. Typically, earlier epochs (left) will mint more tokens than later epochs (right), showing that early burners are rewarded more. A rapid decrease indicates a faster reduction in minting rewards per epoch." />
           </div>
           {hasData && graphData.mintedPerEpochData ? (
@@ -425,15 +449,15 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
               currentPositionLabel={currentPositions ? "We are here" : undefined}
             />
           ) : (
-            <div className="terminal-row">
-              <span className="terminal-label">status:</span>
-              <span className="terminal-accent">awaiting_data</span>
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">status:</span>
+              <span className="text-gray-600 text-xs">awaiting_data</span>
             </div>
           )}
         </div>
-        <div className="terminal-graph">
-          <div className="terminal-section-header mb-4">
-              <span className="terminal-prompt">&gt;</span> cost_to_mint_vs_supply
+        <div className="p-4 font-mono border border-white/10">
+          <div className="text-white text-sm uppercase mb-2 mb-4">
+              <span className="text-pink-500">&gt;</span> cost_to_mint_vs_supply
               <TooltipIcon text="This graph shows the 'price' to create one new Primary Token by burning Secondary Tokens. Notice how the cost jumps up at each stage (or 'epoch'). This increasing cost is what makes it more rewarding for early participants to mint tokens. When the supply cap is reached, the final epoch's cost is adjusted to avoid misleading drops caused by partial minting." />
           </div>
           {hasData && graphData.costToMintData ? (
@@ -449,15 +473,15 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
               currentPositionLabel={currentPositions ? "We are here" : undefined}
             />
           ) : (
-            <div className="terminal-row">
-              <span className="terminal-label">status:</span>
-              <span className="terminal-accent">awaiting_data</span>
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">status:</span>
+              <span className="text-gray-600 text-xs">awaiting_data</span>
             </div>
           )}
         </div>
-        <div className="terminal-graph">
-          <div className="terminal-section-header mb-4">
-              <span className="terminal-prompt">&gt;</span> minting_valuation_vs_primary_percentage
+        <div className="p-4 font-mono border border-white/10">
+          <div className="text-white text-sm uppercase mb-2 mb-4">
+              <span className="text-pink-500">&gt;</span> minting_valuation_vs_primary_percentage
               <TooltipIcon text="This combined graph shows the percentage of the max supply that's been minted (blue line) alongside the total USD cost to mint those tokens (green line). This illustrates how the cost grows exponentially as more of the supply is minted." />
           </div>
           {hasData && graphData.cumulativePercentageSupplyData ? (
@@ -476,24 +500,32 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
               currentPositionLabel={currentPositions ? "We are here" : undefined}
             />
           ) : (
-            <div className="terminal-row">
-              <span className="terminal-label">status:</span>
-              <span className="terminal-accent">awaiting_data</span>
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">status:</span>
+              <span className="text-gray-600 text-xs">awaiting_data</span>
             </div>
           )}
         </div>
       </div>
-      <div className="terminal-section bg-black border border-white/30 p-3 font-mono mt-8">
-        <div className="terminal-row justify-end">
-          <button 
-            type="button"
-            onClick={copyToClipboard}
-            className="terminal-button text-xs hover:bg-white/10 px-3 py-1 border border-white/30"
-          >
-            <span className="terminal-prompt">&gt;</span> {copySuccess ? 'copied_to_clipboard' : 'copy_graph_data'}
-          </button>
+    );
+  };
+
+  return (
+    <>
+      {/* Status Messages */}
+      {warnings.length > 0 && !compactMode && (
+        <div className="space-y-3 mb-4">
+          {warnings.map((warning, index) => (
+            <div key={index} className="text-yellow-500 text-xs">
+              <span className="text-pink-500">&gt;</span> [WARN] {warning}
+            </div>
+          ))}
         </div>
-      </div>
+      )}
+      
+      {/* Render based on mode */}
+      {renderMetrics()}
+      {renderGraphs()}
     </>
   );
 };

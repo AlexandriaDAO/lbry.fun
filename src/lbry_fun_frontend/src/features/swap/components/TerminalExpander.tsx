@@ -64,9 +64,9 @@ export const TerminalExpander: React.FC<TerminalExpanderProps> = ({
   };
 
   return (
-    <div className="terminal-pure terminal-flicker">
+    <div className="bg-black border border-white/30 font-mono text-sm p-3">
       <div
-        className="terminal-header flex items-center justify-between p-4 cursor-pointer select-none transition-colors duration-200 hover:bg-lime-500/10"
+        className="font-mono font-bold text-white mb-1 text-sm uppercase flex items-center justify-between p-4 cursor-pointer select-none transition-colors duration-200 hover:bg-lime-500/10"
         onClick={toggleExpanded}
         role="button"
         tabIndex={0}
@@ -80,7 +80,7 @@ export const TerminalExpander: React.FC<TerminalExpanderProps> = ({
         }}
       >
         <div className="flex items-center gap-2">
-          <span className="terminal-prompt">
+          <span className="text-pink-500">
             {isExpanded ? '<<' : '>>'}
           </span>
           <span className="text-white font-mono uppercase">
@@ -93,11 +93,11 @@ export const TerminalExpander: React.FC<TerminalExpanderProps> = ({
           )}
         </div>
       </div>
-      {isExpanded && <div className="terminal-divider-single" />}
+      {isExpanded && <div className="border-t border-white/30" />}
       <div
         ref={contentRef}
         id={`terminal-content-${terminalId}`}
-        className="terminal-expander-content transition-all duration-300 ease-out"
+        className="transition-all duration-300 ease-out"
         style={{ 
           maxHeight,
           overflow: isExpanded ? 'visible' : 'hidden'

@@ -68,9 +68,7 @@ export const StakingTerminal: React.FC = React.memo(() => {
       terminalId="staking"
       defaultExpanded={false}
     >
-      <div className="p-4 min-h-[400px]">
-        <StakeContent />
-      </div>
+      <StakeContent />
     </TerminalExpander>
   );
 });

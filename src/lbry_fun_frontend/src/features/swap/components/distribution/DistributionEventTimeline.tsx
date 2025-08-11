@@ -8,15 +8,15 @@ interface DistributionEventTimelineProps {
 
 const DistributionEventTimeline: React.FC<DistributionEventTimelineProps> = ({ events }) => {
   return (
-    <div className="terminal-pure">
-      <div className="terminal-header mb-4">
-        <span className="terminal-prompt">&gt;</span> recent_distributions
+    <div className="bg-black border border-white/30 font-mono text-sm p-3">
+      <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-4">
+        <span className="text-pink-500">&gt;</span> recent_distributions
       </div>
       
-      <div className="terminal-distribution-timeline">
+      <div className="space-y-4">
         {events.length === 0 ? (
-          <div className="terminal-info">
-            <span className="terminal-dim">no_distribution_events_yet</span>
+          <div className="bg-blue-900/20 border border-blue-500/30 text-blue-400 p-3 font-mono text-sm">
+            <span className="text-gray-500">no_distribution_events_yet</span>
           </div>
         ) : (
           events.map((event) => (

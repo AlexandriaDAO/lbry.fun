@@ -170,7 +170,7 @@ const SwapContent: React.FC = () => {
             <div className="space-y-3 mb-6">
               <div className={`border ${inputState === 'error' ? 'border-red-500' : inputState === 'focus' ? 'border-lime-500' : 'border-white/20'} bg-background-secondary p-4 rounded-lg transition-colors`}>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="terminal-label text-xs">SEND ICP</span>
+                  <span className="text-gray-400 text-xs text-xs">SEND ICP</span>
                   <button
                     className="text-xs text-gray-400 hover:text-white transition-colors"
                     onClick={handleMaxIcp}
@@ -187,22 +187,22 @@ const SwapContent: React.FC = () => {
                   placeholder="0.0000"
                 />
                 <div className="flex justify-between items-center mt-2">
-                  <span className="terminal-label text-xs">balance:</span>
-                  <span className="terminal-value text-xs">{icpLedger.accountBalance} ICP</span>
+                  <span className="text-gray-400 text-xs text-xs">balance:</span>
+                  <span className="text-white text-sm text-xs">{icpLedger.accountBalance} ICP</span>
                 </div>
               </div>
 
               {/* Output Section */}
               <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="terminal-label text-xs">RECEIVE {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                  <span className="text-gray-400 text-xs text-xs">RECEIVE {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
                 </div>
                 <div className="text-lime-500 font-mono text-lg mb-2">
                   {(tentativeSecondary || 0).toFixed(4)}
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="terminal-label text-xs">balance:</span>
-                  <span className="terminal-value text-xs">{swap.secondaryBalance} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                  <span className="text-gray-400 text-xs text-xs">balance:</span>
+                  <span className="text-white text-sm text-xs">{swap.secondaryBalance} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
                 </div>
               </div>
             </div>
@@ -254,24 +254,24 @@ const SwapContent: React.FC = () => {
               <h3 className="text-sm font-semibold mb-4">Transaction Details</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="terminal-label text-xs">Network Fee:</span>
-                  <span className="terminal-value text-xs">{icp_fee} ICP</span>
+                  <span className="text-gray-400 text-xs text-xs">Network Fee:</span>
+                  <span className="text-white text-sm text-xs">{icp_fee} ICP</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="terminal-label text-xs">Send:</span>
-                  <span className="terminal-value text-xs">{amount || "0"} ICP</span>
+                  <span className="text-gray-400 text-xs text-xs">Send:</span>
+                  <span className="text-white text-sm text-xs">{amount || "0"} ICP</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="terminal-label text-xs">Receive:</span>
-                  <span className="terminal-primary text-xs">{(tentativeSecondary || 0).toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                  <span className="text-gray-400 text-xs text-xs">Receive:</span>
+                  <span className="text-lime-500 font-bold text-sm text-xs">{(tentativeSecondary || 0).toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
                 </div>
                 
                 <div className="border-t border-white/10 pt-3">
                   <div className="flex justify-between items-center">
-                    <span className="terminal-label text-xs">Exchange Rate:</span>
-                    <span className="terminal-value text-xs">1 ICP = {secondaryRatio.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
+                    <span className="text-gray-400 text-xs text-xs">Exchange Rate:</span>
+                    <span className="text-white text-sm text-xs">1 ICP = {secondaryRatio.toFixed(4)} {swap.activeSwapPool?.[1].secondary_token_symbol}</span>
                   </div>
                 </div>
                 
@@ -297,8 +297,8 @@ const SwapContent: React.FC = () => {
             {showRedeemSection && (
               <div className="border border-white/20 bg-background-secondary p-4 rounded-lg mt-3">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="terminal-label text-sm">Recoverable Amount:</span>
-                  <span className="terminal-primary text-sm">{swap.archivedBalance} ICP</span>
+                  <span className="text-gray-400 text-xs text-sm">Recoverable Amount:</span>
+                  <span className="text-lime-500 font-bold text-sm text-sm">{swap.archivedBalance} ICP</span>
                 </div>
                 
                 <button

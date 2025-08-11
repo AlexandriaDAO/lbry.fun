@@ -180,7 +180,7 @@ const BurnContent = () => {
                         <div className="space-y-3 mb-6">
                             <div className={`border ${amountSecondary > maxBurnAllowed ? 'border-red-500' : 'border-white/20'} bg-background-secondary p-4 rounded-lg transition-colors`}>
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="terminal-label text-xs">BURN {secondarySymbol}</span>
+                                    <span className="text-gray-400 text-xs text-xs">BURN {secondarySymbol}</span>
                                     <button
                                         className="text-xs text-gray-400 hover:text-white transition-colors"
                                         onClick={handleMaxLbry}
@@ -197,8 +197,8 @@ const BurnContent = () => {
                                     placeholder="0"
                                 />
                                 <div className="flex justify-between items-center mt-2">
-                                    <span className="terminal-label text-xs">balance:</span>
-                                    <span className="terminal-value text-xs">{swap.secondaryBalance} {secondarySymbol}</span>
+                                    <span className="text-gray-400 text-xs text-xs">balance:</span>
+                                    <span className="text-white text-sm text-xs">{swap.secondaryBalance} {secondarySymbol}</span>
                                 </div>
                             </div>
 
@@ -206,7 +206,7 @@ const BurnContent = () => {
                             <div className="space-y-3">
                                 <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
                                     <div className="flex justify-between items-center mb-2">
-                                        <span className="terminal-label text-xs">RECEIVE ICP</span>
+                                        <span className="text-gray-400 text-xs text-xs">RECEIVE ICP</span>
                                     </div>
                                     <div className={`font-mono text-lg mb-2 ${amountSecondary > maxBurnAllowed ? 'text-red-500' : 'text-lime-500'}`}>
                                         {tentativeICP.toFixed(4)}
@@ -216,7 +216,7 @@ const BurnContent = () => {
                                 
                                 <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
                                     <div className="flex justify-between items-center mb-2">
-                                        <span className="terminal-label text-xs">RECEIVE {primarySymbol}</span>
+                                        <span className="text-gray-400 text-xs text-xs">RECEIVE {primarySymbol}</span>
                                     </div>
                                     <div className="text-lime-500 font-mono text-lg">
                                         {tentativePrimary.toFixed(4)}
@@ -291,26 +291,26 @@ const BurnContent = () => {
                             </div>
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center">
-                                    <span className="terminal-label text-xs">Network Fee:</span>
-                                    <span className="terminal-value text-xs">{swap.secondaryFee} {secondarySymbol}</span>
+                                    <span className="text-gray-400 text-xs text-xs">Network Fee:</span>
+                                    <span className="text-white text-sm text-xs">{swap.secondaryFee} {secondarySymbol}</span>
                                 </div>
                                 
                                 <div className="flex justify-between items-center">
-                                    <span className="terminal-label text-xs">Max Burn Allowed:</span>
-                                    <span className={`terminal-primary text-xs ${isRefreshingBurn ? 'terminal-blink' : ''}`}>
+                                    <span className="text-gray-400 text-xs text-xs">Max Burn Allowed:</span>
+                                    <span className={`text-lime-500 font-bold text-sm text-xs ${isRefreshingBurn ? 'terminal-blink' : ''}`}>
                                         {maxBurnAllowed.toFixed(4)} {secondarySymbol}
                                     </span>
                                 </div>
                                 
                                 <div className="border-t border-white/10 pt-3">
                                     <div className="flex justify-between items-center mb-2">
-                                        <span className="terminal-label text-xs">Exchange Rate:</span>
-                                        <span className="terminal-value text-xs">1 {secondarySymbol} = {Number(tokenomics.primaryMintRate).toFixed(4)} {primarySymbol}</span>
+                                        <span className="text-gray-400 text-xs text-xs">Exchange Rate:</span>
+                                        <span className="text-white text-sm text-xs">1 {secondarySymbol} = {Number(tokenomics.primaryMintRate).toFixed(4)} {primarySymbol}</span>
                                     </div>
                                     
                                     <div className="flex justify-between items-center">
-                                        <span className="terminal-label text-xs">ICP Return Rate:</span>
-                                        <span className="terminal-value text-xs">{Number(swap.secondaryRatio).toFixed(4)} {secondarySymbol} = 0.5 ICP</span>
+                                        <span className="text-gray-400 text-xs text-xs">ICP Return Rate:</span>
+                                        <span className="text-white text-sm text-xs">{Number(swap.secondaryRatio).toFixed(4)} {secondarySymbol} = 0.5 ICP</span>
                                     </div>
                                 </div>
                             </div>

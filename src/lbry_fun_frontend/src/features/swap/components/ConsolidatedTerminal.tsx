@@ -84,10 +84,10 @@ const ConsolidatedTerminal: React.FC = () => {
 
     if (!isAuthenticated || !principal) {
         return (
-            <div className="terminal-container-sm">
-                <div className="terminal-pure mb-2 terminal-boot">
+            <div className="w-full mx-auto max-w-[600px]">
+                <div className="bg-black border border-white/30 font-mono text-sm p-3 mb-2">
                     <div className="text-center py-2">
-                        <span className="terminal-status-error terminal-blink">WALLET_NOT_CONNECTED</span>
+                        <span className="text-red-500 font-bold uppercase animate-pulse">WALLET_NOT_CONNECTED</span>
                         <div className="mt-2">
                             <TerminalAuthMenu />
                         </div>
@@ -105,24 +105,24 @@ const ConsolidatedTerminal: React.FC = () => {
             defaultExpanded={false}
         >
             <div className="p-4 min-h-[400px]">
-                <span className="terminal-timestamp">
+                <span className="text-gray-600 text-xs">
                     {new Date().toTimeString().slice(0, 8)}
                 </span>
                 
-                <div className="terminal-divider-dots mt-2" />
+                <div className="border-t border-dotted border-white/30 mt-2" />
                 
                 {/* Principal & Account */}
-                <div className="terminal-row mt-1 terminal-boot" style={{ animationDelay: '0.1s' }}>
-                    <span className="terminal-label">principal:</span>
+                <div className="flex justify-between items-center py-0.5 mt-1" style={{ animationDelay: '0.1s' }}>
+                    <span className="text-gray-400 text-xs">principal:</span>
                     <div className="flex items-center gap-2">
                         <span className="hex-address">{formattedPrincipal}</span>
-                        <span className="terminal-status">[connected]</span>
+                        <span className="text-pink-500 text-xs uppercase">[connected]</span>
                         <CopyHelper account={principal} />
                     </div>
                 </div>
                 
-                <div className="terminal-row">
-                    <span className="terminal-label">account_id:</span>
+                <div className="flex justify-between items-center py-0.5">
+                    <span className="text-gray-400 text-xs">account_id:</span>
                     <div className="flex items-center gap-2">
                         <span className="hex-address text-xs">{formattedAccountId}</span>
                         {icpLedgerAccountId && <CopyHelper account={icpLedgerAccountId} />}
@@ -132,35 +132,35 @@ const ConsolidatedTerminal: React.FC = () => {
                 {/* Active Pool Section */}
                 {swap.activeSwapPool && (
                     <div className="border-t border-white/30 mt-2 pt-2">
-                        <div className="terminal-row">
-                            <span className="terminal-label">status:</span>
-                            <span className="terminal-status">
+                        <div className="flex justify-between items-center py-0.5">
+                            <span className="text-gray-400 text-xs">status:</span>
+                            <span className="text-pink-500 text-xs uppercase">
                                 {swap.activeSwapPool[1].isLive ? "[live]" : "[launching]"}
                             </span>
                         </div>
                         
-                        <div className="terminal-row">
-                            <span className="terminal-label">pool_id:</span>
-                            <span className="terminal-value">{swap.activeSwapPool[0]}</span>
+                        <div className="flex justify-between items-center py-0.5">
+                            <span className="text-gray-400 text-xs">pool_id:</span>
+                            <span className="text-white text-sm">{swap.activeSwapPool[0]}</span>
                         </div>
                         
-                        <div className="terminal-row">
-                            <span className="terminal-label">primary_token:</span>
-                            <span className="terminal-primary">{swap.activeSwapPool[1].primary_token_symbol}</span>
+                        <div className="flex justify-between items-center py-0.5">
+                            <span className="text-gray-400 text-xs">primary_token:</span>
+                            <span className="text-lime-500 font-bold text-sm">{swap.activeSwapPool[1].primary_token_symbol}</span>
                         </div>
                         
-                        <div className="terminal-row">
-                            <span className="terminal-label">secondary_token:</span>
-                            <span className="terminal-value">{swap.activeSwapPool[1].secondary_token_symbol}</span>
+                        <div className="flex justify-between items-center py-0.5">
+                            <span className="text-gray-400 text-xs">secondary_token:</span>
+                            <span className="text-white text-sm">{swap.activeSwapPool[1].secondary_token_symbol}</span>
                         </div>
                     </div>
                 )}
 
                 {/* Balances Section */}
-                <div className="border-t border-white/30 mt-2 pt-2 terminal-boot" style={{ animationDelay: '0.3s' }}>
+                <div className="border-t border-white/30 mt-2 pt-2" style={{ animationDelay: '0.3s' }}>
                     <div className="flex justify-between items-center mb-2">
-                        <span className="terminal-accent text-xs">
-                            <span className="terminal-prompt">&gt;</span> wallet_assets
+                        <span className="text-gray-600 text-xs text-xs">
+                            <span className="text-pink-500">&gt;</span> wallet_assets
                         </span>
                         <FontAwesomeIcon 
                             role="button" 
@@ -175,31 +175,31 @@ const ConsolidatedTerminal: React.FC = () => {
                         />
                     </div>
                     
-                    <div className="terminal-row">
-                        <span className="terminal-label">icp_balance:</span>
+                    <div className="flex justify-between items-center py-0.5">
+                        <span className="text-gray-400 text-xs">icp_balance:</span>
                         <div className="text-right">
-                            <span className="terminal-primary cyber-glow">{icpLedgerAccountBalance}</span>
-                            <span className="terminal-accent ml-2">[${icpLedgerAccountBalanceUSD}]</span>
+                            <span className="text-lime-500 font-bold text-sm cyber-glow">{icpLedgerAccountBalance}</span>
+                            <span className="text-gray-600 text-xs ml-2">[${icpLedgerAccountBalanceUSD}]</span>
                         </div>
                     </div>
 
                     {swap.activeSwapPool && (
                         <>
-                            <div className="terminal-row">
-                                <span className="terminal-label">{swap.activeSwapPool[1].primary_token_symbol.toLowerCase()}:</span>
+                            <div className="flex justify-between items-center py-0.5">
+                                <span className="text-gray-400 text-xs">{swap.activeSwapPool[1].primary_token_symbol.toLowerCase()}:</span>
                                 <div className="text-right">
-                                    <span className="terminal-value">{primary.primaryBal}</span>
-                                    <span className="terminal-accent ml-2">
+                                    <span className="text-white text-sm">{primary.primaryBal}</span>
+                                    <span className="text-gray-600 text-xs ml-2">
                                         [${(parseFloat(primary.primaryBal) * parseFloat(primary.primaryPriceUsd)).toFixed(4)}]
                                     </span>
                                 </div>
                             </div>
                             
-                            <div className="terminal-row">
-                                <span className="terminal-label">{swap.activeSwapPool[1].secondary_token_symbol.toLowerCase()}:</span>
+                            <div className="flex justify-between items-center py-0.5">
+                                <span className="text-gray-400 text-xs">{swap.activeSwapPool[1].secondary_token_symbol.toLowerCase()}:</span>
                                 <div className="text-right">
-                                    <span className="terminal-value">{swap.secondaryBalance || "0"}</span>
-                                    <span className="terminal-accent ml-2">
+                                    <span className="text-white text-sm">{swap.secondaryBalance || "0"}</span>
+                                    <span className="text-gray-600 text-xs ml-2">
                                         [${(parseFloat(swap.secondaryBalance || "0") * 0.01).toFixed(4)}]
                                     </span>
                                 </div>
@@ -212,21 +212,21 @@ const ConsolidatedTerminal: React.FC = () => {
                 {swap.activeSwapPool && (
                     <div className="border-t border-white/30 mt-2 pt-2">
                         
-                        <div className="terminal-row">
-                            <span className="terminal-label">max_supply:</span>
-                            <span className="terminal-primary">
+                        <div className="flex justify-between items-center py-0.5">
+                            <span className="text-gray-400 text-xs">max_supply:</span>
+                            <span className="text-lime-500 font-bold text-sm">
                                 {Number(TokenConversionService.formatE8sDisplay(swap.activeSwapPool[1].primary_token_max_supply, 0)).toLocaleString()}
                             </span>
                         </div>
                         
                         {tokenomics.totalPrimarySupply && (
-                            <div className="terminal-row">
-                                <span className="terminal-label">current_supply:</span>
+                            <div className="flex justify-between items-center py-0.5">
+                                <span className="text-gray-400 text-xs">current_supply:</span>
                                 <div className="text-right">
-                                    <span className="terminal-value">
+                                    <span className="text-white text-sm">
                                         {Number(TokenConversionService.formatE8sDisplay(tokenomics.totalPrimarySupply, 0)).toLocaleString()}
                                     </span>
-                                    <span className="terminal-accent ml-2">
+                                    <span className="text-gray-600 text-xs ml-2">
                                         [{((BigInt(tokenomics.totalPrimarySupply) * BigInt(100)) / BigInt(swap.activeSwapPool[1].primary_token_max_supply)).toString()}%]
                                     </span>
                                 </div>

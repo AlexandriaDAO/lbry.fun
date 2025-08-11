@@ -84,16 +84,16 @@ export const TradingTerminal: React.FC = React.memo(() => {
           </button>
         </div>
 
-        <div className="terminal-divider-single" />
+        <div className="border-b border-white/20 my-3" />
 
         {/* Active Operation Interface */}
-        <div className="terminal-section">
+        <div className="">
           {renderActiveOperation()}
         </div>
 
         {/* Recent Transactions */}
         {isAuthenticated && showTransactions && (
-          <div className="terminal-section mt-4">
+          <div className=" mt-4">
             <UnifiedTransaction view="history" />
           </div>
         )}

@@ -77,17 +77,17 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
     // Card variant - generic info card
     if (variant === 'card') {
         return (
-            <div className="terminal-pure">
+            <div className="bg-black border border-white/30 font-mono text-sm p-3">
                 {title && (
-                    <div className="terminal-header mb-2">
-                        <span className="terminal-prompt">&gt;&gt;</span> {title}
+                    <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-2">
+                        <span className="text-pink-500">&gt;&gt;</span> {title}
                     </div>
                 )}
-                <div className="terminal-info">
+                <div className="">
                     {Object.entries(data).map(([key, value]) => (
-                        <div key={key} className="terminal-row">
-                            <span className="terminal-label">{key}:</span>
-                            <span className="terminal-value">{String(value)}</span>
+                        <div key={key} className="flex justify-between items-center py-0.5">
+                            <span className="text-gray-400 text-xs">{key}:</span>
+                            <span className="text-white text-sm">{String(value)}</span>
                         </div>
                     ))}
                 </div>
@@ -100,10 +100,10 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
         return (
             <div className="flex items-center justify-between pl-8">
                 <div className="flex items-center gap-4">
-                    <span className="terminal-label w-[116px]">cycles:</span>
-                    <span className="terminal-accent font-mono">
+                    <span className="text-gray-400 text-xs w-[116px]">cycles:</span>
+                    <span className="text-gray-600 text-xs font-mono">
                         {loading && "loading..."}
-                        {error && <span className="terminal-status">[ERROR]</span>}
+                        {error && <span className="text-red-400">[ERROR]</span>}
                         {cycles !== null && !loading && !error && `${cycles} T`}
                     </span>
                 </div>
@@ -117,17 +117,17 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
     // Stats variant - for displaying statistics
     if (variant === 'stats') {
         return (
-            <div className="terminal-pure">
+            <div className="bg-black border border-white/30 font-mono text-sm p-3">
                 {title && (
-                    <div className="terminal-header mb-2">
-                        <span className="terminal-prompt">&gt;&gt;</span> {title}
+                    <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-2">
+                        <span className="text-pink-500">&gt;&gt;</span> {title}
                     </div>
                 )}
-                <div className="terminal-section-minimal">
+                <div className="">
                     {Object.entries(data).map(([key, value]) => (
-                        <div key={key} className="terminal-row">
-                            <span className="terminal-label">{key}:</span>
-                            <span className="terminal-primary">{String(value)}</span>
+                        <div key={key} className="flex justify-between items-center py-0.5">
+                            <span className="text-gray-400 text-xs">{key}:</span>
+                            <span className="text-lime-500 font-bold text-sm">{String(value)}</span>
                         </div>
                     ))}
                 </div>
@@ -226,7 +226,7 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                     variant="outline"
                                     scale="sm"
                                     onClick={copyAllCanisterIds}
-                                    className="terminal-button"
+                                    className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10"
                                     title="Copy all canister IDs as JSON"
                                 >
                                     <FontAwesomeIcon icon={faCopy} className="mr-2" />
@@ -237,7 +237,7 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                     scale="sm"
                                     onClick={refreshAllCycles}
                                     disabled={refreshing}
-                                    className="terminal-button"
+                                    className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10"
                                     title="Refresh all cycle balances"
                                 >
                                     <FontAwesomeIcon icon={faRotate} className={refreshing ? 'animate-spin' : ''} />
@@ -246,7 +246,7 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                                     variant="outline"
                                     scale="sm"
                                     onClick={() => setCompactMode(!compactMode)}
-                                    className="terminal-button"
+                                    className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10"
                                     title={compactMode ? 'Expand view' : 'Compact view'}
                                 >
                                     <FontAwesomeIcon icon={compactMode ? faExpand : faCompress} />
@@ -320,13 +320,13 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
 
                         <div className="mt-8 pt-6 border-t border-white/10">
                             <div className="space-y-1">
-                                <div className="terminal-row">
-                                    <span className="terminal-label">status:</span>
-                                    <span className="terminal-primary">[ACTIVE]</span>
+                                <div className="flex justify-between items-center py-0.5">
+                                    <span className="text-gray-400 text-xs">status:</span>
+                                    <span className="text-lime-500 font-bold text-sm">[ACTIVE]</span>
                                 </div>
-                                <div className="terminal-row">
-                                    <span className="terminal-label">network:</span>
-                                    <span className="terminal-value">internet_computer</span>
+                                <div className="flex justify-between items-center py-0.5">
+                                    <span className="text-gray-400 text-xs">network:</span>
+                                    <span className="text-white text-sm">internet_computer</span>
                                 </div>
                             </div>
                         </div>

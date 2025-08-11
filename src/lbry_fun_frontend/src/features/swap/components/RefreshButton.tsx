@@ -50,7 +50,7 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({
     <button
       onClick={handleRefresh}
       disabled={isRefreshing}
-      className={`terminal-refresh-btn ${sizeClasses[size]} ${className}`}
+      className={`bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses[size]} ${className}`}
       title={isRefreshing ? 'Refreshing...' : `Refresh ${label}`}
     >
       {showLabel && <span className="mr-2">{label}</span>}

@@ -2,9 +2,6 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities'; */
 
-/* Import terminal design system */
-@import './terminal.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

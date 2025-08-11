@@ -134,7 +134,7 @@ const TokenLogo: React.FC<{
       <img 
         src={logo} 
         alt={`${tokenSymbol} logo`} 
-        className={`terminal-token-image ${className}`}
+        className={`w-8 h-8 border border-white/30 ${className}`}
         style={{ borderRadius: 0 }}
       />
     );
@@ -142,7 +142,7 @@ const TokenLogo: React.FC<{
 
   // Fallback when no logo is available
   return (
-    <div className={`terminal-token-image flex items-center justify-center bg-black ${className}`}>
+    <div className={`w-8 h-8 border border-white/30 flex items-center justify-center bg-black ${className}`}>
       <span className="text-white font-mono text-sm">
         {tokenSymbol.charAt(0)}
       </span>
@@ -178,18 +178,18 @@ const TerminalPoolCard: React.FC<TerminalPoolCardProps> = ({ pool, poolId, tvl, 
   };
 
   return (
-    <div className={`terminal-card ${isVisible ? 'terminal-boot' : 'opacity-0'}`}>
-      <div className="terminal-card-header">
+    <div className={`bg-black border border-white/30 font-mono text-sm p-4 ${isVisible ? 'opacity-100 transition-opacity duration-500' : 'opacity-0'}`}>
+      <div className="flex justify-between items-center mb-2">
         <div>
-          <span className="terminal-prompt">&gt;</span>
-          <span className="terminal-pool-id ml-1">#{truncateId(poolId)}</span>
+          <span className="text-pink-500">&gt;</span>
+          <span className="text-white text-sm ml-1">#{truncateId(poolId)}</span>
         </div>
-        <span className={pool.isLive ? 'terminal-status-live' : 'terminal-status'}>
+        <span className={pool.isLive ? 'text-lime-500 font-bold text-sm' : 'text-gray-400 text-xs'}>
           {pool.isLive ? '[LIVE]' : '[PENDING]'}
         </span>
       </div>
       
-      <div className="terminal-card-content">
+      <div className="flex flex-col gap-3">
         {/* Token Pair Display */}
         <div className="space-y-3">
           {/* Primary Token - Larger text */}
@@ -200,10 +200,10 @@ const TerminalPoolCard: React.FC<TerminalPoolCardProps> = ({ pool, poolId, tvl, 
               className="w-12 h-12 flex-shrink-0"
             />
             <div className="flex-1 min-w-0">
-              <div className="terminal-value text-base truncate">{pool.primary_token_name}</div>
-              <div className="terminal-primary text-sm">${pool.primary_token_symbol}</div>
+              <div className="text-white text-sm text-base truncate">{pool.primary_token_name}</div>
+              <div className="text-lime-500 font-bold text-sm text-sm">${pool.primary_token_symbol}</div>
               {primaryMetadata.description && (
-                <div className="terminal-label text-xs opacity-60 truncate mt-1">
+                <div className="text-gray-400 text-xs text-xs opacity-60 truncate mt-1">
                   {primaryMetadata.description}
                 </div>
               )}
@@ -225,10 +225,10 @@ const TerminalPoolCard: React.FC<TerminalPoolCardProps> = ({ pool, poolId, tvl, 
               className="w-8 h-8 flex-shrink-0"
             />
             <div className="flex-1 min-w-0">
-              <div className="terminal-value text-xs truncate">{pool.secondary_token_name}</div>
-              <div className="terminal-accent text-xs">${pool.secondary_token_symbol}</div>
+              <div className="text-white text-sm text-xs truncate">{pool.secondary_token_name}</div>
+              <div className="text-gray-600 text-xs text-xs">${pool.secondary_token_symbol}</div>
               {secondaryMetadata.description && (
-                <div className="terminal-label text-xs opacity-50 truncate mt-0.5">
+                <div className="text-gray-400 text-xs text-xs opacity-50 truncate mt-0.5">
                   {secondaryMetadata.description}
                 </div>
               )}
@@ -237,33 +237,33 @@ const TerminalPoolCard: React.FC<TerminalPoolCardProps> = ({ pool, poolId, tvl, 
         </div>
 
         {/* TVL */}
-        <div className="terminal-row">
-          <span className="terminal-label">tvl:</span>
-          <span className="terminal-primary">
-            {tvlLoading ? <span className="terminal-blink">...</span> : tvl ? `$${formatTvl(tvl.tvl)}` : '$0'}
+        <div className="flex justify-between items-center py-0.5">
+          <span className="text-gray-400 text-xs">tvl:</span>
+          <span className="text-lime-500 font-bold text-sm">
+            {tvlLoading ? <span className="animate-pulse">...</span> : tvl ? `$${formatTvl(tvl.tvl)}` : '$0'}
           </span>
         </div>
 
         {/* Created Date */}
-        <div className="terminal-row">
-          <span className="terminal-label">created:</span>
-          <span className="terminal-accent">
+        <div className="flex justify-between items-center py-0.5">
+          <span className="text-gray-400 text-xs">created:</span>
+          <span className="text-gray-600 text-xs">
             {new Date(Number(pool.created_time) / 1000000).toLocaleDateString()}
           </span>
         </div>
       </div>
       
-      <div className="terminal-card-footer">
+      <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
         <button 
-          className="terminal-action flex-1 text-center group" 
+          className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 flex-1 text-center group" 
           onClick={() => navigate(`/swap?id=${poolId}`)}
         >
           <span className="group-hover:hidden">&gt; trade</span>
-          <span className="hidden group-hover:inline">&gt; trade<span className="terminal-blink"></span></span>
+          <span className="hidden group-hover:inline">&gt; trade<span className="animate-pulse"></span></span>
         </button>
-        <button className="terminal-action flex-1 text-center group">
+        <button className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 flex-1 text-center group">
           <span className="group-hover:hidden">&gt; kong</span>
-          <span className="hidden group-hover:inline">&gt; kong<span className="terminal-blink"></span></span>
+          <span className="hidden group-hover:inline">&gt; kong<span className="animate-pulse"></span></span>
         </button>
       </div>
     </div>

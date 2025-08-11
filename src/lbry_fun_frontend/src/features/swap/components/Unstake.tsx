@@ -40,7 +40,7 @@ const Unstake: React.FC = () => {
 
     return (
         <button
-            className={`terminal-button text-xs ${unstakeStatus === 'pending' ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 text-xs ${unstakeStatus === 'pending' ? 'opacity-50 cursor-not-allowed' : ''}`}
             onClick={(e) => handleUnstake(e)}
             disabled={unstakeStatus === 'pending'}
         >

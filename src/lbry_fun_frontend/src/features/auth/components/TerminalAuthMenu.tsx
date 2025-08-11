@@ -45,7 +45,7 @@ const TerminalAuthMenu: React.FC = () => {
       <>
         <button
           onClick={() => setShowAuthModal(true)}
-          className="terminal-button-primary px-4 py-2"
+          className="bg-lime-500 text-black border-0 font-bold hover:bg-lime-400 font-mono text-sm px-4 py-2 w-full px-4 py-2"
         >
           <FontAwesomeIcon icon={faWallet} className="mr-2" />
           <span>&gt; connect_wallet</span>
@@ -57,8 +57,8 @@ const TerminalAuthMenu: React.FC = () => {
 
   return (
     <div className="flex items-center gap-4">
-      <span className="terminal-status-live">[CONNECTED]</span>
-      <span className={`terminal-primary ${isRefreshing ? 'opacity-50' : ''}`}>
+      <span className="text-pink-500 text-xs uppercase">[CONNECTED]</span>
+      <span className={`text-lime-500 font-bold text-sm ${isRefreshing ? 'opacity-50' : ''}`}>
         {balance || "0.00"} ICP
       </span>
       <FontAwesomeIcon 
@@ -77,7 +77,7 @@ const TerminalAuthMenu: React.FC = () => {
       </div>
       <button
         onClick={logout}
-        className="terminal-button px-2 py-1"
+        className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 px-2 py-1"
       >
         <FontAwesomeIcon icon={faPowerOff} />
       </button>

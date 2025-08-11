@@ -50,17 +50,17 @@ const AccessGuard: React.FC<AccessGuardProps> = ({
   if (accessState === AccessState.UNAUTHENTICATED) {
     return (
       <div>
-        <div className="terminal-warning mb-4">
-          <div className="terminal-header mb-2">
-            <span className="terminal-prompt">&gt;</span> <span className="terminal-status">[auth_required]</span>
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded p-4 mb-4">
+          <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-2">
+            <span className="text-pink-500">&gt;</span> <span className="text-yellow-400">[auth_required]</span>
           </div>
-          <div className="terminal-row">
-            <span className="terminal-label">status:</span>
-            <span className="terminal-value">read_only_mode</span>
+          <div className="flex justify-between items-center py-0.5">
+            <span className="text-gray-400 text-xs">status:</span>
+            <span className="text-white text-sm">read_only_mode</span>
           </div>
-          <div className="terminal-row">
-            <span className="terminal-label">action:</span>
-            <span className="terminal-value">connect_wallet_to_enable_trading</span>
+          <div className="flex justify-between items-center py-0.5">
+            <span className="text-gray-400 text-xs">action:</span>
+            <span className="text-white text-sm">connect_wallet_to_enable_trading</span>
           </div>
           <div className="mt-2">
             <TerminalAuthMenu />
@@ -75,18 +75,18 @@ const AccessGuard: React.FC<AccessGuardProps> = ({
   if (accessState === AccessState.AWAITING_LAUNCH) {
     return (
       <div>
-        <div className="terminal-warning mb-4">
-          <div className="terminal-header mb-2">
-            <span className="terminal-prompt">&gt;</span> <span className="terminal-status">[launch_pending]</span>
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded p-4 mb-4">
+          <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-2">
+            <span className="text-pink-500">&gt;</span> <span className="text-yellow-400">[launch_pending]</span>
           </div>
-          <div className="terminal-row">
-            <span className="terminal-label">countdown:</span>
-            <span className="terminal-primary">{formatCountdown(timeRemaining)}</span>
+          <div className="flex justify-between items-center py-0.5">
+            <span className="text-gray-400 text-xs">countdown:</span>
+            <span className="text-lime-500 font-bold text-sm">{formatCountdown(timeRemaining)}</span>
           </div>
           {launchTime && (
-            <div className="terminal-row">
-              <span className="terminal-label">launch_time:</span>
-              <span className="terminal-value">
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">launch_time:</span>
+              <span className="text-white text-sm">
                 {launchTime.toLocaleString('en-US', {
                   month: 'short',
                   day: 'numeric',

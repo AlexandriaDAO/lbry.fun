@@ -38,26 +38,26 @@ const GetTokenPools = () => {
 
   return (
     <div className="w-full">
-      <div className="flex justify-between items-center mb-6 terminal-boot">
+      <div className="flex justify-between items-center mb-6 opacity-100 transition-opacity duration-500">
         <div className="flex items-center space-x-2">
-          <span className="terminal-prompt text-2xl">&gt;</span>
-          <span className="terminal-header text-2xl">active_pools</span>
-          <span className="terminal-status text-lg terminal-typewriter">[{tokenPools?.length || 0} TOKENS]</span>
+          <span className="text-pink-500 text-2xl">&gt;</span>
+          <span className="font-mono font-bold text-white mb-1 text-sm uppercase text-2xl">active_pools</span>
+          <span className="text-gray-400 text-xs text-lg">[{tokenPools?.length || 0} TOKENS]</span>
         </div>
         <button 
-          className="terminal-create-button group"
+          className="bg-black border border-lime-500 text-lime-500 hover:bg-lime-500 hover:text-black px-3 py-1 font-mono text-sm transition-colors uppercase group"
           onClick={() => dispatch(setActiveTokenView('CreateToken'))}
         >
           <span className="group-hover:hidden">&gt; create_token</span>
-          <span className="hidden group-hover:inline">&gt; create_token<span className="terminal-blink"></span></span>
+          <span className="hidden group-hover:inline">&gt; create_token<span className="animate-pulse"></span></span>
         </button>
       </div>
       
       {tokenPools?.length === 0 ? (
-        <p className="terminal-label terminal-blink">no tokens found.</p>
+        <p className="text-gray-400 text-xs animate-pulse">no tokens found.</p>
       ) : (
         <>
-          <div className="terminal-divider-dots mb-4"></div>
+          <div className="border-t border-dotted border-white/30 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 relative">
             {/* Subtle grid lines overlay */}
             <div className="absolute inset-0 pointer-events-none opacity-5">

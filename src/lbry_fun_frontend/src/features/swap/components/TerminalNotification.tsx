@@ -42,11 +42,11 @@ const TerminalNotification: React.FC<TerminalNotificationProps> = ({
   const getStatusClass = () => {
     switch (type) {
       case 'success':
-        return 'terminal-success';
+        return 'text-lime-500 font-bold uppercase';
       case 'error':
-        return 'terminal-error';
+        return 'text-red-500 font-bold uppercase';
       case 'loading':
-        return 'terminal-status-loading';
+        return 'text-pink-500 text-xs uppercase';
       default:
         return 'text-white';
     }
@@ -54,7 +54,7 @@ const TerminalNotification: React.FC<TerminalNotificationProps> = ({
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 max-w-2xl mx-auto">
-      <div className="terminal-pure p-4">
+      <div className="bg-black border border-white/30 font-mono text-sm p-3 p-4">
         <div className="flex items-start gap-2">
           <span className={getStatusClass()}>{getIcon()}</span>
           <div className="flex-1">
@@ -70,13 +70,13 @@ const TerminalNotification: React.FC<TerminalNotificationProps> = ({
           {type === 'confirm' ? (
             <div className="flex gap-2">
               <button
-                className="terminal-button text-xs px-2 py-1"
+                className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 text-xs px-2 py-1"
                 onClick={onClose}
               >
                 CANCEL
               </button>
               <button
-                className="terminal-button-primary text-xs px-2 py-1"
+                className="bg-lime-500 text-black border-0 font-bold hover:bg-lime-400 font-mono text-sm px-4 py-2 w-full text-xs px-2 py-1"
                 onClick={() => {
                   onConfirm?.();
                   onClose();

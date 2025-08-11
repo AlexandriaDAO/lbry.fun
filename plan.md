@@ -1,7 +1,3 @@
-
-
-
-
 - Duplicate logs stored in ICPSwap for the same init/burn/stake/etc. funcs
 
 
@@ -34,7 +30,7 @@
 
 
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "6movs-6vcz3-5ltlm-a7okh-66epv-hs3is-gtsa7-hzwlh-ykci7-hegdd-oae"; subaccount = null }; amount = (100_000_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "c5uww-7b3td-uj2rq-53mpf-ujzzj-x3tnd-6ji2t-ahxek-ljrsf-h3loo-hqe"; subaccount = null }; amount = (100_000_000_000 : nat) })'
 
 dfx identity use default
 

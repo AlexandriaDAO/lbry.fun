@@ -7,6 +7,7 @@ import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swa
 import { stakingThunks } from "../thunks/stakingThunks";
 import ClaimReward from "./ClaimReward";
 import Unstake from "./Unstake";
+// import { TerminalRow, TerminalSection } from '@/components/terminal';
 
 // Destructure for easier access
 const { getStakedInfo, getAllStakesInfo, getStakersCount, getAverageApy } = stakingThunks;
@@ -38,35 +39,36 @@ const StakedInfo: React.FC<StakedInfoProps> = ({ userEstimateReward }) => {
     }, [isAuthenticated, principal, stakeStatus, unstakeStatus, claimStatus, dispatch])
 
     return (
-        <div>
-            <div className="terminal-header mb-2">
-                <span className="terminal-prompt">&gt;</span> stake_info
-            </div>
-            <div className="terminal-info">
-                <div className="terminal-row">
-                    <span className="terminal-label">date:</span>
-                    <span className="terminal-value">{new Date(Number(swap.stakeInfo.unix_stake_time) / 1e6).toLocaleString()}</span>
-                </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">amount_staked:</span>
-                    <span className="terminal-value">{swap.stakeInfo.stakedPrimary} {swap.activeSwapPool&& swap.activeSwapPool[1]?.primary_token_name}</span>
-                </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">amount_earned:</span>
-                    <span className="terminal-value">{swap.stakeInfo.rewardIcp} ICP</span>
-                </div>
-                <div className="terminal-row">
-                    <span className="terminal-label">estimated_reward:</span>
-                    <span className="terminal-value">{userEstimateReward} ICP</span>
-                </div>
-                <div className="terminal-row mt-2">
-                    <span className="terminal-label">actions:</span>
+        <div className="border-t border-white/30 mt-2 pt-3">
+            <TerminalSection title="STAKE_INFO">
+                <TerminalRow 
+                    label="date" 
+                    value={new Date(Number(swap.stakeInfo.unix_stake_time) / 1e6).toLocaleString()}
+                />
+                <TerminalRow 
+                    label="amount_staked" 
+                    value={swap.stakeInfo.stakedPrimary} 
+                    unit={swap.activeSwapPool?.[1]?.primary_token_symbol}
+                    accent
+                />
+                <TerminalRow 
+                    label="amount_earned" 
+                    value={swap.stakeInfo.rewardIcp} 
+                    unit="ICP"
+                    accent
+                />
+                <TerminalRow 
+                    label="estimated_reward" 
+                    value={userEstimateReward} 
+                    unit="ICP"
+                />
+                <TerminalRow label="actions">
                     <div className="flex gap-2">
                         <ClaimReward />
                         <Unstake />
                     </div>
-                </div>
-            </div>
+                </TerminalRow>
+            </TerminalSection>
         </div>
     );
 };

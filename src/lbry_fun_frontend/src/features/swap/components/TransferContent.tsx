@@ -151,7 +151,7 @@ const TransferContent: React.FC = () => {
   const renderSendTab = () => (
     <div className="space-y-4">
       <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
-        <label className="terminal-label text-xs mb-2 block">SELECT TOKEN</label>
+        <label className="text-gray-400 text-xs text-xs mb-2 block">SELECT TOKEN</label>
         <select 
           value={selectedToken} 
           onChange={handleTokenChange}
@@ -172,7 +172,7 @@ const TransferContent: React.FC = () => {
       </div>
 
       <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
-        <label className="terminal-label text-xs mb-2 block">RECIPIENT PRINCIPAL</label>
+        <label className="text-gray-400 text-xs text-xs mb-2 block">RECIPIENT PRINCIPAL</label>
         <input
           type="text"
           value={destinationPrincipal}
@@ -186,7 +186,7 @@ const TransferContent: React.FC = () => {
       </div>
 
       <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
-        <label className="terminal-label text-xs mb-2 block">AMOUNT</label>
+        <label className="text-gray-400 text-xs text-xs mb-2 block">AMOUNT</label>
         <input
           type="number"
           value={amount}
@@ -196,12 +196,12 @@ const TransferContent: React.FC = () => {
         />
         <div className="space-y-1">
           <div className="flex justify-between items-center">
-            <span className="terminal-label text-xs">Balance:</span>
-            <span className="terminal-value text-xs">{getBalance()} {selectedToken}</span>
+            <span className="text-gray-400 text-xs text-xs">Balance:</span>
+            <span className="text-white text-sm text-xs">{getBalance()} {selectedToken}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="terminal-label text-xs">Fee:</span>
-            <span className="terminal-value text-xs">{getFee()} {selectedToken}</span>
+            <span className="text-gray-400 text-xs text-xs">Fee:</span>
+            <span className="text-white text-sm text-xs">{getFee()} {selectedToken}</span>
           </div>
         </div>
       </div>
@@ -226,7 +226,7 @@ const TransferContent: React.FC = () => {
   const renderReceiveTab = () => (
     <div className="space-y-4">
       <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
-        <label className="terminal-label text-xs mb-2 block">YOUR PRINCIPAL ID</label>
+        <label className="text-gray-400 text-xs text-xs mb-2 block">YOUR PRINCIPAL ID</label>
         <div className="break-all text-sm font-mono text-white mb-3">
           {principal || "Not connected"}
         </div>
@@ -235,7 +235,7 @@ const TransferContent: React.FC = () => {
 
       {principal && (
         <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
-          <label className="terminal-label text-xs mb-3 block">QR CODE</label>
+          <label className="text-gray-400 text-xs text-xs mb-3 block">QR CODE</label>
           <div className="flex justify-center p-4 bg-white rounded">
             <QRCode value={principal} size={180} />
           </div>
@@ -243,7 +243,7 @@ const TransferContent: React.FC = () => {
       )}
 
       <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
-        <label className="terminal-label text-xs mb-3 block">SUPPORTED TOKENS</label>
+        <label className="text-gray-400 text-xs text-xs mb-3 block">SUPPORTED TOKENS</label>
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm">ICP</span>

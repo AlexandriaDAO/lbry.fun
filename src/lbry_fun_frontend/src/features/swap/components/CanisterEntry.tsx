@@ -34,7 +34,7 @@ export const CanisterEntry: React.FC<CanisterEntryProps> = ({
         <div className="space-y-2">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <span className="terminal-label w-[140px]">{label}:</span>
+                    <span className="text-gray-400 text-xs w-[140px]">{label}:</span>
                     <span className="hex-address font-mono" title={canisterId}>
                         {shortenCanisterId(canisterId)}
                     </span>
@@ -49,7 +49,7 @@ export const CanisterEntry: React.FC<CanisterEntryProps> = ({
                     {cycleData ? (
                         <div className="flex items-center justify-between pl-8">
                             <div className="flex items-center gap-4">
-                                <span className="terminal-label w-[116px]">cycles:</span>
+                                <span className="text-gray-400 text-xs w-[116px]">cycles:</span>
                                 <span className={`font-mono ${getCycleHealthColor(cycleData.cycles)} ${cycleData.loading ? 'animate-pulse' : ''}`}>
                                     {cycleData.loading ? 'Loading...' : cycleData.cycles}
                                 </span>
@@ -70,7 +70,7 @@ export const CanisterEntry: React.FC<CanisterEntryProps> = ({
                     {(showLogs || showStats) && (
                         <div className="flex items-center justify-between pl-8">
                             <div className="flex items-center gap-4">
-                                <span className="terminal-label w-[116px]"></span>
+                                <span className="text-gray-400 text-xs w-[116px]"></span>
                             </div>
                             <div className="flex items-center gap-2">
                                 {showLogs && canisterType && (

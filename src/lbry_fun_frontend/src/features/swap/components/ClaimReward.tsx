@@ -41,7 +41,7 @@ const ClaimReward: React.FC = () => {
     return (
         <button
             onClick={(e) => handleClaim(e)}
-            className={`terminal-button text-xs ${claimStatus === 'pending' ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 text-xs ${claimStatus === 'pending' ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={claimStatus === 'pending'}
         >
             {claimStatus === 'pending' ? '[CLAIMING...]' : '[CLAIM]'}
