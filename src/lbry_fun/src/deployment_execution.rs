@@ -15,6 +15,12 @@ const CANISTER_INITIAL_CYCLES_TOKENOMICS_CANISTER: u128 = 2_000_000_000_000u128;
 const CANISTER_INITIAL_CYCLES_LOGS_CANISTER: u128 = 2_000_000_000_000u128;
 
 pub async fn execute_deployment_safe(deployment_id: u64) -> Result<u64, String> {
+    // Generate token_id atomically at the start
+    let token_id = TOKENS.with(|tokens| {
+        let tokens = tokens.borrow();
+        tokens.len() as u64 + 1
+    });
+    
     // Get deployment params
     let params = DEPLOYMENTS.with(|deployments| {
         deployments.borrow()
@@ -167,7 +173,7 @@ pub async fn execute_deployment_safe(deployment_id: u64) -> Result<u64, String> 
         Some(tokenomics_canister_id),
         params.distribution_interval_seconds,
         params.launch_delay_seconds,
-        Some(deployment_id),  // Pass deployment_id for now, will map to token_id later
+        Some(token_id),  // Pass the correct token_id
     )
     .await?;
     
@@ -251,13 +257,11 @@ pub async fn execute_deployment_safe(deployment_id: u64) -> Result<u64, String> 
                 pool_id: reply.pool_id.to_string(),
             };
             
-            // Save the successful token
-            let token_id = TOKENS.with(|tokens| {
+            // Save the successful token with pre-generated ID
+            token_record.id = token_id;
+            TOKENS.with(|tokens| {
                 let mut tokens = tokens.borrow_mut();
-                let id = tokens.len() as u64 + 1;
-                token_record.id = id;
-                tokens.insert(id, token_record);
-                id
+                tokens.insert(token_id, token_record);
             });
             
             // Update deployment to completed

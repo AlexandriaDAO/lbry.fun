@@ -318,9 +318,8 @@ export const getLogs = () => getActor(log_canister_id, createActorLogs);
 export const getLbryFunActor = () => {
   if (!lbry_fun_canister_id) {
     console.error("CANISTER_ID_LBRY_FUN is not defined in environment variables");
-  } else {
-    console.log("Using LBRY_FUN canister ID:", lbry_fun_canister_id);
   }
+  // Removed debug logging for canister ID
   return getActor(lbry_fun_canister_id, createActorLbryFun);
 };
 

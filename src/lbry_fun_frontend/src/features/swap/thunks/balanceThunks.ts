@@ -104,7 +104,8 @@ export const getSecondaryBalance = createAsyncThunk<
     try {
       const state = getState();
       if (!state.swap.activeSwapPool) {
-        throw new Error("No active swap pool found");
+        // Return 0 balance when no pool is active instead of throwing
+        return "0.0000";
       }
 
       // Fetching secondary balance from canister

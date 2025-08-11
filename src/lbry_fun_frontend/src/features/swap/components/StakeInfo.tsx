@@ -7,7 +7,7 @@ import { _SERVICE as _SERVICESWAP } from '../../../../../../declarations/icp_swa
 import { stakingThunks } from "../thunks/stakingThunks";
 import ClaimReward from "./ClaimReward";
 import Unstake from "./Unstake";
-// import { TerminalRow, TerminalSection } from '@/components/terminal';
+import { TerminalRow, TerminalSection } from '@/components/terminal';
 
 // Destructure for easier access
 const { getStakedInfo, getAllStakesInfo, getStakersCount, getAverageApy } = stakingThunks;

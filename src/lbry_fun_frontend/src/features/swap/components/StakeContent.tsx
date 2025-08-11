@@ -24,7 +24,7 @@ import { TerminalAuthMenu } from "@/features/auth/components/TerminalAuthMenu";
 import { RootState } from "@/store";
 import UnifiedSkeleton from "./UnifiedSkeleton";
 import { formatDistributionInterval } from '../utils/distributionUtils';
-// import { TerminalRow, TerminalInput, TerminalButton, TerminalSection } from '@/components/terminal';
+import { TerminalRow, TerminalInput, TerminalButton, TerminalSection } from '@/components/terminal';
 
 const StakeContent = () => {
     const dispatch = useAppDispatch();

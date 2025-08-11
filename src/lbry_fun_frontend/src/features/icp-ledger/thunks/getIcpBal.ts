@@ -10,6 +10,11 @@ const getIcpBal = createAsyncThunk<
   { rejectValue: string }
 >("icp_ledger/getIcpBal", async (account, { rejectWithValue }) => {
   try {
+    // Validate account parameter
+    if (!account || account === 'null' || account === 'undefined') {
+      return { formatedAccountBal: "0.0000" };
+    }
+    
     const actor = await getIcpLedgerActor();
     let resultAccountBal = await actor.icrc1_balance_of({
       owner: Principal.fromText(account),

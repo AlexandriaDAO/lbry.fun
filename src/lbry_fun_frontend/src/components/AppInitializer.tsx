@@ -27,16 +27,17 @@ const AppInitializer: React.FC = () => {
     const hasValidIdentity = identity && identity.getPrincipal().toText() !== '2vxsx-fae';
     const uiShowsAuthenticated = isAuthenticated && principal;
     
-    console.log('[AppInitializer] Session check:', {
-      isInitializing,
-      hasValidIdentity,
-      uiShowsAuthenticated,
-      identityPrincipal: identity?.getPrincipal().toText(),
-      reduxPrincipal: principal
-    });
+    // Session check debugging removed - uncomment if needed
+    // console.log('[AppInitializer] Session check:', {
+    //   isInitializing,
+    //   hasValidIdentity,
+    //   uiShowsAuthenticated,
+    //   identityPrincipal: identity?.getPrincipal().toText(),
+    //   reduxPrincipal: principal
+    // });
     
     if (uiShowsAuthenticated && !hasValidIdentity) {
-      console.warn('[AppInitializer] Session expired - clearing auth state');
+      // Session expired - clearing auth state
       dispatch(clearAuth());
       clearAuthCaches(); // Clear all cached actors and agents
       // Force page reload to clear any cached actor state

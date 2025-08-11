@@ -321,7 +321,8 @@ async fn collect_all_fees_internal() -> Result<CollectionSummary, String> {
     
     // Update accumulated total
     TOTAL_ACCUMULATED.with(|total| {
-        *total.borrow_mut() = total.borrow().saturating_add(total_collected);
+        let new_total = total.borrow().saturating_add(total_collected);
+        *total.borrow_mut() = new_total;
     });
     
     // Reset to idle - collection phase complete
