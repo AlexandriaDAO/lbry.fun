@@ -1,5 +1,23 @@
 # ICP Swap Change Log
 
+## 2025-08-12: Treasury Reconciliation Query Fix
+
+### Changes Made:
+1. **queries.rs - get_reconciliation_status() function**:
+   - Changed from `#[query]` to `#[update]` annotation
+   - Added `update` import to use statement
+   
+2. **icp_swap.did**:
+   - Removed `query` designation from `get_reconciliation_status` method signature
+
+### Purpose:
+Fixed runtime error where `get_reconciliation_status` was marked as a query but was making inter-canister calls (via `fetch_canister_icp_balance()`). Query methods in ICP cannot make network calls or inter-canister calls. This was causing "ic0_call_new cannot be executed in replicated query mode" errors.
+
+### Technical Details:
+- Query methods are read-only and execute locally on a single replica
+- Update methods can make inter-canister calls but require consensus
+- The reconciliation status needs to fetch real-time balance from ICP ledger, requiring an inter-canister call
+
 ## 2025-08-12: Burn Refund Accounting Fix
 
 ### Changes Made:

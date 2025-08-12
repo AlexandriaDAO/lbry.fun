@@ -1,6 +1,3 @@
-- Duplicate logs stored in ICPSwap for the same init/burn/stake/etc. funcs
-
-
 - The logs canister isn't getting real lp data from kongswap (and maybe fake data in other graphs)
 
 
@@ -27,7 +24,7 @@ dfx canister call kong_backend force_add_token '("ryjl3-tyaaa-aaaaa-aaaba-cai")'
 
 
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "c5uww-7b3td-uj2rq-53mpf-ujzzj-x3tnd-6ji2t-ahxek-ljrsf-h3loo-hqe"; subaccount = null }; amount = (10_000_000_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "jyf42-65z2k-o5zsk-7sto2-wvjlt-sk2cr-66ewi-q4qpg-snpgj-qsg5u-2qe"; subaccount = null }; amount = (100_000_000_000_000 : nat) })'
 
 
 

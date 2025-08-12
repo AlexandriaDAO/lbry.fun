@@ -1,5 +1,5 @@
 use std::time::Duration;
-use ic_cdk::{init, update};
+use ic_cdk::{init, post_upgrade, update};
 use crate::guard::*;
 use crate::register_log;
 use crate::storage::{Config, CONFIGS};
@@ -42,6 +42,12 @@ pub struct InitArgs {
             .expect("Failed to initialize config");
     });
 
+    let _log_timer_id: ic_cdk_timers::TimerId = ic_cdk_timers::set_timer_interval(LOG_INTERVAL, || ic_cdk::spawn(register_log_wrapper()));
+}
+
+#[post_upgrade]
+fn post_upgrade() {
+    // Simply restart the timer after upgrade
     let _log_timer_id: ic_cdk_timers::TimerId = ic_cdk_timers::set_timer_interval(LOG_INTERVAL, || ic_cdk::spawn(register_log_wrapper()));
 }
 

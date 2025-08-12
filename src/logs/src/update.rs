@@ -1,4 +1,5 @@
 use ic_cdk::update;
+use candid::Nat;
 use crate::guard::*;
 use crate::{
     utils::{
@@ -11,13 +12,14 @@ use crate::{
 
 #[update(guard = "is_canister")]
 pub async fn register_log() -> Result<String, String> {
-    let primary_token_supply = get_primary_token_supply().await?;
-    let secondary_token_supply = get_secondary_token_supply().await?;
-    let total_secondary_burned = get_total_secondary_burned().await?;
-    let icp_in_lp_treasury = get_icp_in_lp_treasury().await?;
-    let total_primary_staked = get_total_primary_staked().await?;
-    let staker_count = get_stakers_count().await?;
-    let apy = get_apy_value().await?;
+    // Use unwrap_or with sensible defaults instead of ? operator
+    let primary_token_supply = get_primary_token_supply().await.unwrap_or(Nat::from(0u128));
+    let secondary_token_supply = get_secondary_token_supply().await.unwrap_or(Nat::from(0u128));
+    let total_secondary_burned = get_total_secondary_burned().await.unwrap_or(0);
+    let icp_in_lp_treasury = get_icp_in_lp_treasury().await.unwrap_or(0);
+    let total_primary_staked = get_total_primary_staked().await.unwrap_or(Nat::from(0u128));
+    let staker_count = get_stakers_count().await.unwrap_or(0);
+    let apy = get_apy_value().await.unwrap_or(0);
     let time = ic_cdk::api::time();
 
     LOGS.with(|logs| -> Result<(), String> {
@@ -36,7 +38,7 @@ pub async fn register_log() -> Result<String, String> {
             apy,
         };
 
-        log_map.insert(time.clone(), new_log);
+        log_map.insert(time, new_log);
         Ok(())
     })?;
     Ok("Logged!".to_string())

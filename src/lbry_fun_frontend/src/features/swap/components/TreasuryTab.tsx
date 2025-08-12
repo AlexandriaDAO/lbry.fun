@@ -54,7 +54,8 @@ const TreasuryTab: React.FC = () => {
   const fetchData = async () => {
     if (!activeSwapPool) return;
     
-    const tokenId = activeSwapPool[0];
+    // activeSwapPool[0] is the numeric pool ID as a string, convert to BigInt for the backend call
+    const tokenId = BigInt(activeSwapPool[0]);
     try {
       const actor = await getLbryFunActor();
       
@@ -73,12 +74,15 @@ const TreasuryTab: React.FC = () => {
       });
       
       // Fetch token-specific data separately
+      console.log('Fetching token reconciliation for token ID:', tokenId.toString());
       actor.get_token_reconciliation(tokenId)
         .then(result => {
+          console.log('Token reconciliation result:', result);
           if ('Ok' in result) {
             setTokenReconciliation(result.Ok);
             setDataLoadStatus(prev => ({ ...prev, token: true }));
           } else {
+            console.error('Token reconciliation returned Err:', result.Err);
             setError(`Token reconciliation error: ${result.Err}`);
           }
         })

@@ -12,7 +12,7 @@ use crate::{
     ALLOWED_DISCREPANCY_E8S,
 };
 use candid::{CandidType, Principal};
-use ic_cdk::{api::caller, query};
+use ic_cdk::{api::caller, query, update};
 use serde::Deserialize;
 //swap
 #[query]
@@ -192,7 +192,7 @@ pub fn get_reward_pool_status() -> u64 {
     REWARD_POOL.with(|p| p.borrow().get(&()).unwrap_or(0))
 }
 
-#[query]
+#[update]
 pub async fn get_reconciliation_status() -> ReconciliationStatus {
     // 1. Get actual ICP balance from ledger using existing utility
     let actual_balance = match crate::utils::fetch_canister_icp_balance().await {

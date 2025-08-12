@@ -1,5 +1,5 @@
 use candid::{CandidType, Principal};
-use ic_cdk::query;
+use ic_cdk::{query, update};
 use ic_cdk_timers::set_timer_interval;
 use serde::{Deserialize};
 use std::cell::RefCell;
@@ -464,7 +464,7 @@ pub fn init_reconciliation_timer() {
 }
 
 // Query 1: System Reconciliation (Balance Focus)
-#[query]
+#[update]
 pub async fn get_system_reconciliation() -> SystemReconciliationSummary {
     let mut total_uncollected_alex = 0u64;
     let mut tokens_with_discrepancies = Vec::new();
@@ -502,7 +502,7 @@ pub async fn get_system_reconciliation() -> SystemReconciliationSummary {
 }
 
 // Query 2: Collection Metrics (Performance Focus)
-#[query]
+#[update]
 pub fn get_collection_metrics() -> CollectionMetrics {
     let total_accumulated = TOTAL_ACCUMULATED.with(|t| *t.borrow());
     let total_burned = TOTAL_BURNED.with(|t| *t.borrow());
@@ -529,7 +529,7 @@ pub fn get_collection_metrics() -> CollectionMetrics {
 }
 
 // Query 3: Token Health (Status Focus)
-#[query]
+#[update]
 pub fn get_token_health_summary() -> TokenHealthSummary {
     let mut healthy_count = 0u32;
     let mut unhealthy_count = 0u32;
@@ -568,7 +568,7 @@ pub fn get_token_health_summary() -> TokenHealthSummary {
 }
 
 // Query 4: Individual Token Reconciliation
-#[query]
+#[update]
 pub async fn get_token_reconciliation(token_id: u64) -> Result<ReconciliationDetail, String> {
     let (icp_swap_canister, primary_token_id) = TOKENS.with(|t| {
         let record = t.borrow().get(&token_id);
