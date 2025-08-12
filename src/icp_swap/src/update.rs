@@ -381,6 +381,20 @@ pub async fn burn_secondary(
                 "burn_secondary",
                 &format!("Successfully sent {} ICP (e8s) to {}", amount_icp_e8s, caller)
             );
+            
+            // Deduct the refunded ICP from the reward pool
+            // This is necessary because the ICP was originally added to the pool during swap
+            // but when we refund 50% during burn, we need to remove it from the pool
+            REWARD_POOL.with(|p| {
+                let current = p.borrow().get(&()).unwrap_or(0);
+                let new_total = current.saturating_sub(amount_icp_e8s);
+                p.borrow_mut().insert((), new_total);
+            });
+            register_info_log(
+                caller,
+                "burn_secondary",
+                &format!("Deducted {} ICP (e8s) from reward pool for burn refund", amount_icp_e8s)
+            );
         }
         Err(e) => {
             let amount_icp_after_fee = amount_icp_e8s

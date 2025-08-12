@@ -49,6 +49,7 @@ const getTokenPools = createAsyncThunk<
             threshold_multiplier: record.threshold_multiplier,
             distribution_interval_seconds: record.distribution_interval_seconds.toString(),
             status: record.status,
+            codebase_version: record.codebase_version,
             isLive: isLive,
           },
         ];
@@ -108,6 +109,7 @@ export type TokenRecordStringified = {
   threshold_multiplier: number;
   distribution_interval_seconds: string;
   status: TokenStatus;
+  codebase_version: string;
   isLive: boolean;
   primary_token_logo_base64?: string;
   secondary_token_logo_base64?: string;

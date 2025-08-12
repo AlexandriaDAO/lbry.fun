@@ -297,7 +297,7 @@ const StakeContent = () => {
                     )}
                     <div className="text-xs text-gray-600">
                         <span className="text-pink-500">*</span>
-                        <span className="ml-1">check redeem page if transaction fails</span>
+                        <span className="ml-1">failed transactions will create an archived balance in the swap tab</span>
                     </div>
                 </TerminalSection>
 

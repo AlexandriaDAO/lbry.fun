@@ -1,5 +1,8 @@
 use candid::Principal;
 
+// Codebase version - Update this when making changes to the codebase
+pub const CODEBASE_VERSION: &str = "0.1.0";
+
 // Admin principal
 const ADMIN_PRINCIPAL_STR: &str = "56kka-oe6xl-acccy-6cc5r-odus2-insgr-kk5ch-3d5i5-rwoit-3juc3-jqe";
 

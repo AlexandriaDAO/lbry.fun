@@ -243,7 +243,7 @@ const SwapContent: React.FC = () => {
               )}
               
               <div className="mt-3">
-                <span className="text-xs text-gray-400">* Failed transactions can be redeemed below</span>
+                <span className="text-xs text-gray-400">* Failed transactions will create an archived balance that can be redeemed</span>
               </div>
             </div>
           </div>
@@ -284,7 +284,7 @@ const SwapContent: React.FC = () => {
         </div>
 
         {/* Redeem Section */}
-        {isAuthenticated && swap.archivedBalance && Number(swap.archivedBalance) > 0 && (
+        {isAuthenticated && swap.archivedBalance && Number(swap.archivedBalance) > 0 ? (
           <div className="mt-6 border-t border-white/10 pt-6">
             <button
               onClick={handleToggleRedeemSection}
@@ -318,6 +318,13 @@ const SwapContent: React.FC = () => {
                 </button>
               </div>
             )}
+          </div>
+        ) : isAuthenticated && (
+          <div className="mt-6 border-t border-white/10 pt-6">
+            <div className="text-xs text-gray-500">
+              <span className="text-gray-400">No archived balance</span>
+              <span className="text-gray-600 ml-2">• Redemption is only needed if a transaction fails</span>
+            </div>
           </div>
         )}
 

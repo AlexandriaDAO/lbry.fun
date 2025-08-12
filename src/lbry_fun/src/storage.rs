@@ -58,6 +58,7 @@ pub struct TokenRecord {
     pub caller: Principal,
     pub created_time: u64,
     pub launched_at: u64, // When token goes live (created_time + launch_delay)
+    pub codebase_version: String,
 }
 
 impl Storable for TokenStatus {

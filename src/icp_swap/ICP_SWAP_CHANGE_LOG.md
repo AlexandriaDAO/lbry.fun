@@ -1,5 +1,21 @@
 # ICP Swap Change Log
 
+## 2025-08-12: Burn Refund Accounting Fix
+
+### Changes Made:
+1. **update.rs - burn_secondary() function**:
+   - Added REWARD_POOL deduction when ICP is refunded to users during burn
+   - After successful `send_icp`, now deducts `amount_icp_e8s` from REWARD_POOL
+   - Added logging to track the deduction
+
+### Purpose:
+Fixed critical accounting bug where burn refunds were not being deducted from REWARD_POOL. When users swap ICP for secondary tokens, the full amount goes into REWARD_POOL. But when they burn secondary tokens and receive 50% ICP back, this wasn't being deducted, causing phantom ICP accumulation in the pool.
+
+### Technical Details:
+- Uses `saturating_sub` to safely deduct from REWARD_POOL
+- Maintains consistency: money in (swap) increases pool, money out (burn) decreases pool
+- Ensures REWARD_POOL tracks net ICP (deposits minus refunds)
+
 ## 2025-08-09: Restored APY Tracking in distribute_reward()
 
 ### Changes Made:

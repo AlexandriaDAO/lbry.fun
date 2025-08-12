@@ -39,6 +39,7 @@ const getLiveTokens = createAsyncThunk<
         threshold_multiplier: record.threshold_multiplier,
         distribution_interval_seconds: record.distribution_interval_seconds.toString(),
         status: record.status,
+        codebase_version: record.codebase_version,
         isLive: true, // get_live() already filters for tokens where status is Live AND current_time >= launched_at
       },
     ]);

@@ -241,6 +241,7 @@ pub async fn execute_deployment_safe(deployment_id: u64) -> Result<u64, String> 
         caller,
         created_time: ic_cdk::api::time(),
         launched_at: ic_cdk::api::time() + params.launch_delay_seconds * 1_000_000_000,
+        codebase_version: crate::CODEBASE_VERSION.to_string(),
     };
     
     // Attempt to create pool on KongSwap

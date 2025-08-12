@@ -268,7 +268,7 @@ const BurnContent = () => {
                             <div className="mt-3 space-y-1">
                                 <span className="text-xs text-gray-400">* Burns are irreversible</span>
                                 <br />
-                                <span className="text-xs text-gray-400">* Failed transactions can be redeemed in swap tab</span>
+                                <span className="text-xs text-gray-400">* Failed transactions will create an archived balance in the swap tab</span>
                             </div>
                         </div>
                     </div>

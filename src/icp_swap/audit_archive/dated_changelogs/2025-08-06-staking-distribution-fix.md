@@ -4,6 +4,7 @@
 Fixed staking rewards showing 0 ICP by:
 1. Adding swapped ICP to the REWARD_POOL (it was never being funded)
 2. Replacing LP fee accumulation with direct proportional distribution to stakers
+3. **[2025-08-12 Update]** Fixed REWARD_POOL accounting to deduct burn refunds
 
 ## Problem
 - **Critical Issue**: REWARD_POOL was never being funded - swap operations didn't add ICP to the pool
@@ -218,3 +219,37 @@ Perfect 99:1 ratio maintained between stakers (0.99% of pool) and platform (0.01
 - **Platform receives its fee**: ALEX stakers get 0.01% of pool per interval via UNCOLLECTED_ALEX_FEES
 - **UNCOLLECTED_LP_FEES removed**: LP fees now distributed directly to stakers
 - **Perfect 99:1 ratio maintained**: Distribution splits correctly between stakers and platform
+
+## 2025-08-12 Update: Burn Refund Fix
+
+### Problem Discovered
+After implementing REWARD_POOL funding, a critical accounting bug was discovered:
+- When users swap ICP for secondary tokens, the full amount is added to REWARD_POOL
+- When users burn secondary tokens, they receive 50% ICP refund
+- **Bug**: The refunded ICP was NOT being deducted from REWARD_POOL
+- This created phantom ICP in the pool equal to all historical burn refunds
+
+### Solution
+Added logic to deduct burn refunds from REWARD_POOL in the `burn_secondary` function:
+
+```rust
+// In burn_secondary, after successful send_icp:
+// Deduct the refunded ICP from the reward pool
+// This is necessary because the ICP was originally added to the pool during swap
+// but when we refund 50% during burn, we need to remove it from the pool
+REWARD_POOL.with(|p| {
+    let current = p.borrow().get(&()).unwrap_or(0);
+    let new_total = current.saturating_sub(amount_icp_e8s);
+    p.borrow_mut().insert((), new_total);
+});
+register_info_log(
+    caller,
+    "burn_secondary",
+    &format!("Deducted {} ICP (e8s) from reward pool for burn refund", amount_icp_e8s)
+);
+```
+
+### Impact
+- REWARD_POOL now correctly tracks net ICP (deposits minus refunds)
+- Prevents accumulation of phantom ICP in the reward pool
+- Ensures accurate reward distribution calculations
