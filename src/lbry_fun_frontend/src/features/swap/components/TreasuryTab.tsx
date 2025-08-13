@@ -10,6 +10,7 @@ import {
   calculateTimeUntilNextDistribution,
   getHealthColor 
 } from '@/utils/treasury';
+import TooltipIcon from '@/features/token/components/TooltipIcon';
 import type { 
   SystemReconciliationSummary, 
   CollectionMetrics, 
@@ -169,19 +170,28 @@ const TreasuryTab: React.FC = () => {
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs">Reward Pool (Awaiting Distribution):</span>
+              <span className="text-gray-400 text-xs flex items-center">
+                Reward Pool (Awaiting Distribution):
+                <TooltipIcon text="ICP collected from users buying secondary tokens. Every interval (e.g., hourly), 1% of this pool is distributed: 99% to stakers as yield, 1% as platform fees. Think of it as the 'treasury' that pays out staking rewards." />
+              </span>
               <span className="text-white text-sm text-lime-400">
                 {formatE8sToICP(tokenReconciliation.reconciliation.reward_pool)} ICP
               </span>
             </div>
             <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs">Reserved for Stakers:</span>
+              <span className="text-gray-400 text-xs flex items-center">
+                Reserved for Stakers:
+                <TooltipIcon text="Total ICP rewards earned by all stakers but not yet claimed. This is YOUR money if you're staking - it accumulates every distribution and you can claim it anytime. Higher stakes = bigger share of rewards." />
+              </span>
               <span className="text-white text-sm">
                 {formatE8sToICP(tokenReconciliation.reconciliation.total_staked)} ICP
               </span>
             </div>
             <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs">Pending Collection:</span>
+              <span className="text-gray-400 text-xs flex items-center">
+                Pending Collection:
+                <TooltipIcon text="Platform fees (1% of distributions) waiting to be collected by the protocol. These fees support the parent project ($LBRY) through buy-and-burn mechanics. Not claimable by users." />
+              </span>
               <span className="text-white text-sm text-amber-400">
                 {formatE8sToICP(
                   tokenReconciliation.reconciliation.uncollected_alex_fees
@@ -209,22 +219,34 @@ const TreasuryTab: React.FC = () => {
                 <div className="terminal-divider-single my-2" />
                 <div className="text-xs space-y-1 text-gray-500">
                   <div className="flex justify-between">
-                    <span>Expected Balance:</span>
+                    <span className="flex items-center">
+                      Expected Balance:
+                      <TooltipIcon text="Sum of all ICP that should be in the contract: reward pool + staker rewards + platform fees + operational buffer. This is what the math says we should have." />
+                    </span>
                     <span>{formatE8sToICP(tokenReconciliation.reconciliation.icp_balance_expected)} ICP</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Actual Balance:</span>
+                    <span className="flex items-center">
+                      Actual Balance:
+                      <TooltipIcon text="The real ICP balance from the blockchain ledger. This is what we actually have. Should match Expected Balance exactly." />
+                    </span>
                     <span>{formatE8sToICP(tokenReconciliation.reconciliation.icp_balance_actual)} ICP</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Discrepancy:</span>
+                    <span className="flex items-center">
+                      Discrepancy:
+                      <TooltipIcon text="Difference between Expected and Actual. Should be zero. Any non-zero value indicates an accounting error that needs investigation." />
+                    </span>
                     <span className={tokenReconciliation.reconciliation.requires_attention ? 'text-red-400' : 'text-gray-400'}>
                       {formatDiscrepancy(tokenReconciliation.reconciliation.discrepancy_e8s)}
                     </span>
                   </div>
                   {tokenReconciliation.reconciliation.operational_balance_suspicious && (
                     <div className="flex justify-between">
-                      <span>Operational Balance:</span>
+                      <span className="flex items-center">
+                        Operational Balance:
+                        <TooltipIcon text="ICP buffer for transaction fees and operations. Should be minimal (< 0.1 ICP). High values indicate ICP that isn't properly allocated to rewards or fees." />
+                      </span>
                       <span className="text-amber-400">
                         {formatE8sToICP(tokenReconciliation.reconciliation.operational_balance)} ICP (High)
                       </span>
@@ -245,19 +267,28 @@ const TreasuryTab: React.FC = () => {
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs">Total ICP Distributed:</span>
+              <span className="text-gray-400 text-xs flex items-center">
+                Total ICP Distributed:
+                <TooltipIcon text="Lifetime ICP paid out to stakers. This shows the protocol's total yield generation. Higher = more rewards have been earned by stakers over time." />
+              </span>
               <span className="text-white text-sm">
                 {formatE8sToICP(collectionMetrics.total_accumulated_icp)} ICP
               </span>
             </div>
             <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs">Total LBRY Burned:</span>
+              <span className="text-gray-400 text-xs flex items-center">
+                Total LBRY Burned:
+                <TooltipIcon text="Amount of $LBRY (parent project token) bought and burned using platform fees. This creates deflationary pressure on $LBRY, benefiting all holders." />
+              </span>
               <span className="text-white text-sm">
                 {formatE8sToICP(collectionMetrics.total_burned_lbry)} LBRY
               </span>
             </div>
             <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs">Collection Efficiency:</span>
+              <span className="text-gray-400 text-xs flex items-center">
+                Collection Efficiency:
+                <TooltipIcon text="Success rate of fee collection operations. Should be near 100%. Lower values indicate technical issues with the collection mechanism." />
+              </span>
               <span className={`terminal-value ${
                 collectionMetrics.collection_efficiency_basis_points > 9000 
                   ? 'text-lime-400' 
@@ -267,7 +298,10 @@ const TreasuryTab: React.FC = () => {
               </span>
             </div>
             <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs">Next Distribution:</span>
+              <span className="text-gray-400 text-xs flex items-center">
+                Next Distribution:
+                <TooltipIcon text="Countdown to next reward payout. When this hits zero, 1% of the reward pool gets distributed to stakers. Set your watch and compound those gains!" />
+              </span>
               <span className="text-white text-sm">
                 {calculateTimeUntilNextDistribution(
                   collectionMetrics.last_successful_collection,
@@ -295,7 +329,10 @@ const TreasuryTab: React.FC = () => {
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs">Platform-wide Pending Fees:</span>
+              <span className="text-gray-400 text-xs flex items-center">
+                Platform-wide Pending Fees:
+                <TooltipIcon text="Total uncollected platform fees across ALL tokens on the launchpad. Shows the protocol's overall fee accumulation waiting to be processed for $LBRY buyback." />
+              </span>
               <span className="text-white text-sm">
                 {formatE8sToICP(
                   systemReconciliation.total_uncollected_alex
@@ -303,14 +340,20 @@ const TreasuryTab: React.FC = () => {
               </span>
             </div>
             <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs">Healthy Tokens:</span>
+              <span className="text-gray-400 text-xs flex items-center">
+                Healthy Tokens:
+                <TooltipIcon text="Tokens operating normally vs those with issues. Healthy = distributions working, no accounting errors. Monitor this for overall platform health." />
+              </span>
               <span className="text-white text-sm text-lime-400">
                 {tokenHealth.healthy_tokens} / {tokenHealth.healthy_tokens + tokenHealth.unhealthy_tokens}
               </span>
             </div>
             {tokenHealth.stagnant_tokens.length > 0 && (
               <div className="flex justify-between items-center py-0.5">
-                <span className="text-gray-400 text-xs">Stagnant Tokens:</span>
+                <span className="text-gray-400 text-xs flex items-center">
+                  Stagnant Tokens:
+                  <TooltipIcon text="Tokens with no activity for 24+ hours. Could indicate dead projects or technical issues preventing transactions." />
+                </span>
                 <span className="text-white text-sm text-amber-400">
                   {tokenHealth.stagnant_tokens.length}
                 </span>
@@ -318,7 +361,10 @@ const TreasuryTab: React.FC = () => {
             )}
             {systemReconciliation.tokens_with_discrepancies.length > 0 && (
               <div className="flex justify-between items-center py-0.5">
-                <span className="text-gray-400 text-xs">Tokens with Discrepancies:</span>
+                <span className="text-gray-400 text-xs flex items-center">
+                  Tokens with Discrepancies:
+                  <TooltipIcon text="Tokens where internal accounting doesn't match blockchain balance. RED FLAG - indicates potential bugs or exploits that need immediate investigation." />
+                </span>
                 <span className="text-white text-sm text-red-400">
                   {systemReconciliation.tokens_with_discrepancies.length}
                 </span>

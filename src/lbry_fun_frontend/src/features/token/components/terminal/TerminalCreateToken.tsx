@@ -55,9 +55,9 @@ const TerminalCreateToken: React.FC = () => {
   const { activeDeploymentId } = useAppSelector((state: RootState) => state.deployment);
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [warnings, setWarnings] = useState<FormErrors>({});
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const [halvingStepWarning, setHalvingStepWarning] = useState<string>('');
   const [status, setStatus] = useState<{
     type: 'loading' | 'success' | 'error' | 'idle';
     message?: string;
@@ -76,13 +76,13 @@ const TerminalCreateToken: React.FC = () => {
     secondary_token_name: '',
     secondary_token_description: '',
     secondary_token_logo_base64: '',
-    primary_max_supply: '21000000',
+    primary_max_supply: '1000000000',
     tge_allocation: '0',
     initial_secondary_burn: '1000000',
     primary_token_logo_base64: '',
-    halving_step: '50',
-    threshold_multiplier: '2',
-    initial_reward_per_burn_unit: '0.105',
+    halving_step: '95',
+    threshold_multiplier: '1.5',
+    initial_reward_per_burn_unit: '1',
     distribution_interval_seconds: '3600',
     launch_delay_seconds: '86400',
   });
@@ -90,16 +90,8 @@ const TerminalCreateToken: React.FC = () => {
   // Validation logic
   useEffect(() => {
     const newErrors: FormErrors = {};
+    const newWarnings: FormErrors = {};
 
-    // Set informational warnings
-    const step = parseInt(form.halving_step, 10);
-    if (step >= 25 && step < 40) {
-      setHalvingStepWarning("A low value creates an extreme front-load. The number of tokens minted will drop sharply after the first epoch.");
-    } else if (step > 75 && step <= 99) {
-      setHalvingStepWarning("A high value causes the number of tokens minted per epoch to increase over time. This leads to higher inflation in later stages.");
-    } else {
-      setHalvingStepWarning('');
-    }
 
     // Validation for disabling form submission
     const requiredFields: Array<keyof TokenFormValues> = [
@@ -113,11 +105,42 @@ const TerminalCreateToken: React.FC = () => {
       }
     });
 
-    if (form.primary_token_symbol && !/^[A-Z]{3,5}$/.test(form.primary_token_symbol)) {
-      newErrors.primary_token_symbol = 'Ticker must be 3-5 uppercase letters';
+    // Symbol validation (2-10 characters, letters and numbers allowed per ICRC1)
+    if (form.primary_token_symbol) {
+      if (form.primary_token_symbol.length < 2 || form.primary_token_symbol.length > 10) {
+        newErrors.primary_token_symbol = 'Symbol must be 2-10 characters';
+      } else if (!/^[A-Za-z0-9]+$/.test(form.primary_token_symbol)) {
+        newErrors.primary_token_symbol = 'Symbol must contain only letters and numbers';
+      } else if (/[a-z]/.test(form.primary_token_symbol)) {
+        // Warning for lowercase - not a blocking error but important to note
+        newWarnings.primary_token_symbol = '⚠️ Contains lowercase letters - unconventional! Standard is uppercase (e.g., BTC, ETH). This is permanent.';
+      }
     }
-    if (form.secondary_token_symbol && !/^[A-Z]{3,5}$/.test(form.secondary_token_symbol)) {
-      newErrors.secondary_token_symbol = 'Ticker must be 3-5 uppercase letters';
+    if (form.secondary_token_symbol) {
+      if (form.secondary_token_symbol.length < 2 || form.secondary_token_symbol.length > 10) {
+        newErrors.secondary_token_symbol = 'Symbol must be 2-10 characters';
+      } else if (!/^[A-Za-z0-9]+$/.test(form.secondary_token_symbol)) {
+        newErrors.secondary_token_symbol = 'Symbol must contain only letters and numbers';
+      } else if (/[a-z]/.test(form.secondary_token_symbol)) {
+        // Warning for lowercase - not a blocking error but important to note
+        newWarnings.secondary_token_symbol = '⚠️ Contains lowercase letters - unconventional! Standard is uppercase (e.g., BTC, ETH). This is permanent.';
+      }
+    }
+    
+    // Name validation (max 100 characters)
+    if (form.primary_token_name && form.primary_token_name.length > 100) {
+      newErrors.primary_token_name = `Name too long (${form.primary_token_name.length}/100 characters)`;
+    }
+    if (form.secondary_token_name && form.secondary_token_name.length > 100) {
+      newErrors.secondary_token_name = `Name too long (${form.secondary_token_name.length}/100 characters)`;
+    }
+    
+    // Description validation (max 500 characters)
+    if (form.primary_token_description && form.primary_token_description.length > 500) {
+      newErrors.primary_token_description = `Description too long (${form.primary_token_description.length}/500 characters)`;
+    }
+    if (form.secondary_token_description && form.secondary_token_description.length > 500) {
+      newErrors.secondary_token_description = `Description too long (${form.secondary_token_description.length}/500 characters)`;
     }
     
     const numericFields: Array<keyof TokenFormValues> = [
@@ -135,35 +158,8 @@ const TerminalCreateToken: React.FC = () => {
       newErrors.primary_max_supply = 'Hard cap must be at least 1,000,000 tokens (prevents dust issues)';
     }
 
-    const initialBurn = parseFloat(form.initial_secondary_burn);
-    const secondaryTokenPrice = 0.005;
-    if (!newErrors.initial_secondary_burn && initialBurn > 0 && (initialBurn * secondaryTokenPrice) < 5000) {
-      newErrors.initial_secondary_burn = `Initial valuation must be at least $5,000 to prevent bot attacks. Current: $${(initialBurn * secondaryTokenPrice).toLocaleString()}`;
-    }
 
-    // Calculate theoretical first epoch
-    const remainingSupply = hardCap - parseInt(form.tge_allocation || '1');
-    const initialReward = parseInt(form.initial_reward_per_burn_unit);
-    const initialBurnAmount = parseInt(form.initial_secondary_burn);
-    
-    if (!newErrors.initial_reward_per_burn_unit && remainingSupply > 0 && initialReward > 0) {
-      const firstEpochMint = initialReward * initialBurnAmount;
-      const firstEpochPercent = (firstEpochMint / remainingSupply) * 100;
-      
-      if (firstEpochPercent > 30) {
-        newErrors.initial_reward_per_burn_unit = 
-          `First epoch would capture ${firstEpochPercent.toFixed(1)}% of supply - reduce initial reward to max 30% for fair distribution`;
-      }
-      
-      if (firstEpochPercent > 90) {
-        newErrors.initial_reward_per_burn_unit = 
-          `CRITICAL: These parameters would attempt to mint ${firstEpochPercent.toFixed(1)}% in first epoch alone! Max supply would be exceeded.`;
-      }
-    }
 
-    if (!newErrors.halving_step && (step < 25 || step > 99)) {
-      newErrors.halving_step = `Halving Step must be between 25% and 99%.`;
-    }
     
     // Validate threshold multiplier
     const multiplier = parseFloat(form.threshold_multiplier);
@@ -186,6 +182,7 @@ const TerminalCreateToken: React.FC = () => {
     }
 
     setErrors(newErrors);
+    setWarnings(newWarnings);
   }, [form]);
 
   const handleFieldTouch = (field: string) => {
@@ -204,6 +201,11 @@ const TerminalCreateToken: React.FC = () => {
       'threshold_multiplier'
     ];
     
+    const symbolFields: Array<keyof TokenFormValues> = [
+      'primary_token_symbol',
+      'secondary_token_symbol'
+    ];
+    
     if (field === 'tge_allocation') return;
 
     if (integerFieldNames.includes(field)) {
@@ -213,6 +215,11 @@ const TerminalCreateToken: React.FC = () => {
     } else if (decimalFieldNames.includes(field)) {
       // Allow decimals for these fields
       if (value === '' || /^\d*\.?\d*$/.test(value)) {
+        setForm(prev => ({ ...prev, [field]: value }));
+      }
+    } else if (symbolFields.includes(field)) {
+      // For symbol fields: only allow letters and numbers per ICRC1 standard
+      if (value === '' || /^[A-Za-z0-9]*$/.test(value)) {
         setForm(prev => ({ ...prev, [field]: value }));
       }
     } else {
@@ -226,6 +233,11 @@ const TerminalCreateToken: React.FC = () => {
   // Helper to determine if an error should be shown
   const shouldShowError = (field: string): boolean => {
     return submitAttempted && !!errors[field];
+  };
+  
+  // Helper to determine if a warning should be shown
+  const shouldShowWarning = (field: string): boolean => {
+    return touchedFields.has(field) && !!warnings[field];
   };
 
   // Helper to format large numbers in human-readable format
@@ -391,6 +403,8 @@ const TerminalCreateToken: React.FC = () => {
               onBlur={() => handleFieldTouch('primary_token_name')}
               error={shouldShowError('primary_token_name') ? errors.primary_token_name : undefined}
               placeholder="Enter token name"
+              maxLength={100}
+              helperText={form.primary_token_name ? `${form.primary_token_name.length}/100 characters` : undefined}
               required
             />
             
@@ -399,8 +413,11 @@ const TerminalCreateToken: React.FC = () => {
               value={form.primary_token_symbol}
               onChange={(v) => updateForm('primary_token_symbol', v)}
               onBlur={() => handleFieldTouch('primary_token_symbol')}
-              error={shouldShowError('primary_token_symbol') ? errors.primary_token_symbol : undefined}
-              placeholder="3-5 uppercase letters"
+              error={shouldShowError('primary_token_symbol') ? errors.primary_token_symbol : 
+                     shouldShowWarning('primary_token_symbol') ? warnings.primary_token_symbol : undefined}
+              placeholder="e.g., BTC, USDT, ckETH"
+              maxLength={10}
+              helperText={form.primary_token_symbol ? `${form.primary_token_symbol.length}/10 characters` : '2-10 characters'}
               required
             />
             
@@ -412,6 +429,8 @@ const TerminalCreateToken: React.FC = () => {
               error={shouldShowError('primary_token_description') ? errors.primary_token_description : undefined}
               placeholder="Describe your token"
               rows={4}
+              maxLength={500}
+              helperText={form.primary_token_description ? `${form.primary_token_description.length}/500 characters` : undefined}
               required
             />
             
@@ -434,8 +453,11 @@ const TerminalCreateToken: React.FC = () => {
               label="name"
               value={form.secondary_token_name}
               onChange={(v) => updateForm('secondary_token_name', v)}
+              onBlur={() => handleFieldTouch('secondary_token_name')}
               error={shouldShowError('secondary_token_name') ? errors.secondary_token_name : undefined}
               placeholder="Enter token name"
+              maxLength={100}
+              helperText={form.secondary_token_name ? `${form.secondary_token_name.length}/100 characters` : undefined}
               required
             />
             
@@ -443,8 +465,12 @@ const TerminalCreateToken: React.FC = () => {
               label="symbol"
               value={form.secondary_token_symbol}
               onChange={(v) => updateForm('secondary_token_symbol', v)}
-              error={shouldShowError('secondary_token_symbol') ? errors.secondary_token_symbol : undefined}
-              placeholder="3-5 uppercase letters"
+              onBlur={() => handleFieldTouch('secondary_token_symbol')}
+              error={shouldShowError('secondary_token_symbol') ? errors.secondary_token_symbol : 
+                     shouldShowWarning('secondary_token_symbol') ? warnings.secondary_token_symbol : undefined}
+              placeholder="e.g., xBTC, mUSDT"
+              maxLength={10}
+              helperText={form.secondary_token_symbol ? `${form.secondary_token_symbol.length}/10 characters` : '2-10 characters'}
               required
             />
             
@@ -452,9 +478,12 @@ const TerminalCreateToken: React.FC = () => {
               label="description"
               value={form.secondary_token_description}
               onChange={(v) => updateForm('secondary_token_description', v)}
+              onBlur={() => handleFieldTouch('secondary_token_description')}
               error={shouldShowError('secondary_token_description') ? errors.secondary_token_description : undefined}
               placeholder="Describe your token"
               rows={4}
+              maxLength={500}
+              helperText={form.secondary_token_description ? `${form.secondary_token_description.length}/500 characters` : undefined}
               required
             />
             
@@ -561,9 +590,6 @@ const TerminalCreateToken: React.FC = () => {
                 step={100000}
                 helperText={form.initial_secondary_burn ? `initial_valuation: $${(parseInt(form.initial_secondary_burn) * 0.005).toLocaleString()} USD` : ''}
               />
-              {form.initial_secondary_burn && parseInt(form.initial_secondary_burn) * 0.005 < 5000 && (
-                <div className="text-yellow-500 text-xs mt-1 font-mono">[WARN] Initial valuation below $5,000 threshold - vulnerable to bot attacks</div>
-              )}
             </div>
 
             {/* Halving Step */}
@@ -590,7 +616,6 @@ const TerminalCreateToken: React.FC = () => {
                 max={99}
                 step={1}
                 suffix="%"
-                warning={halvingStepWarning}
               />
             </div>
 
@@ -669,14 +694,6 @@ const TerminalCreateToken: React.FC = () => {
             )}
           </div>
         </div>
-
-        {/* Parameter Validation Warnings */}
-        {(form.initial_reward_per_burn_unit && form.primary_max_supply && 
-          parseInt(form.initial_reward_per_burn_unit) > (parseInt(form.primary_max_supply) - parseInt(form.tge_allocation || '1')) * 0.1) && (
-          <div className="bg-yellow-900/20 border border-yellow-500/30 text-yellow-400 p-3 font-mono text-sm">
-            [WARN] High reward exceeds 10% of remaining supply - enables unfair launches where bots can monopolize early epochs. Reduce initial reward to ensure at least 3 meaningful distribution epochs.
-          </div>
-        )}
 
         {/* Divider */}
         <div className="border-t border-white/10 my-6"></div>

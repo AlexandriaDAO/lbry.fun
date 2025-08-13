@@ -9,6 +9,8 @@ interface TerminalInputProps {
   placeholder?: string;
   name?: string;
   required?: boolean;
+  maxLength?: number;
+  helperText?: string;
 }
 
 export const TerminalInput: React.FC<TerminalInputProps> = ({ 
@@ -19,7 +21,9 @@ export const TerminalInput: React.FC<TerminalInputProps> = ({
   error,
   placeholder,
   name,
-  required = false
+  required = false,
+  maxLength,
+  helperText
 }) => {
   return (
     <div className="terminal-field">
@@ -33,9 +37,11 @@ export const TerminalInput: React.FC<TerminalInputProps> = ({
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           placeholder={placeholder}
+          maxLength={maxLength}
           className="terminal-input"
         />
       </div>
+      {helperText && <div className="terminal-helper text-gray-500 text-xs mt-1">{helperText}</div>}
       {error && <div className="terminal-error">[ERROR] {error}</div>}
     </div>
   );
@@ -51,6 +57,8 @@ interface TerminalTextareaProps {
   name?: string;
   rows?: number;
   required?: boolean;
+  maxLength?: number;
+  helperText?: string;
 }
 
 export const TerminalTextarea: React.FC<TerminalTextareaProps> = ({
@@ -62,7 +70,9 @@ export const TerminalTextarea: React.FC<TerminalTextareaProps> = ({
   placeholder,
   name,
   rows = 3,
-  required = false
+  required = false,
+  maxLength,
+  helperText
 }) => {
   return (
     <div className="terminal-field">
@@ -75,7 +85,9 @@ export const TerminalTextarea: React.FC<TerminalTextareaProps> = ({
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
         placeholder={placeholder}
+        maxLength={maxLength}
       />
+      {helperText && <div className="terminal-helper text-gray-500 text-xs mt-1">{helperText}</div>}
       {error && <div className="terminal-error">[ERROR] {error}</div>}
     </div>
   );

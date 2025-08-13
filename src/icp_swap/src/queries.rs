@@ -217,29 +217,32 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
     let reward_pool = REWARD_POOL.with(|p| p.borrow().get(&()).unwrap_or(0));
     let uncollected_alex = UNCOLLECTED_ALEX_FEES.with(|f| f.borrow().get(&()).unwrap_or(0));
     
-    // 3. Calculate total staked (sum of all user stakes)
+    // 3. Calculate total ICP rewards reserved for stakers (sum of all accumulated rewards)
     let total_staked = STAKES.with(|stakes| {
         stakes.borrow().iter()
-            .map(|(_, stake)| stake.amount)
+            .map(|(_, stake)| stake.reward_icp as u64)
             .sum::<u64>()
     });
     
-    // 4. Calculate operational balance (for transfers, fees, etc)
+    // 4. Get archived balance (ICP held for users from failed transactions)
+    let archived_balance = get_total_archived_balance();
+    
+    // 5. Calculate operational balance (for transfers, fees, etc)
     // This is balance not accounted for in other categories
-    let accounted_balance = reward_pool + uncollected_alex + total_staked;
+    let accounted_balance = reward_pool + uncollected_alex + total_staked + archived_balance;
     let operational_balance = if actual_balance > accounted_balance {
         actual_balance - accounted_balance
     } else {
         0
     };
     
-    // 5. Expected balance includes all components
-    let expected_balance = reward_pool + uncollected_alex + total_staked + operational_balance;
+    // 6. Expected balance includes all components
+    let expected_balance = reward_pool + uncollected_alex + total_staked + archived_balance + operational_balance;
     
-    // 6. Calculate discrepancy (integer arithmetic only)
+    // 7. Calculate discrepancy (integer arithmetic only)
     let discrepancy = (actual_balance as i64) - (expected_balance as i64);
     
-    // 7. Validate operational balance isn't suspiciously high
+    // 8. Validate operational balance isn't suspiciously high
     // If operational balance is more than 10% of total staked, flag it
     let operational_balance_suspicious = if total_staked > 0 {
         operational_balance > (total_staked / 10)
