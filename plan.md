@@ -1,5 +1,5 @@
 - The logs canister isn't getting real lp data from kongswap (and maybe fake data in other graphs)
-
+- Execute_swap_and_burn placeholder
 
 
 - Display price from ICP SWAP

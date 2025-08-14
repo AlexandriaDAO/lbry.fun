@@ -57,6 +57,12 @@ your_reward=$(echo "$your_stake" | grep -oE '[0-9_]+\s*:\s*nat[^6]' | grep -oE '
 if [ -z "$your_reward" ]; then your_reward=0; fi
 your_reward_icp=$(echo "scale=8; $your_reward / 100000000" | bc)
 
+# Get YOUR archived balance (if you have failed transactions)
+your_archive=$(dfx canister call $ICP_SWAP get_user_archive_balance "(principal \"$USER_PRINCIPAL\")" 2>/dev/null)
+your_archived=$(echo "$your_archive" | grep -oE '[0-9_]+' | head -1 | tr -d '_')
+if [ -z "$your_archived" ]; then your_archived=0; fi
+your_archived_icp=$(echo "scale=8; $your_archived / 100000000" | bc)
+
 # Get reward pool (ICP collected but not yet distributed)
 reward_pool=$(dfx canister call $ICP_SWAP get_reward_pool_status 2>/dev/null | grep -oE '[0-9_]+' | head -1 | tr -d '_')
 if [ -z "$reward_pool" ]; then reward_pool=0; fi
@@ -72,14 +78,21 @@ total_unclaimed=$(dfx canister call $ICP_SWAP get_total_unclaimed_icp_reward '()
 if [ -z "$total_unclaimed" ]; then total_unclaimed=0; fi
 total_unclaimed_icp=$(echo "scale=8; $total_unclaimed / 100000000" | bc)
 
+# Get total archived balance (failed transactions awaiting redemption)
+total_archived=$(dfx canister call $ICP_SWAP get_total_archived_balance '()' 2>/dev/null | grep -oE '[0-9_]+' | head -1 | tr -d '_')
+if [ -z "$total_archived" ]; then total_archived=0; fi
+total_archived_icp=$(echo "scale=8; $total_archived / 100000000" | bc)
+
 echo -e "${MAGENTA}[STATE]${NC} Your Unclaimed:      ${GREEN}$(printf "%.8f" $your_reward_icp) ICP${NC}"
+echo -e "${MAGENTA}[STATE]${NC} Your Archived:       ${GREEN}$(printf "%.8f" $your_archived_icp) ICP${NC}"
 echo -e "${MAGENTA}[STATE]${NC} All Unclaimed:       ${GREEN}$(printf "%.8f" $total_unclaimed_icp) ICP${NC}"
+echo -e "${MAGENTA}[STATE]${NC} Total Archived:      ${GREEN}$(printf "%.8f" $total_archived_icp) ICP${NC}"
 echo -e "${MAGENTA}[STATE]${NC} Reward Pool:         ${GREEN}$(printf "%.8f" $reward_pool_icp) ICP${NC}"
 echo -e "${MAGENTA}[STATE]${NC} Uncollected Fees:    ${GREEN}$(printf "%.8f" $uncollected_fees_icp) ICP${NC}"
 echo ""
 
 # Internal total (calculate in E8S for precision)
-internal_total_e8s=$((total_unclaimed + reward_pool + uncollected_fees))
+internal_total_e8s=$((total_unclaimed + reward_pool + uncollected_fees + total_archived))
 internal_total=$(echo "scale=8; $internal_total_e8s / 100000000" | bc)
 echo -e "${BLUE}Swap Internal Total:         ${GREEN}$(printf "%.8f" $internal_total) ICP${NC}"
 echo ""

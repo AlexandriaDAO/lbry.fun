@@ -1,5 +1,5 @@
 use candid::Principal;
-use ic_cdk::{heartbeat, update, query};
+use ic_cdk::heartbeat;
 
 use crate::{
     deployment::*,
@@ -133,20 +133,8 @@ async fn cleanup_deployment_with_progress(deployment: &Deployment) -> Result<(),
             Err(e) => {
                 errors.push(format!("Refund failed: {}", e));
                 
-                // Store for manual processing
-                FAILED_REFUNDS.with(|refunds| {
-                    refunds.borrow_mut().insert(
-                        deployment.user,
-                        FailedRefund {
-                            user: deployment.user,
-                            amount: refund_amount,
-                            payment_block: deployment.payment_block,
-                            deployment_id: deployment.id,
-                            failed_at: ic_cdk::api::time(),
-                            error: e,
-                        }
-                    );
-                });
+                // Log the failed refund for monitoring
+                ic_cdk::println!("Failed to refund {} to {}: {}", refund_amount, deployment.user, e);
             }
         }
     }
@@ -158,147 +146,4 @@ async fn cleanup_deployment_with_progress(deployment: &Deployment) -> Result<(),
     }
 }
 
-/// Get deployments that need manual intervention
-#[query(guard = "is_admin")]
-fn get_stuck_deployments() -> Vec<StuckDeploymentInfo> {
-    DEPLOYMENTS.with(|deployments| {
-        deployments.borrow()
-            .iter()
-            .filter(|(_, d)| {
-                // Failed with max retries or stuck in Cleaning
-                (matches!(d.status, DeploymentStatus::Failed) && d.cleanup_attempts >= 3) ||
-                (matches!(d.status, DeploymentStatus::Cleaning) && d.cleanup_attempts >= 3)
-            })
-            .map(|(id, d)| StuckDeploymentInfo {
-                id,
-                user: d.user,
-                status: format!("{:?}", d.status),
-                created_at: d.created_at,
-                cleanup_attempts: d.cleanup_attempts,
-                last_error: d.last_error.clone(),
-                created_canisters: d.created_canisters.clone(),
-                deleted_canisters: d.deleted_canisters.clone(),
-                payment_amount: d.payment_amount,
-            })
-            .collect()
-    })
-}
 
-/// Force cleanup of a specific deployment
-#[update(guard = "is_admin")]
-async fn admin_force_cleanup(deployment_id: u64, options: AdminCleanupOptions) -> Result<String, String> {
-    let deployment = DEPLOYMENTS.with(|deployments| {
-        deployments.borrow().get(&deployment_id)
-    }).ok_or("Deployment not found")?;
-    
-    let mut results = vec![];
-    
-    // Force delete canisters if requested
-    if options.force_delete_canisters {
-        for canister in &deployment.created_canisters {
-            if deployment.deleted_canisters.contains(canister) {
-                continue;
-            }
-            
-            match stop_and_delete_canister(*canister).await {
-                Ok(_) => results.push(format!("Deleted canister {}", canister)),
-                Err(e) => results.push(format!("Failed to delete {}: {}", canister, e)),
-            }
-        }
-    }
-    
-    // Force refund if requested
-    if options.force_refund {
-        // Platform fee: 1 ICP (100_000_000 e8s) to cover cycle costs and prevent abuse
-        const PLATFORM_FEE: u64 = 100_000_000; // 1 ICP
-        let refund_amount = deployment.payment_amount.saturating_sub(PLATFORM_FEE);
-        match transfer_icp_to_account(deployment.user, refund_amount).await {
-            Ok(_) => results.push(format!("Refunded {} ICP", refund_amount as f64 / 100_000_000.0)),
-            Err(e) => results.push(format!("Refund failed: {}", e)),
-        }
-    }
-    
-    // Remove deployment record if requested
-    if options.remove_record {
-        DEPLOYMENTS.with(|deployments| {
-            deployments.borrow_mut().remove(&deployment_id);
-        });
-        results.push("Removed deployment record".to_string());
-    }
-    
-    Ok(results.join("\n"))
-}
-
-/// Retry failed refunds
-#[update(guard = "is_admin")]
-async fn admin_retry_failed_refunds() -> Result<Vec<String>, String> {
-    let failed_refunds = FAILED_REFUNDS.with(|refunds| {
-        refunds.borrow()
-            .iter()
-            .map(|(_, r)| r.clone())
-            .collect::<Vec<_>>()
-    });
-    
-    let mut results = vec![];
-    
-    for refund in failed_refunds {
-        match transfer_icp_to_account(refund.user, refund.amount).await {
-            Ok(_) => {
-                FAILED_REFUNDS.with(|refunds| {
-                    refunds.borrow_mut().remove(&refund.user);
-                });
-                results.push(format!(
-                    "Successfully refunded {} ICP to {}",
-                    refund.amount as f64 / 100_000_000.0,
-                    refund.user
-                ));
-            }
-            Err(e) => {
-                results.push(format!(
-                    "Failed to refund {} ICP to {}: {}",
-                    refund.amount as f64 / 100_000_000.0,
-                    refund.user,
-                    e
-                ));
-            }
-        }
-    }
-    
-    Ok(results)
-}
-
-/// Check if caller is admin
-fn is_admin() -> Result<(), String> {
-    let caller = ic_cdk::caller();
-    
-    if crate::is_admin_principal(&caller) {
-        Ok(())
-    } else {
-        Err("Not authorized".to_string())
-    }
-}
-
-/// Migrate V9 deployments to V10 format
-#[update(guard = "is_admin")]
-fn migrate_v9_deployments() -> String {
-    let mut migrated = 0;
-    
-    // Add version field and other V10 fields to existing deployments
-    DEPLOYMENTS.with(|deployments| {
-        let mut deps = deployments.borrow_mut();
-        let ids: Vec<u64> = deps.iter().map(|(id, _)| id).collect();
-        
-        for id in ids {
-            if let Some(mut deployment) = deps.get(&id) {
-                deployment.version = 0;
-                deployment.last_activity = deployment.created_at;
-                deployment.deleted_canisters = vec![];
-                deployment.payment_amount = 500_000_000; // Standard 5 ICP
-                deps.insert(id, deployment);
-                migrated += 1;
-            }
-        }
-    });
-    
-    format!("Migrated {} deployments to V10 format", migrated)
-}

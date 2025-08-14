@@ -18,8 +18,6 @@ mod tokenomics_simple;
 pub use tokenomics_simple::{TokenomicsSchedule, EpochData};
 mod simulation_new;
 pub use simulation_new::{PreviewArgs, GraphData};
-mod preview_canister;
-pub use preview_canister::{preview_tokenomics_with_real_canister};
 mod queries;
 pub use queries::*;
 mod update;

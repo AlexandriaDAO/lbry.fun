@@ -13,7 +13,6 @@ type Memory = VirtualMemory<DefaultMemoryImpl>;
 pub const DEPLOYMENTS_MEM_ID: MemoryId = MemoryId::new(10);
 pub const USER_ACTIVE_DEPLOYMENTS_MEM_ID: MemoryId = MemoryId::new(11);
 pub const DEPLOYMENT_COUNTER_MEM_ID: MemoryId = MemoryId::new(12);
-pub const FAILED_REFUNDS_MEM_ID: MemoryId = MemoryId::new(13);
 
 #[derive(CandidType, Deserialize, Clone, Debug, PartialEq)]
 pub enum DeploymentStatus {
@@ -62,15 +61,6 @@ pub struct Deployment {
     pub token_id: Option<u64>,           // Set on successful completion
 }
 
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub struct FailedRefund {
-    pub user: Principal,
-    pub amount: u64,
-    pub payment_block: u64,
-    pub deployment_id: u64,
-    pub failed_at: u64,
-    pub error: String,
-}
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct DeploymentInfo {
@@ -85,25 +75,6 @@ pub struct DeploymentInfo {
     pub last_error: Option<String>,
 }
 
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub struct StuckDeploymentInfo {
-    pub id: u64,
-    pub user: Principal,
-    pub status: String,
-    pub created_at: u64,
-    pub cleanup_attempts: u8,
-    pub last_error: Option<String>,
-    pub created_canisters: Vec<Principal>,
-    pub deleted_canisters: Vec<Principal>,
-    pub payment_amount: u64,
-}
-
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub struct AdminCleanupOptions {
-    pub force_delete_canisters: bool,
-    pub force_refund: bool,
-    pub remove_record: bool,
-}
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct TokenDeploymentResult {
@@ -115,16 +86,6 @@ pub struct TokenDeploymentResult {
 
 // Storable implementations
 impl Storable for Deployment {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
-    }
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
-    }
-    const BOUND: Bound = Bound::Unbounded;
-}
-
-impl Storable for FailedRefund {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }
@@ -155,13 +116,6 @@ thread_local! {
             crate::storage::MEMORY_MANAGER.with(|m| m.borrow().get(DEPLOYMENT_COUNTER_MEM_ID)),
             0
         ).unwrap())
-    };
-    
-    // Failed refunds for manual processing
-    pub static FAILED_REFUNDS: RefCell<StableBTreeMap<Principal, FailedRefund, Memory>> = {
-        RefCell::new(StableBTreeMap::init(
-            crate::storage::MEMORY_MANAGER.with(|m| m.borrow().get(FAILED_REFUNDS_MEM_ID))
-        ))
     };
 }
 

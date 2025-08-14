@@ -3,17 +3,14 @@ use ic_cdk::{query, update};
 use ic_cdk_timers::set_timer_interval;
 use serde::{Deserialize};
 use std::cell::RefCell;
-use std::collections::BTreeMap;
 use std::time::Duration;
 
 use crate::{TOKENS};
 
 // Constants
-const MIN_COLLECTION_AMOUNT: u64 = 1_000_000;     // 0.01 ICP per token
 const MIN_SWAP_AMOUNT: u64 = 100_000_000;         // 1 ICP total
 const COLLECTION_INTERVAL: u64 = 3600;             // 1 hour
 const OPERATION_TIMEOUT: u64 = 600_000_000_000;   // 10 minutes in nanoseconds
-const DE_PEG_THRESHOLD: f64 = 0.0001;              // 0.01% price deviation triggers alert
 const STAGNATION_THRESHOLD: u64 = 86400;          // 24 hours without collection
 
 // Audit state for monitoring
@@ -36,16 +33,6 @@ pub enum SwapState {
     Failed { error: String, timestamp: u64 },
 }
 
-// Enhanced token info with audit data
-#[derive(CandidType, Deserialize)]
-pub struct TokenCollectionInfo {
-    pub canister_id: Principal,
-    pub registered_at: u64,
-    pub total_collected: u64,
-    pub last_collection_attempt: u64,
-    pub last_successful_collection: u64,
-    pub consecutive_failures: u32,
-}
 
 // Collection summary (defined later in file)
 
@@ -69,22 +56,6 @@ pub struct CollectionMetrics {
     pub failed_collections_24h: u32,
 }
 
-// Query 3: Per-token health status
-#[derive(CandidType, Deserialize)]
-pub struct TokenHealthSummary {
-    pub healthy_tokens: u32,
-    pub unhealthy_tokens: u32,
-    pub stagnant_tokens: Vec<Principal>,
-    pub tokens_with_failures: Vec<TokenFailureInfo>,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct TokenFailureInfo {
-    pub token_id: Principal,
-    pub consecutive_failures: u32,
-    pub last_error: String,
-    pub uncollected_amount: u64,
-}
 
 // Mirror of ICP Swap's ReconciliationStatus type for cross-canister calls
 #[derive(CandidType, Deserialize)]
@@ -130,7 +101,6 @@ pub struct AuditAlerts {
 
 // Main state
 thread_local! {
-    static TOKEN_REGISTRY: RefCell<BTreeMap<Principal, TokenCollectionInfo>> = RefCell::new(BTreeMap::new());
     static SWAP_STATE: RefCell<SwapState> = RefCell::new(SwapState::Idle);
     static TOTAL_ACCUMULATED: RefCell<u64> = RefCell::new(0);
     static TOTAL_BURNED: RefCell<u64> = RefCell::new(0);
@@ -232,29 +202,12 @@ async fn collect_all_fees_internal() -> Result<CollectionSummary, String> {
                 if amount > 0 {
                     total_collected = total_collected.saturating_add(amount);
                     successful_collections += 1;
-                    
-                    // Update registry
-                    TOKEN_REGISTRY.with(|reg| {
-                        if let Some(info) = reg.borrow_mut().get_mut(&token_id) {
-                            info.total_collected = info.total_collected.saturating_add(amount);
-                            info.last_successful_collection = ic_cdk::api::time();
-                            info.consecutive_failures = 0;
-                        }
-                    });
                 }
                 collection_results.push((token_id, Ok(amount)));
             }
             Err(e) => {
                 failed_collections += 1;
                 collection_results.push((token_id, Err(e.clone())));
-                
-                // Update failure tracking
-                TOKEN_REGISTRY.with(|reg| {
-                    if let Some(info) = reg.borrow_mut().get_mut(&token_id) {
-                        info.consecutive_failures += 1;
-                        info.last_collection_attempt = ic_cdk::api::time();
-                    }
-                });
             }
         }
     }
@@ -270,13 +223,8 @@ async fn collect_all_fees_internal() -> Result<CollectionSummary, String> {
             10000 - actual_basis_points
         };
         
-        // NEW: Also check for balance discrepancies in individual tokens
-        let health_summary = get_token_health_summary();
-        let has_unhealthy_tokens = health_summary.unhealthy_tokens > 0 || 
-                                  !health_summary.stagnant_tokens.is_empty();
-        
-        // DE_PEG_THRESHOLD_BASIS_POINTS = 1 (0.01% as basis points)
-        deviation_basis_points > 1 || has_unhealthy_tokens
+        // Check if deviation > 0.01% (1 basis point)
+        deviation_basis_points > 1
     } else {
         false
     };
@@ -412,16 +360,7 @@ pub fn get_audit_state() -> AuditState {
     AUDIT_STATE.with(|a| a.borrow().clone())
 }
 
-#[query]
-pub fn get_problematic_tokens() -> Vec<(Principal, u32)> {
-    TOKEN_REGISTRY.with(|reg| {
-        reg.borrow()
-            .iter()
-            .filter(|(_, info)| info.consecutive_failures > 3)
-            .map(|(id, info)| (*id, info.consecutive_failures))
-            .collect()
-    })
-}
+// Removed get_problematic_tokens - TOKEN_REGISTRY was never populated
 
 #[query]
 pub fn get_collection_status() -> (SwapState, u64) {
@@ -449,15 +388,6 @@ pub fn init_reconciliation_timer() {
                     ));
                 }
                 
-                // Check token health separately
-                let health = get_token_health_summary();
-                if health.unhealthy_tokens > 0 {
-                    ic_cdk::print(format!(
-                        "Token Health Alert - {} unhealthy tokens, {} stagnant",
-                        health.unhealthy_tokens,
-                        health.stagnant_tokens.len()
-                    ));
-                }
             });
         }
     );
@@ -528,44 +458,6 @@ pub fn get_collection_metrics() -> CollectionMetrics {
     }
 }
 
-// Query 3: Token Health (Status Focus)
-#[update]
-pub fn get_token_health_summary() -> TokenHealthSummary {
-    let mut healthy_count = 0u32;
-    let mut unhealthy_count = 0u32;
-    let mut stagnant_tokens = Vec::new();
-    let mut tokens_with_failures = Vec::new();
-    
-    let current_time = ic_cdk::api::time();
-    let stagnation_threshold = current_time - (STAGNATION_THRESHOLD * 1_000_000_000);
-    
-    TOKEN_REGISTRY.with(|registry| {
-        for (token_id, info) in registry.borrow().iter() {
-            if info.consecutive_failures > 0 {
-                unhealthy_count += 1;
-                tokens_with_failures.push(TokenFailureInfo {
-                    token_id: *token_id,
-                    consecutive_failures: info.consecutive_failures,
-                    last_error: "Collection failed".to_string(),
-                    uncollected_amount: 0,  // Would need async call to get
-                });
-            } else {
-                healthy_count += 1;
-            }
-            
-            if info.last_successful_collection < stagnation_threshold {
-                stagnant_tokens.push(*token_id);
-            }
-        }
-    });
-    
-    TokenHealthSummary {
-        healthy_tokens: healthy_count,
-        unhealthy_tokens: unhealthy_count,
-        stagnant_tokens,
-        tokens_with_failures,
-    }
-}
 
 // Query 4: Individual Token Reconciliation
 #[update]

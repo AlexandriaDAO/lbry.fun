@@ -59,14 +59,17 @@ const DistributionTracker: React.FC<DistributionTrackerProps> = ({ icpSwapCanist
     );
   }
 
-  if (!distributionSummary) {
+  if (!distributionSummary || distributionSummary.message === "Distribution tracking coming soon") {
     return (
       <div className="bg-black border border-white/30 font-mono text-sm p-3 mb-6">
         <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-2">
           <span className="text-pink-500">&gt;</span> distribution_status
         </div>
         <div className="flex justify-between items-center py-0.5">
-          <span className="text-gray-600 text-xs">no_distribution_data_available</span>
+          <span className="text-gray-600 text-xs">distribution_event_tracking_coming_soon</span>
+        </div>
+        <div className="mt-2 text-gray-500 text-xs">
+          <span>Protocol fee distribution occurs automatically every interval.</span>
         </div>
       </div>
     );

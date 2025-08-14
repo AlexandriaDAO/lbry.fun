@@ -55,17 +55,17 @@ const StakedInfo: React.FC<StakedInfoProps> = ({ userEstimateReward }) => {
             <TerminalSection title="STAKE_INFO">
                 <TerminalRow 
                     label="date" 
-                    value={new Date(Number(swap.stakeInfo.unix_stake_time) / 1e6).toLocaleString()}
+                    value={swap.stakeInfo ? new Date(Number(swap.stakeInfo.unix_stake_time) / 1e6).toLocaleString() : 'N/A'}
                 />
                 <TerminalRow 
                     label="amount_staked" 
-                    value={swap.stakeInfo.stakedPrimary} 
+                    value={swap.stakeInfo?.stakedPrimary || '0'} 
                     unit={swap.activeSwapPool?.[1]?.primary_token_symbol}
                     accent
                 />
                 <TerminalRow 
                     label="amount_earned" 
-                    value={swap.stakeInfo.rewardIcp} 
+                    value={swap.stakeInfo?.rewardIcp || '0'} 
                     unit="ICP"
                     accent
                 />

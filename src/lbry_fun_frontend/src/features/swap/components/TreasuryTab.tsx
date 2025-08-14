@@ -14,21 +14,18 @@ import TooltipIcon from '@/features/token/components/TooltipIcon';
 import type { 
   SystemReconciliationSummary, 
   CollectionMetrics, 
-  TokenHealthSummary,
   ReconciliationDetail
 } from '../../../../../declarations/lbry_fun/lbry_fun.did';
 
 interface TreasuryState {
   systemReconciliation: SystemReconciliationSummary | null;
   collectionMetrics: CollectionMetrics | null;
-  tokenHealth: TokenHealthSummary | null;
   tokenReconciliation: ReconciliationDetail | null;
   isLoading: boolean;
   error: string | null;
   dataLoadStatus: {
     system: boolean;
     metrics: boolean;
-    health: boolean;
     token: boolean;
   };
 }
@@ -37,7 +34,6 @@ const TreasuryTab: React.FC = () => {
   const { activeSwapPool, distributionInterval } = useAppSelector(state => state.swap);
   const [systemReconciliation, setSystemReconciliation] = useState<SystemReconciliationSummary | null>(null);
   const [collectionMetrics, setCollectionMetrics] = useState<CollectionMetrics | null>(null);
-  const [tokenHealth, setTokenHealth] = useState<TokenHealthSummary | null>(null);
   const [tokenReconciliation, setTokenReconciliation] = useState<ReconciliationDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,13 +59,11 @@ const TreasuryTab: React.FC = () => {
       // Fetch system-wide data (don't wait for token-specific data)
       Promise.all([
         actor.get_system_reconciliation(),
-        actor.get_collection_metrics(),
-        actor.get_token_health_summary()
-      ]).then(([systemRecon, metrics, health]) => {
+        actor.get_collection_metrics()
+      ]).then(([systemRecon, metrics]) => {
         setSystemReconciliation(systemRecon);
         setCollectionMetrics(metrics);
-        setTokenHealth(health);
-        setDataLoadStatus(prev => ({ ...prev, system: true, metrics: true, health: true }));
+        setDataLoadStatus(prev => ({ ...prev, system: true, metrics: true }));
       }).catch(err => {
         console.error('Failed to fetch system data:', err);
       });
@@ -322,7 +316,7 @@ const TreasuryTab: React.FC = () => {
       )}
       
       {/* System Overview - Priority 3 */}
-      {dataLoadStatus.system && systemReconciliation && tokenHealth && (
+      {dataLoadStatus.system && systemReconciliation && (
         <div className="border-t border-white/30 mt-2 pt-1">
           <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-3">
             <span className="text-pink-500">&gt;&gt;</span> SYSTEM OVERVIEW
@@ -339,26 +333,6 @@ const TreasuryTab: React.FC = () => {
                 )} ICP
               </span>
             </div>
-            <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs flex items-center">
-                Healthy Tokens:
-                <TooltipIcon text="Tokens operating normally vs those with issues. Healthy = distributions working, no accounting errors. Monitor this for overall platform health." />
-              </span>
-              <span className="text-white text-sm text-lime-400">
-                {tokenHealth.healthy_tokens} / {tokenHealth.healthy_tokens + tokenHealth.unhealthy_tokens}
-              </span>
-            </div>
-            {tokenHealth.stagnant_tokens.length > 0 && (
-              <div className="flex justify-between items-center py-0.5">
-                <span className="text-gray-400 text-xs flex items-center">
-                  Stagnant Tokens:
-                  <TooltipIcon text="Tokens with no activity for 24+ hours. Could indicate dead projects or technical issues preventing transactions." />
-                </span>
-                <span className="text-white text-sm text-amber-400">
-                  {tokenHealth.stagnant_tokens.length}
-                </span>
-              </div>
-            )}
             {systemReconciliation.tokens_with_discrepancies.length > 0 && (
               <div className="flex justify-between items-center py-0.5">
                 <span className="text-gray-400 text-xs flex items-center">

@@ -1,8 +1,3 @@
-type AdminCleanupOptions = record {
-  force_refund : bool;
-  remove_record : bool;
-  force_delete_canisters : bool;
-};
 type AuditState = record {
   last_successful_collection : nat64;
   expected_value : nat64;
@@ -92,25 +87,13 @@ type ReconciliationStatus = record {
   operational_balance : nat64;
 };
 type Result = variant { Ok : text; Err : text };
-type Result_1 = variant { Ok : vec text; Err : text };
-type Result_2 = variant { Ok : nat; Err : TransferFromError };
-type Result_3 = variant { Ok : TokenDeploymentResult; Err : text };
-type Result_4 = variant { Ok : nat; Err : text };
-type Result_5 = variant { Ok : ReconciliationDetail; Err : text };
-type Result_6 = variant { Ok : TokenStatus; Err : text };
-type Result_7 = variant { Ok : GraphData; Err : text };
-type Result_8 = variant { Ok : nat64; Err : text };
-type StuckDeploymentInfo = record {
-  id : nat64;
-  cleanup_attempts : nat8;
-  last_error : opt text;
-  status : text;
-  payment_amount : nat64;
-  deleted_canisters : vec principal;
-  user : principal;
-  created_at : nat64;
-  created_canisters : vec principal;
-};
+type Result_1 = variant { Ok : nat; Err : TransferFromError };
+type Result_2 = variant { Ok : TokenDeploymentResult; Err : text };
+type Result_3 = variant { Ok : nat; Err : text };
+type Result_4 = variant { Ok : ReconciliationDetail; Err : text };
+type Result_5 = variant { Ok : TokenStatus; Err : text };
+type Result_6 = variant { Ok : GraphData; Err : text };
+type Result_7 = variant { Ok : nat64; Err : text };
 type SwapState = variant {
   Failed : record { error : text; timestamp : nat64 };
   Collecting : record { started_at : nat64 };
@@ -125,18 +108,6 @@ type SystemReconciliationSummary = record {
   timestamp : nat64;
 };
 type TokenDeploymentResult = record { token_id : nat64; message : text };
-type TokenFailureInfo = record {
-  last_error : text;
-  token_id : principal;
-  uncollected_amount : nat64;
-  consecutive_failures : nat32;
-};
-type TokenHealthSummary = record {
-  healthy_tokens : nat32;
-  unhealthy_tokens : nat32;
-  stagnant_tokens : vec principal;
-  tokens_with_failures : vec TokenFailureInfo;
-};
 type TokenRecord = record {
   id : nat64;
   status : TokenStatus;
@@ -192,10 +163,6 @@ type TransferFromError = variant {
   InsufficientFunds : record { balance : nat };
 };
 service : () -> {
-  // Force cleanup of a specific deployment
-  admin_force_cleanup : (nat64, AdminCleanupOptions) -> (Result);
-  // Retry failed refunds
-  admin_retry_failed_refunds : () -> (Result_1);
   create_token : (
       text,
       text,
@@ -214,35 +181,27 @@ service : () -> {
       nat64,
       nat64,
     ) -> (Result);
-  deposit_icp_in_canister : (nat64, opt blob) -> (Result_2);
+  deposit_icp_in_canister : (nat64, opt blob) -> (Result_1);
   // Phase 2: Execute the deployment with the given ID
-  execute_token_deployment : (nat64) -> (Result_3);
-  // Quick fix to remove stuck tokens with failed pool creation
-  fix_stuck_token : (nat64) -> (Result);
+  execute_token_deployment : (nat64) -> (Result_2);
   get_all_token_record : () -> (vec record { nat64; TokenRecord }) query;
   get_audit_state : () -> (AuditState) query;
-  get_canister_cycle_balance : (principal) -> (Result_4);
+  get_canister_cycle_balance : (principal) -> (Result_3);
   get_collection_metrics : () -> (CollectionMetrics);
   get_collection_status : () -> (SwapState, nat64) query;
   get_failed : () -> (vec record { nat64; TokenRecord }) query;
   get_live : () -> (vec record { nat64; TokenRecord }) query;
   // Query deployment status and history
   get_my_deployments : () -> (vec DeploymentInfo) query;
-  get_problematic_tokens : () -> (vec record { principal; nat32 }) query;
-  // Get deployments that need manual intervention
-  get_stuck_deployments : () -> (vec StuckDeploymentInfo) query;
   get_system_reconciliation : () -> (SystemReconciliationSummary);
   get_token_detail : (nat64) -> (opt TokenStatusDetail) query;
-  get_token_health_summary : () -> (TokenHealthSummary);
-  get_token_reconciliation : (nat64) -> (Result_5);
-  get_token_status : (nat64) -> (Result_6) query;
-  get_tokenomics_graphs : (nat64) -> (Result_7) query;
-  get_treasury_balance : () -> (Result_8) query;
+  get_token_reconciliation : (nat64) -> (Result_4);
+  get_token_status : (nat64) -> (Result_5) query;
+  get_tokenomics_graphs : (nat64) -> (Result_6) query;
+  get_treasury_balance : () -> (Result_7) query;
   get_upcoming : () -> (vec record { nat64; TokenRecord }) query;
   // Phase 1: Create deployment and return ID immediately
-  initiate_token_deployment : (CreateTokenParams) -> (Result_8);
-  // Migrate V9 deployments to V10 format
-  migrate_v9_deployments : () -> (text);
+  initiate_token_deployment : (CreateTokenParams) -> (Result_7);
   preview_tokenomics_graphs : (PreviewArgs) -> (GraphData);
   preview_tokenomics_schedule : (
       nat64,

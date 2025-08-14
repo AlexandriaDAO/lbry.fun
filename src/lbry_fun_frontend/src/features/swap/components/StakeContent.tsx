@@ -123,7 +123,7 @@ const StakeContent = () => {
 
     useEffect(() => {
         // Calculate estimated user reward based on their stake and APY
-        if (swap.averageAPY && swap.stakeInfo.stakedPrimary && swap.distributionInterval) {
+        if (swap.averageAPY && swap.stakeInfo?.stakedPrimary && swap.distributionInterval) {
             const stakedAmount = Number(swap.stakeInfo.stakedPrimary);
             const apyDecimal = swap.averageAPY / 100; // Convert percentage to decimal
             const distributionsPerYear = (365 * 24 * 3600) / swap.distributionInterval;
@@ -132,7 +132,7 @@ const StakeContent = () => {
         } else {
             setUserEstimatedReward(0);
         }
-    }, [swap.averageAPY, swap.stakeInfo.stakedPrimary, swap.distributionInterval]);
+    }, [swap.averageAPY, swap.stakeInfo?.stakedPrimary, swap.distributionInterval]);
 
 
     useEffect(() => {
@@ -217,7 +217,7 @@ const StakeContent = () => {
                 >
                     <TerminalRow 
                         label="staked_amount" 
-                        value={swap.stakeInfo.stakedPrimary} 
+                        value={swap.stakeInfo?.stakedPrimary || '0'} 
                         unit={swap.activeSwapPool?.[1]?.primary_token_symbol}
                         accent
                     />
@@ -237,6 +237,7 @@ const StakeContent = () => {
                                     `${swap.averageAPY.toFixed(2)}%` : 
                                 '0.00%'
                         }
+                        tooltip="Real-time APY calculated from current treasury and staking conditions. Updates instantly with each stake/unstake. Formula: APY = (Last 30 Distribution Avg ICP Rewards per Token × Distributions/Year × ICP Price) ÷ Primary Token Price × 100%"
                     />
                     <TerminalRow 
                         label="token_price" 

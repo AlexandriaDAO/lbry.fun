@@ -23,7 +23,6 @@ use crate::{
     CreateTokenParams, initiate_token_deployment, execute_token_deployment,
 };
 
-const CANISTER_CREATION_CYCLES: u128 = 2_000_000_000_000u128;
 const ICP_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 const SECONDARY_SWAP_CANISTER_ID: &str = "54fqz-5iaaa-aaaap-qkmqa-cai";
 const MINIMUM_TREASURY_RESERVE: u64 = 500_000_000; // 5 ICP reserve for token creation
@@ -668,38 +667,6 @@ async fn _process_fee_treasury() -> Result<String, String> {
     }
 }
 
-/// Admin guard function - checks if caller is authorized admin
-fn is_admin() -> Result<(), String> {
-    let caller = ic_cdk::caller();
-    
-    if crate::is_admin_principal(&caller) {
-        Ok(())
-    } else {
-        Err("Not authorized".to_string())
-    }
-}
-
-/// Quick fix to remove stuck tokens with failed pool creation
-#[update(guard = "is_admin")]
-async fn fix_stuck_token(token_id: u64) -> Result<String, String> {
-    TOKENS.with(|tokens| {
-        let mut tokens_mut = tokens.borrow_mut();
-        if let Some(token) = tokens_mut.get(&token_id) {
-            match &token.status {
-                crate::storage::TokenStatus::Failed { .. } => {
-                    // Remove stuck token
-                    tokens_mut.remove(&token_id);
-                    Ok(format!("Removed stuck token {} with failed deployment", token_id))
-                },
-                _ => {
-                    Err("Token not stuck - only failed tokens can be removed".to_string())
-                }
-            }
-        } else {
-            Err("Token not found".to_string())
-        }
-    })
-}
 
 #[ic_cdk::init]
 fn init() {

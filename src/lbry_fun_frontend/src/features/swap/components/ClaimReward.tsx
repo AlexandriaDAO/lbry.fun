@@ -19,9 +19,9 @@ const ClaimReward: React.FC = () => {
 
     const handleClaim = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
-        dispatch(claimReward({reward:swap.stakeInfo.rewardIcp}));
+        dispatch(claimReward({reward:swap.stakeInfo?.rewardIcp || '0'}));
         showLoading("CLAIMING REWARDS", "Processing ICP reward claim");
-    }, [dispatch, swap.stakeInfo.rewardIcp, showLoading]);
+    }, [dispatch, swap.stakeInfo?.rewardIcp, showLoading]);
 
     // Handle claim operation state changes
     useEffect(() => {

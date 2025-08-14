@@ -48,6 +48,7 @@ const Insights: React.FC = () => {
             totalSecondaryBurned: insights.totalSecondaryBurned[lastIndex],
             totalPrimaryStaked: insights.totalPrimaryStaked[lastIndex],
             stakerCount: insights.stakerCount[lastIndex],
+            apy: insights.apy ? insights.apy[lastIndex] : null,
             hourlyIcpRewards: insights.hourlyIcpRewards[lastIndex],
             icpInLpTreasury: insights.icpInLpTreasury[lastIndex],
         };
@@ -96,56 +97,49 @@ const Insights: React.FC = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-
             {summaryData && (
                 <div className="terminal-pure mb-8">
-                    <div className="terminal-header mb-2">
-                        <span className="terminal-prompt">&gt;</span> latest_metrics
+                    <div className="terminal-header mb-4">
+                        <span className="terminal-prompt">&gt;</span> LATEST_METRICS
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <div className="terminal-info">
-                            <div className="terminal-row">
-                                <span className="terminal-label">primary_supply:</span>
-                                <span className="terminal-primary">{formatNumber(summaryData.primaryTokenSupply)}</span>
-                            </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8 font-mono text-sm">
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400">primary_supply:</span>
+                            <span className="text-lime-500">{formatNumber(summaryData.primaryTokenSupply)}</span>
                         </div>
-                        <div className="terminal-info">
-                            <div className="terminal-row">
-                                <span className="terminal-label">secondary_supply:</span>
-                                <span className="terminal-value">{formatNumber(summaryData.secondaryTokenSupply)}</span>
-                            </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400">secondary_supply:</span>
+                            <span className="text-white">{formatNumber(summaryData.secondaryTokenSupply)}</span>
                         </div>
-                        <div className="terminal-info">
-                            <div className="terminal-row">
-                                <span className="terminal-label">secondary_burned:</span>
-                                <span className="terminal-value">{formatNumber(summaryData.totalSecondaryBurned)}</span>
-                            </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400">secondary_burned:</span>
+                            <span className="text-white">{formatNumber(summaryData.totalSecondaryBurned)}</span>
                         </div>
-                        <div className="terminal-info">
-                            <div className="terminal-row">
-                                <span className="text-gray-400 text-xs">primary_staked:</span>
-                                <span className="text-white text-sm">{formatNumber(summaryData.totalPrimaryStaked)}</span>
-                            </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400">primary_staked:</span>
+                            <span className="text-white">{formatNumber(summaryData.totalPrimaryStaked)}</span>
                         </div>
-                        <div className="terminal-info">
-                            <div className="terminal-row">
-                                <span className="text-gray-400 text-xs">stakers:</span>
-                                <span className="text-white text-sm">{summaryData.stakerCount}</span>
-                            </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400">stakers:</span>
+                            <span className="text-white">{summaryData.stakerCount}</span>
                         </div>
-                        <div className="terminal-info">
-                            <div className="terminal-row">
-                                <span className="text-gray-400 text-xs">icp_in_lp:</span>
-                                <span className="text-white text-sm">{formatNumber(summaryData.icpInLpTreasury)}</span>
-                            </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400">icp_in_lp:</span>
+                            <span className="text-white">{formatNumber(summaryData.icpInLpTreasury)}</span>
                         </div>
-                        <div className="terminal-info">
-                            <div className="terminal-row">
-                                <span className="text-gray-400 text-xs">hourly_icp_rewards:</span>
-                                <span className="text-lime-500 font-bold text-sm">{summaryData.hourlyIcpRewards.toFixed(6)} ICP</span>
-                                <TooltipIcon text="ICP rewards earned per primary token per hour" />
-                            </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400">reward_per_token:</span>
+                            <span className="text-lime-500 font-bold">{summaryData.hourlyIcpRewards.toFixed(6)} ICP</span>
                         </div>
+                        {summaryData.apy && (
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-400 flex items-center gap-1">
+                                    snapshot_apy:
+                                    <TooltipIcon text="APY at the time of last hourly snapshot. For real-time APY, check the Stake tab. Formula: APY = (Hourly Snapshot ICP Rewards per Token × Distributions/Year × ICP Price) ÷ Primary Token Price × 100%" />
+                                </span>
+                                <span className="text-lime-500 font-bold">{summaryData.apy.toExponential(2)}%</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -187,13 +181,29 @@ const Insights: React.FC = () => {
                     </div>
                     <LineChart dataXaxis={formattedTime} dataYaxis={insights.stakerCount} xAxisLabel="Time" yAxisLabel="Count" lineColor="hsl(var(--color-chart-accent))" gardientColor="hsl(var(--color-chart-accent) / 0.3)" />
                 </div>
-                <div className="md:col-span-2">
+                <div>
                     <div className="flex items-center mb-2">
                         <h3 className="text-xl font-medium text-white">ICP in LP Treasury</h3>
                         <TooltipIcon text="The amount of ICP held in the liquidity pool treasury." />
                     </div>
                     <LineChart dataXaxis={formattedTime} dataYaxis={insights.icpInLpTreasury} xAxisLabel="Time" yAxisLabel="ICP" lineColor="hsl(var(--color-chart-secondary))" gardientColor="hsl(var(--color-chart-secondary) / 0.3)" />
                 </div>
+                {insights.apy && (
+                    <div>
+                        <div className="flex items-center mb-2">
+                            <h3 className="text-xl font-medium text-white">Historical APY (Hourly Snapshots)</h3>
+                            <TooltipIcon text="Historical APY captured once per hour by the logs canister. May differ from real-time APY shown in Stake tab due to timing of snapshots. Formula: APY = (Hourly Snapshot ICP Rewards per Token × Distributions/Year × ICP Price) ÷ Primary Token Price × 100%" />
+                        </div>
+                        <LineChart 
+                            dataXaxis={formattedTime} 
+                            dataYaxis={insights.apy.map(val => val || 0)} 
+                            xAxisLabel="Time (Hourly Snapshots)" 
+                            yAxisLabel="APY % at Snapshot" 
+                            lineColor="hsl(var(--color-chart-success))" 
+                            gardientColor="hsl(var(--color-chart-success) / 0.3)" 
+                        />
+                    </div>
+                )}
             </div>
             </Suspense>
             

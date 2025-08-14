@@ -9,7 +9,7 @@ export const initialState: SwapState = {
   secondaryFee: "0",
   secondaryBalance: "0",
   archivedBalance: "0",
-  stakeInfo: { stakedPrimary: "0", rewardIcp: "0", unix_stake_time: "0" },
+  stakeInfo: null,
   totalStakers: "0",
   canisterArchivedBal: { canisterUnClaimedIcp: 0, canisterArchivedBal: 0 },
   totalStaked: "0",

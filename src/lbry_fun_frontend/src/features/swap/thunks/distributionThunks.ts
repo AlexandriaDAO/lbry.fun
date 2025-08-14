@@ -17,10 +17,17 @@ export const fetchDistributionSummary = createAsyncThunk(
   async (icpSwapId: string, { rejectWithValue }) => {
     try {
       const actor = await getActorSwap(icpSwapId);
-      const summary = await actor.get_distribution_summary();
-      return serializeDistributionSummary(summary as DistributionSummary);
+      // Note: get_distribution_summary doesn't exist in the backend yet
+      // Return placeholder data for now
+      return {
+        next_distribution_time: BigInt(0),
+        distribution_interval_seconds: BigInt(3600), // 1 hour default
+        total_distributed: BigInt(0),
+        lifetime_totals: null,
+        message: "Distribution tracking coming soon"
+      };
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch distribution summary');
+      return rejectWithValue('Distribution tracking not yet implemented');
     }
   }
 );
@@ -31,10 +38,11 @@ export const fetchDistributionEvents = createAsyncThunk(
   async ({ icpSwapId, fromId = 0, limit = 10 }: DistributionEventsParams, { rejectWithValue }) => {
     try {
       const actor = await getActorSwap(icpSwapId);
-      const events = await actor.get_distribution_events(BigInt(fromId), limit);
-      return serializeDistributionEvents(events as DistributionEvent[]);
+      // Note: get_distribution_events doesn't exist in the backend yet
+      // Return empty array for now
+      return [];
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch distribution events');
+      return rejectWithValue('Distribution events tracking not yet implemented');
     }
   }
 );
@@ -45,10 +53,11 @@ export const fetchLatestDistributionEvent = createAsyncThunk(
   async (icpSwapId: string, { rejectWithValue }) => {
     try {
       const actor = await getActorSwap(icpSwapId);
-      const event = await actor.get_latest_distribution_event();
-      return event ? serializeDistributionEvent(event as DistributionEvent) : null;
+      // Note: get_latest_distribution_event doesn't exist in the backend yet
+      // Return null for now
+      return null;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch latest distribution event');
+      return rejectWithValue('Distribution event tracking not yet implemented');
     }
   }
 );

@@ -1,4 +1,5 @@
 import React from 'react';
+import TooltipIcon from '@/features/token/components/TooltipIcon';
 
 interface TerminalSectionProps {
   title: string;
@@ -30,6 +31,7 @@ interface TerminalRowProps {
   unit?: string;
   accent?: boolean;
   children?: React.ReactNode;
+  tooltip?: string;
 }
 
 export const TerminalRow: React.FC<TerminalRowProps> = ({ 
@@ -37,17 +39,23 @@ export const TerminalRow: React.FC<TerminalRowProps> = ({
   value, 
   unit,
   accent = false,
-  children 
+  children,
+  tooltip 
 }) => {
   return (
     <div className="flex justify-between items-center font-mono text-sm">
       <span className="text-gray-400">{label}:</span>
-      {children || (
-        <span className={accent ? "text-cyan-400" : "text-white"}>
-          {value !== undefined ? value : 'N/A'}
-          {unit && ` ${unit}`}
-        </span>
-      )}
+      <div className="flex items-center gap-1">
+        {children || (
+          <span className={accent ? "text-cyan-400" : "text-white"}>
+            {value !== undefined ? value : 'N/A'}
+            {unit && ` ${unit}`}
+          </span>
+        )}
+        {tooltip && (
+          <TooltipIcon text={tooltip} />
+        )}
+      </div>
     </div>
   );
 };
