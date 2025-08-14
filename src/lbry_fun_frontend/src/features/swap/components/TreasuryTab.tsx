@@ -11,6 +11,7 @@ import {
   getHealthColor 
 } from '@/utils/treasury';
 import TooltipIcon from '@/features/token/components/TooltipIcon';
+import ValidationStatus from './ValidationStatus';
 import type { 
   SystemReconciliationSummary, 
   CollectionMetrics, 
@@ -346,6 +347,11 @@ const TreasuryTab: React.FC = () => {
             )}
           </div>
         </div>
+      )}
+      
+      {/* Accounting Validation - Priority 4 */}
+      {activeSwapPool && (
+        <ValidationStatus tokenId={activeSwapPool[0]} />
       )}
 
       {/* Loading individual sections */}

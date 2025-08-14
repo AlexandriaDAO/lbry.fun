@@ -118,6 +118,7 @@ type ReconciliationStatus = record {
 type Result = variant { Ok : nat64; Err : text };
 type Result_1 = variant { Ok : text; Err : ExecutionError };
 type Result_2 = variant { Ok : CollectionResult; Err : CollectionError };
+type Result_3 = variant { Ok : text; Err : text };
 type SecondaryRatio = record { time : nat64; ratio : nat64 };
 type Stake = record { time : nat64; reward_icp : nat; amount : nat64 };
 service : (opt InitArgs) -> {
@@ -150,4 +151,7 @@ service : (opt InitArgs) -> {
   stake_primary : (nat64, opt blob) -> (Result_1);
   swap : (nat64, opt blob) -> (Result_1);
   un_stake_all_primary : (opt blob) -> (Result_1);
+  validate_accounting : () -> (Result_3);
+  validate_archived_consistency : () -> (Result_3) query;
+  validate_reward_consistency : () -> (Result_3) query;
 }

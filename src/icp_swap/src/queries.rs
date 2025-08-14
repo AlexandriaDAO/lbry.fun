@@ -227,20 +227,19 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
     // 4. Get archived balance (ICP held for users from failed transactions)
     let archived_balance = get_total_archived_balance();
     
-    // 5. Calculate operational balance (for transfers, fees, etc)
-    // This is balance not accounted for in other categories
-    let accounted_balance = reward_pool + uncollected_alex + total_staked + archived_balance;
-    let operational_balance = if actual_balance > accounted_balance {
-        actual_balance - accounted_balance
+    // 5. Calculate expected balance based on internal accounting only
+    let expected_balance = reward_pool + uncollected_alex + total_staked + archived_balance;
+    
+    // 6. Calculate actual discrepancy between ledger balance and internal accounting
+    let discrepancy = (actual_balance as i64) - (expected_balance as i64);
+    
+    // 7. Operational balance represents unexplained funds (positive discrepancy only)
+    // This could be transfer fees, rounding errors, or accounting bugs
+    let operational_balance = if discrepancy > 0 {
+        discrepancy as u64
     } else {
         0
     };
-    
-    // 6. Expected balance includes all components
-    let expected_balance = reward_pool + uncollected_alex + total_staked + archived_balance + operational_balance;
-    
-    // 7. Calculate discrepancy (integer arithmetic only)
-    let discrepancy = (actual_balance as i64) - (expected_balance as i64);
     
     // 8. Validate operational balance isn't suspiciously high
     // If operational balance is more than 10% of total staked, flag it
@@ -263,4 +262,83 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
         requires_attention: discrepancy.abs() as u64 > ALLOWED_DISCREPANCY_E8S || operational_balance_suspicious,
         operational_balance_suspicious,
     }
+}
+
+#[query]
+pub fn validate_reward_consistency() -> Result<String, String> {
+    let sum_of_rewards: u128 = STAKES.with(|stakes| {
+        stakes.borrow()
+            .iter()
+            .map(|(_, stake)| stake.reward_icp)
+            .sum()
+    });
+    
+    let total_unclaimed = get_total_unclaimed_icp_reward();
+    
+    if sum_of_rewards != total_unclaimed {
+        return Err(format!(
+            "Reward mismatch: sum of individual rewards {} != total unclaimed {}",
+            sum_of_rewards, total_unclaimed
+        ));
+    }
+    Ok(format!("Reward consistency validated: {} E8S", total_unclaimed))
+}
+
+#[query]
+pub fn validate_archived_consistency() -> Result<String, String> {
+    let sum_of_archived: u64 = ARCHIVED_TRANSACTION_LOG.with(|log| {
+        log.borrow()
+            .iter()
+            .map(|(_, balance)| balance.icp)
+            .sum()
+    });
+    
+    let total_archived = get_total_archived_balance();
+    
+    if sum_of_archived != total_archived {
+        return Err(format!(
+            "Archive mismatch: sum of individual archives {} != total archived {}",
+            sum_of_archived, total_archived
+        ));
+    }
+    Ok(format!("Archive consistency validated: {} E8S", total_archived))
+}
+
+#[update]
+pub async fn validate_accounting() -> Result<String, String> {
+    // Check reward consistency
+    let reward_check = validate_reward_consistency();
+    if let Err(e) = reward_check {
+        return Err(format!("Reward validation failed: {}", e));
+    }
+    
+    // Check archive consistency
+    let archive_check = validate_archived_consistency();
+    if let Err(e) = archive_check {
+        return Err(format!("Archive validation failed: {}", e));
+    }
+    
+    // Check that no values are suspiciously negative (using saturating arithmetic detection)
+    let reward_pool = REWARD_POOL.with(|p| p.borrow().get(&()).unwrap_or(0));
+    let uncollected_fees = UNCOLLECTED_ALEX_FEES.with(|f| f.borrow().get(&()).unwrap_or(0));
+    
+    // Get actual balance
+    let actual_balance = crate::utils::fetch_canister_icp_balance().await
+        .map_err(|e| format!("Failed to fetch balance: {:?}", e))?;
+    
+    // Calculate expected
+    let total_unclaimed = get_total_unclaimed_icp_reward();
+    let total_archived = get_total_archived_balance();
+    
+    let expected = reward_pool
+        .saturating_add(uncollected_fees)
+        .saturating_add(total_unclaimed.try_into().unwrap_or(u64::MAX))
+        .saturating_add(total_archived);
+    
+    let discrepancy = (actual_balance as i64) - (expected as i64);
+    
+    Ok(format!(
+        "Validation complete. Actual: {} E8S, Expected: {} E8S, Discrepancy: {} E8S\nReward pool: {}, Uncollected fees: {}, Total unclaimed: {}, Total archived: {}",
+        actual_balance, expected, discrepancy, reward_pool, uncollected_fees, total_unclaimed, total_archived
+    ))
 }

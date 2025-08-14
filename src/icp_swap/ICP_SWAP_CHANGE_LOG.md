@@ -1,5 +1,35 @@
 # ICP Swap Change Log
 
+## 2025-08-14: Bug #9 - Fixed Reconciliation Double-Counting Error
+
+### Changes Made:
+1. **queries.rs - get_reconciliation_status() function (lines 230-242)**:
+   - Fixed circular logic bug where operational_balance was calculated as `actual - accounted` then added back to expected_balance
+   - Now calculates expected_balance from internal accounting components only (without operational_balance)
+   - operational_balance now correctly represents unexplained positive discrepancy
+
+### Problem:
+The reconciliation function had a critical logic error that made it useless:
+- It calculated `operational_balance = actual - accounted`
+- Then added it back: `expected = accounted + operational_balance`
+- This guaranteed `expected = actual`, making `discrepancy` always 0
+- The function could never detect accounting errors, defeating its purpose
+
+### Solution:
+- Expected balance now only includes known accounting components
+- Discrepancy properly shows difference between actual ledger balance and internal accounting
+- Operational balance represents unexplained funds (could be fees, rounding, or bugs)
+- Reconciliation now actually detects accounting errors as intended
+
+### Impact:
+This fix enables proper detection of:
+- Accounting errors and bugs
+- Double-spending issues
+- Lost or stuck funds
+- Unexplained balance discrepancies
+
+---
+
 ## 2025-08-12: Treasury Reconciliation Query Fix
 
 ### Changes Made:

@@ -91,7 +91,13 @@ echo -e "${MAGENTA}[STATE]${NC} Reward Pool:         ${GREEN}$(printf "%.8f" $re
 echo -e "${MAGENTA}[STATE]${NC} Uncollected Fees:    ${GREEN}$(printf "%.8f" $uncollected_fees_icp) ICP${NC}"
 echo ""
 
+# Validate no negative values (defensive check)
+if [ "$total_unclaimed" -lt 0 ] || [ "$reward_pool" -lt 0 ] || [ "$uncollected_fees" -lt 0 ] || [ "$total_archived" -lt 0 ]; then
+    echo -e "${YELLOW}⚠ WARNING: Negative value detected in internal state!${NC}"
+fi
+
 # Internal total (calculate in E8S for precision)
+# Must include all four buckets: unclaimed rewards + undistributed pool + platform fees + archived failed txs
 internal_total_e8s=$((total_unclaimed + reward_pool + uncollected_fees + total_archived))
 internal_total=$(echo "scale=8; $internal_total_e8s / 100000000" | bc)
 echo -e "${BLUE}Swap Internal Total:         ${GREEN}$(printf "%.8f" $internal_total) ICP${NC}"
@@ -116,10 +122,61 @@ if (( $(echo "$discrepancy_e8s < 1000000 && $discrepancy_e8s > -1000000" | bc -l
 else
     if (( $(echo "$discrepancy_e8s > 0" | bc -l) )); then
         echo -e "  ${YELLOW}⚠ Ledger shows $(printf "%.8f" $discrepancy) ICP more than internal state${NC}"
+        echo -e "  ${YELLOW}  Possible causes: Transfer fees, pending operations, or accounting bug${NC}"
     else
         abs_disc=$(echo "scale=8; ${discrepancy_e8s#-} / 100000000" | bc)
         echo -e "  ${YELLOW}⚠ Internal state shows $(printf "%.8f" $abs_disc) ICP more than ledger${NC}"
+        echo -e "  ${YELLOW}  Possible causes: Failed transfers not archived, or double-counting bug${NC}"
     fi
+fi
+echo ""
+
+echo -e "${BLUE}=========================================${NC}"
+echo -e "${BLUE}        ACCOUNTING VALIDATION${NC}"
+echo -e "${BLUE}=========================================${NC}"
+echo ""
+
+# Run validation checks
+echo -e "${MAGENTA}[VALIDATION]${NC} Running consistency checks..."
+echo ""
+
+# Check reward consistency
+reward_check=$(dfx canister call $ICP_SWAP validate_reward_consistency '()' 2>/dev/null)
+if echo "$reward_check" | grep -q "Ok"; then
+    echo -e "  ${GREEN}✓ Reward Consistency: PASS${NC}"
+    reward_msg=$(echo "$reward_check" | sed 's/.*Ok = "\(.*\)".*/\1/')
+    echo -e "    ${CYAN}$reward_msg${NC}"
+else
+    echo -e "  ${YELLOW}⚠ Reward Consistency: FAIL${NC}"
+    error_msg=$(echo "$reward_check" | sed 's/.*Err = "\(.*\)".*/\1/')
+    echo -e "    ${YELLOW}$error_msg${NC}"
+fi
+echo ""
+
+# Check archive consistency
+archive_check=$(dfx canister call $ICP_SWAP validate_archived_consistency '()' 2>/dev/null)
+if echo "$archive_check" | grep -q "Ok"; then
+    echo -e "  ${GREEN}✓ Archive Consistency: PASS${NC}"
+    archive_msg=$(echo "$archive_check" | sed 's/.*Ok = "\(.*\)".*/\1/')
+    echo -e "    ${CYAN}$archive_msg${NC}"
+else
+    echo -e "  ${YELLOW}⚠ Archive Consistency: FAIL${NC}"
+    error_msg=$(echo "$archive_check" | sed 's/.*Err = "\(.*\)".*/\1/')
+    echo -e "    ${YELLOW}$error_msg${NC}"
+fi
+echo ""
+
+# Run comprehensive accounting validation
+accounting_check=$(dfx canister call $ICP_SWAP validate_accounting '()' 2>/dev/null)
+if echo "$accounting_check" | grep -q "Ok"; then
+    echo -e "  ${GREEN}✓ Comprehensive Accounting: PASS${NC}"
+    # Extract and display the detailed message
+    accounting_msg=$(echo "$accounting_check" | sed 's/.*Ok = "\(.*\)".*/\1/' | sed 's/\\n/\n    /g')
+    echo -e "    ${CYAN}$accounting_msg${NC}"
+else
+    echo -e "  ${YELLOW}⚠ Comprehensive Accounting: FAIL${NC}"
+    error_msg=$(echo "$accounting_check" | sed 's/.*Err = "\(.*\)".*/\1/')
+    echo -e "    ${YELLOW}$error_msg${NC}"
 fi
 echo ""
 

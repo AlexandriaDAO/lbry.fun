@@ -385,11 +385,24 @@ pub async fn burn_secondary(
             // Deduct the refunded ICP from the reward pool
             // This is necessary because the ICP was originally added to the pool during swap
             // but when we refund 50% during burn, we need to remove it from the pool
-            REWARD_POOL.with(|p| {
+            REWARD_POOL.with(|p| -> Result<(), ExecutionError> {
                 let current = p.borrow().get(&()).unwrap_or(0);
-                let new_total = current.saturating_sub(amount_icp_e8s);
+                if current < amount_icp_e8s {
+                    return Err(ExecutionError::new_with_log(
+                        caller,
+                        "burn_secondary", 
+                        ExecutionError::InsufficientBalance {
+                            required: amount_icp_e8s,
+                            available: current,
+                            token: "reward_pool".to_string(),
+                            details: "Reward pool has insufficient funds for refund".to_string()
+                        }
+                    ));
+                }
+                let new_total = current - amount_icp_e8s;
                 p.borrow_mut().insert((), new_total);
-            });
+                Ok(())
+            })?;
             register_info_log(
                 caller,
                 "burn_secondary",
@@ -397,31 +410,8 @@ pub async fn burn_secondary(
             );
         }
         Err(e) => {
-            let amount_icp_after_fee = amount_icp_e8s
-                .checked_mul(2)
-                .ok_or_else(||
-                    ExecutionError::new_with_log(
-                        caller,
-                        "burn_secondary",
-                        ExecutionError::MultiplicationOverflow {
-                            operation: DEFAULT_MULTIPLICATION_OVERFLOW_ERROR.to_string(),
-                            details: format!("amount_icp_e8s: {} with {}", amount_icp_e8s, 2),
-                        }
-                    )
-                )?
-                .checked_sub(ICP_TRANSFER_FEE)
-                .ok_or_else(||
-                    ExecutionError::new_with_log(caller, "burn_secondary", ExecutionError::Underflow {
-                        operation: DEFAULT_UNDERFLOW_ERROR.to_string(),
-                        details: format!(
-                            "amount_icp_e8s: {} with ICP_TRANSFER_FEE: {}",
-                            amount_icp_e8s,
-                            ICP_TRANSFER_FEE
-                        ),
-                    })
-                )?;
-
-            archive_user_transaction(amount_icp_after_fee)?;
+            // Archive the full amount - no fee was paid on failed transfer
+            archive_user_transaction(amount_icp_e8s)?;
             return Err(
                 ExecutionError::new_with_log(caller, "burn_secondary", ExecutionError::TransferFailed {
                     source: "canister".to_string(),
@@ -455,24 +445,7 @@ pub async fn burn_secondary(
                 );
             }
             Err(e) => {
-                let amount_icp_after_fee = amount_icp_e8s
-                    .checked_sub(ICP_TRANSFER_FEE)
-                    .ok_or_else(||
-                        ExecutionError::new_with_log(
-                            caller,
-                            "burn_secondary",
-                            ExecutionError::Underflow {
-                                operation: DEFAULT_UNDERFLOW_ERROR.to_string(),
-                                details: format!(
-                                    "amount_icp_e8s: {} with ICP_TRANSFER_FEE: {}",
-                                    amount_icp_e8s,
-                                    ICP_TRANSFER_FEE
-                                ),
-                            }
-                        )
-                    )?;
-
-                archive_user_transaction(amount_icp_after_fee)?;
+                // Do not archive - user already received ICP refund
                 return Err(
                     ExecutionError::new_with_log(caller, "burn_secondary", ExecutionError::MintFailed {
                         token: "primary".to_string(),
@@ -1294,25 +1267,7 @@ async fn claim_icp_reward(from_subaccount: Option<[u8; 32]>) -> Result<String, E
                     ),
                 })
             )?;
-            send_icp(caller, amount_after_fee, from_subaccount).await.map_err(|e|
-                ExecutionError::new_with_log(
-                    caller,
-                    "claim_icp_reward",
-                    ExecutionError::TransferFailed {
-                        source: "canister".to_string(),
-                        dest: caller.to_string(),
-                        token: "ICP".to_string(),
-                        amount: amount_after_fee,
-                        details: e.to_string(),
-                        reason: DEFAULT_TRANSFER_FAILED_ERROR.to_string(),
-                    }
-                )
-            )?;
-            register_info_log(
-                caller,
-                "claim_icp_reward",
-                &format!("Successfully sent {} ICP (e8s) to {}", amount_after_fee, caller)
-            );
+            // Apply CEI pattern: Update all state first
             sub_to_unclaimed_amount(stake.reward_icp)?;
 
             STAKES.with(|stakes| {
@@ -1330,6 +1285,40 @@ async fn claim_icp_reward(from_subaccount: Option<[u8; 32]>) -> Result<String, E
                 // Reinsert the updated stake back into the map.
                 stakes_map.insert(caller, current_stake);
             });
+            
+            // Then send ICP (last step)
+            send_icp(caller, amount_after_fee, from_subaccount).await.map_err(|e| {
+                // Restore state on failure
+                let _ = add_to_unclaimed_amount(stake.reward_icp);
+                STAKES.with(|stakes| {
+                    let mut stakes_map = stakes.borrow_mut();
+                    let mut current_stake = stakes_map.get(&caller).unwrap_or(Stake {
+                        amount: 0,
+                        time: ic_cdk::api::time(),
+                        reward_icp: 0,
+                    });
+                    current_stake.reward_icp = stake.reward_icp;
+                    stakes_map.insert(caller, current_stake);
+                });
+                
+                ExecutionError::new_with_log(
+                    caller,
+                    "claim_icp_reward",
+                    ExecutionError::TransferFailed {
+                        source: "canister".to_string(),
+                        dest: caller.to_string(),
+                        token: "ICP".to_string(),
+                        amount: amount_after_fee,
+                        details: e.to_string(),
+                        reason: DEFAULT_TRANSFER_FAILED_ERROR.to_string(),
+                    }
+                )
+            })?;
+            register_info_log(
+                caller,
+                "claim_icp_reward",
+                &format!("Successfully sent {} ICP (e8s) to {}", amount_after_fee, caller)
+            );
             register_info_log(caller, "claim_icp_reward", "Claim process completed successfully.");
             Ok("Success".to_string())
         }
@@ -1514,24 +1503,10 @@ async fn redeem(from_subaccount: Option<[u8; 32]>) -> Result<String, ExecutionEr
                     )
                 );
             }
-            send_icp(caller, trx.icp, from_subaccount).await.map_err(|e|
-                ExecutionError::new_with_log(caller, "redeem", ExecutionError::TransferFailed {
-                    source: "canister".to_string(),
-                    dest: caller.to_string(),
-                    token: "ICP".to_string(),
-                    amount: trx.icp,
-                    details: e.to_string(),
-                    reason: DEFAULT_TRANSFER_FAILED_ERROR.to_string(),
-                })
-            )?;
-            register_info_log(
-                caller,
-                "claim_icp_reward",
-                &format!("Successfully sent {} ICP (e8s) exculisve of fee to {}", trx.icp, caller)
-            );
+            // Apply CEI pattern: Update state FIRST
             sub_to_total_archived_balance(trx.icp)?;
 
-            // make balance to 0
+            // Zero user's balance before sending
             ARCHIVED_TRANSACTION_LOG.with(
                 |trxs| -> Result<(), ExecutionError> {
                     let mut trxs = trxs.borrow_mut();
@@ -1544,6 +1519,33 @@ async fn redeem(from_subaccount: Option<[u8; 32]>) -> Result<String, ExecutionEr
                     Ok(())
                 }
             )?;
+            
+            // THEN send ICP (last step)
+            send_icp(caller, trx.icp, from_subaccount).await.map_err(|e| {
+                // On failure, restore the state
+                let _ = add_to_total_archived_balance(trx.icp);
+                ARCHIVED_TRANSACTION_LOG.with(|trxs| {
+                    let mut trxs = trxs.borrow_mut();
+                    let mut user_archive = trxs.get(&caller).unwrap_or(ArchiveBalance { icp: 0 });
+                    user_archive.icp = trx.icp;
+                    trxs.insert(caller, user_archive);
+                });
+                
+                ExecutionError::new_with_log(caller, "redeem", ExecutionError::TransferFailed {
+                    source: "canister".to_string(),
+                    dest: caller.to_string(),
+                    token: "ICP".to_string(),
+                    amount: trx.icp,
+                    details: e.to_string(),
+                    reason: DEFAULT_TRANSFER_FAILED_ERROR.to_string(),
+                })
+            })?;
+            
+            register_info_log(
+                caller,
+                "redeem",
+                &format!("Successfully sent {} ICP (e8s) exclusive of fee to {}", trx.icp, caller)
+            );
 
             Ok("Success".to_string())
         }
@@ -1738,17 +1740,20 @@ pub enum CollectionError {
 // Collection with CEI pattern and failure reversal
 #[update(guard = "only_lbry_fun")]
 pub async fn collect_alex_fees() -> Result<CollectionResult, CollectionError> {
-    // Check
-    let fees = UNCOLLECTED_ALEX_FEES.with(|f| f.borrow().get(&()).unwrap_or(0));
-    
-    if fees < ICP_TRANSFER_FEE {
-        return Err(CollectionError::AmountTooSmall { amount: fees });
-    }
-    
-    // Effect - deduct from balance
-    UNCOLLECTED_ALEX_FEES.with(|f| {
-        f.borrow_mut().insert((), 0);
+    // Atomic check and extraction
+    let fees = UNCOLLECTED_ALEX_FEES.with(|f| {
+        let current = f.borrow().get(&()).unwrap_or(0);
+        if current >= ICP_TRANSFER_FEE {
+            f.borrow_mut().insert((), 0);
+            current
+        } else {
+            0
+        }
     });
+    
+    if fees == 0 {
+        return Err(CollectionError::AmountTooSmall { amount: 0 });
+    }
     
     // Interaction - external transfer
     match transfer_icp_to_lbry_fun(fees).await {
@@ -1759,9 +1764,10 @@ pub async fn collect_alex_fees() -> Result<CollectionResult, CollectionError> {
             })
         }
         Err(e) => {
-            // Failure reversal - restore exact balance
+            // Failure reversal - add back to current balance (don't overwrite)
             UNCOLLECTED_ALEX_FEES.with(|f| {
-                f.borrow_mut().insert((), fees);
+                let current = f.borrow().get(&()).unwrap_or(0);
+                f.borrow_mut().insert((), current + fees);
             });
             Err(CollectionError::TransferFailed { reason: e.to_string() })
         }
