@@ -21,29 +21,20 @@ export function useAccessState() {
       try {
         // Defensive programming: validate fields exist and are valid
         const launchedAtStr = tokenRecord.launched_at;
-        const launchDelayStr = tokenRecord.launch_delay_seconds || '86400'; // 24 hours default
         
         // Handle case where launched_at might be '0' or undefined
-        let launchedAt = BigInt(0);
+        let launchTimeNanos = BigInt(0);
         if (launchedAtStr && launchedAtStr !== '0') {
-          launchedAt = BigInt(launchedAtStr);
+          // launched_at already contains the final launch time (created_time + delay)
+          launchTimeNanos = BigInt(launchedAtStr);
         } else {
-          // Fallback to created_time if launched_at is not set
-          const createdTimeStr = tokenRecord.created_time;
-          if (createdTimeStr && createdTimeStr !== '0') {
-            launchedAt = BigInt(createdTimeStr);
-          } else {
-            // If neither field is valid, clear countdown
-            setCountdown(0);
-            setLaunchTime(undefined);
-            return;
-          }
+          // If launched_at is not set, clear countdown
+          setCountdown(0);
+          setLaunchTime(undefined);
+          return;
         }
         
-        const launchDelaySeconds = BigInt(launchDelayStr);
-        
-        // Launch time is launched_at + launch_delay_seconds (converted to nanoseconds)
-        const launchTimeNanos = launchedAt + (launchDelaySeconds * BigInt(1_000_000_000));
+        // Convert nanoseconds to milliseconds
         const launchTimeMillis = Number(launchTimeNanos / BigInt(1_000_000));
         
         // Validate the calculated time is reasonable (not in the distant past or future)
