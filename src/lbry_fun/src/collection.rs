@@ -394,8 +394,8 @@ pub fn init_reconciliation_timer() {
 }
 
 // Query 1: System Reconciliation (Balance Focus)
-#[update]
-pub async fn get_system_reconciliation() -> SystemReconciliationSummary {
+// Internal function - used by timers for health monitoring
+async fn get_system_reconciliation() -> SystemReconciliationSummary {
     let mut total_uncollected_alex = 0u64;
     let mut tokens_with_discrepancies = Vec::new();
     let mut failed_queries = Vec::new();

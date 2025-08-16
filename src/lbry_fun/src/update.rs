@@ -552,7 +552,6 @@ async fn get_canister_cycle_balance(canister_id: Principal) -> Result<Nat, Strin
     }
 }
 
-#[update]
 pub async fn deposit_icp_in_canister(
     amount: u64,
     from_subaccount: Option<[u8; 32]>,

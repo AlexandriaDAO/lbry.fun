@@ -13,19 +13,16 @@ import {
 import TooltipIcon from '@/features/token/components/TooltipIcon';
 import ValidationStatus from './ValidationStatus';
 import type { 
-  SystemReconciliationSummary, 
   CollectionMetrics, 
   ReconciliationDetail
 } from '../../../../../declarations/lbry_fun/lbry_fun.did';
 
 interface TreasuryState {
-  systemReconciliation: SystemReconciliationSummary | null;
   collectionMetrics: CollectionMetrics | null;
   tokenReconciliation: ReconciliationDetail | null;
   isLoading: boolean;
   error: string | null;
   dataLoadStatus: {
-    system: boolean;
     metrics: boolean;
     token: boolean;
   };
@@ -33,15 +30,12 @@ interface TreasuryState {
 
 const TreasuryTab: React.FC = () => {
   const { activeSwapPool, distributionInterval } = useAppSelector(state => state.swap);
-  const [systemReconciliation, setSystemReconciliation] = useState<SystemReconciliationSummary | null>(null);
   const [collectionMetrics, setCollectionMetrics] = useState<CollectionMetrics | null>(null);
   const [tokenReconciliation, setTokenReconciliation] = useState<ReconciliationDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dataLoadStatus, setDataLoadStatus] = useState({
-    system: false,
     metrics: false,
-    health: false,
     token: false
   });
   const [lastRefresh, setLastRefresh] = useState(Date.now());
@@ -57,17 +51,14 @@ const TreasuryTab: React.FC = () => {
     try {
       const actor = await getLbryFunActor();
       
-      // Fetch system-wide data (don't wait for token-specific data)
-      Promise.all([
-        actor.get_system_reconciliation(),
-        actor.get_collection_metrics()
-      ]).then(([systemRecon, metrics]) => {
-        setSystemReconciliation(systemRecon);
-        setCollectionMetrics(metrics);
-        setDataLoadStatus(prev => ({ ...prev, system: true, metrics: true }));
-      }).catch(err => {
-        console.error('Failed to fetch system data:', err);
-      });
+      // Fetch collection metrics for this token
+      actor.get_collection_metrics()
+        .then(metrics => {
+          setCollectionMetrics(metrics);
+          setDataLoadStatus(prev => ({ ...prev, metrics: true }));
+        }).catch(err => {
+          console.error('Failed to fetch metrics data:', err);
+        });
       
       // Fetch token-specific data separately
       console.log('Fetching token reconciliation for token ID:', tokenId.toString());
@@ -105,9 +96,7 @@ const TreasuryTab: React.FC = () => {
       setIsLoading(true);
       setError(null);
       setDataLoadStatus({
-        system: false,
         metrics: false,
-        health: false,
         token: false
       });
       fetchData();
@@ -316,40 +305,7 @@ const TreasuryTab: React.FC = () => {
         </div>
       )}
       
-      {/* System Overview - Priority 3 */}
-      {dataLoadStatus.system && systemReconciliation && (
-        <div className="border-t border-white/30 mt-2 pt-1">
-          <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-3">
-            <span className="text-pink-500">&gt;&gt;</span> SYSTEM OVERVIEW
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs flex items-center">
-                Platform-wide Pending Fees:
-                <TooltipIcon text="Total uncollected platform fees across ALL tokens on the launchpad. Shows the protocol's overall fee accumulation waiting to be processed for $LBRY buyback." />
-              </span>
-              <span className="text-white text-sm">
-                {formatE8sToICP(
-                  systemReconciliation.total_uncollected_alex
-                )} ICP
-              </span>
-            </div>
-            {systemReconciliation.tokens_with_discrepancies.length > 0 && (
-              <div className="flex justify-between items-center py-0.5">
-                <span className="text-gray-400 text-xs flex items-center">
-                  Tokens with Discrepancies:
-                  <TooltipIcon text="Tokens where internal accounting doesn't match blockchain balance. RED FLAG - indicates potential bugs or exploits that need immediate investigation." />
-                </span>
-                <span className="text-white text-sm text-red-400">
-                  {systemReconciliation.tokens_with_discrepancies.length}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      
-      {/* Accounting Validation - Priority 4 */}
+      {/* Accounting Validation - Priority 3 */}
       {activeSwapPool && (
         <ValidationStatus tokenId={activeSwapPool[0]} />
       )}

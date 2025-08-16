@@ -1,8 +1,7 @@
-- fill in execute_swap_and_burn function.
-
-- Display price from ICP SWAP
 - The backend currently accepts any initial parameters without validation. Need to set those.
-  - We also don't cap the amount you could mint in one shot.
+
+- fill in execute_swap_and_burn function.
+- Display price from ICP SWAP
 - [LAUNCH_PENDING] reads 48 hours by default (when we send 24 hours).
 
 
@@ -10,11 +9,11 @@ dfx canister call kong_backend force_add_token '("ryjl3-tyaaa-aaaaa-aaaba-cai")'
 
 
 // Before mainnet: 
-- Distribution backdoor function has to go beforehand.
 - Timing before launch back to 24hrs.
 - Minimum distribution intervals much higher than 1 second.
 - Add popup warnings and admin-only launching.
 
+  - We also don't cap the amount you could mint in one shot.
 
 // Before v1
 - Show 'my holdings'/stakes. Need a scalable plan for this.
@@ -24,7 +23,7 @@ dfx canister call kong_backend force_add_token '("ryjl3-tyaaa-aaaaa-aaaba-cai")'
 
 # ICP Topup
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "pj55w-hkbh6-bzcot-umobs-mkqdl-tzw75-4i4xi-mvs5g-xh7sx-vclvm-kqe"; subaccount = null }; amount = (100_000_000_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "vgkov-ojfm2-etzss-lqse4-dm6ck-mdhmr-lhx7y-stnvb-bsj5p-npi54-eae"; subaccount = null }; amount = (100_000_000_000_000 : nat) })'
 
 # To fix Kong
 

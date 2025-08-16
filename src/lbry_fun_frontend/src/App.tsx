@@ -15,6 +15,7 @@ import ActorProvider from "./providers/ActorProvider";
 // import UserProvider from "./providers/UserProvider";
 import { AppRoutes } from "./routes";
 import AppInitializer from "./components/AppInitializer";
+import { IdentityBridge } from "./components/IdentityBridge";
 
 export default function App() {
     const [isReady, setIsReady] = useState(false);
@@ -35,6 +36,7 @@ export default function App() {
             <InternetIdentityProvider>
                 <ActorProvider>
                     {/* <UserProvider> Removed </UserProvider> */}
+                    <IdentityBridge />
                     <AppInitializer />
                     {isReady ? <AppRoutes /> : null}
                 </ActorProvider>

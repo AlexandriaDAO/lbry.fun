@@ -11,8 +11,8 @@ MAGENTA='\033[0;35m'
 NC='\033[0m'
 
 # Configuration
-USER_PRINCIPAL="pj55w-hkbh6-bzcot-umobs-mkqdl-tzw75-4i4xi-mvs5g-xh7sx-vclvm-kqe"
-ICP_SWAP="77rlu-vx777-77773-aaamq-cai"
+USER_PRINCIPAL="vgkov-ojfm2-etzss-lqse4-dm6ck-mdhmr-lhx7y-stnvb-bsj5p-npi54-eae"
+ICP_SWAP="5lpoa-qx777-77773-aaacq-cai"
 LBRY_FUN="oni4e-oyaaa-aaaap-qp2pq-cai"
 ICP_LEDGER="ryjl3-tyaaa-aaaaa-aaaba-cai"
 
