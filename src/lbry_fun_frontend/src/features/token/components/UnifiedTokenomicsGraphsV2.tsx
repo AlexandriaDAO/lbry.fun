@@ -63,13 +63,7 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
     const newWarnings: string[] = [];
     if (initialSecondaryBurn && primaryMaxSupply && tgeAllocation && halvingStep) {
       try {
-        const initialBurn = parseFloat(initialSecondaryBurn);
-        if (initialBurn > 0) {
-          const secondaryTokenPrice = 0.005; // Corresponds to SECONDARY_BURN_USD_COST in backend
-          if ((initialBurn * secondaryTokenPrice) < 5000) {
-            newWarnings.push(`Initial valuation for the first epoch is less than $5,000. A low initial valuation can make the critical initial phase susceptible to manipulation or a single-actor buyout.`);
-          }
-        }
+        // Removed initial valuation warning - let users decide their own risk tolerance
         
         const tge = parseFloat(tgeAllocation);
         const maxSupply = parseFloat(primaryMaxSupply);
@@ -80,8 +74,6 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
         const halving = parseInt(halvingStep, 10);
         if (halving <= 0 || halving > 100) {
             newWarnings.push(`The Halving Step must be between 1% and 100% to ensure a decaying reward structure.`);
-        } else if (halving < 25 || halving > 90) {
-            newWarnings.push(`A Halving Step between 25% and 90% is generally recommended for a balanced decay curve.`);
         }
       } catch (error) {
         console.error("Error validating tokenomics parameters:", error);

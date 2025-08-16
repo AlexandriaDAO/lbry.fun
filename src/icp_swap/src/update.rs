@@ -19,6 +19,7 @@ use crate::{
     DEFAULT_UNDERFLOW_ERROR,
 };
 use crate::{ get_stake, storage::* };
+use crate::storage::add_to_total_claimed_rewards;
 use crate::{ get_user_archive_balance, utils::{*, check_can_trade} };
 use candid::{ CandidType, Nat, Principal };
 use ic_cdk::{ self, caller, update };
@@ -887,12 +888,6 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
     // Calculate 1% of pool for distribution
     let total_distribution = reward_pool / 100;
     
-    // Update reward pool (remove what we're distributing)
-    REWARD_POOL.with(|p| {
-        let new_pool = reward_pool.saturating_sub(total_distribution);
-        p.borrow_mut().insert((), new_pool);
-    });
-    
     // Calculate exact distribution
     let alex_portion = total_distribution / 100;  // 1% of distribution
     let lp_portion = total_distribution - alex_portion; // Remainder for exact accounting
@@ -905,32 +900,65 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
     
     // The LP portion (99% of distribution) is distributed directly to stakers
     let total_staked = get_total_primary_staked().await?;
+    
+    if total_staked == 0 {
+        // No stakers - only remove ALEX portion from pool, keep LP portion
+        REWARD_POOL.with(|p| {
+            let new_pool = reward_pool.saturating_sub(alex_portion);
+            p.borrow_mut().insert((), new_pool);
+        });
+        
+        register_info_log(
+            Principal::anonymous(),
+            "distribute_reward",
+            &format!("No stakers - distributed {} to ALEX, {} stays in pool", alex_portion, lp_portion)
+        );
+        
+        return Ok(format!("Distributed {} to ALEX, {} stays in pool (no stakers)", alex_portion, lp_portion));
+    }
+    
+    // Remove full distribution from pool since we have stakers to distribute to
+    REWARD_POOL.with(|p| {
+        let new_pool = reward_pool.saturating_sub(total_distribution);
+        p.borrow_mut().insert((), new_pool);
+    });
+    
     if total_staked > 0 {
-        // Collect updates first to avoid borrow checker issues
-        let updates: Vec<(Principal, Stake)> = STAKES.with(|s| {
-            s.borrow()
+        // Track what we actually distribute (matching core's pattern)
+        let mut total_distributed: u128 = 0;
+        
+        // Calculate and distribute rewards
+        STAKES.with(|stakes| -> Result<(), ExecutionError> {
+            let mut stakes_map = stakes.borrow_mut();
+            
+            // Collect keys first (StableBTreeMap doesn't have iter_mut)
+            let keys: Vec<Principal> = stakes_map
                 .iter()
-                .map(|(principal, stake)| {
+                .map(|(principal, _)| principal.clone())
+                .collect();
+            
+            for principal in keys {
+                if let Some(mut stake) = stakes_map.get(&principal) {
+                    // Calculate this stake's reward
                     let stake_ratio = (stake.amount as u128) * SCALING_FACTOR / (total_staked as u128);
                     let icp_reward = ((lp_portion as u128) * stake_ratio) / SCALING_FACTOR;
                     
-                    let mut updated_stake = stake.clone();
-                    updated_stake.reward_icp = updated_stake.reward_icp.saturating_add(icp_reward);
-                    (principal.clone(), updated_stake)
-                })
-                .collect()
-        });
-        
-        // Apply updates
-        STAKES.with(|s| {
-            for (principal, updated_stake) in updates {
-                s.borrow_mut().insert(principal, updated_stake);
+                    // Accumulate total distributed (like core does)
+                    total_distributed = total_distributed.saturating_add(icp_reward);
+                    
+                    // Update individual stake
+                    stake.reward_icp = stake.reward_icp.saturating_add(icp_reward);
+                    
+                    // Reinsert the updated stake
+                    stakes_map.insert(principal, stake);
+                }
             }
-        });
+            Ok(())
+        })?;
         
-        // Update the global unclaimed amount to match the sum of all stake rewards
-        // This ensures sub_to_unclaimed_amount won't underflow when users claim
-        add_to_unclaimed_amount(lp_portion as u128)?;
+        // Update global counter with ACTUAL distributed amount (not theoretical)
+        // This fixes the double-counting bug - we only track what was actually distributed
+        add_to_unclaimed_amount(total_distributed)?;
         
         // Track APY for historical data
         let intervals = get_distribution_interval();
@@ -1314,6 +1342,16 @@ async fn claim_icp_reward(from_subaccount: Option<[u8; 32]>) -> Result<String, E
                     }
                 )
             })?;
+            
+            // Track the successfully claimed amount (AFTER successful send)
+            add_to_total_claimed_rewards(amount_after_fee).map_err(|e|
+                ExecutionError::new_with_log(
+                    caller,
+                    "claim_icp_reward",
+                    e
+                )
+            )?;
+            
             register_info_log(
                 caller,
                 "claim_icp_reward",

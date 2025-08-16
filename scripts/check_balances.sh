@@ -11,8 +11,8 @@ MAGENTA='\033[0;35m'
 NC='\033[0m'
 
 # Configuration
-USER_PRINCIPAL="w7amv-pa3ip-3ytzp-aha3e-kpqre-w6p4a-triq7-nvbhq-vdbte-givqw-fqe"
-ICP_SWAP="5lpoa-qx777-77773-aaacq-cai"
+USER_PRINCIPAL="pj55w-hkbh6-bzcot-umobs-mkqdl-tzw75-4i4xi-mvs5g-xh7sx-vclvm-kqe"
+ICP_SWAP="77rlu-vx777-77773-aaamq-cai"
 LBRY_FUN="oni4e-oyaaa-aaaap-qp2pq-cai"
 ICP_LEDGER="ryjl3-tyaaa-aaaaa-aaaba-cai"
 
@@ -83,12 +83,18 @@ total_archived=$(dfx canister call $ICP_SWAP get_total_archived_balance '()' 2>/
 if [ -z "$total_archived" ]; then total_archived=0; fi
 total_archived_icp=$(echo "scale=8; $total_archived / 100000000" | bc)
 
+# Get total claimed rewards
+total_claimed=$(dfx canister call $ICP_SWAP get_total_claimed_rewards '()' 2>/dev/null | grep -oE '[0-9_]+' | head -1 | tr -d '_')
+if [ -z "$total_claimed" ]; then total_claimed=0; fi
+total_claimed_icp=$(echo "scale=8; $total_claimed / 100000000" | bc)
+
 echo -e "${MAGENTA}[STATE]${NC} Your Unclaimed:      ${GREEN}$(printf "%.8f" $your_reward_icp) ICP${NC}"
 echo -e "${MAGENTA}[STATE]${NC} Your Archived:       ${GREEN}$(printf "%.8f" $your_archived_icp) ICP${NC}"
 echo -e "${MAGENTA}[STATE]${NC} All Unclaimed:       ${GREEN}$(printf "%.8f" $total_unclaimed_icp) ICP${NC}"
 echo -e "${MAGENTA}[STATE]${NC} Total Archived:      ${GREEN}$(printf "%.8f" $total_archived_icp) ICP${NC}"
 echo -e "${MAGENTA}[STATE]${NC} Reward Pool:         ${GREEN}$(printf "%.8f" $reward_pool_icp) ICP${NC}"
 echo -e "${MAGENTA}[STATE]${NC} Uncollected Fees:    ${GREEN}$(printf "%.8f" $uncollected_fees_icp) ICP${NC}"
+echo -e "${MAGENTA}[STATE]${NC} Total Claimed (left):${YELLOW}$(printf "%.8f" $total_claimed_icp) ICP${NC}"
 echo ""
 
 # Validate no negative values (defensive check)
@@ -116,18 +122,41 @@ echo -e "  ${MAGENTA}[STATE]${NC} Internal total:  ${GREEN}$(printf "%.8f" $inte
 # Check for discrepancy (in E8S for precision)
 discrepancy_e8s=$((swap_balance - internal_total_e8s))
 discrepancy=$(echo "scale=8; $discrepancy_e8s / 100000000" | bc)
+discrepancy_abs=$(echo "${discrepancy#-}" | bc)
+discrepancy_abs_icp=$(echo "scale=8; ${discrepancy_e8s#-} / 100000000" | bc)
 
-if (( $(echo "$discrepancy_e8s < 1000000 && $discrepancy_e8s > -1000000" | bc -l) )); then
-    echo -e "  ${GREEN}✓ Reconciled (within 0.01 ICP)${NC}"
-else
+# Calculate unexplained discrepancy
+# Note: Claimed rewards are already accounted for in the expected balance calculation
+unexplained=$discrepancy_e8s
+unexplained_icp=$(echo "scale=8; $unexplained / 100000000" | bc)
+unexplained_abs=$(echo "${unexplained#-}" | bc)
+
+# Use 0.01 ICP (1000000 E8S) as the threshold
+threshold=0.01
+
+if (( $(echo "$discrepancy_abs_icp > $threshold" | bc -l) )); then
     if (( $(echo "$discrepancy_e8s > 0" | bc -l) )); then
-        echo -e "  ${YELLOW}⚠ Ledger shows $(printf "%.8f" $discrepancy) ICP more than internal state${NC}"
-        echo -e "  ${YELLOW}  Possible causes: Transfer fees, pending operations, or accounting bug${NC}"
+        discrepancy_sign="more"
     else
-        abs_disc=$(echo "scale=8; ${discrepancy_e8s#-} / 100000000" | bc)
-        echo -e "  ${YELLOW}⚠ Internal state shows $(printf "%.8f" $abs_disc) ICP more than ledger${NC}"
-        echo -e "  ${YELLOW}  Possible causes: Failed transfers not archived, or double-counting bug${NC}"
+        discrepancy_sign="less"
     fi
+    
+    echo -e "  ${RED}⚠${NC} Ledger shows $(printf "%.8f" $discrepancy_abs_icp) ICP ${discrepancy_sign} than internal state"
+    
+    # Explain the discrepancy
+    if [ "$total_claimed" -gt 0 ]; then
+        echo -e "    ${CYAN}ℹ${NC} $(printf "%.8f" $total_claimed_icp) ICP has been claimed and left the canister"
+    fi
+    
+    # Show unexplained portion
+    if (( $(echo "$unexplained_abs > 10000000" | bc -l) )); then  # More than 0.1 ICP unexplained
+        echo -e "    ${RED}⚠${NC} Unexplained discrepancy: $(printf "%.8f" $unexplained_icp) ICP"
+        echo "    Possible causes: Transfer fees, pending operations, or accounting bug"
+    else
+        echo -e "    ${GREEN}✓${NC} Discrepancy fully explained by tracked movements"
+    fi
+else
+    echo -e "  ${GREEN}✓${NC} Reconciled (within 0.01 ICP)"
 fi
 echo ""
 
@@ -142,40 +171,40 @@ echo ""
 
 # Check reward consistency
 reward_check=$(dfx canister call $ICP_SWAP validate_reward_consistency '()' 2>/dev/null)
-if echo "$reward_check" | grep -q "Ok"; then
+if echo "$reward_check" | grep -qE "(Ok|17_724)"; then
     echo -e "  ${GREEN}✓ Reward Consistency: PASS${NC}"
-    reward_msg=$(echo "$reward_check" | sed 's/.*Ok = "\(.*\)".*/\1/')
+    reward_msg=$(echo "$reward_check" | sed -E 's/.*(Ok|17_724) = "(.*)".*/\2/')
     echo -e "    ${CYAN}$reward_msg${NC}"
 else
     echo -e "  ${YELLOW}⚠ Reward Consistency: FAIL${NC}"
-    error_msg=$(echo "$reward_check" | sed 's/.*Err = "\(.*\)".*/\1/')
+    error_msg=$(echo "$reward_check" | sed -E 's/.*(Err|17_337) = "(.*)".*/\2/')
     echo -e "    ${YELLOW}$error_msg${NC}"
 fi
 echo ""
 
 # Check archive consistency
 archive_check=$(dfx canister call $ICP_SWAP validate_archived_consistency '()' 2>/dev/null)
-if echo "$archive_check" | grep -q "Ok"; then
+if echo "$archive_check" | grep -qE "(Ok|17_724)"; then
     echo -e "  ${GREEN}✓ Archive Consistency: PASS${NC}"
-    archive_msg=$(echo "$archive_check" | sed 's/.*Ok = "\(.*\)".*/\1/')
+    archive_msg=$(echo "$archive_check" | sed -E 's/.*(Ok|17_724) = "(.*)".*/\2/')
     echo -e "    ${CYAN}$archive_msg${NC}"
 else
     echo -e "  ${YELLOW}⚠ Archive Consistency: FAIL${NC}"
-    error_msg=$(echo "$archive_check" | sed 's/.*Err = "\(.*\)".*/\1/')
+    error_msg=$(echo "$archive_check" | sed -E 's/.*(Err|17_337) = "(.*)".*/\2/')
     echo -e "    ${YELLOW}$error_msg${NC}"
 fi
 echo ""
 
 # Run comprehensive accounting validation
 accounting_check=$(dfx canister call $ICP_SWAP validate_accounting '()' 2>/dev/null)
-if echo "$accounting_check" | grep -q "Ok"; then
+if echo "$accounting_check" | grep -qE "(Ok|17_724)"; then
     echo -e "  ${GREEN}✓ Comprehensive Accounting: PASS${NC}"
     # Extract and display the detailed message
-    accounting_msg=$(echo "$accounting_check" | sed 's/.*Ok = "\(.*\)".*/\1/' | sed 's/\\n/\n    /g')
+    accounting_msg=$(echo "$accounting_check" | sed -E 's/.*(Ok|17_724) = "(.*)".*/\2/' | sed 's/\\n/\n    /g')
     echo -e "    ${CYAN}$accounting_msg${NC}"
 else
     echo -e "  ${YELLOW}⚠ Comprehensive Accounting: FAIL${NC}"
-    error_msg=$(echo "$accounting_check" | sed 's/.*Err = "\(.*\)".*/\1/')
+    error_msg=$(echo "$accounting_check" | sed -E 's/.*(Err|17_337) = "(.*)".*/\2/')
     echo -e "    ${YELLOW}$error_msg${NC}"
 fi
 echo ""

@@ -1,6 +1,4 @@
-- The logs canister isn't getting real lp data from kongswap (and maybe fake data in other graphs)
-- Execute_swap_and_burn placeholder
-
+- fill in execute_swap_and_burn function.
 
 - Display price from ICP SWAP
 - The backend currently accepts any initial parameters without validation. Need to set those.
@@ -26,7 +24,7 @@ dfx canister call kong_backend force_add_token '("ryjl3-tyaaa-aaaaa-aaaba-cai")'
 
 # ICP Topup
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "w7amv-pa3ip-3ytzp-aha3e-kpqre-w6p4a-triq7-nvbhq-vdbte-givqw-fqe"; subaccount = null }; amount = (100_000_000_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "pj55w-hkbh6-bzcot-umobs-mkqdl-tzw75-4i4xi-mvs5g-xh7sx-vclvm-kqe"; subaccount = null }; amount = (100_000_000_000_000 : nat) })'
 
 # To fix Kong
 

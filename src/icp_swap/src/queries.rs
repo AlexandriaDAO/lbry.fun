@@ -206,6 +206,8 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
             uncollected_alex_fees: 0,
             total_staked: 0,
             operational_balance: 0,
+            total_claimed_rewards: 0,
+            unexplained_discrepancy: 0,
             timestamp: ic_cdk::api::time(),
             canister_id: ic_cdk::api::id(),
             requires_attention: true,
@@ -227,21 +229,29 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
     // 4. Get archived balance (ICP held for users from failed transactions)
     let archived_balance = get_total_archived_balance();
     
-    // 5. Calculate expected balance based on internal accounting only
+    // 5. Get total claimed rewards (ICP that left the canister)
+    let total_claimed = get_total_claimed_rewards();
+    
+    // 6. Calculate expected balance (all ICP that should be in canister)
     let expected_balance = reward_pool + uncollected_alex + total_staked + archived_balance;
     
-    // 6. Calculate actual discrepancy between ledger balance and internal accounting
+    // 7. Calculate actual discrepancy between ledger balance and internal accounting
     let discrepancy = (actual_balance as i64) - (expected_balance as i64);
     
-    // 7. Operational balance represents unexplained funds (positive discrepancy only)
-    // This could be transfer fees, rounding errors, or accounting bugs
-    let operational_balance = if discrepancy > 0 {
-        discrepancy as u64
+    // 8. Calculate unexplained discrepancy
+    // Note: Claimed rewards are already accounted for through reduced stake.reward_icp values
+    // which automatically reduces total_staked and thus expected_balance.
+    // No adjustment needed - discrepancy already reflects true unexplained amount.
+    let unexplained_discrepancy = discrepancy;
+    
+    // 9. Operational balance represents unexplained positive funds
+    let operational_balance = if unexplained_discrepancy > 0 {
+        unexplained_discrepancy as u64
     } else {
         0
     };
     
-    // 8. Validate operational balance isn't suspiciously high
+    // 10. Validate operational balance isn't suspiciously high
     // If operational balance is more than 10% of total staked, flag it
     let operational_balance_suspicious = if total_staked > 0 {
         operational_balance > (total_staked / 10)
@@ -257,11 +267,18 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
         uncollected_alex_fees: uncollected_alex,
         total_staked,
         operational_balance,
+        total_claimed_rewards: total_claimed,
+        unexplained_discrepancy,
         timestamp: ic_cdk::api::time(),
         canister_id: ic_cdk::api::id(),
-        requires_attention: discrepancy.abs() as u64 > ALLOWED_DISCREPANCY_E8S || operational_balance_suspicious,
+        requires_attention: unexplained_discrepancy.abs() as u64 > ALLOWED_DISCREPANCY_E8S || operational_balance_suspicious,
         operational_balance_suspicious,
     }
+}
+
+#[query]
+pub fn get_total_claimed_rewards() -> u64 {
+    crate::storage::get_total_claimed_rewards()
 }
 
 #[query]
@@ -329,6 +346,7 @@ pub async fn validate_accounting() -> Result<String, String> {
     // Calculate expected
     let total_unclaimed = get_total_unclaimed_icp_reward();
     let total_archived = get_total_archived_balance();
+    let total_claimed = get_total_claimed_rewards();
     
     let expected = reward_pool
         .saturating_add(uncollected_fees)
@@ -336,9 +354,16 @@ pub async fn validate_accounting() -> Result<String, String> {
         .saturating_add(total_archived);
     
     let discrepancy = (actual_balance as i64) - (expected as i64);
+    // No adjustment for claimed rewards - they're already accounted for in expected balance
+    let unexplained = discrepancy;
     
     Ok(format!(
-        "Validation complete. Actual: {} E8S, Expected: {} E8S, Discrepancy: {} E8S\nReward pool: {}, Uncollected fees: {}, Total unclaimed: {}, Total archived: {}",
-        actual_balance, expected, discrepancy, reward_pool, uncollected_fees, total_unclaimed, total_archived
+        "Validation complete. Actual: {} E8S, Expected: {} E8S, Discrepancy: {} E8S\n\
+         Reward pool: {}, Uncollected fees: {}, Total unclaimed: {}, Total archived: {}\n\
+         Total claimed (left canister): {} E8S\n\
+         Unexplained discrepancy: {} E8S",
+        actual_balance, expected, discrepancy, 
+        reward_pool, uncollected_fees, total_unclaimed, total_archived,
+        total_claimed, unexplained
     ))
 }

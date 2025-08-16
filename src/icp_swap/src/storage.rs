@@ -32,6 +32,7 @@ pub const UNCOLLECTED_ALEX_FEES_MEM_ID: MemoryId = MemoryId::new(12);
 // Memory ID 13 is intentionally unused (previously UNCOLLECTED_LP_FEES)
 pub const REWARD_POOL_MEM_ID: MemoryId = MemoryId::new(14);
 pub const TOKEN_ID_MEM_ID: MemoryId = MemoryId::new(15);
+pub const TOTAL_CLAIMED_REWARDS_MEM_ID: MemoryId = MemoryId::new(16);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
@@ -44,6 +45,11 @@ thread_local! {
     
     // Cache for token status with timestamp
     pub static CACHED_STATUS: RefCell<Option<(TokenStatus, u64)>> = RefCell::new(None);
+    
+    // Track total ICP that has been claimed and left the canister
+    pub static TOTAL_CLAIMED_REWARDS: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_CLAIMED_REWARDS_MEM_ID)))
+    );
 
     pub static APY: RefCell<StableBTreeMap<u32, DailyValues, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(APY_MEM_ID)))
@@ -148,6 +154,31 @@ pub fn get_reward_pool_mem() -> StableBTreeMap<(), u64, Memory> {
     })
 }
 
+pub fn get_total_claimed_rewards_mem() -> StableBTreeMap<(), u64, Memory> {
+    TOTAL_CLAIMED_REWARDS.with(|_rewards_map| {
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(TOTAL_CLAIMED_REWARDS_MEM_ID)))
+    })
+}
+
+// Helper functions for claimed rewards tracking
+pub fn add_to_total_claimed_rewards(amount: u64) -> Result<(), ExecutionError> {
+    TOTAL_CLAIMED_REWARDS.with(|t| {
+        let current = t.borrow().get(&()).unwrap_or(0);
+        let new_total = current.checked_add(amount).ok_or_else(|| 
+            ExecutionError::AdditionOverflow {
+                operation: "Adding to total claimed rewards".to_string(),
+                details: format!("Current: {}, Adding: {}", current, amount)
+            }
+        )?;
+        t.borrow_mut().insert((), new_total);
+        Ok(())
+    })
+}
+
+pub fn get_total_claimed_rewards() -> u64 {
+    TOTAL_CLAIMED_REWARDS.with(|t| t.borrow().get(&()).unwrap_or(0))
+}
+
 #[derive(CandidType, Deserialize, Clone)]
 pub struct Stake {
     pub amount: u64,
@@ -233,6 +264,10 @@ pub struct ReconciliationStatus {
     pub uncollected_alex_fees: u64,
     pub total_staked: u64,
     pub operational_balance: u64,
+    
+    // New tracking fields
+    pub total_claimed_rewards: u64,  // ICP that left via successful claims
+    pub unexplained_discrepancy: i64,  // Actual discrepancy after accounting for claims
     
     // Audit metadata
     pub timestamp: u64,

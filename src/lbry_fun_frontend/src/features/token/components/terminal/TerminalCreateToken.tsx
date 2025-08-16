@@ -675,7 +675,7 @@ const TerminalCreateToken: React.FC = () => {
                   onChange={(v) => updateForm('distribution_interval_seconds', v)}
                   options={distributionIntervalOptions}
                 />
-                <div className="text-gray-600 text-xs mt-1 font-mono mt-1">[WARN] Advanced setting - Default (1 hour) recommended. Cannot be changed after creation.</div>
+                <div className="text-gray-600 text-xs mt-1 font-mono mt-1">Cannot be changed after creation.</div>
                 
                 <div className="flex items-center mb-1 mt-4">
                   <span className="text-gray-400 text-xs">launch_delay</span>

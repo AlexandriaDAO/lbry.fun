@@ -103,6 +103,7 @@ type PaginatedLogs = record {
   current_page : nat64;
 };
 type ReconciliationStatus = record {
+  unexplained_discrepancy : int64;
   operational_balance_suspicious : bool;
   canister_id : principal;
   total_staked : nat64;
@@ -110,6 +111,7 @@ type ReconciliationStatus = record {
   discrepancy_e8s : int64;
   icp_balance_actual : nat64;
   reward_pool : nat64;
+  total_claimed_rewards : nat64;
   uncollected_alex_fees : nat64;
   timestamp : nat64;
   requires_attention : bool;
@@ -144,6 +146,7 @@ service : (opt InitArgs) -> {
   get_stake : (principal) -> (opt Stake) query;
   get_stakers_count : () -> (nat64) query;
   get_total_archived_balance : () -> (nat64) query;
+  get_total_claimed_rewards : () -> (nat64) query;
   get_total_unclaimed_icp_reward : () -> (nat) query;
   get_uncollected_fees : () -> (nat64, nat64) query;
   get_user_archive_balance : (principal) -> (opt ArchiveBalance) query;

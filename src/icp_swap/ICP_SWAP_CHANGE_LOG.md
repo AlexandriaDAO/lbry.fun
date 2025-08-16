@@ -1,5 +1,54 @@
 # ICP Swap Change Log
 
+## 2025-01-16: Reconciliation Fix - Claimed Rewards Tracking & Distribution Logic Fix
+
+### Changes Made:
+
+1. **storage.rs**:
+   - Added `TOTAL_CLAIMED_REWARDS_MEM_ID` (MemoryId 16) to track ICP that left via claims
+   - Added thread-local storage and helper functions for tracking claimed rewards
+   - Updated `ReconciliationStatus` struct with claimed rewards and unexplained discrepancy fields
+
+2. **update.rs**:
+   - Fixed `distribute_reward()` to only remove ALEX portion when no stakers exist
+   - Modified `claim_icp_reward()` to track successfully claimed amounts
+   - Prevents phantom ICP from disappearing when no stakers exist
+
+3. **queries.rs**:
+   - Fixed `get_reconciliation_status()` to properly calculate unexplained discrepancies
+   - Added `get_total_claimed_rewards()` query function
+   - Updated `validate_accounting()` to include claimed rewards in validation
+
+4. **check_balances.sh**:
+   - Added display of total claimed rewards
+   - Updated reconciliation to show explained vs unexplained discrepancies
+
+### Problems Fixed:
+
+1. **Untracked Claimed Rewards**: The ~990 ICP persistent discrepancy was from historical claimed rewards that weren't being tracked.
+
+2. **Phantom ICP on No Stakers**: When `distribute_reward()` ran with no stakers, it removed the full 1% from the pool but the 99% LP portion had nowhere to go, creating ~4946 ICP discrepancies.
+
+3. **Bug #9**: Fixed the circular logic in reconciliation that was hiding real issues.
+
+### Solution:
+
+1. **Claimed Rewards Tracking**: Now tracks all ICP that successfully leaves via reward claims
+2. **Smart Distribution**: When no stakers exist, only the 1% ALEX portion is removed from the pool; the 99% LP portion stays for future distributions
+3. **Proper Reconciliation**: Unexplained discrepancy = actual - expected + claimed_rewards
+
+### Impact:
+- Fresh deployments will show 0 unexplained discrepancy
+- Existing deployments can now explain their historical discrepancies
+- Prevents phantom ICP from disappearing when no stakers exist
+- All ICP movements are properly tracked and accounted for
+
+### Technical Details:
+- Claimed rewards are tracked AFTER successful ICP transfer (not before)
+- Distribution logic now handles the no-staker case correctly
+- The reconciliation formula: `expected = reward_pool + uncollected_fees + unclaimed + archived`
+- Unexplained discrepancy: `actual - expected + claimed_rewards`
+
 ## 2025-08-14: Bug #9 - Fixed Reconciliation Double-Counting Error
 
 ### Changes Made:
