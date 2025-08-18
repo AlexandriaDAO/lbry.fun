@@ -298,6 +298,12 @@ fn setup_timers(distribution_interval_seconds: u64) {
         || { ic_cdk::spawn(distribute_reward_wrapper()) }
     );
 
+    // Push ALEX fees to lbry_fun every 24 hours
+    let _alex_push_timer_id: ic_cdk_timers::TimerId = ic_cdk_timers::set_timer_interval(
+        Duration::from_secs(86400), // 24 hours
+        || { ic_cdk::spawn(push_alex_fees_wrapper()) }
+    );
+
     // Periodic price fetch
     let _price_timer_id: ic_cdk_timers::TimerId = ic_cdk_timers::set_timer_interval(
         PRICE_FETCH_INTERVAL,
@@ -322,6 +328,30 @@ async fn get_icp_rate_cents_wrapper() {
                 caller(),
                 "get_icp_rate_cents_wrapper",
                 &format!("Error fetching ICP price. Error details: {:?}", e)
+            );
+        }
+    }
+}
+
+async fn push_alex_fees_wrapper() {
+    use crate::update::collect_alex_fees_internal;
+    use candid::Principal;
+    
+    match collect_alex_fees_internal().await {
+        Ok(amount) => {
+            if amount > 0 {
+                register_info_log(
+                    Principal::anonymous(),
+                    "push_alex_fees",
+                    &format!("Successfully pushed {} ICP to lbry_fun", amount)
+                );
+            }
+        }
+        Err(e) => {
+            register_info_log(
+                Principal::anonymous(),
+                "push_alex_fees",
+                &format!("Failed to push ALEX fees: {}", e)
             );
         }
     }

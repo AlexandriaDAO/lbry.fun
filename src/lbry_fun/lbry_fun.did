@@ -1,18 +1,3 @@
-type AuditState = record {
-  last_successful_collection : nat64;
-  expected_value : nat64;
-  de_peg_detected : bool;
-  consecutive_failures : nat32;
-  total_value_locked : nat64;
-};
-type CollectionMetrics = record {
-  last_successful_collection : nat64;
-  collection_efficiency_basis_points : nat32;
-  failed_collections_24h : nat32;
-  total_accumulated_icp : nat64;
-  average_collection_interval : nat64;
-  total_burned_lbry : nat64;
-};
 type CreateTokenParams = record {
   secondary_token_symbol : text;
   primary_token_name : text;
@@ -68,45 +53,12 @@ type PreviewArgs = record {
   primary_max_supply : nat64;
   initial_secondary_burn : nat64;
 };
-type ReconciliationDetail = record {
-  token_id : principal;
-  reconciliation : ReconciliationStatus;
-  icp_swap_canister : principal;
-};
-type ReconciliationStatus = record {
-  operational_balance_suspicious : bool;
-  canister_id : principal;
-  total_staked : nat64;
-  icp_balance_expected : nat64;
-  discrepancy_e8s : int64;
-  icp_balance_actual : nat64;
-  reward_pool : nat64;
-  uncollected_alex_fees : nat64;
-  timestamp : nat64;
-  requires_attention : bool;
-  operational_balance : nat64;
-};
 type Result = variant { Ok : text; Err : text };
-type Result_1 = variant { Ok : nat; Err : TransferFromError };
-type Result_2 = variant { Ok : TokenDeploymentResult; Err : text };
-type Result_3 = variant { Ok : nat; Err : text };
-type Result_4 = variant { Ok : ReconciliationDetail; Err : text };
-type Result_5 = variant { Ok : TokenStatus; Err : text };
-type Result_6 = variant { Ok : GraphData; Err : text };
-type Result_7 = variant { Ok : nat64; Err : text };
-type SwapState = variant {
-  Failed : record { error : text; timestamp : nat64 };
-  Collecting : record { started_at : nat64 };
-  Idle;
-  Burning : record { lbry_amount : nat64; started_at : nat64 };
-  Swapping : record { amount : nat64; started_at : nat64 };
-};
-type SystemReconciliationSummary = record {
-  tokens_with_discrepancies : vec principal;
-  total_uncollected_alex : nat64;
-  total_expected_fees : nat64;
-  timestamp : nat64;
-};
+type Result_1 = variant { Ok : TokenDeploymentResult; Err : text };
+type Result_2 = variant { Ok : nat; Err : text };
+type Result_3 = variant { Ok : TokenStatus; Err : text };
+type Result_4 = variant { Ok : GraphData; Err : text };
+type Result_5 = variant { Ok : nat64; Err : text };
 type TokenDeploymentResult = record { token_id : nat64; message : text };
 type TokenRecord = record {
   id : nat64;
@@ -151,17 +103,6 @@ type TokenomicsSchedule = record {
   total_supply_percentage : float64;
   total_epochs : nat32;
 };
-type TransferFromError = variant {
-  GenericError : record { message : text; error_code : nat };
-  TemporarilyUnavailable;
-  InsufficientAllowance : record { allowance : nat };
-  BadBurn : record { min_burn_amount : nat };
-  Duplicate : record { duplicate_of : nat };
-  BadFee : record { expected_fee : nat };
-  CreatedInFuture : record { ledger_time : nat64 };
-  TooOld;
-  InsufficientFunds : record { balance : nat };
-};
 service : () -> {
   create_token : (
       text,
@@ -181,27 +122,22 @@ service : () -> {
       nat64,
       nat64,
     ) -> (Result);
-  deposit_icp_in_canister : (nat64, opt blob) -> (Result_1);
   // Phase 2: Execute the deployment with the given ID
-  execute_token_deployment : (nat64) -> (Result_2);
+  execute_token_deployment : (nat64) -> (Result_1);
   get_all_token_record : () -> (vec record { nat64; TokenRecord }) query;
-  get_audit_state : () -> (AuditState) query;
-  get_canister_cycle_balance : (principal) -> (Result_3);
-  get_collection_metrics : () -> (CollectionMetrics);
-  get_collection_status : () -> (SwapState, nat64) query;
+  get_canister_cycle_balance : (principal) -> (Result_2);
   get_failed : () -> (vec record { nat64; TokenRecord }) query;
   get_live : () -> (vec record { nat64; TokenRecord }) query;
   // Query deployment status and history
   get_my_deployments : () -> (vec DeploymentInfo) query;
-  get_system_reconciliation : () -> (SystemReconciliationSummary);
+  get_swap_stats : () -> (nat64, nat64, nat64) query;
   get_token_detail : (nat64) -> (opt TokenStatusDetail) query;
-  get_token_reconciliation : (nat64) -> (Result_4);
-  get_token_status : (nat64) -> (Result_5) query;
-  get_tokenomics_graphs : (nat64) -> (Result_6) query;
-  get_treasury_balance : () -> (Result_7) query;
+  get_token_status : (nat64) -> (Result_3) query;
+  get_tokenomics_graphs : (nat64) -> (Result_4) query;
+  get_treasury_balance : () -> (Result_5) query;
   get_upcoming : () -> (vec record { nat64; TokenRecord }) query;
   // Phase 1: Create deployment and return ID immediately
-  initiate_token_deployment : (CreateTokenParams) -> (Result_7);
+  initiate_token_deployment : (CreateTokenParams) -> (Result_5);
   preview_tokenomics_graphs : (PreviewArgs) -> (GraphData);
   preview_tokenomics_schedule : (
       nat64,

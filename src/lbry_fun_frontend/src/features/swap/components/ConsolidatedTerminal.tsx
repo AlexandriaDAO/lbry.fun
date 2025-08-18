@@ -40,7 +40,8 @@ const ConsolidatedTerminal: React.FC = () => {
         await Promise.all([
             dispatch(getIcpBal(principal)),
             dispatch(getPrimaryBalance(principal)),
-            dispatch(getSecondaryBalance(principal))
+            dispatch(getSecondaryBalance(principal)),
+            dispatch(balanceThunks.getPrimaryPrice())
         ]);
     }, [dispatch, principal, isAuthenticated]);
     
@@ -189,6 +190,21 @@ const ConsolidatedTerminal: React.FC = () => {
                             title={isRefreshing ? 'Refreshing...' : 'Click to refresh'}
                         />
                     </div>
+                    
+                    {/* Display Primary Token Price prominently at the top */}
+                    {swap.activeSwapPool && (
+                        <div className="flex justify-between items-center py-1 mb-1 border-b border-cyan-400/30">
+                            <span className="text-cyan-400 text-sm font-bold">{swap.activeSwapPool[1].primary_token_symbol.toLowerCase()}_price:</span>
+                            <div className="text-right">
+                                <span className="text-cyan-400 font-bold text-lg cyber-glow">
+                                    ${parseFloat(primary.primaryPriceUsd).toFixed(4)}
+                                </span>
+                                <span className="text-cyan-400/70 text-xs ml-2">
+                                    [per token]
+                                </span>
+                            </div>
+                        </div>
+                    )}
                     
                     <div className="flex justify-between items-center py-0.5">
                         <span className="text-gray-400 text-xs">icp_balance:</span>

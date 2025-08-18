@@ -1,12 +1,10 @@
-
 - The backend currently accepts any initial parameters without validation. Need to set those.
 
-- When the total supply is hit, the burning should no longer show a return in the primary token.
-- Each burn action is causing a 0.001ICP discrepancy.
 
-- fill in execute_swap_and_burn function.
-- Display price from ICP SWAP
-- [LAUNCH_PENDING] reads 48 hours by default (when we send 24 hours).
+- Change the 24hr swap() timer for/from testing.
+
+
+
 
 
 dfx canister call kong_backend force_add_token '("ryjl3-tyaaa-aaaaa-aaaba-cai")'

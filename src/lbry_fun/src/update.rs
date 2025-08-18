@@ -677,11 +677,8 @@ fn init() {
         });
     });
     
-    // Initialize the collection timer for ALEX rewards
-    crate::collection::init_collection_timer();
-    
-    // Initialize the reconciliation timer
-    crate::collection::init_reconciliation_timer();
+    // Initialize the swap timer for ALEX rewards
+    crate::collection::init_swap_timer();
 }
 
 #[ic_cdk::post_upgrade]
@@ -695,9 +692,6 @@ fn post_upgrade() {
         });
     });
     
-    // Initialize the collection timer for ALEX rewards
-    crate::collection::init_collection_timer();
-    
-    // Initialize the reconciliation timer
-    crate::collection::init_reconciliation_timer();
+    // Initialize the swap timer for ALEX rewards
+    crate::collection::init_swap_timer();
 }

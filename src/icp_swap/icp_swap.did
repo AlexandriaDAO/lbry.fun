@@ -1,9 +1,4 @@
 type ArchiveBalance = record { icp : nat64 };
-type CollectionError = variant {
-  TransferFailed : record { reason : text };
-  AmountTooSmall : record { amount : nat64 };
-};
-type CollectionResult = record { collected : nat64; timestamp : nat64 };
 type Configs = record {
   secondary_token_id : principal;
   tokenomics_canister_id : principal;
@@ -117,18 +112,14 @@ type ReconciliationStatus = record {
   requires_attention : bool;
   operational_balance : nat64;
 };
-type Result = variant { Ok : nat64; Err : text };
-type Result_1 = variant { Ok : text; Err : ExecutionError };
-type Result_2 = variant { Ok : CollectionResult; Err : CollectionError };
-type Result_3 = variant { Ok : text; Err : text };
+type Result = variant { Ok : text; Err : ExecutionError };
+type Result_1 = variant { Ok : text; Err : text };
 type SecondaryRatio = record { time : nat64; ratio : nat64 };
 type Stake = record { time : nat64; reward_icp : nat; amount : nat64 };
 service : (opt InitArgs) -> {
-  add_to_reward_pool : (nat64) -> (Result);
-  burn_secondary : (nat64, opt blob) -> (Result_1);
+  burn_secondary : (nat64, opt blob) -> (Result);
   caller_subaccount : () -> (text) query;
-  claim_icp_reward : (opt blob) -> (Result_1);
-  collect_alex_fees : () -> (Result_2);
+  claim_icp_reward : (opt blob) -> (Result);
   get_all_apy_values : () -> (vec record { nat32; nat }) query;
   get_all_archive_balances : () -> (
       vec record { principal; ArchiveBalance },
@@ -150,11 +141,11 @@ service : (opt InitArgs) -> {
   get_total_unclaimed_icp_reward : () -> (nat) query;
   get_uncollected_fees : () -> (nat64, nat64) query;
   get_user_archive_balance : (principal) -> (opt ArchiveBalance) query;
-  redeem : (opt blob) -> (Result_1);
-  stake_primary : (nat64, opt blob) -> (Result_1);
-  swap : (nat64, opt blob) -> (Result_1);
-  un_stake_all_primary : (opt blob) -> (Result_1);
-  validate_accounting : () -> (Result_3);
-  validate_archived_consistency : () -> (Result_3) query;
-  validate_reward_consistency : () -> (Result_3) query;
+  redeem : (opt blob) -> (Result);
+  stake_primary : (nat64, opt blob) -> (Result);
+  swap : (nat64, opt blob) -> (Result);
+  un_stake_all_primary : (opt blob) -> (Result);
+  validate_accounting : () -> (Result_1);
+  validate_archived_consistency : () -> (Result_1) query;
+  validate_reward_consistency : () -> (Result_1) query;
 }

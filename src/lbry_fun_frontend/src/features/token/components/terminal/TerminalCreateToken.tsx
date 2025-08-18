@@ -80,7 +80,7 @@ const TerminalCreateToken: React.FC = () => {
     tge_allocation: '0',
     initial_secondary_burn: '1000000',
     primary_token_logo_base64: '',
-    halving_step: '95',
+    halving_step: '90',
     threshold_multiplier: '1.5',
     initial_reward_per_burn_unit: '1',
     distribution_interval_seconds: '3600',

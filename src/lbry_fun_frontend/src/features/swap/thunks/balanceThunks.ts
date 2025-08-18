@@ -70,24 +70,66 @@ export const getPrimaryFee = createAsyncThunk<
   return rejectWithValue("An unknown error occurred while fetching ALEX fee");
 });
 
-// Get primary token price (currently returns static value)
-export const getPrimaryPrice = createAsyncThunk<string, void, { rejectValue: string }>(
+// Get primary token price from Kongswap pool data
+export const getPrimaryPrice = createAsyncThunk<string, void, { state: RootState; rejectValue: string }>(
   "primary/getPrimaryPrice",
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
-      // TODO: Get primary price dynamically from kongswap canister
-      // const factorySwapCanister = await getIcpSwapFactoryCanister();
-      // const poolData = await factorySwapCanister.getPoolsForToken(
-      //   "ysy5f-2qaaa-aaaap-qkmmq-cai"
-      // );
-      // return poolData[0].token0Price.toString();
-      return "1";
+      const state = getState();
+      
+      // Need active swap pool to get primary token ID
+      if (!state.swap.activeSwapPool) {
+        return "0";
+      }
+      
+      // Import KongswapService
+      const { KongswapService } = await import("@/services/kongswapService");
+      
+      // Get ICP price from state (in dollars)
+      const icpPrice = state.icpLedger.icpPrice || 10; // Default to $10 if not available
+      
+      // Get all pools from Kongswap
+      const poolsData = await KongswapService.getAllPools(Number(icpPrice));
+      
+      // Find the pool for our primary token
+      const primaryTokenId = state.swap.activeSwapPool[1].primary_token_id.toString();
+      const pool = poolsData.pools.find(p => 
+        (p.address_0 === primaryTokenId || p.address_1 === primaryTokenId) && !p.is_removed
+      );
+      
+      if (!pool) {
+        console.warn("No Kongswap pool found for primary token");
+        return "0";
+      }
+      
+      // Calculate price based on pool reserves
+      // In a 50/50 AMM, price = (other_token_balance * other_token_price) / primary_token_balance
+      let primaryPrice = 0;
+      
+      if (pool.address_0 === primaryTokenId) {
+        // Primary token is token0, ICP/other is token1
+        if (pool.symbol_1 === 'ICP' || pool.symbol_1 === 'ksICP') {
+          // Price = ICP_balance * ICP_price / Primary_balance
+          // Both balances are in E8S, so they cancel out
+          primaryPrice = (Number(pool.balance_1) * Number(icpPrice)) / Number(pool.balance_0);
+        }
+      } else if (pool.address_1 === primaryTokenId) {
+        // Primary token is token1, ICP/other is token0
+        if (pool.symbol_0 === 'ICP' || pool.symbol_0 === 'ksICP') {
+          // Price = ICP_balance * ICP_price / Primary_balance
+          primaryPrice = (Number(pool.balance_0) * Number(icpPrice)) / Number(pool.balance_1);
+        }
+      }
+      
+      // Format to 4 decimal places
+      return primaryPrice.toFixed(4);
     } catch (error) {
+      console.error("Failed to get primary price from Kongswap:", error);
       if (error instanceof Error) {
         return rejectWithValue(error.message);
       }
       return rejectWithValue(
-        "An unknown error occurred while fetching ALEX price"
+        "An unknown error occurred while fetching primary token price"
       );
     }
   }

@@ -18,7 +18,7 @@ import getCanisterBal from '@/features/icp-ledger/thunks/getCanisterBal';
 // Destructure for easier access
 const { getStakedInfo } = stakingThunks;
 const { getSecondaryRatio } = tradingThunks;
-const { getPrimaryBalance, getSecondaryBalance, getPrimaryFee, getSecondaryFee, getArchivedBalance, getCanisterArchivedBalance } = balanceThunks;
+const { getPrimaryBalance, getSecondaryBalance, getPrimaryFee, getSecondaryFee, getPrimaryPrice, getArchivedBalance, getCanisterArchivedBalance } = balanceThunks;
 const { getPrimaryMintRate, getTokenomicsInfo, getTotalPrimarySupply } = analyticsThunks;
 
 export enum LoadingPhase {
@@ -61,6 +61,7 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
         dispatch(getSecondaryFee()).unwrap(),
         dispatch(getPrimaryFee()).unwrap(),
         dispatch(getIcpPrice()).unwrap(),
+        dispatch(getPrimaryPrice()).unwrap(), // Get primary token price from Kongswap
         dispatch(getCanisterBal()).unwrap(), // Needed for burn calculations
         dispatch(getCanisterArchivedBalance()).unwrap(), // Also needed for burn calculations
       ];

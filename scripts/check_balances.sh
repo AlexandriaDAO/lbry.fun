@@ -14,6 +14,7 @@ NC='\033[0m'
 USER_PRINCIPAL="vgkov-ojfm2-etzss-lqse4-dm6ck-mdhmr-lhx7y-stnvb-bsj5p-npi54-eae"
 ICP_SWAP="5lpoa-qx777-77773-aaacq-cai"
 LBRY_FUN="oni4e-oyaaa-aaaap-qp2pq-cai"
+CORE_LBRY_SWAP="54fqz-5iaaa-aaaap-qkmqa-cai"  # Core LBRY project swap canister
 ICP_LEDGER="ryjl3-tyaaa-aaaaa-aaaba-cai"
 
 echo -e "${BLUE}=========================================${NC}"
@@ -34,13 +35,18 @@ lbry_balance=$(dfx canister call $ICP_LEDGER icrc1_balance_of "(record {owner = 
 if [ -z "$lbry_balance" ]; then lbry_balance=0; fi
 lbry_icp=$(echo "scale=8; $lbry_balance / 100000000" | bc)
 
+core_swap_balance=$(dfx canister call $ICP_LEDGER icrc1_balance_of "(record {owner = principal \"$CORE_LBRY_SWAP\"; subaccount = null})" 2>/dev/null | grep -oE '[0-9_]+' | head -1 | tr -d '_')
+if [ -z "$core_swap_balance" ]; then core_swap_balance=0; fi
+core_swap_icp=$(echo "scale=8; $core_swap_balance / 100000000" | bc)
+
 echo -e "${CYAN}[LEDGER]${NC} Your Wallet:        ${GREEN}$(printf "%.8f" $user_icp) ICP${NC}"
 echo -e "${CYAN}[LEDGER]${NC} ICP Swap Canister:  ${GREEN}$(printf "%.8f" $swap_icp) ICP${NC}"
 echo -e "${CYAN}[LEDGER]${NC} LBRY Fun Canister:  ${GREEN}$(printf "%.8f" $lbry_icp) ICP${NC}"
+echo -e "${CYAN}[LEDGER]${NC} Core LBRY Swap:     ${GREEN}$(printf "%.8f" $core_swap_icp) ICP${NC}"
 echo ""
 
 # Total from actual ledger (use raw E8S for precision)
-ledger_total_e8s=$((user_balance + swap_balance + lbry_balance))
+ledger_total_e8s=$((user_balance + swap_balance + lbry_balance + core_swap_balance))
 ledger_total=$(echo "scale=8; $ledger_total_e8s / 100000000" | bc)
 echo -e "${BLUE}TOTAL (Ledger):              ${GREEN}$(printf "%.8f" $ledger_total) ICP${NC}"
 echo ""

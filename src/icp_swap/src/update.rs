@@ -383,31 +383,33 @@ pub async fn burn_secondary(
                 &format!("Successfully sent {} ICP (e8s) to {}", amount_icp_e8s, caller)
             );
             
-            // Deduct the refunded ICP from the reward pool
+            // Deduct the refunded ICP from the reward pool INCLUDING the transfer fee
             // This is necessary because the ICP was originally added to the pool during swap
             // but when we refund 50% during burn, we need to remove it from the pool
+            // The actual amount deducted from canister balance is amount + transfer fee
+            let total_deducted = amount_icp_e8s + ICP_TRANSFER_FEE;
             REWARD_POOL.with(|p| -> Result<(), ExecutionError> {
                 let current = p.borrow().get(&()).unwrap_or(0);
-                if current < amount_icp_e8s {
+                if current < total_deducted {
                     return Err(ExecutionError::new_with_log(
                         caller,
                         "burn_secondary", 
                         ExecutionError::InsufficientBalance {
-                            required: amount_icp_e8s,
+                            required: total_deducted,
                             available: current,
                             token: "reward_pool".to_string(),
-                            details: "Reward pool has insufficient funds for refund".to_string()
+                            details: "Reward pool has insufficient funds for refund including transfer fee".to_string()
                         }
                     ));
                 }
-                let new_total = current - amount_icp_e8s;
+                let new_total = current - total_deducted;
                 p.borrow_mut().insert((), new_total);
                 Ok(())
             })?;
             register_info_log(
                 caller,
                 "burn_secondary",
-                &format!("Deducted {} ICP (e8s) from reward pool for burn refund", amount_icp_e8s)
+                &format!("Deducted {} ICP (e8s) from reward pool for burn refund (including {} transfer fee)", total_deducted, ICP_TRANSFER_FEE)
             );
         }
         Err(e) => {
@@ -1768,28 +1770,17 @@ async fn burn_token(
     result // Return the inner Result<BlockIndex, TransferFromError>
 }
 
-// Collection result structure
-#[derive(CandidType, Deserialize)]
-pub struct CollectionResult {
-    pub collected: u64,
-    pub timestamp: u64,
-}
-
-// Collection error structure
-#[derive(CandidType, Deserialize)]
-pub enum CollectionError {
-    AmountTooSmall { amount: u64 },
-    TransferFailed { reason: String },
-}
 
 // Collection with CEI pattern and failure reversal
-#[update(guard = "only_lbry_fun")]
-pub async fn collect_alex_fees() -> Result<CollectionResult, CollectionError> {
+// Now callable by internal timer (removed guard)
+pub async fn collect_alex_fees_internal() -> Result<u64, String> {
+    const MIN_PUSH_AMOUNT: u64 = 10_000_000; // 0.1 ICP (was ICP_TRANSFER_FEE)
+    
     // Atomic check and extraction
     let fees = UNCOLLECTED_ALEX_FEES.with(|f| {
         let current = f.borrow().get(&()).unwrap_or(0);
-        if current >= ICP_TRANSFER_FEE {
-            f.borrow_mut().insert((), 0);
+        if current >= MIN_PUSH_AMOUNT {  // Higher threshold
+            f.borrow_mut().insert((), 0);  // This empties it!
             current
         } else {
             0
@@ -1797,38 +1788,23 @@ pub async fn collect_alex_fees() -> Result<CollectionResult, CollectionError> {
     });
     
     if fees == 0 {
-        return Err(CollectionError::AmountTooSmall { amount: 0 });
+        return Ok(0); // Not an error, just nothing to push yet
     }
     
     // Interaction - external transfer
     match transfer_icp_to_lbry_fun(fees).await {
-        Ok(_) => {
-            Ok(CollectionResult { 
-                collected: fees,
-                timestamp: ic_cdk::api::time()
-            })
-        }
+        Ok(_) => Ok(fees),
         Err(e) => {
             // Failure reversal - add back to current balance (don't overwrite)
             UNCOLLECTED_ALEX_FEES.with(|f| {
                 let current = f.borrow().get(&()).unwrap_or(0);
                 f.borrow_mut().insert((), current + fees);
             });
-            Err(CollectionError::TransferFailed { reason: e.to_string() })
+            Err(e.to_string())
         }
     }
 }
 
-// Function to add funds to reward pool (only callable by lbry_fun)
-#[update(guard = "only_lbry_fun")]
-pub fn add_to_reward_pool(amount: u64) -> Result<u64, String> {
-    REWARD_POOL.with(|p| {
-        let current = p.borrow().get(&()).unwrap_or(0);
-        let new_total = current.saturating_add(amount);
-        p.borrow_mut().insert((), new_total);
-        Ok(new_total)
-    })
-}
 
 // Helper function to transfer ICP to lbry_fun canister
 async fn transfer_icp_to_lbry_fun(amount: u64) -> Result<BlockIndex, String> {
