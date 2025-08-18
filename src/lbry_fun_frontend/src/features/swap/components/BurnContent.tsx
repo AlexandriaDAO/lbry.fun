@@ -36,6 +36,8 @@ const BurnContent = () => {
     const burnError = useAppSelector((state: RootState) => state.swap.operationErrors.burn);
     const icpLedger = useAppSelector((state: RootState) => state.icpLedger);
     const tokenomics = useAppSelector((state: RootState) => state.tokenomics);
+    const tokenomicsConfig = useAppSelector((state: RootState) => state.swap.tokenomicsConfig);
+    const tokenomicsCurrentState = useAppSelector((state: RootState) => state.swap.tokenomicsCurrentState);
     const { accessState, countdown, launchTime, isTokenLive } = useAccessState();
 
     const [amountSecondary, setAmountSecondary] = useState(0);
@@ -52,6 +54,28 @@ const BurnContent = () => {
             swap.canisterArchivedBal?.canisterUnClaimedIcp || 0
         );
     }, [swap.secondaryRatio, icpLedger.canisterBalance, swap.canisterArchivedBal]);
+    
+    // Calculate supply status
+    const supplyStatus = useMemo(() => {
+        if (!tokenomicsConfig || !tokenomicsCurrentState) {
+            return { percentage: 0, isAtMax: false, isNearMax: false };
+        }
+        
+        const maxSupply = BigInt(tokenomicsConfig.maxPrimarySupply);
+        const currentSupply = BigInt(tokenomicsCurrentState.totalPrimaryMinted);
+        
+        // Calculate percentage (multiply by 100 for percentage)
+        const percentage = maxSupply > 0n ? Number((currentSupply * 100n) / maxSupply) : 0;
+        
+        return {
+            percentage,
+            isAtMax: currentSupply >= maxSupply,
+            isNearMax: percentage >= 95,
+            remainingSupply: maxSupply - currentSupply,
+            currentSupply,
+            maxSupply
+        };
+    }, [tokenomicsConfig, tokenomicsCurrentState]);
     
     // Fetcher to refresh the underlying data
     const fetchBurnData = useCallback(async () => {
@@ -173,6 +197,40 @@ const BurnContent = () => {
     return (
         <AccessGuard accessState={accessState} countdown={countdown} launchTime={launchTime}>
             <div className="w-full">
+                {/* Supply Warning Banner */}
+                {supplyStatus.isAtMax && (
+                    <div className="mb-6 p-4 border border-red-500/50 bg-red-500/10 rounded-lg">
+                        <div className="flex items-start space-x-3">
+                            <span className="text-red-500 text-xl">⚠</span>
+                            <div>
+                                <div className="text-red-500 font-bold text-sm mb-1">
+                                    MAXIMUM SUPPLY REACHED
+                                </div>
+                                <div className="text-red-400 text-xs">
+                                    Primary token minting has ended. Burns will only return ICP (50% refund).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
+                {!supplyStatus.isAtMax && supplyStatus.isNearMax && (
+                    <div className="mb-6 p-4 border border-yellow-500/50 bg-yellow-500/10 rounded-lg">
+                        <div className="flex items-start space-x-3">
+                            <span className="text-yellow-500 text-xl">⚠</span>
+                            <div>
+                                <div className="text-yellow-500 font-bold text-sm mb-1">
+                                    APPROACHING MAX SUPPLY ({supplyStatus.percentage}%)
+                                </div>
+                                <div className="text-yellow-400 text-xs">
+                                    Only {(supplyStatus.remainingSupply / 100000000n).toString()} {primarySymbol} remaining.
+                                    Burns exceeding this limit will receive NO primary tokens (ICP refund only).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Left Column - Burn Form */}
                     <div>
@@ -214,13 +272,16 @@ const BurnContent = () => {
                                     <div className="text-xs text-gray-400">50% of original mint value</div>
                                 </div>
                                 
-                                <div className="border border-white/20 bg-background-secondary p-4 rounded-lg">
+                                <div className={`border ${supplyStatus.isAtMax ? 'border-red-500/50' : 'border-white/20'} bg-background-secondary p-4 rounded-lg`}>
                                     <div className="flex justify-between items-center mb-2">
                                         <span className="text-gray-400 text-xs text-xs">RECEIVE {primarySymbol}</span>
                                     </div>
-                                    <div className="text-lime-500 font-mono text-lg">
-                                        {tentativePrimary.toFixed(4)}
+                                    <div className={`font-mono text-lg ${supplyStatus.isAtMax ? 'text-red-500' : 'text-lime-500'}`}>
+                                        {supplyStatus.isAtMax ? '0.0000' : tentativePrimary.toFixed(4)}
                                     </div>
+                                    {supplyStatus.isAtMax && (
+                                        <div className="text-xs text-red-400 mt-2">Max supply reached - no primary tokens</div>
+                                    )}
                                 </div>
                             </div>
                         </div>

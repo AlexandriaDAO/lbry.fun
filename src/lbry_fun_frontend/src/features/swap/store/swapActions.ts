@@ -55,6 +55,11 @@ export const initialState: SwapState = {
   tokenomicsCurrentStateLoading: false,
   tokenomicsCurrentStateError: null,
   
+  // Tokenomics config (includes max supply)
+  tokenomicsConfig: null,
+  tokenomicsConfigLoading: false,
+  tokenomicsConfigError: null,
+  
   // Distribution tracking
   distributionSummary: null,
   distributionEvents: [],

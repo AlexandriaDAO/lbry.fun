@@ -2,7 +2,7 @@ import { TokenRecordStringified } from "../../token/thunk/getTokenPools.thunk";
 import { ProcessedLogsData } from "../types/logs";
 import { TransactionHistoryState } from "../types/transactionTypes";
 import { ErrorMessage } from "../utils/errors";
-import { TokenomicsCurrentState } from "../thunks/tokenomicsThunks";
+import { TokenomicsCurrentState, TokenomicsConfig } from "../thunks/tokenomicsThunks";
 import { SerializedDistributionSummary, SerializedDistributionEvent } from "@/utils/bigintSerialization";
 
 // Operation status tracking
@@ -77,6 +77,11 @@ export interface SwapState {
   tokenomicsCurrentState: TokenomicsCurrentState | null;
   tokenomicsCurrentStateLoading: boolean;
   tokenomicsCurrentStateError: string | null;
+  
+  // Tokenomics config (includes max supply)
+  tokenomicsConfig: TokenomicsConfig | null;
+  tokenomicsConfigLoading: boolean;
+  tokenomicsConfigError: string | null;
   
   // Distribution tracking
   distributionSummary: SerializedDistributionSummary | null;

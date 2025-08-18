@@ -11,6 +11,7 @@ import { stakingThunks } from '../thunks/stakingThunks';
 import { tradingThunks } from '../thunks/tradingThunks';
 import { balanceThunks } from '../thunks/balanceThunks';
 import { analyticsThunks } from '../thunks/analyticsThunks';
+import { fetchTokenomicsConfig } from '../thunks/tokenomicsThunks';
 import getIcpPrice from '@/features/icp-ledger/thunks/getIcpPrice';
 import getCanisterBal from '@/features/icp-ledger/thunks/getCanisterBal';
 
@@ -70,6 +71,7 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
       }
       if (activeSwapPool[1].tokenomics_canister_id) {
         publicDataPromises.push(dispatch(getTokenomicsInfo(activeSwapPool[1].tokenomics_canister_id)).unwrap());
+        publicDataPromises.push(dispatch(fetchTokenomicsConfig(activeSwapPool[1].tokenomics_canister_id)).unwrap());
       }
 
       // Load public data first - these should work without authentication

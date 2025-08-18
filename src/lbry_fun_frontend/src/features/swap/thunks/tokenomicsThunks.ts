@@ -10,6 +10,37 @@ export interface TokenomicsCurrentState {
   circulatingSupply?: string;
 }
 
+export interface TokenomicsConfig {
+  maxPrimarySupply: string;
+  icpSwapCanisterId: string;
+  secondaryTokenLedger: string;
+  primaryTokenLedger: string;
+}
+
+export const fetchTokenomicsConfig = createAsyncThunk<
+  TokenomicsConfig,
+  string, // tokenomics_canister_id
+  { rejectValue: ErrorMessage }
+>("swap/fetchTokenomicsConfig", async (tokenomicsCanisterId, { rejectWithValue }) => {
+  try {
+    const actor = await getTokenomicsActor(Principal.fromText(tokenomicsCanisterId));
+    const config = await actor.get_configs();
+    
+    return {
+      maxPrimarySupply: config.max_primary_supply.toString(),
+      icpSwapCanisterId: config.icp_swap_canister_id.toString(),
+      secondaryTokenLedger: config.secondary_token_ledger.toString(),
+      primaryTokenLedger: config.primary_token_ledger.toString()
+    };
+  } catch (error) {
+    console.error("Failed to fetch tokenomics config:", error instanceof Error ? error.message : "Unknown error");
+    return rejectWithValue({
+      title: "Failed to Load Config",
+      message: "Unable to fetch tokenomics configuration"
+    });
+  }
+});
+
 export const fetchTokenomicsCurrentState = createAsyncThunk<
   TokenomicsCurrentState,
   string, // tokenomics_canister_id

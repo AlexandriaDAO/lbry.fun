@@ -48,6 +48,25 @@ export const getErrorMessage = (error: ExecutionError): ErrorMessage => {
         typeof value === 'bigint' ? value.toString() : value
       ));
     }
+    
+    // Check if it's a max supply error and provide a clearer message
+    const reason = error.MintFailed!.reason || "";
+    const details = error.MintFailed!.details || "";
+    
+    if (reason.includes("Maximum primary supply reached") || details.includes("Max primary reached")) {
+      return { 
+        title: "Max Supply Reached", 
+        message: "Primary token max supply has been reached. You received your ICP refund but no primary tokens were minted." 
+      };
+    }
+    
+    if (reason.includes("You received your ICP refund") || reason.includes("You already received your ICP refund")) {
+      return { 
+        title: "Mint Failed (ICP Refunded)", 
+        message: reason 
+      };
+    }
+    
     return { title: "Mint Failed", message: getMessage(error.MintFailed!.reason, undefined, error.MintFailed!.details) };
   }
 

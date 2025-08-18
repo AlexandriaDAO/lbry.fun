@@ -5,9 +5,12 @@ use ic_stable_structures::{
 };
 use std::{cell::RefCell, collections::HashMap};
 
+#[allow(dead_code)]
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
+#[allow(dead_code)]
 const SNAPSHOTS_MEM_ID: MemoryId = MemoryId::new(0);
+#[allow(dead_code)]
 const TOKEN_INFO_MEM_ID: MemoryId = MemoryId::new(1);
 
 thread_local! {

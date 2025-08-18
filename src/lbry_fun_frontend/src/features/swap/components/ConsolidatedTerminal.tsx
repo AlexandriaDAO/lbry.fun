@@ -133,6 +133,21 @@ const ConsolidatedTerminal: React.FC = () => {
                 {swap.activeSwapPool && (
                     <div className="border-t border-white/30 mt-2 pt-2">
                         <div className="flex justify-between items-center py-0.5">
+                            <span className="text-gray-400 text-xs">creator:</span>
+                            <div className="flex items-center gap-2">
+                                <span className="hex-address text-xs">
+                                    {swap.activeSwapPool[1].caller?.slice(0, 5)}...{swap.activeSwapPool[1].caller?.slice(-3)}
+                                </span>
+                                {swap.activeSwapPool[1].caller && <CopyHelper account={swap.activeSwapPool[1].caller} />}
+                            </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center py-0.5">
+                            <span className="text-gray-400 text-xs">version:</span>
+                            <span className="text-gray-500 text-xs">{swap.activeSwapPool[1].codebase_version || "v1.0.0"}</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center py-0.5">
                             <span className="text-gray-400 text-xs">status:</span>
                             <span className="text-pink-500 text-xs uppercase">
                                 {swap.activeSwapPool[1].isLive ? "[live]" : "[launching]"}

@@ -4,6 +4,8 @@ import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import getTokenomicsGraphs, { ProcessedGraphData } from '@/features/token/thunk/getTokenomicsGraphs.thunk';
 import LineChart from './Chart';
+import TooltipIcon from '@/features/token/components/TooltipIcon';
+import { TokenConversionService } from '@/utils/TokenConversionService';
 
 const TokenomicsTab: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -128,8 +130,136 @@ const TokenomicsTab: React.FC = () => {
         setTimeout(() => setCopySuccess(false), 2000);
     };
 
+    const tokenConfig = poolData?.[1];
+
+    // Helper functions for better formatting
+    const formatSupplyNumber = (value: string | number) => {
+        const num = Number(TokenConversionService.formatE8sDisplay(value, 0));
+        if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B';
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toFixed(0);
+    };
+
+    const formatTimeInterval = (seconds: string | number) => {
+        const totalSeconds = Number(seconds);
+        const hours = totalSeconds / 3600;
+        const days = hours / 24;
+        
+        if (days >= 1) {
+            return days === 1 ? '1 day' : `${days.toFixed(0)} days`;
+        } else if (hours >= 1) {
+            return hours === 1 ? '1 hour' : `${hours.toFixed(0)} hours`;
+        } else {
+            const minutes = totalSeconds / 60;
+            if (minutes >= 1) {
+                return minutes === 1 ? '1 minute' : `${minutes.toFixed(0)} minutes`;
+            }
+            return totalSeconds === 1 ? '1 second' : `${totalSeconds} seconds`;
+        }
+    };
+
+    const formatRewardPerBurn = (value: string | number) => {
+        const num = Number(TokenConversionService.formatE8sDisplay(value, 4));
+        if (num === 0) return '1.0'; // Default to 1.0 if it appears as 0
+        return num.toFixed(2);
+    };
+
     return (
         <div className="w-full">
+            {/* Tokenomics Configuration Section */}
+            {tokenConfig && (
+                <div className="terminal-pure mb-8">
+                    <div className="terminal-header mb-4">
+                        <span className="terminal-prompt">&gt;</span> TOKENOMICS_CONFIGURATION
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8 font-mono text-sm">
+                        {/* Supply Parameters */}
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400 flex items-center gap-1">
+                                max_supply:
+                                <TooltipIcon text="Maximum number of primary tokens that can ever be minted. Hard cap for the entire token supply." />
+                            </span>
+                            <span className="text-white">{formatSupplyNumber(tokenConfig.primary_token_max_supply)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400 flex items-center gap-1">
+                                initial_mint:
+                                <TooltipIcon text="Number of primary tokens minted in the first epoch when burning starts. Sets the baseline for future epochs." />
+                            </span>
+                            <span className="text-white">{formatSupplyNumber(tokenConfig.initial_primary_mint || '100000000')}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400 flex items-center gap-1">
+                                burn_unit:
+                                <TooltipIcon text="Amount of secondary tokens required for one burn operation in the first epoch. Increases each epoch." />
+                            </span>
+                            <span className="text-white">{formatSupplyNumber(tokenConfig.initial_secondary_burn)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400 flex items-center gap-1">
+                                initial_reward:
+                                <TooltipIcon text="Number of primary tokens minted per burn unit in the first epoch. Decreases with halvings." />
+                            </span>
+                            <span className="text-lime-500">{formatRewardPerBurn(tokenConfig.initial_reward_per_burn_unit)}</span>
+                        </div>
+                        
+                        {/* Mechanics Parameters */}
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400 flex items-center gap-1">
+                                halving_step:
+                                <TooltipIcon text="Percentage of previous epoch's reward retained after halving. 95% means each new epoch mints 95% of the previous epoch's amount." />
+                            </span>
+                            <span className="text-white">{tokenConfig.halving_step}%</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400 flex items-center gap-1">
+                                threshold_mult:
+                                <TooltipIcon text="How much more burning is required to reach the next epoch. 1.5x means each epoch requires 50% more burns than the previous." />
+                            </span>
+                            <span className="text-white">{tokenConfig.threshold_multiplier}x</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400 flex items-center gap-1">
+                                distribution:
+                                <TooltipIcon text="How often 1% of the reward pool is distributed to stakers. Shorter = more frequent payouts." />
+                            </span>
+                            <span className="text-white">{formatTimeInterval(tokenConfig.distribution_interval_seconds)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400 flex items-center gap-1">
+                                launch_delay:
+                                <TooltipIcon text="Time after creation before minting/burning becomes active. Allows time for initial liquidity setup." />
+                            </span>
+                            <span className="text-white">{formatTimeInterval(tokenConfig.launch_delay_seconds)}</span>
+                        </div>
+                        
+                        {/* Metadata */}
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400">created:</span>
+                            <span className="text-gray-500">
+                                {new Date(Number(tokenConfig.created_time) / 1_000_000).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric', 
+                                    year: 'numeric' 
+                                })}
+                            </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400">launched:</span>
+                            <span className="text-gray-500">
+                                {new Date(Number(tokenConfig.launched_at) / 1_000_000).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric', 
+                                    year: 'numeric' 
+                                })}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Existing Graphs */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Cumulative Supply Chart */}
                 <div className="bg-background-secondary p-4 rounded-lg">

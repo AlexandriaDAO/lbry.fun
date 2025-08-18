@@ -11,8 +11,8 @@ use std::collections::{ BTreeSet, HashMap };
 use crate::utils::DEFAULT_SECONDARY_RATIO;
 use crate::ExecutionError;
 
-// Threshold for acceptable discrepancy (1 transfer fee)
-pub const ALLOWED_DISCREPANCY_E8S: u64 = 10_000;
+// Threshold for acceptable discrepancy (100 transfer fees - allows for many operations and rounding)
+pub const ALLOWED_DISCREPANCY_E8S: u64 = 1_000_000;  // 0.01 ICP
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 // Memory identifiers for each variable

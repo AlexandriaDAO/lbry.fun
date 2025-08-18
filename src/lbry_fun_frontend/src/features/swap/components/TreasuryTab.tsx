@@ -39,7 +39,6 @@ const TreasuryTab: React.FC = () => {
     token: false
   });
   const [lastRefresh, setLastRefresh] = useState(Date.now());
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const canRefresh = Date.now() - lastRefresh > 30000; // 30 second cooldown
 
@@ -189,19 +188,9 @@ const TreasuryTab: React.FC = () => {
               </div>
             )}
             
-            {/* Toggle for advanced details */}
-            <button
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-xs text-gray-500 hover:text-gray-400 mt-2"
-            >
-              {showAdvanced ? '− Hide' : '+ Show'} reconciliation details
-            </button>
-            
-            {/* Developer-friendly reconciliation details */}
-            {(tokenReconciliation.reconciliation.requires_attention || showAdvanced) && (
-              <>
-                <div className="terminal-divider-single my-2" />
-                <div className="text-xs space-y-1 text-gray-500">
+            {/* Always show reconciliation details */}
+            <div className="terminal-divider-single my-2" />
+            <div className="text-xs space-y-1 text-gray-500">
                   <div className="flex justify-between">
                     <span className="flex items-center">
                       Expected Balance:
@@ -237,8 +226,6 @@ const TreasuryTab: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </>
-            )}
           </div>
         </div>
       )}
@@ -270,11 +257,12 @@ const TreasuryTab: React.FC = () => {
             </div>
             <div className="flex justify-between items-center py-0.5">
               <span className="text-gray-400 text-xs flex items-center">
-                Collection Efficiency:
-                <TooltipIcon text="Success rate of fee collection operations. Should be near 100%. Lower values indicate technical issues with the collection mechanism." />
+                Platform Fee Rate:
+                <TooltipIcon text="Percentage of total reward pool collected as platform fees. Target is 1% - this shows the actual collection rate achieved." />
               </span>
               <span className={`terminal-value ${
-                collectionMetrics.collection_efficiency_basis_points > 9000 
+                collectionMetrics.collection_efficiency_basis_points > 50 && 
+                collectionMetrics.collection_efficiency_basis_points < 150
                   ? 'text-lime-400' 
                   : 'text-amber-400'
               }`}>
@@ -306,8 +294,8 @@ const TreasuryTab: React.FC = () => {
       )}
       
       {/* Accounting Validation - Priority 3 */}
-      {activeSwapPool && (
-        <ValidationStatus tokenId={activeSwapPool[0]} />
+      {activeSwapPool && activeSwapPool[1]?.icp_swap_canister_id && (
+        <ValidationStatus tokenId={activeSwapPool[1].icp_swap_canister_id} />
       )}
 
       {/* Loading individual sections */}

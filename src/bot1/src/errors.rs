@@ -94,6 +94,7 @@ impl From<BotError> for String {
 }
 
 // Helper function to convert generic errors to BotError
+#[allow(dead_code)]
 pub fn canister_call_error(canister: Principal, method: &str, error: String) -> BotError {
     BotError::CanisterCallFailed {
         canister: canister.to_string(),

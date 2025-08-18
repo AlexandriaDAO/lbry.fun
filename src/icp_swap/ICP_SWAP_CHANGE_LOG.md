@@ -1,5 +1,29 @@
 # ICP Swap Change Log
 
+## 2025-01-18: Improved Error Messages for Max Supply Mint Failures
+
+### Changes Made:
+
+1. **update.rs (burn_secondary function)**:
+   - Updated error handling when `mint_primary` fails after successful burn
+   - Added detection for max supply errors in the error message
+   - Clarified that users have already received their ICP refund when mint fails
+
+### Problem Fixed:
+- When burning secondary tokens after max primary supply is reached, the error message incorrectly mentioned "check the redeem process"
+- This was confusing because the ICP refund had already been sent successfully and redeem was not needed
+
+### Solution:
+- Error messages now correctly state:
+  - "Maximum primary supply reached. You received your ICP refund but no primary tokens were minted." (for max supply errors)
+  - "Primary token minting failed. You already received your ICP refund." (for other mint failures)
+- Users are clearly informed that they have their ICP and don't need to use the redeem function
+
+### Impact:
+- Clearer user experience when burning at or near max supply
+- No confusion about whether users need to redeem their ICP
+- Accurate error messages that reflect the actual state
+
 ## 2025-01-16: Reconciliation Fix - Claimed Rewards Tracking & Distribution Logic Fix
 
 ### Changes Made:

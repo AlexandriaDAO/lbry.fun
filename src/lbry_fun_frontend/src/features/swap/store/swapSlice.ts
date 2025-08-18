@@ -4,7 +4,7 @@ import { stakingThunks } from "../thunks/stakingThunks";
 import { tradingThunks } from "../thunks/tradingThunks";
 import { balanceThunks } from "../thunks/balanceThunks";
 import { analyticsThunks } from "../thunks/analyticsThunks";
-import { fetchTokenomicsCurrentState } from "../thunks/tokenomicsThunks";
+import { fetchTokenomicsCurrentState, fetchTokenomicsConfig } from "../thunks/tokenomicsThunks";
 import { distributionThunks } from "../thunks/distributionThunks";
 import fetchTokenLogosForPool from "../../token/thunk/fetchTokenLogosForPoolThunk";
 import transferICP from "../../icp-ledger/thunks/transferICP";
@@ -242,6 +242,21 @@ const swapSlice = createSlice({
       .addCase(fetchTokenomicsCurrentState.rejected, (state, action) => {
         state.tokenomicsCurrentStateLoading = false;
         state.tokenomicsCurrentStateError = action.payload?.message || "Failed to fetch current state";
+      })
+      
+      // Tokenomics Config
+      .addCase(fetchTokenomicsConfig.pending, (state) => {
+        state.tokenomicsConfigLoading = true;
+        state.tokenomicsConfigError = null;
+      })
+      .addCase(fetchTokenomicsConfig.fulfilled, (state, action) => {
+        state.tokenomicsConfig = action.payload;
+        state.tokenomicsConfigLoading = false;
+        state.tokenomicsConfigError = null;
+      })
+      .addCase(fetchTokenomicsConfig.rejected, (state, action) => {
+        state.tokenomicsConfigLoading = false;
+        state.tokenomicsConfigError = action.payload?.message || "Failed to fetch tokenomics config";
       })
       
       // Distribution Summary

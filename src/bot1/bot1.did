@@ -203,6 +203,7 @@ type TokenLogs = record {
 };
 type TokenRecord = record {
   id : nat64;
+  status : TokenStatus;
   secondary_token_symbol : text;
   secondary_token_id : principal;
   primary_token_name : text;
@@ -210,19 +211,25 @@ type TokenRecord = record {
   secondary_token_name : text;
   primary_token_symbol : text;
   launch_delay_seconds : nat64;
+  launched_at : nat64;
   icp_swap_canister_id : principal;
   halving_step : nat64;
   primary_token_max_supply : nat64;
-  pool_creation_failed : bool;
+  codebase_version : text;
   initial_reward_per_burn_unit : nat64;
   initial_primary_mint : nat64;
+  threshold_multiplier : float64;
   primary_token_id : principal;
   caller : principal;
-  pool_created_at : nat64;
   distribution_interval_seconds : nat64;
   created_time : nat64;
   initial_secondary_burn : nat64;
   logs_canister_id : principal;
+};
+type TokenStatus = variant {
+  Failed : record { reason : text };
+  Live : record { pool_id : text };
+  Pending;
 };
 type TokenomicsExecutionError = variant {
   Underflow : record { operation : text; details : text };

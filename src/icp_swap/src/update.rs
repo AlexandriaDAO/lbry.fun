@@ -446,13 +446,20 @@ pub async fn burn_secondary(
                 );
             }
             Err(e) => {
+                // Check if error is due to max supply being reached
+                let error_reason = if e.contains("Maximum primary token supply reached") || e.contains("Max primary reached") {
+                    "Maximum primary supply reached. You received your ICP refund but no primary tokens were minted."
+                } else {
+                    "Primary token minting failed. You already received your ICP refund."
+                };
+                
                 // Do not archive - user already received ICP refund
                 return Err(
                     ExecutionError::new_with_log(caller, "burn_secondary", ExecutionError::MintFailed {
                         token: "primary".to_string(),
                         amount: amount_secondary,
                         details: e,
-                        reason: DEFAULT_MINT_FAILED.to_string(),
+                        reason: error_reason.to_string(),
                     })
                 );
             }

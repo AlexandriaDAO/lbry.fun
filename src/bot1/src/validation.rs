@@ -1,6 +1,6 @@
 use candid::{CandidType, Deserialize};
 use ic_cdk;
-use crate::types::{TokenRecord, Account};
+use crate::types::{TokenRecord, TokenStatus, Account};
 use crate::utils::{get_token_record, get_secondary_fun_principal, icrc1_balance_of, get_icp_ledger_principal};
 
 #[derive(Debug, CandidType, Deserialize)]
@@ -40,27 +40,39 @@ pub async fn validate_pool_ready(pool_id: u64, icp_per_loop: u64) -> Result<Pool
         }
     };
     
-    // Check if pool creation failed
-    if token_record.pool_creation_failed {
-        ic_cdk::println!("[BOT1] Pool {} creation failed", pool_id);
-        return Err(format!("Pool {} creation failed and cannot be used", pool_id));
+    // Check pool status
+    match &token_record.status {
+        TokenStatus::Failed { reason } => {
+            ic_cdk::println!("[BOT1] Pool {} creation failed: {}", pool_id, reason);
+            return Err(format!("Pool {} creation failed: {}", pool_id, reason));
+        },
+        TokenStatus::Pending => {
+            ic_cdk::println!("[BOT1] Pool {} is still pending", pool_id);
+        },
+        TokenStatus::Live { pool_id: kong_pool_id } => {
+            ic_cdk::println!("[BOT1] Pool {} is live with KongSwap pool {}", pool_id, kong_pool_id);
+        }
     }
     
-    // Calculate when the pool will be live
-    // pool_created_at is in nanoseconds, launch_delay_seconds is in seconds
-    let launch_time_nanos = token_record.pool_created_at + (token_record.launch_delay_seconds * 1_000_000_000);
+    // Check if pool is live based on launched_at timestamp
+    // launched_at is when the token goes live (created_time + launch_delay)
     let current_time_nanos = ic_cdk::api::time();
-    let is_live = current_time_nanos >= launch_time_nanos;
+    let is_live = matches!(token_record.status, TokenStatus::Live { .. }) && 
+                  current_time_nanos >= token_record.launched_at;
     
     // Convert to seconds for display
-    let launch_time = launch_time_nanos / 1_000_000_000;
+    let launch_time = token_record.launched_at / 1_000_000_000;
     let current_time = current_time_nanos / 1_000_000_000;
     
     if !is_live {
-        let time_until_live = launch_time - current_time;
-        ic_cdk::println!("[BOT1] Pool {} is not live yet. Time until live: {} seconds", pool_id, time_until_live);
-        ic_cdk::println!("[BOT1] Debug: current_time_nanos={}, launch_time_nanos={}, pool_created_at={}, launch_delay_seconds={}", 
-            current_time_nanos, launch_time_nanos, token_record.pool_created_at, token_record.launch_delay_seconds);
+        if current_time_nanos < token_record.launched_at {
+            let time_until_live = launch_time - current_time;
+            ic_cdk::println!("[BOT1] Pool {} is not live yet. Time until live: {} seconds", pool_id, time_until_live);
+            ic_cdk::println!("[BOT1] Debug: current_time_nanos={}, launched_at={}, launch_delay_seconds={}", 
+                current_time_nanos, token_record.launched_at, token_record.launch_delay_seconds);
+        } else {
+            ic_cdk::println!("[BOT1] Pool {} status is not Live", pool_id);
+        }
     } else {
         ic_cdk::println!("[BOT1] Pool {} is live", pool_id);
     }
