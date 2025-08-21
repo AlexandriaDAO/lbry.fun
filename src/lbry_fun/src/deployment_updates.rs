@@ -23,6 +23,13 @@ use crate::{
 pub async fn initiate_token_deployment(params: CreateTokenParams) -> Result<u64, String> {
     let caller = ic_cdk::caller();
     
+    // Admin restriction during audit period
+    const ADMIN_PRINCIPAL: &str = "2ljyd-77i5g-ix222-szy7a-ru4cu-ns4j7-kxc2z-oazam-igx3u-uwee6-yqe";
+    let admin = Principal::from_text(ADMIN_PRINCIPAL).unwrap();
+    if caller != admin {
+        return Err("Token creation is currently restricted to admin only while the platform undergoes security auditing. Only the $ZERO/$VALUE token pair is launched during this period.".to_string());
+    }
+    
     // Check for existing active deployment
     if let Some(existing_id) = get_active_deployment_for_user(caller) {
         return Err(format!(
@@ -151,7 +158,7 @@ pub async fn execute_token_deployment(deployment_id: u64) -> Result<TokenDeploym
     }
 }
 
-/// Allow users to recover stuck deployments based on activity
+/// Allow users to recover stuck deployments
 #[update]
 pub async fn recover_stuck_deployment() -> Result<String, String> {
     let caller = ic_cdk::caller();
@@ -171,26 +178,72 @@ pub async fn recover_stuck_deployment() -> Result<String, String> {
     // 5 minutes = 300 seconds = 300_000_000_000 nanoseconds
     const INACTIVITY_THRESHOLD: u64 = 300_000_000_000;
     
-    if inactive_duration < INACTIVITY_THRESHOLD {
+    // If it's still potentially active, don't allow recovery
+    if matches!(deployment.status, DeploymentStatus::Active) && inactive_duration < INACTIVITY_THRESHOLD {
         let remaining_seconds = (INACTIVITY_THRESHOLD - inactive_duration) / 1_000_000_000;
         return Err(format!(
-            "Deployment still potentially active. Last activity was {} seconds ago. Please wait {} more seconds.",
-            inactive_duration / 1_000_000_000,
+            "Deployment still potentially active. Please wait {} more seconds.",
             remaining_seconds
         ));
     }
     
-    // User confirms deployment is stuck
-    mark_deployment_failed(
-        deployment_id, 
-        format!("User initiated recovery after {} seconds of inactivity", 
-            inactive_duration / 1_000_000_000)
-    );
+    // If already completed, nothing to recover
+    if matches!(deployment.status, DeploymentStatus::Completed) {
+        return Err("Deployment already completed successfully".to_string());
+    }
+    
+    // Calculate refund amount and check if possible
+    const PLATFORM_FEE: u64 = 100_000_000; // 1 ICP
+    let refund_amount = deployment.payment_amount.saturating_sub(PLATFORM_FEE);
+    
+    // Check if canister has enough ICP to refund
+    let canister_balance = crate::utlis::get_self_icp_balance(
+        ic_cdk::id()
+    ).await.map_err(|e| format!("Failed to check ICP balance: {}", e))?;
+    
+    let required_balance = refund_amount + ICP_TRANSFER_FEE;
+    if canister_balance < required_balance {
+        // Store structured error in last_error for frontend to parse
+        atomic_update_deployment(deployment_id, |d| {
+            d.last_error = Some(format!("INSUFFICIENT_ICP:{}:{}", required_balance, canister_balance));
+            d.last_activity = now; // Update for retry cooldown
+            Ok(())
+        })?;
+        
+        return Err(format!(
+            "Cannot process refund: Canister has {} ICP but needs {} ICP. Will retry automatically when ICP is added.",
+            canister_balance as f64 / 100_000_000.0,
+            required_balance as f64 / 100_000_000.0
+        ));
+    }
+    
+    // If stuck in Cleaning status, just reset to Failed to trigger cleanup again
+    if matches!(deployment.status, DeploymentStatus::Cleaning) {
+        atomic_update_deployment(deployment_id, |d| {
+            d.status = DeploymentStatus::Failed;
+            d.last_error = Some("User triggered manual recovery".to_string());
+            d.last_activity = now; // Reset activity for immediate retry
+            Ok(())
+        })?;
+        
+        return Ok(format!(
+            "Recovery initiated. Your refund of {} ICP will be processed shortly.",
+            refund_amount as f64 / 100_000_000.0
+        ));
+    }
+    
+    // Mark as failed to trigger cleanup
+    atomic_update_deployment(deployment_id, |d| {
+        d.status = DeploymentStatus::Failed;
+        d.last_error = Some(format!("User initiated recovery after {} seconds", 
+            inactive_duration / 1_000_000_000));
+        d.last_activity = now; // Reset for immediate processing
+        Ok(())
+    })?;
     
     Ok(format!(
-        "Deployment {} marked for cleanup. Refund of {} ICP will be processed within 5 minutes.",
-        deployment_id,
-        (deployment.payment_amount - 100_000_000) as f64 / 100_000_000.0 // Minus 1 ICP platform fee
+        "Recovery initiated. Your refund of {} ICP will be processed shortly.",
+        refund_amount as f64 / 100_000_000.0
     ))
 }
 

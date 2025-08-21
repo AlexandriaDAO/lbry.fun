@@ -53,6 +53,10 @@ const TerminalCreateToken: React.FC = () => {
   const lbryFun = useAppSelector((state: RootState) => state.lbryFun);
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
   const { activeDeploymentId } = useAppSelector((state: RootState) => state.deployment);
+  
+  // Admin principal check
+  const ADMIN_PRINCIPAL = '2ljyd-77i5g-ix222-szy7a-ru4cu-ns4j7-kxc2z-oazam-igx3u-uwee6-yqe';
+  const isAdmin = principal === ADMIN_PRINCIPAL;
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [warnings, setWarnings] = useState<FormErrors>({});
@@ -266,6 +270,12 @@ const TerminalCreateToken: React.FC = () => {
     
     if (!isAuthenticated || !principal) {
       setStatus({ type: 'error', message: 'Please log in to create a token.' });
+      setIsSubmitting(false);
+      return;
+    }
+    
+    if (!isAdmin) {
+      setStatus({ type: 'error', message: 'Token creation is currently restricted to admin only while the platform undergoes security auditing.' });
       setIsSubmitting(false);
       return;
     }
@@ -711,6 +721,22 @@ const TerminalCreateToken: React.FC = () => {
         </div>
 
 
+        {/* Admin restriction notice */}
+        {!isAdmin && (
+          <div className="bg-yellow-900/20 border border-yellow-500/30 text-yellow-400 p-3 font-mono text-sm mb-4">
+            <div className="text-yellow-500 font-bold text-xs mb-2">⚠️ PUBLIC TOKEN CREATION NOT OPEN</div>
+            <div className="text-sm">
+              Token creation is currently restricted while the platform undergoes security auditing.
+              <br />
+              Only the $ZERO/$VALUE token pair is launched during this period.
+              <br />
+              <span className="text-xs text-gray-400 mt-2 block">
+                You can explore the form to understand how token creation will work once public access is enabled.
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Cost transparency display */}
         <div className="bg-blue-900/20 border border-blue-500/30 text-blue-400 p-3 font-mono text-sm mb-4">
           <div className="text-gray-400 text-xs">Deployment Cost:</div>
@@ -726,10 +752,11 @@ const TerminalCreateToken: React.FC = () => {
         <div className="flex gap-4">
           <button
             type="submit"
-            className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10"
-            disabled={Object.keys(errors).length > 0 || status.type === 'loading' || isSubmitting}
+            className={`bg-black border ${isAdmin ? 'border-white/30' : 'border-gray-600'} ${isAdmin ? 'text-white' : 'text-gray-500'} font-mono text-sm px-4 py-2 ${isAdmin ? 'hover:bg-white/10' : 'cursor-not-allowed opacity-50'}`}
+            disabled={!isAdmin || Object.keys(errors).length > 0 || status.type === 'loading' || isSubmitting}
+            title={!isAdmin ? 'Token creation is restricted to admin only during audit period' : ''}
           >
-            &gt; execute_token_creation
+            &gt; {isAdmin ? 'execute_token_creation' : 'execute_token_creation [ADMIN ONLY]'}
           </button>
           <button
             type="button"

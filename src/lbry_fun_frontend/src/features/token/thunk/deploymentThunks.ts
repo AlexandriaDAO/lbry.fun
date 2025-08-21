@@ -33,6 +33,7 @@ const persistDeployment = (deployment: DeploymentRecord) => {
       created_at: deployment.created_at.toString(),
       last_activity: deployment.last_activity.toString(),
       token_id: deployment.token_id?.map(id => id.toString()),
+      last_error: deployment.last_error, // Include last_error if present
       params: {
         ...deployment.params,
         primary_max_supply: deployment.params.primary_max_supply.toString(),
@@ -67,6 +68,7 @@ const loadPersistedDeployments = (): DeploymentRecord[] => {
           created_at: BigInt(deployment.created_at),
           last_activity: BigInt(deployment.last_activity),
           token_id: deployment.token_id?.map((id: string) => BigInt(id)),
+          last_error: deployment.last_error, // Preserve last_error if present
           params: {
             ...deployment.params,
             primary_max_supply: BigInt(deployment.params.primary_max_supply),
@@ -425,7 +427,9 @@ export const checkDeploymentOnce = createAsyncThunk(
         updatedDeployment = {
           ...deployment,
           tokenStatus,
-          token_id: backendDeployment.token_id
+          token_id: backendDeployment.token_id,
+          last_error: backendDeployment.last_error,
+          last_activity: backendDeployment.last_activity
         };
       } else {
         // Phase 2: Have token_id, poll token status directly
@@ -597,7 +601,9 @@ export const initializeDeployments = createAsyncThunk(
         return {
           ...persisted,
           tokenStatus,
-          token_id: backend.token_id
+          token_id: backend.token_id,
+          last_error: backend.last_error,
+          last_activity: backend.last_activity
         };
       }));
       

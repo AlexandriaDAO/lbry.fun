@@ -48,6 +48,7 @@ export interface DeploymentRecord {
   created_at: bigint;
   last_activity: bigint;
   token_id?: bigint[];
+  last_error?: string[];            // From DeploymentInfo backend type
 }
 
 // UI State derived from TokenStatus

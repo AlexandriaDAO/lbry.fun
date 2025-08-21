@@ -147,7 +147,7 @@ service : () -> {
       nat64,
       float64,
     ) -> (TokenomicsSchedule);
-  // Allow users to recover stuck deployments based on activity
+  // Allow users to recover stuck deployments
   recover_stuck_deployment : () -> (Result);
   retry_pool_creation : (nat64) -> (Result);
 }

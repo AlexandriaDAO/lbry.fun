@@ -6,6 +6,11 @@ use crate::{
     deployment_updates::{transfer_icp_to_account, stop_and_delete_canister},
 };
 
+// Structured error format constants for frontend parsing
+const ERROR_INSUFFICIENT_ICP: &str = "INSUFFICIENT_ICP";
+const ERROR_INSUFFICIENT_CYCLES: &str = "INSUFFICIENT_CYCLES";
+const ERROR_TRANSFER_FAILED: &str = "TRANSFER_FAILED";
+
 #[heartbeat]
 async fn cleanup_worker() {
     // Process failed deployments
@@ -19,6 +24,21 @@ async fn cleanup_worker() {
     });
     
     for (deployment_id, deployment) in failed_deployments {
+        // Check if we should skip due to backoff
+        if deployment.cleanup_attempts >= 3 {
+            let now = ic_cdk::api::time();
+            let time_since_last = now.saturating_sub(deployment.last_activity);
+            
+            // Calculate backoff period based on attempts
+            let backoff_multiplier = 2_u64.pow((deployment.cleanup_attempts - 3).min(4) as u32);
+            let backoff_nanos = backoff_multiplier * 3_600_000_000_000; // hours to nanoseconds
+            
+            if time_since_last < backoff_nanos {
+                // Still in backoff period, skip this deployment
+                continue;
+            }
+        }
+        
         // Atomically transition to Cleaning status
         let proceed = atomic_update_deployment(deployment_id, |d| {
             if matches!(d.status, DeploymentStatus::Failed) {
@@ -48,15 +68,23 @@ async fn cleanup_worker() {
                 let _should_retry = atomic_update_deployment(deployment_id, |d| {
                     d.cleanup_attempts += 1;
                     d.last_error = Some(e.clone());
+                    d.last_activity = ic_cdk::api::time(); // Update for backoff calculation
                     
+                    // Never give up - use exponential backoff instead
+                    // After 3 attempts: 2h, 4h, 8h, 16h, then cap at 16h
                     if d.cleanup_attempts >= 3 {
-                        // Leave in Cleaning state for admin intervention
+                        let backoff_multiplier = 2_u64.pow((d.cleanup_attempts - 3).min(4) as u32);
+                        let backoff_hours = backoff_multiplier; // 2, 4, 8, 16, 16...
+                        
                         ic_cdk::println!(
-                            "Deployment {} cleanup failed 3 times: {}. Needs admin.",
-                            deployment_id, e
+                            "Deployment {} cleanup attempt {} failed: {}. Will retry in {} hours.",
+                            deployment_id, d.cleanup_attempts, e, backoff_hours
                         );
+                        
+                        // Stay in Failed state so heartbeat will retry after backoff
+                        d.status = DeploymentStatus::Failed;
                     } else {
-                        // Reset to Failed for retry
+                        // First 3 attempts: immediate retry on next heartbeat
                         d.status = DeploymentStatus::Failed;
                     }
                     Ok(())
@@ -92,8 +120,11 @@ async fn cleanup_deployment_with_progress(deployment: &Deployment) -> Result<(),
                 })?;
             }
             Err(e) => {
-                // Log but continue - canister might already be deleted
-                if !e.contains("not found") && !e.contains("already deleted") {
+                // Check for specific error types
+                if e.contains("out of cycles") || e.contains("insufficient cycles") {
+                    // Return immediately with structured error for cycles issue
+                    return Err(ERROR_INSUFFICIENT_CYCLES.to_string());
+                } else if !e.contains("not found") && !e.contains("already deleted") {
                     errors.push(format!("Delete canister {}: {}", canister_id, e));
                 }
             }
@@ -123,18 +154,41 @@ async fn cleanup_deployment_with_progress(deployment: &Deployment) -> Result<(),
             });
         }
         
-        match transfer_icp_to_account(deployment.user, refund_amount).await {
-            Ok(_) => {
-                ic_cdk::println!("Refunded {} ICP to {}", 
-                    refund_amount as f64 / 100_000_000.0, 
-                    deployment.user
-                );
+        // Check ICP balance before attempting refund
+        const ICP_TRANSFER_FEE: u64 = 10_000; // 0.0001 ICP
+        let required_balance = refund_amount + ICP_TRANSFER_FEE;
+        
+        match crate::utlis::get_self_icp_balance(ic_cdk::id()).await {
+            Ok(balance) if balance >= required_balance => {
+                // Sufficient balance, attempt refund
+                match transfer_icp_to_account(deployment.user, refund_amount).await {
+                    Ok(_) => {
+                        ic_cdk::println!("Refunded {} ICP to {}", 
+                            refund_amount as f64 / 100_000_000.0, 
+                            deployment.user
+                        );
+                    }
+                    Err(e) => {
+                        // Check if it's an insufficient funds error from the transfer itself
+                        if e.contains("InsufficientFunds") {
+                            // The balance check passed but transfer still failed - possibly a race condition
+                            // Re-check the balance and return structured error
+                            let current_balance = crate::utlis::get_self_icp_balance(ic_cdk::id())
+                                .await
+                                .unwrap_or(0);
+                            return Err(format!("{}:{}:{}", ERROR_INSUFFICIENT_ICP, required_balance, current_balance));
+                        }
+                        // Return structured error for other transfer failures
+                        return Err(format!("{}:{}", ERROR_TRANSFER_FAILED, e));
+                    }
+                }
+            }
+            Ok(balance) => {
+                // Insufficient ICP - return structured error
+                return Err(format!("{}:{}:{}", ERROR_INSUFFICIENT_ICP, required_balance, balance));
             }
             Err(e) => {
-                errors.push(format!("Refund failed: {}", e));
-                
-                // Log the failed refund for monitoring
-                ic_cdk::println!("Failed to refund {} to {}: {}", refund_amount, deployment.user, e);
+                errors.push(format!("Failed to check ICP balance: {}", e));
             }
         }
     }

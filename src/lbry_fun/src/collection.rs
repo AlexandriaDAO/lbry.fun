@@ -7,8 +7,7 @@ use std::time::Duration;
 // Constants
 const MIN_ICP_BALANCE: u64 = 100_000_000;  // 1 ICP threshold
 const ICP_RESERVE: u64 = 10_000_000;       // 0.1 ICP reserve for fees
-// const CHECK_INTERVAL: u64 = 3600;          // Check every hour
-const CHECK_INTERVAL: u64 = 60;   // Once per minute for testing.
+const CHECK_INTERVAL: u64 = 3600;          // Check every hour
 const CORE_ICP_SWAP_CANISTER: &str = "54fqz-5iaaa-aaaap-qkmqa-cai"; // Core LBRY swap
 const LBRY_CANISTER_ID: &str = "y33wz-myaaa-aaaap-qkmna-cai";
 const LBRY_BURN_PRINCIPAL: &str = "54fqz-5iaaa-aaaap-qkmqa-cai"; // Same as core swap (minting account)
