@@ -226,35 +226,157 @@ pub fn get_my_deployments() -> Vec<DeploymentInfo> {
     })
 }
 
-/// Validate deployment parameters
+/// Validate deployment parameters to match frontend constraints
 async fn validate_deployment_params(params: &CreateTokenParams) -> Result<(), String> {
-    // Validate token names and symbols
-    if params.primary_token_name.is_empty() || params.primary_token_symbol.is_empty() {
-        return Err("Primary token name and symbol cannot be empty".to_string());
+    // Constants - note that token amounts come in already as E8S from frontend
+    const E8S: u64 = 100_000_000;
+    
+    // Symbol validation (2-10 characters, alphanumeric only)
+    if params.primary_token_symbol.len() < 2 || params.primary_token_symbol.len() > 10 {
+        return Err("Primary token symbol must be 2-10 characters".to_string());
+    }
+    if !params.primary_token_symbol.chars().all(|c| c.is_alphanumeric()) {
+        return Err("Primary token symbol must contain only letters and numbers".to_string());
     }
     
-    if params.secondary_token_name.is_empty() || params.secondary_token_symbol.is_empty() {
-        return Err("Secondary token name and symbol cannot be empty".to_string());
+    if params.secondary_token_symbol.len() < 2 || params.secondary_token_symbol.len() > 10 {
+        return Err("Secondary token symbol must be 2-10 characters".to_string());
+    }
+    if !params.secondary_token_symbol.chars().all(|c| c.is_alphanumeric()) {
+        return Err("Secondary token symbol must contain only letters and numbers".to_string());
     }
     
-    // Validate numeric parameters
-    if params.primary_max_supply == 0 {
-        return Err("Primary max supply must be greater than 0".to_string());
+    // Name validation (max 100 characters)
+    if params.primary_token_name.is_empty() {
+        return Err("Primary token name cannot be empty".to_string());
+    }
+    if params.primary_token_name.len() > 100 {
+        return Err(format!("Primary token name too long ({}/100 characters)", params.primary_token_name.len()));
     }
     
-    if params.initial_reward_per_burn_unit < 10_000 { // Minimum 0.0001 tokens in E8S
-        return Err("Initial reward per burn unit too low".to_string());
+    if params.secondary_token_name.is_empty() {
+        return Err("Secondary token name cannot be empty".to_string());
+    }
+    if params.secondary_token_name.len() > 100 {
+        return Err(format!("Secondary token name too long ({}/100 characters)", params.secondary_token_name.len()));
     }
     
-    if params.halving_step == 0 || params.halving_step >= 100 {
-        return Err("Halving step must be between 1 and 99".to_string());
+    // Description validation (max 500 characters)
+    if params.primary_token_description.is_empty() {
+        return Err("Primary token description cannot be empty".to_string());
+    }
+    if params.primary_token_description.len() > 500 {
+        return Err(format!("Primary token description too long ({}/500 characters)", params.primary_token_description.len()));
     }
     
+    if params.secondary_token_description.is_empty() {
+        return Err("Secondary token description cannot be empty".to_string());
+    }
+    if params.secondary_token_description.len() > 500 {
+        return Err(format!("Secondary token description too long ({}/500 characters)", params.secondary_token_description.len()));
+    }
+    
+    // Logo validation (must be base64 SVG, max 100KB)
+    if params.primary_logo.is_empty() {
+        return Err("Primary token logo is required".to_string());
+    }
+    if params.secondary_logo.is_empty() {
+        return Err("Secondary token logo is required".to_string());
+    }
+    
+    // Validate logo size (base64 is ~4/3 of original size)
+    const MAX_LOGO_SIZE: usize = 100 * 1024; // 100KB
+    if params.primary_logo.len() > MAX_LOGO_SIZE * 4 / 3 {
+        return Err("Primary token logo exceeds 100KB limit".to_string());
+    }
+    if params.secondary_logo.len() > MAX_LOGO_SIZE * 4 / 3 {
+        return Err("Secondary token logo exceeds 100KB limit".to_string());
+    }
+    
+    // Validate base64 format
+    if !is_valid_base64(&params.primary_logo) {
+        return Err("Primary token logo must be valid base64".to_string());
+    }
+    if !is_valid_base64(&params.secondary_logo) {
+        return Err("Secondary token logo must be valid base64".to_string());
+    }
+    
+    // Primary max supply validation (already in E8S from frontend)
+    // Frontend range: 1,000,000 to 100,000,000,000 tokens
+    const MIN_HARD_CAP_E8S: u64 = 1_000_000 * E8S;
+    const MAX_HARD_CAP_E8S: u64 = 100_000_000_000 * E8S;
+    
+    if params.primary_max_supply < MIN_HARD_CAP_E8S {
+        return Err(format!("Primary max supply must be at least {} tokens", 1_000_000));
+    }
+    if params.primary_max_supply > MAX_HARD_CAP_E8S {
+        return Err(format!("Primary max supply cannot exceed {} tokens", 100_000_000_000u64));
+    }
+    
+    // Initial primary mint validation (TGE allocation) - already in E8S
+    if params.initial_primary_mint > params.primary_max_supply {
+        return Err("Initial primary mint cannot exceed max supply".to_string());
+    }
+    
+    // Initial reward per burn unit validation (already in E8S from frontend)
+    // Frontend range: 0.01 to 20 tokens
+    const MIN_INITIAL_REWARD_E8S: u64 = E8S / 100; // 0.01 tokens
+    const MAX_INITIAL_REWARD_E8S: u64 = 20 * E8S; // 20 tokens
+    
+    if params.initial_reward_per_burn_unit < MIN_INITIAL_REWARD_E8S {
+        return Err("Initial reward per burn unit must be at least 0.01 tokens".to_string());
+    }
+    if params.initial_reward_per_burn_unit > MAX_INITIAL_REWARD_E8S {
+        return Err("Initial reward per burn unit cannot exceed 20 tokens".to_string());
+    }
+    
+    // Initial secondary burn validation (already in E8S from frontend)
+    // Frontend range: 1,000,000 to 100,000,000 tokens
+    const MIN_SECONDARY_BURN_E8S: u64 = 1_000_000 * E8S;
+    const MAX_SECONDARY_BURN_E8S: u64 = 100_000_000 * E8S;
+    
+    if params.initial_secondary_burn < MIN_SECONDARY_BURN_E8S {
+        return Err(format!("Initial secondary burn must be at least {} tokens", 1_000_000));
+    }
+    if params.initial_secondary_burn > MAX_SECONDARY_BURN_E8S {
+        return Err(format!("Initial secondary burn cannot exceed {} tokens", 100_000_000));
+    }
+    
+    // Halving step validation (sent as plain percentage: 25-99)
+    if params.halving_step < 25 || params.halving_step > 99 {
+        return Err("Halving step must be between 25 and 99%".to_string());
+    }
+    
+    // Threshold multiplier validation (sent as float: 1.0-10.0)
+    if params.threshold_multiplier < 1.0 || params.threshold_multiplier > 10.0 {
+        return Err("Threshold multiplier must be between 1.0 and 10.0".to_string());
+    }
+    
+    // Launch delay validation (sent as seconds: 1 second to 30 days)
+    const MIN_LAUNCH_DELAY: u64 = 1;
+    const MAX_LAUNCH_DELAY: u64 = 2_592_000; // 30 days in seconds
+    
+    if params.launch_delay_seconds < MIN_LAUNCH_DELAY {
+        return Err("Launch delay must be at least 1 second".to_string());
+    }
+    if params.launch_delay_seconds > MAX_LAUNCH_DELAY {
+        return Err("Launch delay cannot exceed 30 days".to_string());
+    }
+    
+    // Distribution interval validation (sent as seconds, min 60)
     if params.distribution_interval_seconds < 60 {
         return Err("Distribution interval must be at least 60 seconds".to_string());
     }
     
     Ok(())
+}
+
+// Helper function to validate base64 string
+fn is_valid_base64(s: &str) -> bool {
+    // Basic validation - proper base64 should only contain these characters
+    s.chars().all(|c| {
+        c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '='
+    }) && !s.is_empty()
 }
 
 // Helper to transfer ICP to a user account

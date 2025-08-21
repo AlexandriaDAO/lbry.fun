@@ -11,8 +11,8 @@ MAGENTA='\033[0;35m'
 NC='\033[0m'
 
 # Configuration
-USER_PRINCIPAL="vgkov-ojfm2-etzss-lqse4-dm6ck-mdhmr-lhx7y-stnvb-bsj5p-npi54-eae"
-ICP_SWAP="5lpoa-qx777-77773-aaacq-cai"
+USER_PRINCIPAL="3tukv-wqvf4-y6kvm-cos2t-pkir5-gamsa-osl4p-26g3v-q7hk2-esvdc-rqe"
+ICP_SWAP="5qksf-kp777-77773-aaaaa-cai"
 LBRY_FUN="oni4e-oyaaa-aaaap-qp2pq-cai"
 CORE_LBRY_SWAP="54fqz-5iaaa-aaaap-qkmqa-cai"  # Core LBRY project swap canister
 ICP_LEDGER="ryjl3-tyaaa-aaaaa-aaaba-cai"

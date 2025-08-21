@@ -25,6 +25,8 @@ use crate::{
 };
 
 pub const PRICE_FETCH_INTERVAL: Duration = Duration::from_secs(1 * 24 * 60 * 60); // 1 days in seconds
+// pub const ALEX_FEE_PUSH_INTERVAL: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours - push platform fees to lbry_fun
+pub const ALEX_FEE_PUSH_INTERVAL: Duration = Duration::from_secs(1 * 60); // 1 minute for testing.
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct InitArgs {
@@ -298,9 +300,9 @@ fn setup_timers(distribution_interval_seconds: u64) {
         || { ic_cdk::spawn(distribute_reward_wrapper()) }
     );
 
-    // Push ALEX fees to lbry_fun every 24 hours
+    // Push ALEX fees to lbry_fun periodically
     let _alex_push_timer_id: ic_cdk_timers::TimerId = ic_cdk_timers::set_timer_interval(
-        Duration::from_secs(86400), // 24 hours
+        ALEX_FEE_PUSH_INTERVAL,
         || { ic_cdk::spawn(push_alex_fees_wrapper()) }
     );
 

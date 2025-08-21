@@ -8,8 +8,9 @@ export const formatDiscrepancy = (e8s: bigint): string => {
   return `${prefix}${icp.toFixed(8)} ICP`;
 };
 
-export const formatBasisPoints = (bp: number): string => {
-  return (bp / 10000).toFixed(2) + '%';
+export const formatBasisPoints = (bp: number | bigint): string => {
+  const value = typeof bp === 'bigint' ? Number(bp) : bp;
+  return (value / 10000).toFixed(2) + '%';
 };
 
 export const formatNanoTimestamp = (ns: bigint): string => {

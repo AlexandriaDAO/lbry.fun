@@ -1,17 +1,14 @@
 - The backend currently accepts any initial parameters without validation. Need to set those.
 
-
-- Change the 24hr swap() timer for/from testing.
-
-
-
-
-
-dfx canister call kong_backend force_add_token '("ryjl3-tyaaa-aaaaa-aaaba-cai")'
+Before Mainnet:
+- distribution constants: 
+  - lbry_fun/collections.rs | const CHECK_INTERVAL: u64 = 3600;          // Check every hour
+  - icp_swap/script.rs | pub const ALEX_FEE_PUSH_INTERVAL: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours - push platform fees to lbry_fun
+- Block token creation for non-authorized principals.
+- Change the creation interval minimums so there's at least 1 hour notice.
 
 
-// Before mainnet: 
-- Add popup warnings and admin-only launching.
+
 
 
 // Before v1
@@ -22,7 +19,7 @@ dfx canister call kong_backend force_add_token '("ryjl3-tyaaa-aaaaa-aaaba-cai")'
 
 # ICP Topup
 
-dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "u6s2n-gx777-77774-qaaba-cai"; subaccount = null }; amount = (100_000_000_000_000 : nat) })'
+dfx canister call ryjl3-tyaaa-aaaaa-aaaba-cai icrc1_transfer '(record { to = record { owner = principal "3tukv-wqvf4-y6kvm-cos2t-pkir5-gamsa-osl4p-26g3v-q7hk2-esvdc-rqe"; subaccount = null }; amount = (100_000_000_000_000 : nat) })'
 
 # To fix Kong
 

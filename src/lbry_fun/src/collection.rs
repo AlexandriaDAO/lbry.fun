@@ -36,6 +36,8 @@ pub fn init_swap_timer() {
 async fn check_and_swap() -> Result<String, String> {
     use ic_ledger_types::{AccountBalanceArgs, AccountIdentifier, MAINNET_LEDGER_CANISTER_ID};
     
+    ic_cdk::println!("SWAP_TIMER: Checking balance for swap...");
+    
     // Check ICP balance
     let canister_id = ic_cdk::api::id();
     let account_id = AccountIdentifier::new(&canister_id, &ic_ledger_types::DEFAULT_SUBACCOUNT);
@@ -49,13 +51,21 @@ async fn check_and_swap() -> Result<String, String> {
     
     let icp_balance = match icp_balance_result {
         Ok((tokens,)) => tokens.e8s(),
-        Err(_) => return Ok("Could not check balance".to_string()),
+        Err(e) => {
+            ic_cdk::println!("SWAP_TIMER: Failed to check balance: {:?}", e);
+            return Ok("Could not check balance".to_string());
+        }
     };
+    
+    ic_cdk::println!("SWAP_TIMER: Balance check - {} E8S", icp_balance);
     
     // Only proceed if we have more than 1 ICP
     if icp_balance < MIN_ICP_BALANCE {
+        ic_cdk::println!("SWAP_TIMER: Balance {} below threshold {}", icp_balance, MIN_ICP_BALANCE);
         return Ok(format!("Balance {} below threshold", icp_balance));
     }
+    
+    ic_cdk::println!("SWAP_TIMER: Proceeding with swap, balance {} exceeds minimum", icp_balance);
     
     // Execute swap and burn
     execute_swap_and_burn().await
@@ -65,6 +75,8 @@ async fn check_and_swap() -> Result<String, String> {
 async fn execute_swap_and_burn() -> Result<String, String> {
     use icrc_ledger_types::icrc1::account::Account;
     use ic_ledger_types::{AccountBalanceArgs, AccountIdentifier, MAINNET_LEDGER_CANISTER_ID};
+    
+    ic_cdk::println!("SWAP_TIMER: Starting execute_swap_and_burn...");
     
     // Step 1: Check ICP balance
     let canister_id = ic_cdk::api::id();
@@ -88,27 +100,64 @@ async fn execute_swap_and_burn() -> Result<String, String> {
     }
     
     // Calculate swap amount (leave some reserve for fees)
-    let swap_amount = icp_balance.saturating_sub(ICP_RESERVE);
+    // Need to account for approval fee (10_000) and transfer fee (10_000)
+    let swap_amount = icp_balance.saturating_sub(ICP_RESERVE + 20_000);
     
-    // Swap ICP for LBRY using the core project's ICP_SWAP canister
+    ic_cdk::println!("SWAP_TIMER: Attempting to swap {} E8S of ICP", swap_amount);
+    
+    // Get the core swap canister principal
     let core_swap_canister = Principal::from_text(CORE_ICP_SWAP_CANISTER)
         .map_err(|e| format!("Invalid core ICP swap canister ID: {}", e))?;
     
-    // Call the swap function on the core project's ICP_SWAP canister
-    let swap_result: Result<(Result<String, String>,), _> = ic_cdk::call(
+    // First approve the core swap canister to spend our ICP
+    use icrc_ledger_types::icrc2::approve::{ApproveArgs, ApproveError};
+    
+    let approve_args = ApproveArgs {
+        from_subaccount: None,
+        spender: Account {
+            owner: core_swap_canister,
+            subaccount: None,
+        },
+        amount: candid::Nat::from(swap_amount + 10_000), // Amount plus transfer fee
+        expected_allowance: None,
+        expires_at: None,
+        fee: None,
+        memo: None,
+        created_at_time: None,
+    };
+    
+    let approve_result: Result<(Result<candid::Nat, ApproveError>,), _> = ic_cdk::call(
+        MAINNET_LEDGER_CANISTER_ID,
+        "icrc2_approve",
+        (approve_args,),
+    ).await;
+    
+    match approve_result {
+        Ok((Ok(block_index),)) => {
+            ic_cdk::println!("SWAP_TIMER: Approved core swap to spend {} ICP, block: {}", swap_amount, block_index);
+        }
+        Ok((Err(e),)) => {
+            return Err(format!("Approval failed: {:?}", e));
+        }
+        Err(e) => {
+            return Err(format!("Approval call failed: {:?}", e));
+        }
+    }
+    
+    // Now call the swap function on the core project's ICP_SWAP canister
+    // The swap function returns Result<String, ExecutionError> on success
+    let swap_result: Result<(String,), _> = ic_cdk::call(
         core_swap_canister,
         "swap",
         (swap_amount, None::<[u8; 32]>),
     ).await;
     
     match swap_result {
-        Ok((Ok(success_msg),)) => {
+        Ok((success_msg,)) => {
             ic_cdk::println!("Successfully swapped {} ICP: {}", swap_amount, success_msg);
         }
-        Ok((Err(e),)) => {
-            return Err(format!("Swap failed: {}", e));
-        }
         Err(e) => {
+            // The call failed - either rejected by the canister or network error
             return Err(format!("Swap call failed: {:?}", e));
         }
     }

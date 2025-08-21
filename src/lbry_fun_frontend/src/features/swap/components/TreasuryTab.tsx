@@ -12,14 +12,23 @@ import {
 } from '@/utils/treasury';
 import TooltipIcon from '@/features/token/components/TooltipIcon';
 import ValidationStatus from './ValidationStatus';
-import type { 
-  CollectionMetrics, 
-  ReconciliationDetail
-} from '../../../../../declarations/lbry_fun/lbry_fun.did';
+import { createActor } from '@/utils/createActor';
+import { idlFactory as icpSwapIdlFactory } from '../../../../../declarations/icp_swap';
+import type { ReconciliationStatus } from '../../../../../declarations/icp_swap/icp_swap.did';
+import { Principal } from '@dfinity/principal';
+
+// Collection metrics interface - this would come from lbry_fun in the future
+interface CollectionMetrics {
+  total_accumulated_icp: bigint;
+  total_burned_lbry: bigint;
+  collection_efficiency_basis_points: bigint;
+  last_successful_collection: bigint;
+  failed_collections_24h: bigint;
+}
 
 interface TreasuryState {
   collectionMetrics: CollectionMetrics | null;
-  tokenReconciliation: ReconciliationDetail | null;
+  tokenReconciliation: ReconciliationStatus | null;
   isLoading: boolean;
   error: string | null;
   dataLoadStatus: {
@@ -31,7 +40,7 @@ interface TreasuryState {
 const TreasuryTab: React.FC = () => {
   const { activeSwapPool, distributionInterval } = useAppSelector(state => state.swap);
   const [collectionMetrics, setCollectionMetrics] = useState<CollectionMetrics | null>(null);
-  const [tokenReconciliation, setTokenReconciliation] = useState<ReconciliationDetail | null>(null);
+  const [tokenReconciliation, setTokenReconciliation] = useState<ReconciliationStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dataLoadStatus, setDataLoadStatus] = useState({
@@ -43,44 +52,50 @@ const TreasuryTab: React.FC = () => {
   const canRefresh = Date.now() - lastRefresh > 30000; // 30 second cooldown
 
   const fetchData = async () => {
-    if (!activeSwapPool) return;
+    if (!activeSwapPool || !activeSwapPool[1]?.icp_swap_canister_id) return;
     
-    // activeSwapPool[0] is the numeric pool ID as a string, convert to BigInt for the backend call
-    const tokenId = BigInt(activeSwapPool[0]);
     try {
-      const actor = await getLbryFunActor();
+      // Get the ICP swap canister ID from the active pool
+      const icpSwapCanisterId = activeSwapPool[1].icp_swap_canister_id;
       
-      // Fetch collection metrics for this token
-      actor.get_collection_metrics()
-        .then(metrics => {
-          setCollectionMetrics(metrics);
-          setDataLoadStatus(prev => ({ ...prev, metrics: true }));
-        }).catch(err => {
-          console.error('Failed to fetch metrics data:', err);
-        });
+      // Create an actor for the specific ICP swap canister
+      const icpSwapActor = await createActor(icpSwapCanisterId, icpSwapIdlFactory);
       
-      // Fetch token-specific data separately
-      console.log('Fetching token reconciliation for token ID:', tokenId.toString());
-      actor.get_token_reconciliation(tokenId)
-        .then(result => {
-          console.log('Token reconciliation result:', result);
-          if ('Ok' in result) {
-            setTokenReconciliation(result.Ok);
-            setDataLoadStatus(prev => ({ ...prev, token: true }));
-          } else {
-            console.error('Token reconciliation returned Err:', result.Err);
-            setError(`Token reconciliation error: ${result.Err}`);
-          }
+      // Fetch reconciliation status from the ICP swap canister
+      icpSwapActor.get_reconciliation_status()
+        .then((reconciliation: ReconciliationStatus) => {
+          setTokenReconciliation(reconciliation);
+          setDataLoadStatus(prev => ({ ...prev, token: true }));
         })
         .catch(err => {
-          console.error('Failed to fetch token data:', err);
-          setError('Failed to fetch token reconciliation data');
+          console.error('Failed to fetch reconciliation data:', err);
+          setError('Failed to fetch treasury reconciliation data');
+        });
+      
+      // Get swap stats from lbry_fun canister for collection metrics
+      const lbryFunActor = await getLbryFunActor();
+      lbryFunActor.get_swap_stats()
+        .then(([totalBurned, lastSwapTime, lastSwapAmount]) => {
+          // Convert to collection metrics format
+          const metrics: CollectionMetrics = {
+            total_accumulated_icp: BigInt(0), // Not tracked in new system
+            total_burned_lbry: totalBurned,
+            collection_efficiency_basis_points: BigInt(10000), // 100% in new system
+            last_successful_collection: lastSwapTime,
+            failed_collections_24h: BigInt(0), // Not tracked in new system
+          };
+          setCollectionMetrics(metrics);
+          setDataLoadStatus(prev => ({ ...prev, metrics: true }));
+        })
+        .catch(err => {
+          console.error('Failed to fetch swap stats:', err);
         })
         .finally(() => {
           setIsLoading(false);
         });
+        
     } catch (err) {
-      console.error('Failed to get actor:', err);
+      console.error('Failed to get actors:', err);
       setError('Failed to connect to backend');
       setIsLoading(false);
     }
@@ -158,7 +173,7 @@ const TreasuryTab: React.FC = () => {
                 <TooltipIcon text="ICP collected from users buying secondary tokens. Every interval (e.g., hourly), 1% of this pool is distributed: 99% to stakers as yield, 1% as platform fees. Think of it as the 'treasury' that pays out staking rewards." />
               </span>
               <span className="text-white text-sm text-lime-400">
-                {formatE8sToICP(tokenReconciliation.reconciliation.reward_pool)} ICP
+                {formatE8sToICP(tokenReconciliation.reward_pool)} ICP
               </span>
             </div>
             <div className="flex justify-between items-center py-0.5">
@@ -167,7 +182,7 @@ const TreasuryTab: React.FC = () => {
                 <TooltipIcon text="Total ICP rewards earned by all stakers but not yet claimed. This is YOUR money if you're staking - it accumulates every distribution and you can claim it anytime. Higher stakes = bigger share of rewards." />
               </span>
               <span className="text-white text-sm">
-                {formatE8sToICP(tokenReconciliation.reconciliation.total_staked)} ICP
+                {formatE8sToICP(tokenReconciliation.total_staked)} ICP
               </span>
             </div>
             <div className="flex justify-between items-center py-0.5">
@@ -177,11 +192,11 @@ const TreasuryTab: React.FC = () => {
               </span>
               <span className="text-white text-sm text-amber-400">
                 {formatE8sToICP(
-                  tokenReconciliation.reconciliation.uncollected_alex_fees
+                  tokenReconciliation.uncollected_alex_fees
                 )} ICP
               </span>
             </div>
-            {tokenReconciliation.reconciliation.requires_attention && (
+            {tokenReconciliation.requires_attention && (
               <div className="flex justify-between items-center py-0.5">
                 <span className="text-gray-400 text-xs">Status:</span>
                 <span className="text-white text-sm text-red-400">⚠️ Attention Required</span>
@@ -196,32 +211,32 @@ const TreasuryTab: React.FC = () => {
                       Expected Balance:
                       <TooltipIcon text="Sum of all ICP that should be in the contract: reward pool + staker rewards + platform fees + operational buffer. This is what the math says we should have." />
                     </span>
-                    <span>{formatE8sToICP(tokenReconciliation.reconciliation.icp_balance_expected)} ICP</span>
+                    <span>{formatE8sToICP(tokenReconciliation.icp_balance_expected)} ICP</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="flex items-center">
                       Actual Balance:
                       <TooltipIcon text="The real ICP balance from the blockchain ledger. This is what we actually have. Should match Expected Balance exactly." />
                     </span>
-                    <span>{formatE8sToICP(tokenReconciliation.reconciliation.icp_balance_actual)} ICP</span>
+                    <span>{formatE8sToICP(tokenReconciliation.icp_balance_actual)} ICP</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="flex items-center">
                       Discrepancy:
                       <TooltipIcon text="Difference between Expected and Actual. Should be zero. Any non-zero value indicates an accounting error that needs investigation." />
                     </span>
-                    <span className={tokenReconciliation.reconciliation.requires_attention ? 'text-red-400' : 'text-gray-400'}>
-                      {formatDiscrepancy(tokenReconciliation.reconciliation.discrepancy_e8s)}
+                    <span className={tokenReconciliation.requires_attention ? 'text-red-400' : 'text-gray-400'}>
+                      {formatDiscrepancy(tokenReconciliation.discrepancy_e8s)}
                     </span>
                   </div>
-                  {tokenReconciliation.reconciliation.operational_balance_suspicious && (
+                  {tokenReconciliation.operational_balance_suspicious && (
                     <div className="flex justify-between">
                       <span className="flex items-center">
                         Operational Balance:
                         <TooltipIcon text="ICP buffer for transaction fees and operations. Should be minimal (< 0.1 ICP). High values indicate ICP that isn't properly allocated to rewards or fees." />
                       </span>
                       <span className="text-amber-400">
-                        {formatE8sToICP(tokenReconciliation.reconciliation.operational_balance)} ICP (High)
+                        {formatE8sToICP(tokenReconciliation.operational_balance)} ICP (High)
                       </span>
                     </div>
                   )}
