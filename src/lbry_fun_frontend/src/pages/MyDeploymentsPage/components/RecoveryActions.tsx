@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DeploymentRecord } from '@/types/deployment';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { recoverDeployment } from '@/features/token/thunk/deploymentThunks';
+import { useLbryFun } from '@/hooks/actors';
 
 interface RecoveryActionsProps {
   deployment: DeploymentRecord;
@@ -16,6 +17,7 @@ interface BlockerInfo {
 
 export const RecoveryActions: React.FC<RecoveryActionsProps> = ({ deployment }) => {
   const dispatch = useAppDispatch();
+  const { actor: lbryFunActor } = useLbryFun();
   const [isRecovering, setIsRecovering] = useState(false);
   const [localError, setLocalError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
@@ -71,12 +73,17 @@ export const RecoveryActions: React.FC<RecoveryActionsProps> = ({ deployment }) 
   }, [deployment.last_activity]);
   
   const handleRecover = async () => {
+    if (!lbryFunActor) {
+      setLocalError('Actor not available');
+      return;
+    }
+    
     setIsRecovering(true);
     setLocalError('');
     setSuccessMessage('');
     
     try {
-      const result = await dispatch(recoverDeployment());
+      const result = await dispatch(recoverDeployment({ actor: lbryFunActor }));
       
       if (recoverDeployment.fulfilled.match(result)) {
         setSuccessMessage(result.payload as string);

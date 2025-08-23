@@ -44,18 +44,6 @@ pub async fn get_total_secondary_burned() -> Result<u64, String> {
     }
 }
 
-pub async fn get_icp_in_lp_treasury() -> Result<u64, String> {
-    let config = get_config();
-    let canister_id = config.icp_swap_id;
-    match call::<(), (u64,)>(canister_id, "get_lp_treasury_balance", ()).await {
-        Ok((balance,)) => Ok(balance),
-        Err((code, msg)) => Err(format!(
-            "ICP in LP treasury call failed: {:?}: {}",
-            code, msg
-        )),
-    }
-}
-
 pub async fn get_total_primary_staked() -> Result<Nat, String> {
     let config = get_config();
     let primary_canister_id = config.primary_token_id;

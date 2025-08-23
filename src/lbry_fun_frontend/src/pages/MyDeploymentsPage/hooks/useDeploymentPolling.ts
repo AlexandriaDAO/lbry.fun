@@ -3,18 +3,20 @@ import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { fetchDeploymentHistory } from '@/features/token/thunk/deploymentThunks';
 import { selectActiveDeployments } from '@/store/slices/deploymentSlice';
+import { useLbryFun } from '@/hooks/actors';
 
 export const useDeploymentPolling = () => {
   const dispatch = useAppDispatch();
+  const { actor: lbryFunActor } = useLbryFun();
   const activeDeployments = useAppSelector(selectActiveDeployments);
   const [isPolling, setIsPolling] = useState(true);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Auto-refresh active deployments
   useEffect(() => {
-    if (isPolling && activeDeployments.length > 0) {
+    if (isPolling && activeDeployments.length > 0 && lbryFunActor) {
       const interval = setInterval(() => {
-        dispatch(fetchDeploymentHistory());
+        dispatch(fetchDeploymentHistory({ lbryFunActor }));
       }, 10000); // Refresh every 10 seconds
 
       setPollingInterval(interval);
@@ -25,7 +27,7 @@ export const useDeploymentPolling = () => {
         }
       };
     }
-  }, [isPolling, activeDeployments.length, dispatch]);
+  }, [isPolling, activeDeployments.length, dispatch, lbryFunActor]);
 
   const togglePolling = useCallback(() => {
     setIsPolling(prev => !prev);
@@ -36,8 +38,10 @@ export const useDeploymentPolling = () => {
   }, [pollingInterval]);
 
   const refreshAll = useCallback(() => {
-    dispatch(fetchDeploymentHistory());
-  }, [dispatch]);
+    if (lbryFunActor) {
+      dispatch(fetchDeploymentHistory({ lbryFunActor }));
+    }
+  }, [dispatch, lbryFunActor]);
 
   return {
     isPolling,

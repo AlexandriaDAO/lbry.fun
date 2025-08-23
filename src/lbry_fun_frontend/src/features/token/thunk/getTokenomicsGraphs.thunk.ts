@@ -1,6 +1,6 @@
+import { ActorSubclass } from '@dfinity/agent';
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getLbryFunActor } from "@/features/auth/utils/authUtils";
-import { GraphData, Result_4 } from "@/declarations/lbry_fun/lbry_fun.did";
+import { _SERVICE, GraphData, Result_4 } from "@/declarations/lbry_fun/lbry_fun.did";
 import { ErrorMessage } from "@/features/swap/utils/errors";
 
 export interface ProcessedGraphData {
@@ -16,13 +16,13 @@ export interface ProcessedGraphData {
 
 const getTokenomicsGraphs = createAsyncThunk<
   ProcessedGraphData,
-  string, // pool_id
+  { poolId: string; lbryFunActor: ActorSubclass<_SERVICE> },
   { rejectValue: ErrorMessage }
 >(
   "lbryFun/getTokenomicsGraphs",
-  async (poolId, { rejectWithValue }) => {
+  async ({ poolId, lbryFunActor }, { rejectWithValue }) => {
     try {
-      const actor = await getLbryFunActor();
+      const actor = lbryFunActor;
       const result: Result_4 = await actor.get_tokenomics_graphs(BigInt(poolId));
       
       if ('Err' in result) {

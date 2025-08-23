@@ -5,6 +5,8 @@ import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { analyticsThunks } from '../thunks/analyticsThunks';
 import UnifiedSkeleton from './UnifiedSkeleton';
+import { RootState } from '@/store';
+import getPoolsTvl from '@/features/token/thunk/getPoolsTvl.thunk';
 
 // Lazy load the Chart component
 const LineChart = lazy(() => import('./Chart'));
@@ -30,12 +32,18 @@ const Insights: React.FC = () => {
     const { swap } = useAppSelector(state => state);
     const { logsData: insights, logsLoading: isLoading, logsError: error } = swap;
     const poolData = swap.activeSwapPool;
+    const tvlData = useAppSelector((state: RootState) => state.lbryFun.tvlData);
+    const tvlLoading = useAppSelector((state: RootState) => state.lbryFun.tvlLoading);
     
     useEffect(() => {
         if (poolData?.[1]?.logs_canister_id) {
             dispatch(getAllLogs(poolData[1].logs_canister_id));
         }
-    }, [dispatch, poolData]);
+        // Also fetch TVL data if we have a pool
+        if (poolData && !tvlData[poolData[0]] && !tvlLoading) {
+            dispatch(getPoolsTvl([poolData]));
+        }
+    }, [dispatch, poolData, tvlData, tvlLoading]);
 
     const summaryData = useMemo(() => {
         if (!insights || insights.time.length === 0) {
@@ -50,7 +58,6 @@ const Insights: React.FC = () => {
             stakerCount: insights.stakerCount[lastIndex],
             apy: insights.apy ? insights.apy[lastIndex] : null,
             hourlyIcpRewards: insights.hourlyIcpRewards[lastIndex],
-            icpInLpTreasury: insights.icpInLpTreasury[lastIndex],
         };
     }, [insights]);
     
@@ -123,10 +130,17 @@ const Insights: React.FC = () => {
                             <span className="text-gray-400">stakers:</span>
                             <span className="text-white">{summaryData.stakerCount}</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-400">icp_in_lp:</span>
-                            <span className="text-white">{formatNumber(summaryData.icpInLpTreasury)}</span>
-                        </div>
+                        {poolData && tvlData[poolData[0]] && (
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-400 flex items-center gap-1">
+                                    pool_tvl:
+                                    <TooltipIcon text="Total Value Locked in the Kongswap liquidity pool for this token pair" />
+                                </span>
+                                <span className="text-lime-500 font-bold">
+                                    ${formatNumber(Number(tvlData[poolData[0]].tvl) / 100_000_000)}
+                                </span>
+                            </div>
+                        )}
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400">reward_per_token:</span>
                             <span className="text-lime-500 font-bold">{summaryData.hourlyIcpRewards.toFixed(6)} ICP</span>
@@ -180,13 +194,6 @@ const Insights: React.FC = () => {
                         <TooltipIcon text="The number of unique stakers." />
                     </div>
                     <LineChart dataXaxis={formattedTime} dataYaxis={insights.stakerCount} xAxisLabel="Time" yAxisLabel="Count" lineColor="hsl(var(--color-chart-accent))" gardientColor="hsl(var(--color-chart-accent) / 0.3)" />
-                </div>
-                <div>
-                    <div className="flex items-center mb-2">
-                        <h3 className="text-xl font-medium text-white">ICP in LP Treasury</h3>
-                        <TooltipIcon text="The amount of ICP held in the liquidity pool treasury." />
-                    </div>
-                    <LineChart dataXaxis={formattedTime} dataYaxis={insights.icpInLpTreasury} xAxisLabel="Time" yAxisLabel="ICP" lineColor="hsl(var(--color-chart-secondary))" gardientColor="hsl(var(--color-chart-secondary) / 0.3)" />
                 </div>
                 {insights.apy && (
                     <div>

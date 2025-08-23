@@ -163,8 +163,9 @@ export const getActorSwap = async (canisterId: string) => {
   return wrapActorWithErrorHandler(createActorSwap(canisterId, { agent }));
 };
 
-export const getIcpLedgerActor = () =>
-  getActor(icp_ledger_canister_id, createActorIcpLedger);
+// Removed - use useIcpLedger hook instead
+// export const getIcpLedgerActor = () =>
+//   getActor(icp_ledger_canister_id, createActorIcpLedger);
 
 export const getTokenomicsActor = async (canisterId: string) => {
   const identity = getCurrentIdentity();
@@ -191,6 +192,34 @@ export const getTokenomicsActor = async (canisterId: string) => {
   }
   
   return wrapActorWithErrorHandler(createActorTokenomics(canisterId, { agent }));
+};
+
+// Export the ICP Ledger actor getter for components that still need it
+export const getIcpLedgerActor = async () => {
+  const identity = getCurrentIdentity();
+  
+  const agentOptions: any = {};
+  if (identity) {
+    agentOptions.identity = identity;
+    agentOptions.host = isLocalDevelopment
+      ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`
+      : "https://identity.ic0.app";
+  } else {
+    agentOptions.host = isLocalDevelopment
+      ? `http://localhost:4943`
+      : "https://ic0.app";
+  }
+  
+  const agent = await HttpAgent.create(agentOptions);
+  
+  if (isLocalDevelopment) {
+    await agent.fetchRootKey().catch((err) => {
+      console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
+      console.error(err);
+    });
+  }
+  
+  return wrapActorWithErrorHandler(createActorIcpLedger(icp_ledger_canister_id, { agent }));
 };
 
 export const getICRCActor = async (canisterId: string) => {
@@ -221,12 +250,13 @@ export const getICRCActor = async (canisterId: string) => {
 };
 
 export const getLogs = () => getActor(log_canister_id, createActorLogs);
-export const getLbryFunActor = () => {
-  if (!lbry_fun_canister_id) {
-    console.error("CANISTER_ID_LBRY_FUN is not defined in environment variables");
-  }
-  return getActor(lbry_fun_canister_id, createActorLbryFun);
-};
+// Removed - use useLbryFun hook instead
+// export const getLbryFunActor = () => {
+//   if (!lbry_fun_canister_id) {
+//     console.error("CANISTER_ID_LBRY_FUN is not defined in environment variables");
+//   }
+//   return getActor(lbry_fun_canister_id, createActorLbryFun);
+// };
 
 // Compatibility functions for existing code
 export const getAuthClient = async () => {

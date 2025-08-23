@@ -1,16 +1,15 @@
+import { ActorSubclass } from "@dfinity/agent";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getLbryFunActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage } from "@/features/swap/utils/errors";
-import { TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
+import { _SERVICE, TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
 import { TokenRecordStringified } from "./getTokenPools.thunk";
 
 const getUpcomming = createAsyncThunk<
   [string, TokenRecordStringified][],
-  void,
+  { actor: ActorSubclass<_SERVICE> },
   { rejectValue: ErrorMessage }
->("lbry_fun/getUpcomming", async (_, { rejectWithValue }) => {
+>("lbry_fun/getUpcomming", async ({ actor }, { rejectWithValue }) => {
   try {
-    const actor = await getLbryFunActor();
     const result = await actor.get_upcoming(); // returns [bigint, TokenRecord][]
 
     // Convert every BigInt to string

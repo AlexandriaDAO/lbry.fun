@@ -2,14 +2,18 @@ import React, { useEffect } from "react";
 import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import getUpcomming from "../thunk/getUpcommingTokens.thunk";
+import { useLbryFun } from '@/hooks/actors';
 
 const UpcommingToken = () => {
   const dispatch = useAppDispatch();
+  const { actor: lbryFunActor } = useLbryFun();
   const { upcommingTokens, loading, error, success } = useAppSelector((state) => state.lbryFun);
 
   useEffect(() => {
-    dispatch(getUpcomming());
-  }, [success]);
+    if (lbryFunActor) {
+      dispatch(getUpcomming({ actor: lbryFunActor }));
+    }
+  }, [success, lbryFunActor, dispatch]);
 
   if (loading) return <p>Loading token pools...</p>;
 

@@ -6,9 +6,11 @@ import getTokenomicsGraphs, { ProcessedGraphData } from '@/features/token/thunk/
 import LineChart from './Chart';
 import TooltipIcon from '@/features/token/components/TooltipIcon';
 import { TokenConversionService } from '@/utils/TokenConversionService';
+import { useLbryFun } from '@/hooks/actors';
 
 const TokenomicsTab: React.FC = () => {
     const dispatch = useAppDispatch();
+    const { actor: lbryFunActor } = useLbryFun();
     const { swap } = useAppSelector(state => state);
     const poolData = swap.activeSwapPool;
     const [graphData, setGraphData] = useState<ProcessedGraphData | null>(null);
@@ -17,11 +19,11 @@ const TokenomicsTab: React.FC = () => {
     const [copySuccess, setCopySuccess] = useState(false);
 
     useEffect(() => {
-        if (poolData && poolData[0]) {
+        if (poolData && poolData[0] && lbryFunActor) {
             setLoading(true);
             setError(null);
             
-            dispatch(getTokenomicsGraphs(poolData[0].toString()))
+            dispatch(getTokenomicsGraphs({ actor: lbryFunActor, tokenId: poolData[0].toString() }))
                 .unwrap()
                 .then(data => {
                     setGraphData(data);
@@ -33,7 +35,7 @@ const TokenomicsTab: React.FC = () => {
                     setLoading(false);
                 });
         }
-    }, [poolData, dispatch]);
+    }, [poolData, dispatch, lbryFunActor]);
 
     // Render states
     if (!poolData) {

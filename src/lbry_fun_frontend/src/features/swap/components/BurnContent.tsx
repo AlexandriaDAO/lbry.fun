@@ -6,6 +6,7 @@ import { _SERVICE as _SERVICESECONDARY } from '../../../../../../ICRC/ICRC.did'
 import AccessGuard from "./AccessGuard";
 import { useAccessState } from "../hooks/useAccessState";
 import { useRefreshableData } from "@/hooks/useRefreshableData";
+import { useIcpLedger } from "@/hooks/actors";
 
 import { Link } from "react-router-dom";
 import { tradingThunks } from "../thunks/tradingThunks";
@@ -39,6 +40,7 @@ const BurnContent = () => {
     const tokenomicsConfig = useAppSelector((state: RootState) => state.swap.tokenomicsConfig);
     const tokenomicsCurrentState = useAppSelector((state: RootState) => state.swap.tokenomicsCurrentState);
     const { accessState, countdown, launchTime, isTokenLive } = useAccessState();
+    const { actor: icpLedgerActor } = useIcpLedger();
 
     const [amountSecondary, setAmountSecondary] = useState(0);
     const [tentativeICP, setTentativeICP] = useState(0);
@@ -79,11 +81,12 @@ const BurnContent = () => {
     
     // Fetcher to refresh the underlying data
     const fetchBurnData = useCallback(async () => {
+        if (!icpLedgerActor) return;
         await Promise.all([
-            dispatch(getCanisterBal()),
+            dispatch(getCanisterBal({ actor: icpLedgerActor })),
             dispatch(getCanisterArchivedBalance())
         ]);
-    }, [dispatch]);
+    }, [dispatch, icpLedgerActor]);
     
     const { isRefreshing: isRefreshingBurn, refresh } = useRefreshableData(
         'max-burn',
@@ -122,9 +125,13 @@ const BurnContent = () => {
             return;
         }
         
-        dispatch(burnSecondary({ amount: amountSecondary.toString(), userPrincipal: principal }));
+        if (!icpLedgerActor) {
+            showError("ERROR", "ICP Ledger actor not available");
+            return;
+        }
+        dispatch(burnSecondary({ icpLedgerActor, amount: amountSecondary.toString(), userPrincipal: principal }));
         showLoading("BURN IN PROGRESS", "PROCESSING TRANSACTION...");
-    }, [isAuthenticated, principal, isTokenLive, maxBurnAllowed, amountSecondary, dispatch, showError, showLoading]);
+    }, [isAuthenticated, principal, isTokenLive, maxBurnAllowed, amountSecondary, dispatch, showError, showLoading, icpLedgerActor]);
     const handleAmountSecondaryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (Number(e.target.value) >= 0) {
             const amount = Number(e.target.value);

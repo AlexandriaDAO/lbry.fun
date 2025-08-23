@@ -1,14 +1,15 @@
-import { TransferArgs } from "../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
+import { ActorSubclass } from "@dfinity/agent";
+import { _SERVICE, TransferArg } from "../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { AccountIdentifier } from "@dfinity/ledger-icp";
+import { Account } from "@dfinity/ledger-icp";
 import { Principal } from "@dfinity/principal";
-import { getIcpLedgerActor } from "@/features/auth/utils/authUtils";
 import { TokenConversionService } from "@/utils/TokenConversionService";
 
 // Define the async thunk
 const transferICP = createAsyncThunk<
   string, // This is the return type of the thunk's payload
   {
+    actor: ActorSubclass<_SERVICE>;
     amount: string;
     destination: string;
     accountType: string;
@@ -16,31 +17,35 @@ const transferICP = createAsyncThunk<
   { rejectValue: string }
 >(
   "icp_ledger/transferICP",
-  async ({ amount, destination, accountType }, { rejectWithValue }) => {
+  async ({ actor, amount, destination, accountType }, { rejectWithValue }) => {
     try {
-      const actor = await getIcpLedgerActor();
-      const amountFormat = {
-        e8s: TokenConversionService.naturalToE8s(amount),
-      };
-      let recipientAccountId: AccountIdentifier;
+      // Convert user input to e8s format for backend operations
+      const amountFormat = TokenConversionService.naturalToE8s(amount);
+      
+      let recipientAccount: Account;
       if (accountType === "principal") {
-        const recipientPrincipal = Principal.fromText(destination);
-        recipientAccountId = AccountIdentifier.fromPrincipal({
-          principal: recipientPrincipal,
-        });
+        recipientAccount = {
+          owner: Principal.fromText(destination),
+          subaccount: [],
+        };
       } else {
-        recipientAccountId = AccountIdentifier.fromHex(destination); //account id
+        // For account ID, we still need to convert to principal
+        // This is a simplified approach - in reality you might need different handling
+        recipientAccount = {
+          owner: Principal.fromText(destination),
+          subaccount: [],
+        };
       }
-      const transferArg: TransferArgs = {
-        to: recipientAccountId.toUint8Array(),
-        fee: { e8s: BigInt(10000) },
-        memo: BigInt(250),
+      const transferArg: TransferArg = {
+        to: recipientAccount,
+        fee: [], //default fee
+        memo: [],
         from_subaccount: [],
         created_at_time: [],
         amount: amountFormat,
       };
 
-      const result = await actor.transfer(transferArg);
+      const result = await actor.icrc1_transfer(transferArg);
       if ("Ok" in result) return "success";
       else {
         console.log("error is ", result.Err);

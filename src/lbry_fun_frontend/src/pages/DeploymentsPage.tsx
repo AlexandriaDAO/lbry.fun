@@ -7,21 +7,25 @@ import { fetchDeploymentHistory } from '@/features/token/thunk/deploymentThunks'
 import { setActiveDeploymentId } from '@/store/slices/deploymentSlice';
 import { setActiveTokenView } from '@/store/slices/uiSlice';
 import { getUIState } from '@/types/deployment';
+import { useLbryFun } from '@/hooks/actors';
 
 const DeploymentsPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { actor: lbryFunActor } = useLbryFun();
   const deployments = useAppSelector((state: RootState) => state.deployment.deployments);
   
   useEffect(() => {
-    dispatch(fetchDeploymentHistory());
+    if (lbryFunActor) {
+      dispatch(fetchDeploymentHistory({ lbryFunActor }));
+    }
     
     // Clean up when leaving the page
     return () => {
       // Don't clear activeDeploymentId here as it's needed for navigation
       // It will be cleared by the TokenPage cleanup
     };
-  }, [dispatch]);
+  }, [dispatch, lbryFunActor]);
   
   const getStatusBadge = (status: 'deploying' | 'failed' | 'live') => {
     const badges = {

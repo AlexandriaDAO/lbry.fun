@@ -3,15 +3,19 @@ import { useAppDispatch } from "@/store/hooks/useAppDispatch";
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import getUpcomming from "../thunk/getUpcommingTokens.thunk";
 import getLiveTokens from "../thunk/getLiveTokens.thunk";
+import { useLbryFun } from '@/hooks/actors';
 
 const GetLiveTokens = () => {
   const dispatch = useAppDispatch();
+  const { actor: lbryFunActor } = useLbryFun();
 
   const { liveTokens, loading, error,success } = useAppSelector((state) => state.lbryFun);
 
   useEffect(() => {
-    dispatch(getLiveTokens());
-  }, [success]);
+    if (lbryFunActor) {
+      dispatch(getLiveTokens({ actor: lbryFunActor }));
+    }
+  }, [success, lbryFunActor, dispatch]);
 
   if (loading) return <p>Loading token pools...</p>;
 

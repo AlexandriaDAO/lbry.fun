@@ -1,5 +1,6 @@
+import { ActorSubclass } from '@dfinity/agent';
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getLbryFunActor } from "@/features/auth/utils/authUtils";
+import { _SERVICE } from '../../../../../declarations/lbry_fun/lbry_fun.did';
 
 export interface TokenomicsSchedule {
     epochs: Array<{
@@ -23,11 +24,11 @@ export interface PreviewScheduleArgs {
     threshold_multiplier: number;       // Multiplier for burn threshold progression (e.g., 2.0 for doubling)
 }
 
-const previewTokenomicsSchedule = createAsyncThunk<TokenomicsSchedule, PreviewScheduleArgs, { rejectValue: { title: string, message: string } }>(
+const previewTokenomicsSchedule = createAsyncThunk<TokenomicsSchedule, { args: PreviewScheduleArgs; lbryFunActor: ActorSubclass<_SERVICE> }, { rejectValue: { title: string, message: string } }>(
     "lbryfun/previewTokenomicsSchedule",
-    async (args, { rejectWithValue }) => {
+    async ({ args, lbryFunActor }, { rejectWithValue }) => {
         try {
-            const actor = await getLbryFunActor();
+            const actor = lbryFunActor;
             if (!actor) {
                 throw new Error("Failed to initialize Lbry Fun actor");
             }

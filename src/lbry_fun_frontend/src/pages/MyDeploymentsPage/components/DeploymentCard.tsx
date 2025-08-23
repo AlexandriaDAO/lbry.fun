@@ -4,6 +4,7 @@ import { RecoveryActions } from './RecoveryActions';
 import { formatDistanceToNow } from 'date-fns';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { executeTokenDeployment, recoverDeployment } from '@/features/token/thunk/deploymentThunks';
+import { useLbryFun } from '@/hooks/actors';
 
 interface DeploymentCardProps {
   deployment: DeploymentRecord;
@@ -133,12 +134,14 @@ const FailureDetails: React.FC<{ reason: string; isPoolFailure: boolean }> = ({
 // Component for stuck deployments (initiated but not executed)
 const StuckDeploymentActions: React.FC<{ deployment: DeploymentRecord }> = ({ deployment }) => {
   const dispatch = useAppDispatch();
+  const { actor: lbryFunActor } = useLbryFun();
   const [isProcessing, setIsProcessing] = React.useState(false);
   
   const handleExecute = async () => {
+    if (!lbryFunActor) return;
     setIsProcessing(true);
     try {
-      await dispatch(executeTokenDeployment(deployment.id.toString()));
+      await dispatch(executeTokenDeployment({ actor: lbryFunActor, deploymentId: deployment.id.toString() }));
     } catch (error) {
       console.error('Failed to execute deployment:', error);
     } finally {
@@ -147,9 +150,10 @@ const StuckDeploymentActions: React.FC<{ deployment: DeploymentRecord }> = ({ de
   };
   
   const handleCancel = async () => {
+    if (!lbryFunActor) return;
     setIsProcessing(true);
     try {
-      await dispatch(recoverDeployment());
+      await dispatch(recoverDeployment({ actor: lbryFunActor }));
     } catch (error) {
       console.error('Failed to cancel deployment:', error);
     } finally {

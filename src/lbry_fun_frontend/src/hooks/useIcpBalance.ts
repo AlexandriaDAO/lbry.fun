@@ -3,6 +3,7 @@ import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
 import getIcpBal from '@/features/icp-ledger/thunks/getIcpBal';
 import { RootState } from '@/store';
+import { useIcpLedger } from '@/hooks/actors';
 
 const BALANCE_STALE_TIME = 30000; // 30 seconds
 
@@ -16,12 +17,13 @@ export const useIcpBalance = () => {
   const dispatch = useAppDispatch();
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
   const { accountBalance, loading, error } = useAppSelector((state: RootState) => state.icpLedger);
+  const { actor: icpLedgerActor } = useIcpLedger();
   
   // Track when balance was last fetched
   const lastFetchTime = useRef<number>(0);
   
   useEffect(() => {
-    if (!isAuthenticated || !principal) {
+    if (!isAuthenticated || !principal || !icpLedgerActor) {
       return;
     }
     
@@ -38,9 +40,9 @@ export const useIcpBalance = () => {
     
     if (shouldFetch && !loading) {
       lastFetchTime.current = now;
-      dispatch(getIcpBal(principal));
+      dispatch(getIcpBal({ actor: icpLedgerActor, account: principal }));
     }
-  }, [isAuthenticated, principal, dispatch, loading]);
+  }, [isAuthenticated, principal, dispatch, loading, icpLedgerActor]);
   
   return {
     balance: accountBalance,

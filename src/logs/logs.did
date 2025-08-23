@@ -9,7 +9,6 @@ type Log = record {
   total_primary_staked : nat;
   time : nat64;
   staker_count : nat64;
-  icp_in_lp_treasury : nat64;
   total_secondary_burned : nat64;
   secondary_token_supply : nat;
   primary_token_supply : nat;

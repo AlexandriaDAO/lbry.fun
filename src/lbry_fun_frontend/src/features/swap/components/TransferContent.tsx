@@ -8,6 +8,7 @@ import { balanceThunks } from "../thunks/balanceThunks";
 import { analyticsThunks } from "../thunks/analyticsThunks";
 import transferICP from "@/features/icp-ledger/thunks/transferICP";
 import getIcpBal from "@/features/icp-ledger/thunks/getIcpBal";
+import { useIcpLedger } from "@/hooks/actors";
 
 // Destructure for easier access
 const { transferPrimary, transferSecondary } = tradingThunks;
@@ -23,6 +24,7 @@ import { icp_fee } from "@/utils/utils";
 const TransferContent: React.FC = () => {
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState("send");
+  const { actor: icpLedgerActor } = useIcpLedger();
   
   // Redux state
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
@@ -74,6 +76,13 @@ const TransferContent: React.FC = () => {
     setActiveTab(tab);
   }, []);
 
+  const handleMax = useCallback(() => {
+    const balance = Number(getBalance());
+    const fee = Number(getFee());
+    const maxAmount = Math.max(0, balance - fee);
+    setAmount(maxAmount.toFixed(8).replace(/\.?0+$/, ''));
+  }, [selectedToken, icpLedger.accountBalance, primary.primaryBal, swap.secondaryBalance, primary.primaryFee, swap.secondaryFee]);
+
   const handleSend = useCallback(() => {
     if (!validatePrincipal(destinationPrincipal)) return;
     if (!amount || Number(amount) <= 0) {
@@ -84,13 +93,22 @@ const TransferContent: React.FC = () => {
     showLoading("TRANSFER IN PROGRESS", "PROCESSING TRANSACTION...");
 
     if (selectedToken === "ICP") {
-      dispatch(transferICP({ to: destinationPrincipal, amount }));
+      if (!icpLedgerActor) {
+        showError("ERROR", "ICP LEDGER NOT CONNECTED");
+        return;
+      }
+      dispatch(transferICP({ 
+        actor: icpLedgerActor,
+        amount, 
+        destination: destinationPrincipal, 
+        accountType: "principal" 
+      }));
     } else if (selectedToken === swap.activeSwapPool?.[1]?.primary_token_symbol) {
       dispatch(transferPrimary({ destination: destinationPrincipal, amount }));
     } else if (selectedToken === swap.activeSwapPool?.[1]?.secondary_token_symbol) {
       dispatch(transferSecondary({ to: destinationPrincipal, amount }));
     }
-  }, [validatePrincipal, destinationPrincipal, amount, selectedToken, swap.activeSwapPool, dispatch, showLoading]);
+  }, [validatePrincipal, destinationPrincipal, amount, selectedToken, swap.activeSwapPool, dispatch, showLoading, showError, icpLedgerActor]);
 
   // Handle transfer operation state changes
   React.useEffect(() => {
@@ -105,8 +123,8 @@ const TransferContent: React.FC = () => {
       setDestinationPrincipal("");
       
       // Refresh balances after successful transfer
-      if (principal) {
-        dispatch(getIcpBal(principal));
+      if (principal && icpLedgerActor) {
+        dispatch(getIcpBal({ actor: icpLedgerActor, account: principal }));
         if (swap.activeSwapPool) {
           dispatch(getPrimaryBalance(principal));
           dispatch(getSecondaryBalance(principal));
@@ -197,7 +215,15 @@ const TransferContent: React.FC = () => {
         <div className="space-y-1">
           <div className="flex justify-between items-center">
             <span className="text-gray-400 text-xs text-xs">Balance:</span>
-            <span className="text-white text-sm text-xs">{getBalance()} {selectedToken}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-white text-sm text-xs">{getBalance()} {selectedToken}</span>
+              <button 
+                onClick={handleMax}
+                className="text-gray-400 hover:text-lime-500 text-xs font-mono transition-colors"
+              >
+                [MAX]
+              </button>
+            </div>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-gray-400 text-xs text-xs">Fee:</span>

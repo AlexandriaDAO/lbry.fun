@@ -5,6 +5,7 @@ import { RootState } from '@/store';
 import { performanceMonitor } from '../utils/performanceMonitor';
 import { setIsLoadingCriticalData, setIsLoadingSecondaryData } from '../swapSlice';
 import { useIcpBalance } from '@/hooks/useIcpBalance';
+import { useIcpLedger } from '@/hooks/actors';
 
 // Import thunks for data fetching
 import { stakingThunks } from '../thunks/stakingThunks';
@@ -39,6 +40,7 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
   const dispatch = useAppDispatch();
   const { activeSwapPool, isLoadingCriticalData, isLoadingSecondaryData } = useAppSelector((state: RootState) => state.swap);
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
+  const { actor: icpLedgerActor } = useIcpLedger();
   
   // Use the optimized ICP balance hook
   useIcpBalance();
@@ -62,7 +64,7 @@ export const useSwapDataLoader = (): UseSwapDataLoaderReturn => {
         dispatch(getPrimaryFee()).unwrap(),
         dispatch(getIcpPrice()).unwrap(),
         dispatch(getPrimaryPrice()).unwrap(), // Get primary token price from Kongswap
-        dispatch(getCanisterBal()).unwrap(), // Needed for burn calculations
+        icpLedgerActor ? dispatch(getCanisterBal({ actor: icpLedgerActor })).unwrap() : Promise.resolve(), // Needed for burn calculations
         dispatch(getCanisterArchivedBalance()).unwrap(), // Also needed for burn calculations
       ];
       

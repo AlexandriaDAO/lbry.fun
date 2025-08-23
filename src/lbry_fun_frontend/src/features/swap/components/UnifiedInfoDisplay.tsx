@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Principal } from '@dfinity/principal';
-import { getLbryFunActor } from '@/features/auth/utils/authUtils';
 import { toast } from 'sonner';
+import { useLbryFun } from '@/hooks/actors';
 import { useAppSelector } from "@/store/hooks/useAppSelector";
 import { CanisterLogs } from "./CanisterLogs";
 import CopyHelper from "./CopyHelper";
@@ -28,6 +28,7 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
     canisterId,
     showDeveloperInfo = false
 }) => {
+    const { actor: lbryFunActor } = useLbryFun();
     const [cycles, setCycles] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -51,9 +52,11 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
                 }
                 try {
                     setLoading(true);
-                    const actor = await getLbryFunActor();
+                    if (!lbryFunActor) {
+                        throw new Error('LbryFun actor not available');
+                    }
                     const principal = Principal.fromText(canisterId);
-                    const result = await actor.get_canister_cycle_balance(principal);
+                    const result = await lbryFunActor.get_canister_cycle_balance(principal);
                     if ('Ok' in result) {
                         const cyclesValue = BigInt(result.Ok.toString());
                         setCycles(new Intl.NumberFormat().format(cyclesValue));
@@ -180,7 +183,10 @@ const UnifiedInfoDisplay: React.FC<UnifiedInfoDisplayProps> = ({
         ];
 
         try {
-            const actor = await getLbryFunActor();
+            if (!lbryFunActor) {
+                throw new Error('LbryFun actor not available');
+            }
+            const actor = lbryFunActor;
             const promises = canisterIds.map(async (id) => {
                 setCycleData(prev => ({ 
                     ...prev, 

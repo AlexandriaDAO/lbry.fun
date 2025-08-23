@@ -14,6 +14,7 @@ import { initiateTokenDeployment, fetchDeploymentHistory } from '../../thunk/dep
 import { CreateTokenParams } from '@/types/deployment';
 import { DeploymentStatusModal } from '../DeploymentStatusModal';
 import { setActiveDeploymentId } from '@/store/slices/deploymentSlice';
+import { useLbryFun, useIcpLedger } from '@/hooks/actors';
 
 import {
   TerminalInput,
@@ -50,6 +51,8 @@ interface FormErrors {
 const TerminalCreateToken: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { actor: lbryFunActor } = useLbryFun();
+  const { actor: icpLedgerActor } = useIcpLedger();
   const lbryFun = useAppSelector((state: RootState) => state.lbryFun);
   const { principal, isAuthenticated } = useAppSelector((state: RootState) => state.auth);
   const { activeDeploymentId } = useAppSelector((state: RootState) => state.deployment);
@@ -301,7 +304,7 @@ const TerminalCreateToken: React.FC = () => {
     };
     
     // Phase 1: Initiate deployment
-    const result = await dispatch(initiateTokenDeployment(params));
+    const result = lbryFunActor && icpLedgerActor ? await dispatch(initiateTokenDeployment({ params, lbryFunActor, icpLedgerActor })) : null;
     
     if (initiateTokenDeployment.fulfilled.match(result)) {
       // Successfully initiated, open modal to execute phase 2

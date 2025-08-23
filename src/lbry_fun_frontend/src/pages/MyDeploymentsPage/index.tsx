@@ -7,16 +7,20 @@ import { useDeploymentPolling } from './hooks/useDeploymentPolling';
 import { initializeDeployments, cleanupDeployment } from '@/features/token/thunk/deploymentThunks';
 import { RefreshCw } from 'lucide-react';
 import { selectAllDeployments } from '@/store/slices/deploymentSlice';
+import { useLbryFun } from '@/hooks/actors';
 
 export const MyDeploymentsPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const deployments = useAppSelector(selectAllDeployments);
   const { isPolling, togglePolling, refreshAll } = useDeploymentPolling();
+  const { actor: lbryFunActor } = useLbryFun();
 
   useEffect(() => {
-    dispatch(initializeDeployments());
-  }, [dispatch]);
+    if (lbryFunActor) {
+      dispatch(initializeDeployments({ actor: lbryFunActor }));
+    }
+  }, [dispatch, lbryFunActor]);
 
   const sortedDeployments = deployments.sort(
     (a, b) => Number(b.created_at) - Number(a.created_at)

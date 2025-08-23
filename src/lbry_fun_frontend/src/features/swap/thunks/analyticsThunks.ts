@@ -92,7 +92,6 @@ export const getAllLogs = createAsyncThunk(
           primaryTokenSupply: response.map(log => Number(log[1].primary_token_supply) / E8S),
           secondaryTokenSupply: response.map(log => Number(log[1].secondary_token_supply) / E8S),
           totalSecondaryBurned: response.map(log => Number(log[1].total_secondary_burned)), // This is a u64, probably no decimals
-          icpInLpTreasury: response.map(log => Number(log[1].icp_in_lp_treasury) / E8S),
           totalPrimaryStaked: response.map(log => Number(log[1].total_primary_staked) / E8S),
           stakerCount: response.map(log => Number(log[1].staker_count)),
           // APY is stored as a u128 representing the percentage with high precision
@@ -104,21 +103,8 @@ export const getAllLogs = createAsyncThunk(
             // Return as percentage value (will be displayed with % sign in UI)
             return apyValue;
           }),
-          // Calculate actual ICP rewards per token per hour based on treasury and distribution
-          hourlyIcpRewards: response.map((log, index) => {
-            const icpTreasury = Number(log[1].icp_in_lp_treasury) / E8S;
-            const totalStaked = Number(log[1].total_primary_staked) / E8S;
-            
-            if (totalStaked === 0 || icpTreasury === 0) return 0;
-            
-            // Distribution is 1% of treasury per interval
-            // Need to get the actual interval from configuration
-            // For now, assuming 1 hour interval (will need to fetch from canister config)
-            const distributionAmount = icpTreasury * 0.01;
-            const rewardPerToken = distributionAmount / totalStaked;
-            
-            return rewardPerToken;
-          }),
+          // Calculate placeholder rewards (will need different data source)
+          hourlyIcpRewards: response.map(() => 0),
         };
         
         return processedData;

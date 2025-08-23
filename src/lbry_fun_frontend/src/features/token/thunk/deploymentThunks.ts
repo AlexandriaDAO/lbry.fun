@@ -1,7 +1,10 @@
+import { ActorSubclass } from '@dfinity/agent';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { Principal } from '@dfinity/principal';
 import { RootState } from '@/store';
-import { getLbryFunActor, getIcpLedgerActor, getAuthClient, getPrincipal } from '@/features/auth/utils/authUtils';
+import { getAuthClient, getPrincipal } from '@/features/auth/utils/authUtils';
+import { _SERVICE as LBRY_SERVICE } from '../../../../../declarations/lbry_fun/lbry_fun.did';
+import { _SERVICE as ICP_SERVICE } from '../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did';
 import { 
   CreateTokenParams, 
   DeploymentRecord,
@@ -116,7 +119,11 @@ export const clearStaleDeployments = () => {
 // Initiate token deployment
 export const initiateTokenDeployment = createAsyncThunk(
   'deployment/initiate',
-  async (params: CreateTokenParams, { dispatch, rejectWithValue }) => {
+  async ({ params, lbryFunActor, icpLedgerActor }: { 
+    params: CreateTokenParams; 
+    lbryFunActor: ActorSubclass<LBRY_SERVICE>;
+    icpLedgerActor: ActorSubclass<ICP_SERVICE>;
+  }, { dispatch, rejectWithValue }) => {
     try {
       dispatch(setLoading(true));
       
@@ -125,7 +132,7 @@ export const initiateTokenDeployment = createAsyncThunk(
       const deploymentCost = BigInt(5_0000_0000); // 5 ICP in e8s
       const approvalAmount = deploymentCost + BigInt(10000); // Add fee
       
-      const actorIcpLedger = await getIcpLedgerActor();
+      const actorIcpLedger = icpLedgerActor;
       
       // Get user principal
       const authClient = await getAuthClient();
@@ -165,7 +172,7 @@ export const initiateTokenDeployment = createAsyncThunk(
         }
       }
       
-      const actor = await getLbryFunActor();
+      const actor = lbryFunActor;
       console.log('Initiating token deployment with params:', params);
       
       const result = await callWithRetry(() => 
@@ -215,9 +222,12 @@ export const initiateTokenDeployment = createAsyncThunk(
 // Execute token deployment
 export const executeTokenDeployment = createAsyncThunk(
   'deployment/execute',
-  async (deploymentId: string, { dispatch, getState, rejectWithValue }) => {
+  async ({ deploymentId, lbryFunActor }: {
+    deploymentId: string;
+    lbryFunActor: ActorSubclass<LBRY_SERVICE>;
+  }, { dispatch, getState, rejectWithValue }) => {
     try {
-      const actor = await getLbryFunActor();
+      const actor = lbryFunActor;
       console.log('Executing token deployment for ID:', deploymentId);
       
       const result = await callWithRetry(() => 
@@ -254,7 +264,7 @@ export const executeTokenDeployment = createAsyncThunk(
             if ('Ok' in tokenStatus && 'Live' in tokenStatus.Ok) {
               // Force a full refresh to sync all deployments
               setTimeout(() => {
-                dispatch(initializeDeployments());
+                dispatch(initializeDeployments({ lbryFunActor }));
               }, 1000);
             }
           } catch (error) {
@@ -307,8 +317,11 @@ export const executeTokenDeployment = createAsyncThunk(
 // Check deployment status once (no continuous polling)
 export const checkDeploymentOnce = createAsyncThunk(
   'deployment/checkOnce',
-  async (deploymentId: string, { dispatch, getState }) => {
-    const actor = await getLbryFunActor();
+  async ({ deploymentId, lbryFunActor }: {
+    deploymentId: string;
+    lbryFunActor: ActorSubclass<LBRY_SERVICE>;
+  }, { dispatch, getState }) => {
+    const actor = lbryFunActor;
     const state = getState() as RootState;
     const deployment = state.deployment.deployments[deploymentId];
     
@@ -469,7 +482,7 @@ export const checkDeploymentOnce = createAsyncThunk(
 // Initialize persisted deployments on app load
 export const initializeDeployments = createAsyncThunk(
   'deployment/initialize',
-  async (_, { dispatch }) => {
+  async ({ lbryFunActor }: { lbryFunActor: ActorSubclass<LBRY_SERVICE> }, { dispatch }) => {
     // One-time clear of old wrapped formats (can be removed after first deployment)
     const needsClear = localStorage.getItem('deployment_format_cleaned') !== 'v2';
     if (needsClear) {
@@ -495,7 +508,7 @@ export const initializeDeployments = createAsyncThunk(
     
     // Then sync with backend to get actual status
     try {
-      const actor = await getLbryFunActor();
+      const actor = lbryFunActor;
       const backendDeployments = await actor.get_my_deployments();
       const allTokens = await actor.get_all_token_record();
       const userPrincipal = await getPrincipal(await getAuthClient());
@@ -629,16 +642,16 @@ export const initializeDeployments = createAsyncThunk(
 // Recovery mechanism
 export const recoverDeployment = createAsyncThunk(
   'deployment/recover',
-  async (_, { dispatch, rejectWithValue }) => {
+  async ({ lbryFunActor }: { lbryFunActor: ActorSubclass<LBRY_SERVICE> }, { dispatch, rejectWithValue }) => {
     try {
-      const actor = await getLbryFunActor();
+      const actor = lbryFunActor;
       const result = await callWithRetry(() => 
         actor.recover_stuck_deployment()
       );
       
       if ('Ok' in result) {
         // Refresh deployments after recovery
-        dispatch(fetchDeploymentHistory());
+        dispatch(fetchDeploymentHistory({ lbryFunActor }));
         
         return result.Ok;
       } else {
@@ -659,9 +672,9 @@ export const recoverDeployment = createAsyncThunk(
 // Fetch deployment history (used for manual refresh)
 export const fetchDeploymentHistory = createAsyncThunk(
   'deployment/fetchHistory',
-  async (_, { dispatch }) => {
+  async ({ lbryFunActor }: { lbryFunActor: ActorSubclass<LBRY_SERVICE> }, { dispatch }) => {
     // Use the same logic as initializeDeployments to sync properly
-    dispatch(initializeDeployments());
+    dispatch(initializeDeployments({ lbryFunActor }));
   }
 );
 

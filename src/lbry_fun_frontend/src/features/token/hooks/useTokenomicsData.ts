@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import previewTokenomicsSchedule, { TokenomicsSchedule } from '../thunk/previewTokenomicsSchedule.thunk';
+import { useLbryFun } from '@/hooks/actors';
 
 interface UseTokenomicsDataParams {
   primaryMaxSupply: string;
@@ -23,6 +24,7 @@ interface UseTokenomicsDataResult {
  */
 export const useTokenomicsData = (params: UseTokenomicsDataParams): UseTokenomicsDataResult => {
   const dispatch = useAppDispatch();
+  const { actor: lbryFunActor } = useLbryFun();
   const [data, setData] = useState<TokenomicsSchedule | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,11 @@ export const useTokenomicsData = (params: UseTokenomicsDataParams): UseTokenomic
     }
 
     const fetchData = async () => {
+      if (!lbryFunActor) {
+        setError('Actor not available');
+        return;
+      }
+      
       setLoading(true);
       setError(null);
 
@@ -54,6 +61,7 @@ export const useTokenomicsData = (params: UseTokenomicsDataParams): UseTokenomic
         const tge_allocation = BigInt(params.tgeAllocation || '0') * E8S_MULTIPLIER;
 
         const result = await dispatch(previewTokenomicsSchedule({
+          actor: lbryFunActor,
           primary_per_threshold,
           max_primary_supply,
           initial_secondary_burn,
@@ -77,7 +85,8 @@ export const useTokenomicsData = (params: UseTokenomicsDataParams): UseTokenomic
     params.initialSecondaryBurn,
     params.halvingStep,
     params.initialRewardPerBurnUnit,
-    dispatch
+    dispatch,
+    lbryFunActor
   ]);
 
   return { data, loading, error };

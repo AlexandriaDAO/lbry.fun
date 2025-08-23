@@ -5,6 +5,7 @@ import { useAppDispatch } from '@/store/hooks/useAppDispatch';
 import previewTokenomicsSchedule, { TokenomicsSchedule } from '../thunk/previewTokenomicsSchedule.thunk';
 import { TailSpin } from 'react-loader-spinner';
 import { TokenomicsCurrentState } from '@/features/swap/thunks/tokenomicsThunks';
+import { useLbryFun } from '@/hooks/actors';
 
 interface UnifiedTokenomicsGraphsV2Props {
   // Direct parameters from form or tokenomics config
@@ -50,6 +51,7 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
   showMetricsOnly = false,
 }) => {
   const dispatch = useAppDispatch();
+  const { actor: lbryFunActor } = useLbryFun();
   const [scheduleData, setScheduleData] = useState<TokenomicsSchedule | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,11 +119,12 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
         return;
     }
 
-    if (primary_per_threshold > 0 && max_primary_supply > 0n && initial_secondary_burn > 0 && halving_step > 0) {
+    if (primary_per_threshold > 0 && max_primary_supply > 0n && initial_secondary_burn > 0 && halving_step > 0 && lbryFunActor) {
         setLoading(true);
         setError(null);
         
         dispatch(previewTokenomicsSchedule({
+            actor: lbryFunActor,
             primary_per_threshold,
             max_primary_supply,
             initial_secondary_burn,
@@ -140,7 +143,7 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
             setLoading(false);
         });
     }
-  }, [primaryMaxSupply, tgeAllocation, initialSecondaryBurn, halvingStep, initialRewardPerBurnUnit, thresholdMultiplier, dispatch, preCalculatedSchedule]);
+  }, [primaryMaxSupply, tgeAllocation, initialSecondaryBurn, halvingStep, initialRewardPerBurnUnit, thresholdMultiplier, dispatch, preCalculatedSchedule, lbryFunActor]);
 
   // Convert schedule data to graph format
   const graphData = useMemo(() => {

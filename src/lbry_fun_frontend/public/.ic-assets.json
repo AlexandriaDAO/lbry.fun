@@ -4,10 +4,10 @@
     "ignore": false
   },
   {
-    "match": ".well-known/ii-alternative-origins",
+    "match": ".well-known/ic-domains", 
     "headers": {
       "Access-Control-Allow-Origin": "*",
-      "Content-Type": "application/json"
+      "Content-Type": "text/plain"
     },
     "ignore": false
   }

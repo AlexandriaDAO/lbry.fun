@@ -7,6 +7,7 @@ import { _SERVICE as _SERVICEICPLEDGER } from "../../../../../../declarations/ic
 import AccessGuard from "./AccessGuard";
 import { useAccessState } from "../hooks/useAccessState";
 import { TerminalProgressBar, TerminalBoxHeader } from "../terminals/TerminalUtils";
+import { useIcpLedger } from "@/hooks/actors";
 
 import { Link } from "react-router";
 import { tradingThunks } from "../thunks/tradingThunks";
@@ -37,6 +38,7 @@ const SwapContent: React.FC = () => {
   const redeemStatus = useAppSelector((state: RootState) => state.swap.operations.redeem);
   const redeemError = useAppSelector((state: RootState) => state.swap.operationErrors.redeem);
   const { accessState, countdown, launchTime, isTokenLive } = useAccessState();
+  const { actor: icpLedgerActor } = useIcpLedger();
   const [amount, setAmount] = useState("");
   const [secondaryRatio, setSecondaryRatio] = useState(0.0);
   const [tentativeSecondary, setTentativeSecondary] = useState(Number);
@@ -59,12 +61,16 @@ const SwapContent: React.FC = () => {
     }
     
     let amountAfterFees = (Number(amount)).toFixed(4);
-    dispatch(swapSecondary({ amount: amountAfterFees, userPrincipal: principal, canisterId: swap.activeSwapPool?.[1].icp_swap_canister_id }));
+    if (!icpLedgerActor) {
+      showError("ERROR", "ICP Ledger actor not available");
+      return;
+    }
+    dispatch(swapSecondary({ actor: icpLedgerActor, amount: amountAfterFees, userPrincipal: principal, canisterId: swap.activeSwapPool?.[1].icp_swap_canister_id }));
     showLoading(
       "SWAP IN PROGRESS",
       `Processing ICP → ${swap.activeSwapPool?.[1].secondary_token_symbol}`
     );
-  }, [isAuthenticated, principal, swap.activeSwapPool, isTokenLive, amount, dispatch, showError, showLoading]);
+  }, [isAuthenticated, principal, swap.activeSwapPool, isTokenLive, amount, dispatch, showError, showLoading, icpLedgerActor]);
 
   const handleMaxIcp = useCallback(() => {
     const userBal = Math.max(

@@ -1,22 +1,26 @@
+import { ActorSubclass } from "@dfinity/agent";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  getIcpLedgerActor,
-  getLbryFunActor,
-} from "@/features/auth/utils/authUtils";
 import { ErrorMessage } from "@/features/swap/utils/errors";
 import { Principal } from "@dfinity/principal/lib/cjs";
+import { _SERVICE as LBRY_SERVICE } from "../../../../../declarations/lbry_fun/lbry_fun.did";
+import { _SERVICE as ICP_SERVICE } from "../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 
 // Define the thunk
 const createToken = createAsyncThunk<
   boolean, // This is the return type of the thunk's payload
-  { formData: any; userPrincipal: string },
+  { 
+    lbryFunActor: ActorSubclass<LBRY_SERVICE>;
+    icpLedgerActor: ActorSubclass<ICP_SERVICE>;
+    formData: any; 
+    userPrincipal: string 
+  },
   { rejectValue: ErrorMessage }
 >(
   "lbry_fun/createToken",
-  async ({ formData, userPrincipal }, { rejectWithValue }) => {
+  async ({ lbryFunActor, icpLedgerActor, formData, userPrincipal }, { rejectWithValue }) => {
     try {
-      const actorIcpLedger = await getIcpLedgerActor();
-      const actor = await getLbryFunActor();
+      const actor = lbryFunActor;
+      const actorIcpLedger = icpLedgerActor;
 
       let amountFormatApprove: bigint = BigInt(
         Number((Number(5) + 0.0001) * 10 ** 8).toFixed(0)

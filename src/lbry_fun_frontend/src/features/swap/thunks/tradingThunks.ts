@@ -4,11 +4,11 @@ import { Account } from "@dfinity/ledger-icp";
 import { ActorSubclass } from "@dfinity/agent";
 import { TokenConversionService } from "@/utils/TokenConversionService";
 import { TransferArg } from "../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
+import { _SERVICE as _SERVICELEDGER } from "../../../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
 import { _SERVICE as _SERVICESWAP } from "../../../../../declarations/icp_swap/icp_swap.did";
 import {
   getActorSwap,
   getICRCActor,
-  getIcpLedgerActor,
   validateActor,
 } from "@/features/auth/utils/authUtils";
 import { ErrorMessage, getErrorMessage } from "../utils/errors";
@@ -19,11 +19,11 @@ import { RootState } from "@/store";
 // Swap ICP for secondary tokens
 export const swapSecondary = createAsyncThunk<
   string,
-  { amount: string; userPrincipal: string; canisterId: string },
+  { actor: ActorSubclass<_SERVICELEDGER>; amount: string; userPrincipal: string; canisterId: string },
   { rejectValue: ErrorMessage }
 >(
   "icp_swap/swapSecondary",
-  async ({ amount, userPrincipal, canisterId }, { rejectWithValue }) => {
+  async ({ actor: actorIcpLedger, amount, userPrincipal, canisterId }, { rejectWithValue }) => {
     try {
       const actorSwap = await getActorSwap(canisterId);
       
@@ -34,8 +34,6 @@ export const swapSecondary = createAsyncThunk<
           message: "Please ensure you are authenticated." 
         });
       }
-      
-      const actorIcpLedger = await getIcpLedgerActor();
       
       // Validate ICP Ledger actor before using it
       if (!validateActor(actorIcpLedger, "ICP Ledger")) {
@@ -103,12 +101,12 @@ export const swapSecondary = createAsyncThunk<
 // Burn secondary tokens for primary tokens
 export const burnSecondary = createAsyncThunk<
   string,
-  { amount: string; userPrincipal: string },
+  { icpLedgerActor: ActorSubclass<_SERVICELEDGER>; amount: string; userPrincipal: string },
   { state: RootState; rejectValue: ErrorMessage }
 >(
   "icp_swap/burnSecondary",
   async (
-    { amount, userPrincipal },
+    { icpLedgerActor, amount, userPrincipal },
     { getState, dispatch, rejectWithValue }
   ) => {
     try {
@@ -195,7 +193,7 @@ export const burnSecondary = createAsyncThunk<
       // burn_secondary expects natural units, NOT e8s
       const result = await actorSwap.burn_secondary(amountNatural, []);
       if ("Ok" in result) {
-        dispatch(getCanisterBal());
+        dispatch(getCanisterBal({ actor: icpLedgerActor }));
         dispatch(balanceThunks.getCanisterArchivedBalance());
         return "success";
       } else if ("Err" in result) {

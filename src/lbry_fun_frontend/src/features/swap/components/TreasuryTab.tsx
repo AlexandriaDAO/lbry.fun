@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
-import { getLbryFunActor } from '@/features/auth/utils/authUtils';
 import { LoaderCircle, RefreshCw } from 'lucide-react';
+import { useLbryFun } from '@/hooks/actors';
 import { 
   formatE8sToICP, 
   formatDiscrepancy, 
@@ -38,6 +38,7 @@ interface TreasuryState {
 }
 
 const TreasuryTab: React.FC = () => {
+  const { actor: lbryFunActor } = useLbryFun();
   const { activeSwapPool, distributionInterval } = useAppSelector(state => state.swap);
   const [collectionMetrics, setCollectionMetrics] = useState<CollectionMetrics | null>(null);
   const [tokenReconciliation, setTokenReconciliation] = useState<ReconciliationStatus | null>(null);
@@ -73,8 +74,8 @@ const TreasuryTab: React.FC = () => {
         });
       
       // Get swap stats from lbry_fun canister for collection metrics
-      const lbryFunActor = await getLbryFunActor();
-      lbryFunActor.get_swap_stats()
+      if (lbryFunActor) {
+        lbryFunActor.get_swap_stats()
         .then(([totalBurned, lastSwapTime, lastSwapAmount]) => {
           // Convert to collection metrics format
           const metrics: CollectionMetrics = {
@@ -89,11 +90,10 @@ const TreasuryTab: React.FC = () => {
         })
         .catch(err => {
           console.error('Failed to fetch swap stats:', err);
-        })
-        .finally(() => {
-          setIsLoading(false);
         });
-        
+      }
+      
+      setIsLoading(false);
     } catch (err) {
       console.error('Failed to get actors:', err);
       setError('Failed to connect to backend');

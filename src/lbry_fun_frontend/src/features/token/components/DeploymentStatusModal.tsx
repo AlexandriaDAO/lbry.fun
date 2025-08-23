@@ -6,6 +6,7 @@ import {
   recoverDeployment
 } from '../thunk/deploymentThunks';
 import getTokenPools from '@/features/token/thunk/getTokenPools.thunk';
+import { useLbryFun } from '@/hooks/actors';
 import { selectDeploymentById, selectDeploymentUIState } from '@/store/slices/deploymentSlice';
 
 interface DeploymentStatusModalProps {
@@ -22,6 +23,7 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
   onSuccess
 }) => {
   const dispatch = useAppDispatch();
+  const { actor: lbryFunActor } = useLbryFun();
   // Store the deployment ID locally so it doesn't get lost when activeDeploymentId is cleared
   const [localDeploymentId, setLocalDeploymentId] = useState<string | null>(null);
   
@@ -66,7 +68,7 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
   useEffect(() => {
     if (deployment && uiState?.status === 'live' && deployment.token_id?.[0]) {
       // Refresh token pools to ensure the new token is in the list
-      dispatch(getTokenPools()).then(() => {
+      lbryFunActor && dispatch(getTokenPools({ actor: lbryFunActor })).then(() => {
         // Navigate after pools are refreshed
         onSuccess(deployment.token_id[0]);
       });
@@ -77,7 +79,7 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
     if (!effectiveDeploymentId) return;
     
     console.log('DeploymentStatusModal: Starting phase 2 execution for deployment:', effectiveDeploymentId);
-    const result = await dispatch(executeTokenDeployment(effectiveDeploymentId));
+    const result = lbryFunActor ? await dispatch(executeTokenDeployment({ deploymentId: effectiveDeploymentId, lbryFunActor })) : null;
     
     if (executeTokenDeployment.rejected.match(result)) {
       console.error('DeploymentStatusModal: Execution failed:', result.payload);
@@ -91,7 +93,7 @@ export const DeploymentStatusModal: React.FC<DeploymentStatusModalProps> = ({
   };
   
   const handleRecover = async () => {
-    const result = await dispatch(recoverDeployment());
+    const result = lbryFunActor ? await dispatch(recoverDeployment({ lbryFunActor })) : null;
     
     if (recoverDeployment.fulfilled.match(result)) {
       setLocalError('');

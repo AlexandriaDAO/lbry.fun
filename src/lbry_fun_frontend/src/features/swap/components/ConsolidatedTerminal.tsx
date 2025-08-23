@@ -12,6 +12,7 @@ import { RootState } from "@/store";
 import { balanceThunks } from "../thunks/balanceThunks";
 import { TerminalExpander } from "./TerminalExpander";
 import { useRefreshableData } from "@/hooks/useRefreshableData";
+import { useIcpLedger } from "@/hooks/actors";
 
 // Destructure for easier access
 const { getPrimaryBalance, getSecondaryBalance } = balanceThunks;
@@ -30,20 +31,21 @@ const ConsolidatedTerminal: React.FC = () => {
         accountBalanceUSD: icpLedgerAccountBalanceUSD,
         transferSuccess: icpLedgerTransferSuccess
     } = useAppSelector((state: RootState) => state.icpLedger);
+    const { actor: icpLedgerActor } = useIcpLedger();
     
     const [formattedPrincipal, setFormattedPrincipal] = useState("");
     const [formattedAccountId, setFormattedAccountId] = useState("");
 
     // Memoize the batch fetcher
     const fetchAllBalances = useCallback(async () => {
-        if (!isAuthenticated || !principal) return;
+        if (!isAuthenticated || !principal || !icpLedgerActor) return;
         await Promise.all([
-            dispatch(getIcpBal(principal)),
+            dispatch(getIcpBal({ actor: icpLedgerActor, account: principal })),
             dispatch(getPrimaryBalance(principal)),
             dispatch(getSecondaryBalance(principal)),
             dispatch(balanceThunks.getPrimaryPrice())
         ]);
-    }, [dispatch, principal, isAuthenticated]);
+    }, [dispatch, principal, isAuthenticated, icpLedgerActor]);
     
     const { refresh: refreshAll, isRefreshing } = useRefreshableData(
         'wallet-assets',
@@ -58,13 +60,13 @@ const ConsolidatedTerminal: React.FC = () => {
     }, [isAuthenticated, principal, dispatch]);
 
     useEffect(() => {
-        if (!isAuthenticated || !principal) return;
+        if (!isAuthenticated || !principal || !icpLedgerActor) return;
         // Refresh ICP balance when any operation succeeds
         const anyOperationSuccess = Object.values(operations).some(status => status === 'success');
         if (anyOperationSuccess || icpLedgerTransferSuccess === true) {
-            dispatch(getIcpBal(principal));
+            dispatch(getIcpBal({ actor: icpLedgerActor, account: principal }));
         }
-    }, [isAuthenticated, principal, operations, icpLedgerTransferSuccess, dispatch]);
+    }, [isAuthenticated, principal, operations, icpLedgerTransferSuccess, dispatch, icpLedgerActor]);
 
     useEffect(() => {
         if (!isAuthenticated || !principal || !icpLedgerAccountId) return;

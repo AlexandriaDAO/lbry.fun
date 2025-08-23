@@ -59,7 +59,6 @@ pub struct Log {
     pub primary_token_supply: Nat,
     pub secondary_token_supply: Nat,
     pub total_secondary_burned: u64,
-    pub icp_in_lp_treasury: u64,
     pub total_primary_staked: Nat,
     pub staker_count: u64,
     pub apy: u128,

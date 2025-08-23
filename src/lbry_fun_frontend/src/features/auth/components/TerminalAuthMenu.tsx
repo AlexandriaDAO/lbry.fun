@@ -9,11 +9,13 @@ import { faPowerOff, faWallet, faRotate } from '@fortawesome/free-solid-svg-icon
 import { useIcpBalance } from '@/hooks/useIcpBalance';
 import { useRefreshableData } from '@/hooks/useRefreshableData';
 import getIcpBal from '@/features/icp-ledger/thunks/getIcpBal';
+import { useIcpLedger } from '@/hooks/actors';
 
 const TerminalAuthMenu: React.FC = () => {
   const logout = useLogout();
   const dispatch = useAppDispatch();
   const [showAuthModal, setShowAuthModal] = React.useState(false);
+  const { actor: icpLedgerActor } = useIcpLedger();
   
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const principal = useAppSelector((state) => state.auth.principal);
@@ -21,8 +23,8 @@ const TerminalAuthMenu: React.FC = () => {
   
   // Memoize fetcher to prevent recreating every render
   const fetchBalance = useCallback(
-    () => dispatch(getIcpBal(principal!)),
-    [dispatch, principal]
+    () => icpLedgerActor && principal ? dispatch(getIcpBal({ actor: icpLedgerActor, account: principal })) : Promise.resolve(),
+    [dispatch, principal, icpLedgerActor]
   );
   
   const { isRefreshing, refresh } = useRefreshableData(

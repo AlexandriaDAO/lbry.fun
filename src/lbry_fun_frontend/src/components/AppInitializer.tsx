@@ -6,17 +6,21 @@ import { initializeDeployments } from '@/features/token/thunk/deploymentThunks';
 import { clearAuth, setAuthInitialized } from '@/features/auth/authSlice';
 import { useInternetIdentity } from 'ic-use-internet-identity';
 import { clearAuthCaches } from '@/features/auth/utils/authUtils';
+import { useLbryFun } from '@/hooks/actors';
 
 const AppInitializer: React.FC = () => {
   const dispatch = useAppDispatch();
   const { identity, isInitializing } = useInternetIdentity();
+  const { actor: lbryFunActor } = useLbryFun();
   const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
   const principal = useAppSelector(state => state.auth.principal);
   
   useEffect(() => {
     // Initialize persisted deployments on app load
-    dispatch(initializeDeployments());
-  }, [dispatch]);
+    if (lbryFunActor) {
+      dispatch(initializeDeployments({ lbryFunActor }));
+    }
+  }, [dispatch, lbryFunActor]);
   
   // Validate session state on mount and when identity changes
   useEffect(() => {

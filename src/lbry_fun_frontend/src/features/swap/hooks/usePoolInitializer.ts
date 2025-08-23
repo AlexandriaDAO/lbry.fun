@@ -5,6 +5,7 @@ import { useAppSelector } from '@/store/hooks/useAppSelector';
 import { RootState } from '@/store';
 import { setActiveSwapPool } from '../store/swapSlice';
 import getTokenPools from '@/features/token/thunk/getTokenPools.thunk';
+import { useLbryFun } from '@/hooks/actors';
 import getPoolsTvl from '@/features/token/thunk/getPoolsTvl.thunk';
 import fetchTokenLogosForPool from '@/features/token/thunk/fetchTokenLogosForPoolThunk';
 import { fetchTokenomicsCurrentState } from '../thunks/tokenomicsThunks';
@@ -29,6 +30,7 @@ export const usePoolInitializer = (): UsePoolInitializerReturn => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const idFromUrl = searchParams.get("id");
+  const { actor: lbryFunActor } = useLbryFun();
   
   const { activeSwapPool } = useAppSelector((state: RootState) => state.swap);
   const { tokenPools, loading: lbryFunLoading, error: lbryFunError, success: lbryFunSuccess } = 
@@ -39,11 +41,11 @@ export const usePoolInitializer = (): UsePoolInitializerReturn => {
 
   // Load token pools if not already loaded
   useEffect(() => {
-    if (tokenPools.length === 0 && !lbryFunLoading && !lbryFunError) {
+    if (tokenPools.length === 0 && !lbryFunLoading && !lbryFunError && lbryFunActor) {
       setPoolInitState(PoolInitState.LOADING_POOLS);
-      dispatch(getTokenPools());
+      dispatch(getTokenPools({ actor: lbryFunActor }));
     }
-  }, [dispatch, tokenPools.length, lbryFunLoading, lbryFunError]);
+  }, [dispatch, tokenPools.length, lbryFunLoading, lbryFunError, lbryFunActor]);
 
   // Handle pool initialization based on URL
   useEffect(() => {

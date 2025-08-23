@@ -1,17 +1,16 @@
+import { ActorSubclass } from "@dfinity/agent";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getLbryFunActor } from "@/features/auth/utils/authUtils";
 import { ErrorMessage } from "@/features/swap/utils/errors";
-import { TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
+import { _SERVICE, TokenRecord } from "../../../../../declarations/lbry_fun/lbry_fun.did";
 import { TokenRecordStringified } from "./getTokenPools.thunk";
 import fetchTokenLogosForPool from "./fetchTokenLogosForPoolThunk";
 
 const getLiveTokens = createAsyncThunk<
   [string, TokenRecordStringified][],
-  void,
+  { actor: ActorSubclass<_SERVICE> },
   { rejectValue: ErrorMessage; dispatch: any }
->("lbry_fun/getLiveTokens", async (_, { rejectWithValue, dispatch }) => {
+>("lbry_fun/getLiveTokens", async ({ actor }, { rejectWithValue, dispatch }) => {
   try {
-    const actor = await getLbryFunActor();
     const result = await actor.get_live(); // returns [bigint, TokenRecord][]
     // Convert every BigInt to string
     const safeResult: [string, TokenRecordStringified][] = result.map(([poolId, record]) => [

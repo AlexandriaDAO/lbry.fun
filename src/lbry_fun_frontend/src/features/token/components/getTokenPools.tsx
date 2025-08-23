@@ -6,12 +6,15 @@ import getPoolsTvl from "../thunk/getPoolsTvl.thunk";
 import getIcpPrice from "@/features/icp-ledger/thunks/getIcpPrice";
 import { setActiveTokenView } from '@/store/slices/uiSlice';
 import TerminalPoolCard from './terminal/TerminalPoolCard';
+import HowItWorksDropdown from './HowItWorksDropdown';
+import { useLbryFun } from '@/hooks/actors';
 
 
 const GetTokenPools = () => {
   const dispatch = useAppDispatch();
   const { tokenPools, loading, error, success, tvlData, tvlLoading } = useAppSelector((state) => state.lbryFun);
   const { icpPrice, icpPriceTimestamp } = useAppSelector((state) => state.icpLedger);
+  const { actor: lbryFunActor } = useLbryFun();
 
   // Fetch ICP price if not available or stale (older than 5 minutes)
   useEffect(() => {
@@ -22,10 +25,10 @@ const GetTokenPools = () => {
   }, [dispatch, icpPrice, icpPriceTimestamp]);
 
   useEffect(() => {
-    if (tokenPools.length === 0 && !loading && !error) {
-      dispatch(getTokenPools());
+    if (tokenPools.length === 0 && !loading && !error && lbryFunActor) {
+      dispatch(getTokenPools({ actor: lbryFunActor }));
     }
-  }, [dispatch, tokenPools.length, loading, error, success]);
+  }, [dispatch, tokenPools.length, loading, error, success, lbryFunActor]);
 
   // Fetch TVL data when token pools are loaded and ICP price is available
   useEffect(() => {
@@ -39,10 +42,13 @@ const GetTokenPools = () => {
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-6 opacity-100 transition-opacity duration-500">
-        <div className="flex items-center space-x-2">
-          <span className="text-pink-500 text-2xl">&gt;</span>
-          <span className="font-mono font-bold text-white mb-1 text-sm uppercase text-2xl">active_pools</span>
-          <span className="text-gray-400 text-xs text-lg">[{tokenPools?.length || 0} TOKENS]</span>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-pink-500 text-2xl">&gt;</span>
+            <span className="font-mono font-bold text-white mb-1 text-sm uppercase text-2xl">active_pools</span>
+            <span className="text-gray-400 text-xs text-lg">[{tokenPools?.length || 0} TOKENS]</span>
+          </div>
+          <HowItWorksDropdown />
         </div>
         <button 
           className="bg-black border border-lime-500 text-lime-500 hover:bg-lime-500 hover:text-black px-3 py-1 font-mono text-sm transition-colors uppercase group"
