@@ -256,7 +256,7 @@ const TransferContent: React.FC = () => {
         <div className="break-all text-sm font-mono text-white mb-3">
           {principal || "Not connected"}
         </div>
-        {principal && <CopyHelper text={principal} />}
+        {principal && <CopyHelper account={principal} />}
       </div>
 
       {principal && (
