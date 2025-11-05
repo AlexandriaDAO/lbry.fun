@@ -35,10 +35,10 @@ module.exports = {
     })],
     splitChunks: {
       chunks: 'all',
-      maxInitialRequests: 6, // Allow more initial requests for better parallelization
-      maxAsyncRequests: 30, // Allow more async requests
-      minSize: 20000, // Slightly larger minimum size to prevent tiny chunks
-      maxSize: 244000, // Maximum size to prevent huge chunks
+      maxInitialRequests: 8, // Reasonable for HTTP/2
+      maxAsyncRequests: 15, // Reduced from 30 to prevent excessive chunking
+      minSize: 30000, // 30KB minimum to prevent tiny chunks
+      maxSize: 512000, // 512KB - better balance for HTTP/2
       cacheGroups: {
         // Critical path modules needed for initial render
         critical: {

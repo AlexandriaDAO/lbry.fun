@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback } from "react";
+import React, { ReactNode, useCallback, useMemo } from "react";
 import { type DelegationIdentity, isDelegationValid } from "@dfinity/identity";
 import {
   ActorProvider as IcUseActorProvider,
@@ -69,7 +69,8 @@ export default function ActorProvider({ children }: ActorProviderProps) {
     return data.error;
   }, []);
 
-  const httpAgentOptions = { host: getIcHost() };
+  // Memoize httpAgentOptions to prevent actor re-initialization on every render
+  const httpAgentOptions = useMemo(() => ({ host: getIcHost() }), []);
 
   return (
     <IcUseActorProvider
