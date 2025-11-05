@@ -48,7 +48,7 @@ export const registerIdentityGetter = (getter: () => Identity | undefined) => {
 };
 
 // Get current identity from ic-use-internet-identity
-const getCurrentIdentity = (): Identity | undefined => {
+export const getCurrentIdentity = (): Identity | undefined => {
   if (!getIdentityFunc) {
     console.warn('[authUtils] Identity getter not registered');
     return undefined;
