@@ -1,15 +1,14 @@
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
 import { IDL } from '@dfinity/candid';
+import { getIcHost } from './getIcHost';
 
 export const createActor = async (
   canisterId: string | Principal,
   idlFactory: IDL.InterfaceFactory
 ) => {
   const agent = new HttpAgent({
-    host: process.env.DFX_NETWORK === 'ic' 
-      ? 'https://ic0.app' 
-      : 'http://localhost:4943',
+    host: getIcHost(),
   });
 
   // Fetch root key for local development
@@ -17,8 +16,8 @@ export const createActor = async (
     await agent.fetchRootKey();
   }
 
-  const canisterPrincipal = typeof canisterId === 'string' 
-    ? Principal.fromText(canisterId) 
+  const canisterPrincipal = typeof canisterId === 'string'
+    ? Principal.fromText(canisterId)
     : canisterId;
 
   return Actor.createActor(idlFactory, {

@@ -9,6 +9,7 @@ import { useIdentity } from "@/hooks/useIdentity";
 import { TokenomicsContext } from "@/contexts/actors";
 import { useActorErrorHandler } from "@/hooks/actors";
 import { AnonymousIdentity } from "@dfinity/agent";
+import { getIcHost } from "@/utils/getIcHost";
 
 export default function TokenomicsActor({ children }: { children: ReactNode }) {
     const { identity, clear, isInitializing, isLoggingIn } = useIdentity();
@@ -23,6 +24,7 @@ export default function TokenomicsActor({ children }: { children: ReactNode }) {
 			context={TokenomicsContext}
 			identity={identity || new AnonymousIdentity()}
 			idlFactory={idlFactory}
+			httpAgentOptions={{ host: getIcHost() }}
 			onRequest={handleRequest}
 			onRequestError={(error) => errorToast(error)}
 			onResponse={handleResponse}

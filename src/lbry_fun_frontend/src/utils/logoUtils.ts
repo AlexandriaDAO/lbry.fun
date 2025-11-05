@@ -2,6 +2,7 @@ import { Principal } from "@dfinity/principal";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { idlFactory as icrc1IdlFactory } from "../../../declarations/icp_ledger_canister/icp_ledger_canister.did.js";
 import type { Value as Icrc1Value } from "../../../declarations/icp_ledger_canister/icp_ledger_canister.did";
+import { getIcHost } from "./getIcHost";
 
 export const fetchIcrc1Logo = async (tokenIdString: string): Promise<string | undefined> => {
     try {
@@ -9,12 +10,9 @@ export const fetchIcrc1Logo = async (tokenIdString: string): Promise<string | un
             return undefined;
         }
 
-        const network = process.env.DFX_NETWORK || process.env.REACT_APP_DFX_NETWORK;
-        const localReplicaHost = network === 'local' ? 'http://localhost:4943' : 'https://ic0.app';
+        const agent = new HttpAgent({ host: getIcHost() });
 
-        const agent = new HttpAgent({ host: localReplicaHost });
-
-        if (network === 'local') {
+        if (process.env.DFX_NETWORK !== 'ic') {
             await agent.fetchRootKey().catch(err => {
                 console.warn("Unable to fetch root key for local replica. Swallowing error.", err);
             });

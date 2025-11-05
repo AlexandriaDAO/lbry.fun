@@ -1,10 +1,11 @@
 import { Actor, HttpAgent, ActorSubclass } from '@dfinity/agent';
 import { idlFactory as logsIdlFactory } from '../../../declarations/logs/logs.did.js';
 import { _SERVICE as LogsService } from '../../../declarations/logs/logs.did';
+import { getIcHost } from '@/utils/getIcHost';
 
 export const createLogsActor = async (canisterId: string): Promise<ActorSubclass<LogsService>> => {
   const agent = new HttpAgent({
-    host: process.env.DFX_NETWORK === "ic" ? "https://ic0.app" : "http://localhost:4943"
+    host: getIcHost()
   });
 
   // Critical for local development - must await and handle errors

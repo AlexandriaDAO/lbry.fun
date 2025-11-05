@@ -1,5 +1,6 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
+import { getIcHost } from "@/utils/getIcHost";
 
 // Kong Backend Canister ID (same for local and mainnet)
 export const KONG_BACKEND_CANISTER_ID = process.env.REACT_APP_KONG_BACKEND_CANISTER_ID || "2ipq2-uqaaa-aaaar-qailq-cai";
@@ -83,12 +84,9 @@ export class KongswapService {
   private static async getActor() {
     if (this.actor) return this.actor;
 
-    const network = process.env.DFX_NETWORK || process.env.REACT_APP_DFX_NETWORK;
-    const localReplicaHost = network === 'local' ? 'http://localhost:4943' : 'https://ic0.app';
+    const agent = new HttpAgent({ host: getIcHost() });
 
-    const agent = new HttpAgent({ host: localReplicaHost });
-
-    if (network === 'local') {
+    if (process.env.DFX_NETWORK !== 'ic') {
       await agent.fetchRootKey().catch(err => {
         console.warn("Unable to fetch root key. Swallowing error.", err);
       });
