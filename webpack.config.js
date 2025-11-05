@@ -23,7 +23,7 @@ module.exports = {
   entry: {
     index: path.join(__dirname, "src", frontendDirectory, "src", "index.tsx"),
   },
-  devtool: isDevelopment ? "source-map" : false,
+  devtool: isDevelopment ? "eval-cheap-module-source-map" : false,
   optimization: {
     minimize: !isDevelopment,
     minimizer: [new TerserPlugin({
@@ -35,48 +35,34 @@ module.exports = {
     })],
     splitChunks: {
       chunks: 'all',
-      maxInitialRequests: 6, // Allow more initial requests for better parallelization
-      maxAsyncRequests: 30, // Allow more async requests
-      minSize: 20000, // Slightly larger minimum size to prevent tiny chunks
-      maxSize: 244000, // Maximum size to prevent huge chunks
+      maxInitialRequests: 3, // Reduced from 6 for fewer initial HTTP requests
       cacheGroups: {
-        // Critical path modules needed for initial render
-        critical: {
-          test: /[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|redux|react-redux|@reduxjs\/toolkit)[\\/]/,
-          name: 'critical',
-          chunks: 'initial', // Only include in initial chunks
-          priority: 60,
+        // Combine React and critical UI libraries
+        reactVendor: {
+          test: /[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|react-redux|@reduxjs\/toolkit)[\\/]/,
+          name: 'react-vendor',
+          priority: 40,
           enforce: true,
         },
-        // TensorFlow and related packages
-        tensorflow: {
-          test: /[\\/]node_modules[\\/](@tensorflow|tfjs-core|tfjs-backend-.*|tfjs-converter)[\\/]/,
-          name: 'tensorflow',
-          chunks: 'async', // Only load asynchronously
-          priority: 50,
-          enforce: true
+        // Heavy async libraries (TensorFlow, NSFWJS)
+        heavyLibs: {
+          test: /[\\/]node_modules[\\/](@tensorflow|tfjs-core|tfjs-backend-.*|tfjs-converter|nsfwjs)[\\/]/,
+          name: 'heavy-libs',
+          chunks: 'async',
+          priority: 30,
+          enforce: true,
         },
-        // NSFWJS package
-        nsfwjs: {
-          test: /[\\/]node_modules[\\/]nsfwjs[\\/]/,
-          name: 'nsfwjs',
-          chunks: 'async', // Only load asynchronously
-          priority: 40,
-          enforce: true
-        },
-        // Common vendor modules
-        vendors: {
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          chunks: 'all',
+        // IC and crypto dependencies
+        icVendor: {
+          test: /[\\/]node_modules[\\/](@dfinity|@noble|@scure)[\\/]/,
+          name: 'ic-vendor',
           priority: 20,
-          reuseExistingChunk: true,
+          enforce: true,
         },
-        // Common application code
-        commons: {
-          name: 'commons',
-          minChunks: 2, // Used in at least 2 chunks
-          chunks: 'initial',
+        // Other vendor code
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendor',
           priority: 10,
           reuseExistingChunk: true,
         },

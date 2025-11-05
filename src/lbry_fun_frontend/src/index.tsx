@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import WebFont from "webfontloader";
 import App from "./App";
+
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Create a loading indicator
 const loadingIndicator = document.createElement('div');
@@ -57,6 +58,10 @@ function removeLoadingIndicator() {
       if (indicator.parentNode) {
         indicator.parentNode.removeChild(indicator);
       }
+      // Only log in development
+      if (isDevelopment) {
+        console.log('Loading indicator removed');
+      }
     }, 300);
   }
 }
@@ -75,15 +80,6 @@ const AppWithLoadingHandler = () => {
   
   return <App />;
 };
-
-WebFont.load({
-	google: {
-		families: ["Syne", "Roboto Condensed"],
-	},
-	active: () => {
-		console.log("Fonts loaded");
-	}
-});
 
 const container = document.getElementById("root");
 if (container) {
