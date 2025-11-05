@@ -58,3 +58,6 @@ test_schedule
 # Temporary analysis scripts (if they're generated/temporary)
 analyze_*.js
 verify_*.js
+
+# Token analysis reports
+TOKEN_ANALYSIS_REPORT*.md
