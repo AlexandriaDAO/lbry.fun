@@ -1,10 +1,19 @@
 #!/bin/bash
 
-# Get the directory of the current script
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# ⚠️  MUST RUN FROM PROJECT ROOT: ~/alexandria/lbryfun or ~/alexandria/lbryfun-actor-management-fix
+# This script is designed to be copy-pasted into your terminal for manual password entry
 
-# Change to the project root directory (assuming scripts is one level below root)
-cd "$SCRIPT_DIR/.." || exit 1
+# Validate we're in the correct directory
+if [ ! -f "dfx.json" ]; then
+    echo "❌ Error: dfx.json not found. Please run from project root:"
+    echo "   cd ~/alexandria/lbryfun (or worktree)"
+    exit 1
+fi
+
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo "❌ Error: Not in a git repository"
+    exit 1
+fi
 
 # Detect if we're in a worktree
 REPO_ROOT=$(git rev-parse --show-toplevel)
