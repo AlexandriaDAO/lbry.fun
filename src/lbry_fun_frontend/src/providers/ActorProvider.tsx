@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { ReactNode, useCallback } from "react";
 import { type DelegationIdentity, isDelegationValid } from "@dfinity/identity";
 import {
-  authenticateAll,
-  ensureAllInitialized,
+  ActorProvider as IcUseActorProvider,
   type InterceptorErrorData,
   type InterceptorRequestData,
   type InterceptorResponseData,
@@ -11,26 +10,29 @@ import {
 import { getIdentity, useIdentity } from "@/hooks/useIdentity";
 import { toast } from "sonner";
 import {
-  useLbryFun,
-  useIcpLedger,
-  useIcpSwap,
-  useTokenomics,
-} from "@/hooks/actors";
+  LbryFunContext,
+  IcpLedgerContext,
+  IcpSwapContext,
+  TokenomicsContext,
+} from "@/contexts/actors";
+import { idlFactory as lbryFunIdlFactory } from "../../../declarations/lbry_fun/lbry_fun.did.js";
+import { idlFactory as icpLedgerIdlFactory } from "../../../declarations/icp_ledger_canister/icp_ledger_canister.did.js";
+import { idlFactory as icpSwapIdlFactory } from "../../../declarations/icp_swap/icp_swap.did.js";
+import { idlFactory as tokenomicsIdlFactory } from "../../../declarations/tokenomics/tokenomics.did.js";
+import { getIcHost } from "@/utils/getIcHost";
 
-export default function ActorProvider() {
+interface ActorProviderProps {
+  children: ReactNode;
+}
+
+export default function ActorProvider({ children }: ActorProviderProps) {
   const { identity, clear } = useIdentity();
-
-  // Initialize actor hooks
-  const lbryFun = useLbryFun();
-  const icpLedger = useIcpLedger();
-  const icpSwap = useIcpSwap();
-  const tokenomics = useTokenomics();
 
   // Delegation validation interceptor
   const onRequest = useCallback(
     (data: InterceptorRequestData) => {
       const id = getIdentity();
-      console.log("[ActorProvider] onRequest", data.methodName, data.args);
+      console.log("[ActorProvider] onRequest", data.methodName);
 
       if (
         id &&
@@ -67,36 +69,57 @@ export default function ActorProvider() {
     return data.error;
   }, []);
 
-  const interceptors = useMemo(
-    () => ({
-      onRequest,
-      onResponse,
-      onRequestError,
-      onResponseError,
-    }),
-    [onRequest, onResponse, onRequestError, onResponseError]
+  const httpAgentOptions = { host: getIcHost() };
+
+  return (
+    <IcUseActorProvider
+      canisterId={process.env.CANISTER_ID_LBRY_FUN!}
+      context={LbryFunContext}
+      identity={identity}
+      idlFactory={lbryFunIdlFactory}
+      httpAgentOptions={httpAgentOptions}
+      onRequest={onRequest}
+      onResponse={onResponse}
+      onRequestError={onRequestError}
+      onResponseError={onResponseError}
+    >
+      <IcUseActorProvider
+        canisterId={process.env.CANISTER_ID_ICP_LEDGER_CANISTER || "ryjl3-tyaaa-aaaaa-aaaba-cai"}
+        context={IcpLedgerContext}
+        identity={identity}
+        idlFactory={icpLedgerIdlFactory}
+        httpAgentOptions={httpAgentOptions}
+        onRequest={onRequest}
+        onResponse={onResponse}
+        onRequestError={onRequestError}
+        onResponseError={onResponseError}
+      >
+        <IcUseActorProvider
+          canisterId={process.env.CANISTER_ID_ICP_SWAP!}
+          context={IcpSwapContext}
+          identity={identity}
+          idlFactory={icpSwapIdlFactory}
+          httpAgentOptions={httpAgentOptions}
+          onRequest={onRequest}
+          onResponse={onResponse}
+          onRequestError={onRequestError}
+          onResponseError={onResponseError}
+        >
+          <IcUseActorProvider
+            canisterId={process.env.CANISTER_ID_TOKENOMICS!}
+            context={TokenomicsContext}
+            identity={identity}
+            idlFactory={tokenomicsIdlFactory}
+            httpAgentOptions={httpAgentOptions}
+            onRequest={onRequest}
+            onResponse={onResponse}
+            onRequestError={onRequestError}
+            onResponseError={onResponseError}
+          >
+            {children}
+          </IcUseActorProvider>
+        </IcUseActorProvider>
+      </IcUseActorProvider>
+    </IcUseActorProvider>
   );
-
-  // Re-authenticate all actors when identity changes
-  useEffect(() => {
-    if (!identity) return;
-
-    console.log("[ActorProvider] Identity changed, authenticating all actors");
-    ensureAllInitialized().then(() => {
-      authenticateAll(identity);
-    });
-  }, [identity]);
-
-  // Set interceptors on all actors
-  useEffect(() => {
-    console.log("[ActorProvider] Setting interceptors on all actors");
-    ensureAllInitialized().then(() => {
-      lbryFun.setInterceptors(interceptors);
-      icpLedger.setInterceptors(interceptors);
-      icpSwap.setInterceptors(interceptors);
-      tokenomics.setInterceptors(interceptors);
-    });
-  }, [interceptors, lbryFun, icpLedger, icpSwap, tokenomics]);
-
-  return null; // No UI, just side effects
 }

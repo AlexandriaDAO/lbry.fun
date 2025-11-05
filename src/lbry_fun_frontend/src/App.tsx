@@ -34,11 +34,12 @@ export default function App() {
     return (
         <ReduxProvider>
             <InternetIdentityProvider>
-                <ActorProvider /> {/* No longer wraps children */}
-                {/* <UserProvider> Removed </UserProvider> */}
-                <IdentityBridge />
-                <AppInitializer />
-                {isReady ? <AppRoutes /> : null}
+                <ActorProvider>
+                    {/* <UserProvider> Removed </UserProvider> */}
+                    <IdentityBridge />
+                    <AppInitializer />
+                    {isReady ? <AppRoutes /> : null}
+                </ActorProvider>
             </InternetIdentityProvider>
         </ReduxProvider>
     )

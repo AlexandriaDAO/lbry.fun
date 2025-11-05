@@ -1,12 +1,7 @@
-import { createUseActorHook } from "ic-use-actor";
+import { createUseActorHook } from 'ic-use-actor';
 import { _SERVICE } from "../../../../declarations/lbry_fun/lbry_fun.did";
-import { idlFactory } from "../../../../declarations/lbry_fun/lbry_fun.did.js";
-import { getIcHost } from "@/utils/getIcHost";
+import { LbryFunContext } from '@/contexts/actors';
 
-const useLbryFun = createUseActorHook<_SERVICE>({
-  canisterId: process.env.CANISTER_ID_LBRY_FUN!,
-  idlFactory: idlFactory,
-  httpAgentOptions: { host: getIcHost() },
-});
+const useLbryFun = createUseActorHook<_SERVICE>(LbryFunContext);
 
 export default useLbryFun;
