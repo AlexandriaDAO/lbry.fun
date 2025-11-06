@@ -83,6 +83,9 @@ mod test_trace_calculation;
 #[path = "tests/unit/test_unit_analysis.rs"]
 mod test_unit_analysis;
 
+#[path = "tests/unit/test_distribution_math_reproduction.rs"]
+mod test_distribution_math_reproduction;
+
 #[path = "tests/unit/test_fixed_simulation.rs"]
 mod test_fixed_simulation;
 
