@@ -17,6 +17,9 @@ import { AppRoutes } from "./routes";
 import AppInitializer from "./components/AppInitializer";
 import { IdentityBridge } from "./components/IdentityBridge";
 
+// Initialize chunk error handler
+import "./utils/chunkErrorHandler";
+
 export default function App() {
     const [isReady, setIsReady] = useState(false);
 
@@ -25,9 +28,8 @@ export default function App() {
     useEffect(() => {
         const timer = setTimeout(() => {
             setIsReady(true);
-            console.log("App is ready");
         }, 100);
-        
+
         return () => clearTimeout(timer);
     }, []);
 

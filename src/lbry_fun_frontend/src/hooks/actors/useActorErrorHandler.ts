@@ -9,13 +9,11 @@ export const useActorErrorHandler = (clearAuth?: () => void) => {
   }, []);
 
   const handleRequest = useCallback((data: { methodName: string }) => {
-    // Could add request logging here if needed
-    console.debug('Actor request:', data.methodName);
+    // Request handled silently
   }, []);
 
   const handleResponse = useCallback((data: { methodName: string }) => {
-    // Could add response logging here if needed
-    console.debug('Actor response:', data.methodName);
+    // Response handled silently
   }, []);
 
   const handleResponseError = useCallback((error: Error | unknown) => {

@@ -32,7 +32,6 @@ export default function ActorProvider({ children }: ActorProviderProps) {
   const onRequest = useCallback(
     (data: InterceptorRequestData) => {
       const id = getIdentity();
-      console.log("[ActorProvider] onRequest", data.methodName);
 
       if (
         id &&
@@ -60,7 +59,6 @@ export default function ActorProvider({ children }: ActorProviderProps) {
   }, []);
 
   const onResponse = useCallback((data: InterceptorResponseData) => {
-    console.log("[ActorProvider] onResponse", data.methodName);
     return data.response;
   }, []);
 
