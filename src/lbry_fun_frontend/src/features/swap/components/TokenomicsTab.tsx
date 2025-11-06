@@ -23,7 +23,7 @@ const TokenomicsTab: React.FC = () => {
             setLoading(true);
             setError(null);
             
-            dispatch(getTokenomicsGraphs({ actor: lbryFunActor, tokenId: poolData[0].toString() }))
+            dispatch(getTokenomicsGraphs({ poolId: poolData[0].toString(), lbryFunActor }))
                 .unwrap()
                 .then(data => {
                     setGraphData(data);
