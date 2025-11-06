@@ -42,6 +42,10 @@ const lbry_fun_canister_id = process.env.CANISTER_ID_LBRY_FUN!;
 // Store for getting current identity from ic-use-internet-identity
 let getIdentityFunc: (() => Identity | undefined) | null = null;
 
+// Singleton HttpAgent instance
+let cachedAgent: HttpAgent | null = null;
+let cachedIdentity: Identity | undefined = undefined;
+
 // Register a function to get the current identity
 export const registerIdentityGetter = (getter: () => Identity | undefined) => {
   getIdentityFunc = getter;
@@ -50,22 +54,60 @@ export const registerIdentityGetter = (getter: () => Identity | undefined) => {
 // Get current identity from ic-use-internet-identity
 export const getCurrentIdentity = (): Identity | undefined => {
   if (!getIdentityFunc) {
-    console.warn('[authUtils] Identity getter not registered');
     return undefined;
   }
   const identity = getIdentityFunc();
-  if (identity) {
-    console.log('[authUtils] Got identity with principal:', identity.getPrincipal().toString());
-  } else {
-    console.log('[authUtils] No identity available');
-  }
   return identity;
 };
 
 // Clear function when logging out (NOT when unmounting)
 export const clearAuthCaches = () => {
-  console.log('[authUtils] Clearing auth utilities (keeping identity getter)');
+  // Clear cached agent when identity changes
+  cachedAgent = null;
+  cachedIdentity = undefined;
   // Don't clear getIdentityFunc here - let IdentityBridge manage it
+};
+
+// Helper to check if identity has changed
+const hasIdentityChanged = (oldIdentity: Identity | undefined, newIdentity: Identity | undefined): boolean => {
+  // Both undefined - no change
+  if (!oldIdentity && !newIdentity) return false;
+  // One is undefined - changed
+  if (!oldIdentity || !newIdentity) return true;
+  // Compare by principal string
+  return oldIdentity.getPrincipal().toString() !== newIdentity.getPrincipal().toString();
+};
+
+// Get or create singleton HttpAgent
+const getOrCreateAgent = async (): Promise<HttpAgent> => {
+  const currentIdentity = getCurrentIdentity();
+
+  // If identity changed or no cached agent, create new one
+  if (hasIdentityChanged(cachedIdentity, currentIdentity) || !cachedAgent) {
+    const agentOptions: { identity?: Identity; host?: string } = {};
+    agentOptions.host = isLocalDevelopment
+      ? `http://localhost:4943`
+      : "https://ic0.app";
+
+    if (currentIdentity) {
+      agentOptions.identity = currentIdentity;
+    }
+
+    cachedAgent = new HttpAgent(agentOptions);
+    cachedIdentity = currentIdentity;
+
+    // Fetch root key for new agent if in development
+    if (isLocalDevelopment) {
+      await cachedAgent.fetchRootKey().catch((err) => {
+        console.warn(
+          "Unable to fetch root key. Check to ensure that your local replica is running"
+        );
+        console.error(err);
+      });
+    }
+  }
+
+  return cachedAgent;
 };
 
 // Helper function to wrap actors with identity expiration handling
@@ -105,29 +147,7 @@ const getActor = async <T>(
   }
 
   try {
-    const identity = getCurrentIdentity();
-    
-    const agentOptions: { identity?: Identity; host?: string } = {};
-    agentOptions.host = isLocalDevelopment
-      ? `http://localhost:4943`
-      : "https://ic0.app";
-
-    if (identity) {
-      agentOptions.identity = identity;
-    }
-    
-    const agent = new HttpAgent(agentOptions);
-
-    // Fetch root key for new agent if in development
-    if (isLocalDevelopment) {
-      await agent.fetchRootKey().catch((err) => {
-        console.warn(
-          "Unable to fetch root key. Check to ensure that your local replica is running"
-        );
-        console.error(err);
-      });
-    }
-
+    const agent = await getOrCreateAgent();
     const actor = createActorFn(canisterId, { agent });
     return wrapActorWithErrorHandler(actor);
   } catch (error) {
@@ -137,29 +157,7 @@ const getActor = async <T>(
 };
 
 export const getActorSwap = async (canisterId: string) => {
-  const identity = getCurrentIdentity();
-  
-  const agentOptions: any = {};
-  if (identity) {
-    agentOptions.identity = identity;
-    agentOptions.host = isLocalDevelopment
-      ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`
-      : "https://identity.ic0.app";
-  } else {
-    agentOptions.host = isLocalDevelopment
-      ? `http://localhost:4943`
-      : "https://ic0.app";
-  }
-  
-  const agent = await HttpAgent.create(agentOptions);
-  
-  if (isLocalDevelopment) {
-    await agent.fetchRootKey().catch((err) => {
-      console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
-      console.error(err);
-    });
-  }
-  
+  const agent = await getOrCreateAgent();
   return wrapActorWithErrorHandler(createActorSwap(canisterId, { agent }));
 };
 
@@ -168,84 +166,18 @@ export const getActorSwap = async (canisterId: string) => {
 //   getActor(icp_ledger_canister_id, createActorIcpLedger);
 
 export const getTokenomicsActor = async (canisterId: string) => {
-  const identity = getCurrentIdentity();
-  
-  const agentOptions: any = {};
-  if (identity) {
-    agentOptions.identity = identity;
-    agentOptions.host = isLocalDevelopment
-      ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`
-      : "https://identity.ic0.app";
-  } else {
-    agentOptions.host = isLocalDevelopment
-      ? `http://localhost:4943`
-      : "https://ic0.app";
-  }
-  
-  const agent = await HttpAgent.create(agentOptions);
-  
-  if (isLocalDevelopment) {
-    await agent.fetchRootKey().catch((err) => {
-      console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
-      console.error(err);
-    });
-  }
-  
+  const agent = await getOrCreateAgent();
   return wrapActorWithErrorHandler(createActorTokenomics(canisterId, { agent }));
 };
 
 // Export the ICP Ledger actor getter for components that still need it
 export const getIcpLedgerActor = async () => {
-  const identity = getCurrentIdentity();
-  
-  const agentOptions: any = {};
-  if (identity) {
-    agentOptions.identity = identity;
-    agentOptions.host = isLocalDevelopment
-      ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`
-      : "https://identity.ic0.app";
-  } else {
-    agentOptions.host = isLocalDevelopment
-      ? `http://localhost:4943`
-      : "https://ic0.app";
-  }
-  
-  const agent = await HttpAgent.create(agentOptions);
-  
-  if (isLocalDevelopment) {
-    await agent.fetchRootKey().catch((err) => {
-      console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
-      console.error(err);
-    });
-  }
-  
+  const agent = await getOrCreateAgent();
   return wrapActorWithErrorHandler(createActorIcpLedger(icp_ledger_canister_id, { agent }));
 };
 
 export const getICRCActor = async (canisterId: string) => {
-  const identity = getCurrentIdentity();
-  
-  const agentOptions: any = {};
-  if (identity) {
-    agentOptions.identity = identity;
-    agentOptions.host = isLocalDevelopment
-      ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`
-      : "https://identity.ic0.app";
-  } else {
-    agentOptions.host = isLocalDevelopment
-      ? `http://localhost:4943`
-      : "https://ic0.app";
-  }
-  
-  const agent = await HttpAgent.create(agentOptions);
-  
-  if (isLocalDevelopment) {
-    await agent.fetchRootKey().catch((err) => {
-      console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
-      console.error(err);
-    });
-  }
-  
+  const agent = await getOrCreateAgent();
   return wrapActorWithErrorHandler(createActorICRC(canisterId, { agent }));
 };
 

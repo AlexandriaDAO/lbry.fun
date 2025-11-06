@@ -99,10 +99,11 @@ module.exports = {
   output: {
     // filename: "index.js",
     // path: path.join(__dirname, "dist", frontendDirectory),
-    filename: '[name].[contenthash].js',
-    chunkFilename: '[name].[contenthash].js',
+    filename: '[name].[contenthash:8].js',
+    chunkFilename: '[id].[contenthash:8].js', // Use [id] instead of [name] for lazy-loaded chunks
     path: path.join(__dirname, "dist", frontendDirectory),
     publicPath: '/',
+    clean: true, // Clean the output directory before emit
   },
 
   module: {

@@ -15,21 +15,17 @@ export const IdentityBridge: React.FC = () => {
 
   useEffect(() => {
     // Register a function that always returns the current identity from the ref
-    console.log('[IdentityBridge] Registering identity getter');
     registerIdentityGetter(() => {
       const currentIdentity = identityRef.current;
-      console.log('[IdentityBridge] Getter called, returning identity:', 
-        currentIdentity ? currentIdentity.getPrincipal().toString() : 'none');
       return currentIdentity;
     });
 
     // No cleanup needed - keep the getter registered
   }, []); // Empty deps - only register once
 
-  // Log when identity changes
+  // Update auth caches when identity changes
   useEffect(() => {
-    console.log('[IdentityBridge] Identity changed:', 
-      identity ? identity.getPrincipal().toString() : 'none');
+    // This effect still runs on identity change to trigger any necessary side effects
   }, [identity]);
 
   return null; // This component doesn't render anything
