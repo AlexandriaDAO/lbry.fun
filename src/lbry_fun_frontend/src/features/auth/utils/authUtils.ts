@@ -68,12 +68,22 @@ export const clearAuthCaches = () => {
   // Don't clear getIdentityFunc here - let IdentityBridge manage it
 };
 
+// Helper to check if identity has changed
+const hasIdentityChanged = (oldIdentity: Identity | undefined, newIdentity: Identity | undefined): boolean => {
+  // Both undefined - no change
+  if (!oldIdentity && !newIdentity) return false;
+  // One is undefined - changed
+  if (!oldIdentity || !newIdentity) return true;
+  // Compare by principal string
+  return oldIdentity.getPrincipal().toString() !== newIdentity.getPrincipal().toString();
+};
+
 // Get or create singleton HttpAgent
 const getOrCreateAgent = async (): Promise<HttpAgent> => {
   const currentIdentity = getCurrentIdentity();
 
   // If identity changed or no cached agent, create new one
-  if (cachedIdentity !== currentIdentity || !cachedAgent) {
+  if (hasIdentityChanged(cachedIdentity, currentIdentity) || !cachedAgent) {
     const agentOptions: { identity?: Identity; host?: string } = {};
     agentOptions.host = isLocalDevelopment
       ? `http://localhost:4943`
