@@ -252,12 +252,8 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
     };
     
     // 10. Validate operational balance isn't suspiciously high
-    // If operational balance is more than 10% of total staked, flag it
-    let operational_balance_suspicious = if total_staked > 0 {
-        operational_balance > (total_staked / 10)
-    } else {
-        operational_balance > 100_000_000  // 1 ICP for empty pools
-    };
+    // If surplus exceeds sweep threshold, it should have been swept
+    let operational_balance_suspicious = operational_balance > SURPLUS_SWEEP_THRESHOLD_E8S;
     
     ReconciliationStatus {
         icp_balance_actual: actual_balance,
@@ -271,7 +267,16 @@ pub async fn get_reconciliation_status() -> ReconciliationStatus {
         unexplained_discrepancy,
         timestamp: ic_cdk::api::time(),
         canister_id: ic_cdk::api::id(),
-        requires_attention: unexplained_discrepancy.abs() as u64 > ALLOWED_DISCREPANCY_E8S || operational_balance_suspicious,
+        // UPDATED: Directional threshold checking
+        requires_attention: if unexplained_discrepancy < 0 {
+            // Negative discrepancy: ALWAYS flag (missing funds is critical)
+            let abs_negative = (-unexplained_discrepancy) as u64;
+            abs_negative > NEGATIVE_DISCREPANCY_TOLERANCE_E8S
+        } else {
+            // Positive discrepancy: Use higher tolerance (expected operational surplus)
+            let positive = unexplained_discrepancy as u64;
+            positive > POSITIVE_DISCREPANCY_TOLERANCE_E8S
+        } || operational_balance_suspicious,
         operational_balance_suspicious,
     }
 }
@@ -362,8 +367,81 @@ pub async fn validate_accounting() -> Result<String, String> {
          Reward pool: {}, Uncollected fees: {}, Total unclaimed: {}, Total archived: {}\n\
          Total claimed (left canister): {} E8S\n\
          Unexplained discrepancy: {} E8S",
-        actual_balance, expected, discrepancy, 
+        actual_balance, expected, discrepancy,
         reward_pool, uncollected_fees, total_unclaimed, total_archived,
         total_claimed, unexplained
     ))
+}
+
+// Sweep monitoring query functions
+
+#[query]
+pub fn get_sweep_history(limit: Option<u64>) -> Vec<(u64, SweepRecord)> {
+    let limit = limit.unwrap_or(10).min(100); // Max 100 records
+
+    SWEEP_HISTORY.with(|h| {
+        let borrow = h.borrow();
+        let mut entries: Vec<(u64, SweepRecord)> = borrow
+            .iter()
+            .map(|(id, record)| (id, record))
+            .collect();
+
+        // Sort by timestamp descending (most recent first)
+        entries.sort_by(|a, b| b.0.cmp(&a.0));
+
+        // Take the limited number of entries
+        entries.into_iter()
+            .take(limit as usize)
+            .collect()
+    })
+}
+
+#[query]
+pub fn get_last_sweep_info() -> Option<(u64, SweepRecord)> {
+    let last_timestamp = get_last_sweep_timestamp();
+    if last_timestamp == 0 {
+        return None;
+    }
+
+    SWEEP_HISTORY.with(|h| {
+        h.borrow().get(&last_timestamp).map(|record| (last_timestamp, record))
+    })
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct SurplusStatus {
+    pub estimated_surplus: Option<u64>,  // None if we can't determine
+    pub sweep_threshold: u64,
+    pub operational_buffer: u64,
+    pub would_sweep_amount: Option<u64>,
+    pub last_sweep_timestamp: u64,
+    pub time_since_last_sweep: u64,
+    pub can_sweep_now: bool,
+}
+
+#[query]
+pub fn get_surplus_status() -> SurplusStatus {
+    let last_sweep = get_last_sweep_timestamp();
+    let now = ic_cdk::api::time();
+    let one_hour_nanos = 3_600_000_000_000u64;
+    let time_since_last = if last_sweep > 0 {
+        now - last_sweep
+    } else {
+        u64::MAX // Never swept
+    };
+
+    // Try to get most recent reconciliation to estimate surplus
+    // Note: This is just an estimate based on last known state
+    // Real sweep uses async ledger balance query
+
+    // For query context, we can't get real-time balance, so return estimation
+    SurplusStatus {
+        estimated_surplus: None, // Can't determine in query context
+        sweep_threshold: SURPLUS_SWEEP_THRESHOLD_E8S,
+        operational_buffer: OPERATIONAL_BUFFER_E8S,
+        would_sweep_amount: None,
+        last_sweep_timestamp: last_sweep,
+        time_since_last_sweep: time_since_last,
+        can_sweep_now: time_since_last >= one_hour_nanos,
+    }
 }

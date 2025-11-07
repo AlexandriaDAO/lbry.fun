@@ -313,10 +313,31 @@ fn setup_timers(distribution_interval_seconds: u64) {
 }
 
 async fn distribute_reward_wrapper() {
+    // Existing distribution
     match distribute_reward().await {
         Ok(_) => (),
         Err(e) =>
             register_info_log(caller(), "distribute_reward_wrapper", &format!("Error distributing rewards: {}", e)),
+    }
+
+    // NEW: Surplus sweep (best-effort - don't fail timer if sweep fails)
+    use crate::update::sweep_surplus_to_revshare;
+    match sweep_surplus_to_revshare().await {
+        Ok(msg) => {
+            register_info_log(
+                Principal::anonymous(),
+                "distribute_reward_wrapper",
+                &format!("Sweep result: {}", msg)
+            );
+        }
+        Err(e) => {
+            // Log but don't fail - sweep is opportunistic
+            register_error_log(
+                Principal::anonymous(),
+                "distribute_reward_wrapper",
+                e
+            );
+        }
     }
 }
 async fn get_icp_rate_cents_wrapper() {
