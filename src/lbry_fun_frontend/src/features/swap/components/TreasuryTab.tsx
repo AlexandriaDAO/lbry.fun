@@ -196,12 +196,42 @@ const TreasuryTab: React.FC = () => {
                 )} ICP
               </span>
             </div>
-            {tokenReconciliation.requires_attention && (
+            {/* Operational Surplus Display */}
+            {tokenReconciliation.discrepancy_e8s > 0n && (
               <div className="flex justify-between items-center py-0.5">
-                <span className="text-gray-400 text-xs">Status:</span>
-                <span className="text-white text-sm text-red-400">⚠️ Attention Required</span>
+                <span className="text-gray-400 text-xs flex items-center">
+                  Operational Surplus:
+                  <TooltipIcon text={`Positive balance accumulating from rounding and fee mechanics. Automatically swept to protocol when it reaches 1.0 ICP (keeping 0.1 ICP buffer). Current: ${(Number(tokenReconciliation.discrepancy_e8s) / 1e8).toFixed(8)} ICP`} />
+                </span>
+                <span className={`text-sm ${
+                  tokenReconciliation.discrepancy_e8s < 50_000_000n
+                    ? 'text-lime-400'  // Normal operational surplus (< 0.5 ICP)
+                    : tokenReconciliation.discrepancy_e8s >= 50_000_000n && tokenReconciliation.discrepancy_e8s < 100_000_000n
+                    ? 'text-amber-400'  // Approaching sweep threshold (0.5-1.0 ICP)
+                    : 'text-blue-400'   // Ready for sweep (>= 1.0 ICP)
+                }`}>
+                  {formatE8sToICP(tokenReconciliation.discrepancy_e8s)} ICP
+                  {tokenReconciliation.discrepancy_e8s >= 100_000_000n && ' (Ready for sweep)'}
+                  {tokenReconciliation.discrepancy_e8s >= 50_000_000n && tokenReconciliation.discrepancy_e8s < 100_000_000n && ' (Accumulating)'}
+                </span>
               </div>
             )}
+            <div className="flex justify-between items-center py-0.5">
+              <span className="text-gray-400 text-xs">Status:</span>
+              <span className={`text-white text-sm ${
+                tokenReconciliation.discrepancy_e8s < 0n
+                  ? 'text-red-400'  // Negative = missing funds = bad
+                  : tokenReconciliation.requires_attention
+                  ? 'text-amber-400' // Positive but flagged (> 0.5 ICP)
+                  : 'text-green-400' // Positive and normal (< 0.5 ICP)
+              }`}>
+                {tokenReconciliation.discrepancy_e8s < 0n
+                  ? '⚠️ Attention Required (Missing Funds)'
+                  : tokenReconciliation.discrepancy_e8s > 50_000_000n
+                  ? '✓ Normal (Surplus Accumulating)'
+                  : '✓ Normal'}
+              </span>
+            </div>
             
             {/* Always show reconciliation details */}
             <div className="terminal-divider-single my-2" />
@@ -223,9 +253,17 @@ const TreasuryTab: React.FC = () => {
                   <div className="flex justify-between">
                     <span className="flex items-center">
                       Discrepancy:
-                      <TooltipIcon text="Difference between Expected and Actual. Should be zero. Any non-zero value indicates an accounting error that needs investigation." />
+                      <TooltipIcon text="Difference between Expected and Actual. Positive surplus up to 0.5 ICP is normal operational accumulation from fees/rounding. Automatically swept to protocol at 1.0 ICP threshold. Negative values require immediate investigation." />
                     </span>
-                    <span className={tokenReconciliation.requires_attention ? 'text-red-400' : 'text-gray-400'}>
+                    <span className={
+                      tokenReconciliation.discrepancy_e8s < 0n
+                        ? 'text-red-400'    // Negative = ERROR (missing funds)
+                        : tokenReconciliation.discrepancy_e8s >= 100_000_000n
+                        ? 'text-blue-400'   // >= 1.0 ICP = Ready for sweep
+                        : tokenReconciliation.discrepancy_e8s >= 50_000_000n
+                        ? 'text-amber-400'  // 0.5-1.0 ICP = Approaching threshold
+                        : 'text-lime-400'   // < 0.5 ICP = Normal operational
+                    }>
                       {formatDiscrepancy(tokenReconciliation.discrepancy_e8s)}
                     </span>
                   </div>
@@ -233,7 +271,7 @@ const TreasuryTab: React.FC = () => {
                     <div className="flex justify-between">
                       <span className="flex items-center">
                         Operational Balance:
-                        <TooltipIcon text="ICP buffer for transaction fees and operations. Should be minimal (< 0.1 ICP). High values indicate ICP that isn't properly allocated to rewards or fees." />
+                        <TooltipIcon text="ICP buffer for operations. The surplus sweep mechanism maintains a 0.1 ICP operational buffer and automatically sweeps excess above 1.0 ICP threshold to the protocol. High values here indicate the sweep mechanism should trigger soon." />
                       </span>
                       <span className="text-amber-400">
                         {formatE8sToICP(tokenReconciliation.operational_balance)} ICP (High)
