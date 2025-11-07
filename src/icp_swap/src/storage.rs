@@ -11,8 +11,16 @@ use std::collections::{ BTreeSet, HashMap };
 use crate::utils::DEFAULT_SECONDARY_RATIO;
 use crate::ExecutionError;
 
-// Threshold for acceptable discrepancy (100 transfer fees - allows for many operations and rounding)
-pub const ALLOWED_DISCREPANCY_E8S: u64 = 1_000_000;  // 0.01 ICP
+// Surplus sweep configuration
+pub const SURPLUS_SWEEP_THRESHOLD_E8S: u64 = 100_000_000;  // 1 ICP
+pub const OPERATIONAL_BUFFER_E8S: u64 = 10_000_000;        // 0.1 ICP
+pub const MIN_SWEEP_AMOUNT_E8S: u64 = 1_000_000;           // 0.01 ICP
+
+// Reconciliation thresholds (SECURITY-FOCUSED)
+// Negative discrepancy: ALWAYS flagged (missing funds is critical)
+pub const NEGATIVE_DISCREPANCY_TOLERANCE_E8S: u64 = 0;
+// Positive discrepancy: Raised to reasonable operational level
+pub const POSITIVE_DISCREPANCY_TOLERANCE_E8S: u64 = 50_000_000;  // 0.5 ICP
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 // Memory identifiers for each variable
@@ -33,6 +41,10 @@ pub const UNCOLLECTED_ALEX_FEES_MEM_ID: MemoryId = MemoryId::new(12);
 pub const REWARD_POOL_MEM_ID: MemoryId = MemoryId::new(14);
 pub const TOKEN_ID_MEM_ID: MemoryId = MemoryId::new(15);
 pub const TOTAL_CLAIMED_REWARDS_MEM_ID: MemoryId = MemoryId::new(16);
+
+// Memory IDs for surplus sweep feature
+pub const LAST_SWEEP_TIMESTAMP_MEM_ID: MemoryId = MemoryId::new(17);
+pub const SWEEP_HISTORY_MEM_ID: MemoryId = MemoryId::new(18);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
@@ -101,6 +113,15 @@ thread_local! {
     // Segregated reward pool - funded by all swap operations
     pub static REWARD_POOL: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(REWARD_POOL_MEM_ID)))
+    );
+
+    // Surplus sweep tracking
+    pub static LAST_SWEEP_TIMESTAMP: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(LAST_SWEEP_TIMESTAMP_MEM_ID)))
+    );
+
+    pub static SWEEP_HISTORY: RefCell<StableBTreeMap<u64, SweepRecord, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(SWEEP_HISTORY_MEM_ID)))
     );
 }
 
@@ -177,6 +198,26 @@ pub fn add_to_total_claimed_rewards(amount: u64) -> Result<(), ExecutionError> {
 
 pub fn get_total_claimed_rewards() -> u64 {
     TOTAL_CLAIMED_REWARDS.with(|t| t.borrow().get(&()).unwrap_or(0))
+}
+
+// Helper functions for sweep tracking
+pub fn get_last_sweep_timestamp() -> u64 {
+    LAST_SWEEP_TIMESTAMP.with(|t| t.borrow().get(&()).unwrap_or(0))
+}
+
+pub fn record_sweep(record: SweepRecord) -> u64 {
+    let sweep_id = record.timestamp; // Use timestamp from record (already captured in caller)
+
+    // Validate timestamp is reasonable (non-zero)
+    assert!(sweep_id > 0, "Sweep record timestamp must be non-zero");
+
+    SWEEP_HISTORY.with(|h| {
+        h.borrow_mut().insert(sweep_id, record);
+    });
+    LAST_SWEEP_TIMESTAMP.with(|t| {
+        t.borrow_mut().insert((), sweep_id); // Use same timestamp
+    });
+    sweep_id
 }
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -276,6 +317,17 @@ pub struct ReconciliationStatus {
     pub operational_balance_suspicious: bool,
 }
 
+#[derive(CandidType, Deserialize, Clone)]
+pub struct SweepRecord {
+    pub timestamp: u64,
+    pub amount_swept: u64,
+    pub surplus_before: u64,
+    pub operational_buffer_kept: u64,
+    pub transfer_block_index: u64,
+    pub success: bool,
+    pub error_message: Option<String>,
+}
+
 impl Storable for Stake {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
@@ -335,6 +387,18 @@ impl Storable for Log {
 }
 
 impl Storable for Configs {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
+}
+
+impl Storable for SweepRecord {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }

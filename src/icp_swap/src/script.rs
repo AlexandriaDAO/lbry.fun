@@ -6,7 +6,7 @@ use std::time::Duration;
 use crate::{
     distribute_reward,
     get_icp_rate_in_cents,
-    utils::register_info_log,
+    utils::{register_info_log, register_error_log},
     ArchiveBalance,
     Configs,
     DailyValues,
@@ -313,10 +313,38 @@ fn setup_timers(distribution_interval_seconds: u64) {
 }
 
 async fn distribute_reward_wrapper() {
+    // Distribution FIRST - let it complete and settle state
     match distribute_reward().await {
         Ok(_) => (),
-        Err(e) =>
-            register_info_log(caller(), "distribute_reward_wrapper", &format!("Error distributing rewards: {}", e)),
+        Err(e) => {
+            register_info_log(
+                caller(),
+                "distribute_reward_wrapper",
+                &format!("Distribution failed: {}. Skipping surplus sweep to maintain state consistency.", e)
+            );
+            // If distribution fails, skip sweep to avoid inconsistent state
+            return;
+        }
+    }
+
+    // Only sweep if distribution succeeded
+    use crate::update::sweep_surplus_to_revshare;
+    match sweep_surplus_to_revshare().await {
+        Ok(msg) => {
+            register_info_log(
+                Principal::anonymous(),
+                "distribute_reward_wrapper",
+                &format!("Sweep result: {}", msg)
+            );
+        }
+        Err(e) => {
+            // Log but don't fail - sweep is opportunistic
+            register_error_log(
+                Principal::anonymous(),
+                "distribute_reward_wrapper",
+                e
+            );
+        }
     }
 }
 async fn get_icp_rate_cents_wrapper() {

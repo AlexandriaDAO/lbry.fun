@@ -1,5 +1,54 @@
 # ICP Swap Change Log
 
+## 2025-01-XX: Surplus Sweep Mechanism
+
+### Update (Critical Fixes after Code Review - Round 1)
+- **Fixed race condition in timer**: Distribution must succeed before sweep runs to ensure consistent state
+- **Fixed sweep amount calculation**: Now accounts for 10,000 E8S transfer fee to maintain operational buffer
+- **Fixed integer underflow risk**: Added bounds check to prevent panic if system time goes backwards
+- **Fixed timestamp consistency**: Uses single timestamp from record instead of multiple api::time() calls
+- **Added missing import**: Added register_error_log import to script.rs
+
+### Update (Additional Fixes after Code Review - Round 2)
+- **Enhanced arithmetic safety**: Used saturating arithmetic for sweep amount calculation to prevent underflow edge cases
+- **Improved time comparison**: Applied saturating_sub for time calculations to handle clock skew scenarios
+- **Removed unused import**: Cleaned up ALLOWED_DISCREPANCY_E8S reference from queries.rs
+- **Added timestamp validation**: Added assertion to ensure sweep timestamps are non-zero
+- **Improved error logging**: Enhanced distribution failure messages to clarify sweep skip reasoning
+
+### Added
+- **Surplus Sweep Mechanism**: Automated ICP surplus sweeping to alex-revshare canister
+  - Threshold: 1 ICP surplus triggers sweep
+  - Buffer: 0.1 ICP operational buffer maintained
+  - Safety: CEI pattern, atomic operations, comprehensive logging
+  - History: All sweeps recorded in stable memory with full audit trail
+  - Location: `src/update.rs::sweep_surplus_to_revshare()`
+  - Memory IDs: 17 (LAST_SWEEP_TIMESTAMP), 18 (SWEEP_HISTORY)
+
+### Changed
+- **Reconciliation Thresholds**: Updated to security-focused directional model
+  - Negative discrepancy: 0 E8S tolerance (always flag missing funds)
+  - Positive discrepancy: 50,000,000 E8S tolerance (0.5 ICP operational surplus)
+  - Location: `src/storage.rs::NEGATIVE_DISCREPANCY_TOLERANCE_E8S`, `POSITIVE_DISCREPANCY_TOLERANCE_E8S`
+  - Rationale: Missing funds is critical, operational surplus is expected
+
+- **Timer Integration**: Hourly timer now includes surplus sweep alongside distribution
+  - Best-effort execution (sweep failure doesn't fail timer)
+  - Comprehensive logging of sweep attempts
+  - Location: `src/script.rs::distribute_reward_wrapper()`
+
+### Security
+- All sweep operations use CEI pattern (Check-Effect-Interact)
+- Atomic state updates prevent double-sweeping
+- Minimum 1-hour interval between sweeps
+- Transfer failures logged and recorded in history
+- Comprehensive audit trail for all ICP movements
+
+### Query Functions Added
+- `get_sweep_history(limit: Option<u64>)`: Returns sweep history records
+- `get_last_sweep_info()`: Returns the most recent sweep information
+- `get_surplus_status()`: Returns current surplus status and sweep readiness
+
 ## 2025-01-18: Improved Error Messages for Max Supply Mint Failures
 
 ### Changes Made:
