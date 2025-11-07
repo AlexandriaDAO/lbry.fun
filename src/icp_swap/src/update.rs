@@ -1889,17 +1889,19 @@ pub async fn sweep_surplus_to_revshare() -> Result<String, ExecutionError> {
         return Ok(format!("Surplus {} below threshold", surplus));
     }
 
-    // Calculate sweep amount (keep operational buffer)
-    let sweep_amount = if surplus > OPERATIONAL_BUFFER_E8S {
-        surplus - OPERATIONAL_BUFFER_E8S
+    // Calculate sweep amount (keep operational buffer + account for transfer fee)
+    const ICP_TRANSFER_FEE: u64 = 10_000; // 0.0001 ICP
+
+    let sweep_amount = if surplus > OPERATIONAL_BUFFER_E8S + ICP_TRANSFER_FEE {
+        surplus - OPERATIONAL_BUFFER_E8S - ICP_TRANSFER_FEE
     } else {
         // This shouldn't happen given threshold check, but safety first
         register_info_log(
             Principal::anonymous(),
             "sweep_surplus_to_revshare",
-            &format!("Surplus {} not enough above buffer {}. No sweep.", surplus, OPERATIONAL_BUFFER_E8S)
+            &format!("Surplus {} not enough above buffer + fee. No sweep.", surplus)
         );
-        return Ok("Surplus insufficient above buffer".to_string());
+        return Ok("Surplus insufficient above buffer + fee".to_string());
     };
 
     // Validate minimum sweep amount (avoid tiny transfers)
@@ -1917,7 +1919,7 @@ pub async fn sweep_surplus_to_revshare() -> Result<String, ExecutionError> {
     let now = ic_cdk::api::time();
     let one_hour_nanos = 3_600_000_000_000u64; // 1 hour in nanoseconds
 
-    if now - last_sweep < one_hour_nanos {
+    if last_sweep > 0 && now >= last_sweep && now - last_sweep < one_hour_nanos {
         register_info_log(
             Principal::anonymous(),
             "sweep_surplus_to_revshare",

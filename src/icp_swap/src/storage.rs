@@ -206,12 +206,12 @@ pub fn get_last_sweep_timestamp() -> u64 {
 }
 
 pub fn record_sweep(record: SweepRecord) -> u64 {
-    let sweep_id = ic_cdk::api::time(); // Use timestamp as ID
+    let sweep_id = record.timestamp; // Use timestamp from record (already captured in caller)
     SWEEP_HISTORY.with(|h| {
         h.borrow_mut().insert(sweep_id, record);
     });
     LAST_SWEEP_TIMESTAMP.with(|t| {
-        t.borrow_mut().insert((), ic_cdk::api::time());
+        t.borrow_mut().insert((), sweep_id); // Use same timestamp
     });
     sweep_id
 }

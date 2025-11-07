@@ -2,6 +2,13 @@
 
 ## 2025-01-XX: Surplus Sweep Mechanism
 
+### Update (Critical Fixes after Code Review)
+- **Fixed race condition in timer**: Distribution must succeed before sweep runs to ensure consistent state
+- **Fixed sweep amount calculation**: Now accounts for 10,000 E8S transfer fee to maintain operational buffer
+- **Fixed integer underflow risk**: Added bounds check to prevent panic if system time goes backwards
+- **Fixed timestamp consistency**: Uses single timestamp from record instead of multiple api::time() calls
+- **Added missing import**: Added register_error_log import to script.rs
+
 ### Added
 - **Surplus Sweep Mechanism**: Automated ICP surplus sweeping to alex-revshare canister
   - Threshold: 1 ICP surplus triggers sweep
