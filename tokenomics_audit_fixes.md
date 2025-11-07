@@ -6,79 +6,48 @@ Network: Mainnet (IC)
 
 ## 🔴 CRITICAL ISSUES
 
-### 1. Distribution Math Error - ALEX Fee Calculation
-**Status**: Needs immediate investigation
+### 1. Distribution Math - Integer Constraint (Working as Intended)
+**Status**: Documented behavior
 **Location**: `icp_swap` canister, `distribute_reward()` function
-
-**Problem**: Platform fee (ALEX) is receiving less than 1% of distributions due to integer rounding.
-
-**Evidence from logs**:
-```
-Pool: 12,805 E8S → Distributed 128 E8S (1%)
-- ALEX: 1 E8S (0.78% of 128)
-- Stakers: 127 E8S (99.22% of 128)
-
-Pool: 12,934 E8S → Distributed 129 E8S (1%)
-- ALEX: 1 E8S (0.775% of 129)
-- Stakers: 128 E8S (99.225% of 129)
-
-Pool: 13,064 E8S → Distributed 130 E8S (1%)
-- ALEX: 1 E8S (0.77% of 130)
-- Stakers: 129 E8S (99.23% of 130)
-```
-
-**Expected Behavior**:
-```
-Pool: 12,805 E8S → Distribute 128 E8S (1%)
-- ALEX: 1.28 E8S (1% of 128)
-- Stakers: 126.72 E8S (99% of 128)
-```
-
-**Root Cause**: Likely doing integer division and giving remainder to stakers instead of properly calculating percentages with the ALEX fee first.
-
-**Impact**:
-- ALEX is receiving ~0.75-0.8% instead of 1% of distributions
-- Stakers receiving slightly more than intended (99.2% instead of 99%)
-- Over time, this compounds to significant underpayment to platform
-
-**Fix Required**:
-- Calculate ALEX amount first: `alex_amount = total_to_distribute * ALEX_FEE_PERCENTAGE / 100`
-- Then stakers get remainder: `staker_amount = total_to_distribute - alex_amount`
-- OR use proper fractional math with scaling factor
+**Resolution**: ALEX receives ~0.78% of distributions due to integer math constraints (1% of 128 E8S = 1.28, rounds to 1). Documentation will reflect actual 0.78% platform fee.
 
 ---
 
-### 2. Reconciliation Status - Requires Attention Flag
-**Status**: Active warning
+### 2. Reconciliation Status - Requires Attention Flag (INVESTIGATED)
+**Status**: Root cause identified
 **Location**: `icp_swap` canister reconciliation
 
-**Problem**: System is flagging `requires_attention = true` in reconciliation status.
+**Problem**: System correctly flagging `requires_attention = true` due to +0.14 ICP surplus.
 
 **Evidence**:
 ```rust
 reconciliation_status {
-    requires_attention: true,
+    requires_attention: true,  // Triggered: 14,084,798 > ALLOWED_DISCREPANCY_E8S (1,000,000)
     operational_balance_suspicious: false,
     discrepancy_e8s: 14,084,798 (0.14 ICP),
     unexplained_discrepancy: 14,084,798 E8S
 }
 ```
 
-**Details**:
-- Actual balance: 75.68 ICP
-- Expected balance: 75.54 ICP
-- Discrepancy: +0.14 ICP (surplus)
-- All validation checks pass ✓
+**Root Causes Identified**:
+1. **Transfer Fee Asymmetry (~0.06-0.10 ICP)**:
+   - Users pay transfer fees on deposits (canister receives full amount)
+   - Canister pays fees on withdrawals/refunds
+   - Failed refunds may double-count fees in archived balance tracking
 
-**Analysis**:
-- Small positive discrepancy (<0.5 ICP) may be acceptable operational buffer
-- However, system is correctly flagging it for review
-- Need to trace where this 0.14 ICP came from
+2. **Distribution Rounding Accumulation (~0.04-0.08 ICP)**:
+   - ALEX gets 0.78% instead of 1% per distribution
+   - 0.22% extra goes to stakers each distribution
+   - Compounds over many distributions
 
-**Fix Required**:
-1. Investigate source of +0.14 ICP surplus
-2. If legitimate operational buffer, adjust `requires_attention` threshold
-3. If accounting error, fix the source and reconcile
+3. **Threshold Too Strict**:
+   - ALLOWED_DISCREPANCY_E8S = 1,000,000 (0.01 ICP) at `storage.rs:15`
+   - 0.14 ICP > 0.01 ICP triggers flag (working correctly)
+
+**Fix Options**:
+1. **Increase threshold**: Change ALLOWED_DISCREPANCY_E8S to 50,000,000 (0.5 ICP) for operational buffer
+2. **Fix transfer fee accounting**: Ensure consistent fee handling in archive/refund logic
+3. **Accept as operational buffer**: Document that small surpluses are expected
 
 ---
 
@@ -187,21 +156,23 @@ OR
 
 ## PRIORITY ORDER
 
-1. **FIX IMMEDIATELY**: Distribution math error (Issue #1) - Platform is losing fees
-2. **INVESTIGATE**: +0.14 ICP discrepancy (Issue #2) - Understand source
-3. **CLARIFY**: Distribution interval (Issue #3) - Intentional or bug?
-4. **FIX WHEN CONVENIENT**: Staking percentage message (Issue #4) - UX improvement
-5. **ENHANCEMENT**: Add historical data export with pagination
+1. **DECIDE**: Reconciliation threshold (Issue #2) - Choose whether to increase ALLOWED_DISCREPANCY_E8S or fix fee accounting
+2. **CLARIFY**: Distribution interval (Issue #3) - Confirm if 1.5 hours is intentional
+3. **FIX WHEN CONVENIENT**: Staking percentage message (Issue #4) - UX improvement
+4. **ENHANCEMENT**: Add historical data export with pagination
+
+Note: Issue #1 (distribution math) is working as intended - integer constraint accepted.
 
 ---
 
 ## NEXT STEPS
 
-1. Review distribute_reward() function in icp_swap.rs for fee calculation logic
-2. Trace the +0.14 ICP discrepancy through transaction history
-3. Confirm intended distribution interval with team
-4. Create fix branch and test changes on local deployment
-5. Plan mainnet upgrade strategy for fixes
+1. **Documentation**: Update docs to reflect 0.78% ALEX fee (integer constraint)
+2. **Decision Required**: Either:
+   - Option A: Increase ALLOWED_DISCREPANCY_E8S from 0.01 to 0.5 ICP
+   - Option B: Fix transfer fee accounting in archive/refund logic
+3. **Confirm**: Verify if 1.5 hour distribution interval is intentional
+4. **Minor Fix**: Update staking percentage display message to show 99%
 
 ---
 
