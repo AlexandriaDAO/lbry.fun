@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, lazy, Suspense } from 'react';
+import React, { useEffect, useMemo, lazy, Suspense, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
 import TooltipIcon from '@/features/token/components/TooltipIcon';
 import { useAppSelector } from '@/store/hooks/useAppSelector';
@@ -34,7 +34,8 @@ const Insights: React.FC = () => {
     const poolData = swap.activeSwapPool;
     const tvlData = useAppSelector((state: RootState) => state.lbryFun.tvlData);
     const tvlLoading = useAppSelector((state: RootState) => state.lbryFun.tvlLoading);
-    
+    const [copySuccess, setCopySuccess] = useState(false);
+
     useEffect(() => {
         if (poolData?.[1]?.logs_canister_id) {
             dispatch(getAllLogs(poolData[1].logs_canister_id));
@@ -60,7 +61,51 @@ const Insights: React.FC = () => {
             hourlyIcpRewards: insights.hourlyIcpRewards[lastIndex],
         };
     }, [insights]);
-    
+
+    const copyToClipboard = () => {
+        if (!insights) return;
+
+        const formattedTime = formatTime(insights.time);
+        const insightsData = {
+            poolId: poolData?.[0]?.toString(),
+            timestamp: new Date().toISOString(),
+            graphs: {
+                time: formattedTime,
+                primaryTokenSupply: {
+                    xAxis: formattedTime,
+                    yAxis: insights.primaryTokenSupply
+                },
+                secondaryTokenSupply: {
+                    xAxis: formattedTime,
+                    yAxis: insights.secondaryTokenSupply
+                },
+                totalSecondaryBurned: {
+                    xAxis: formattedTime,
+                    yAxis: insights.totalSecondaryBurned
+                },
+                totalPrimaryStaked: {
+                    xAxis: formattedTime,
+                    yAxis: insights.totalPrimaryStaked
+                },
+                stakerCount: {
+                    xAxis: formattedTime,
+                    yAxis: insights.stakerCount
+                },
+                ...(insights.apy && {
+                    historicalApy: {
+                        xAxis: formattedTime,
+                        yAxis: insights.apy
+                    }
+                })
+            },
+            summary: summaryData
+        };
+
+        navigator.clipboard.writeText(JSON.stringify(insightsData, null, 2));
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+    };
+
     if (isLoading) {
         return (
             <div className="terminal-pure terminal-boot">
@@ -213,7 +258,20 @@ const Insights: React.FC = () => {
                 )}
             </div>
             </Suspense>
-            
+
+            {/* Copy Graph Data Button */}
+            <div className="bg-black border border-white/30 p-3 font-mono mt-8">
+                <div className="flex justify-between items-center py-0.5 justify-end">
+                    <button
+                        type="button"
+                        onClick={copyToClipboard}
+                        className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 text-xs px-3 py-1"
+                    >
+                        <span className="text-pink-500">&gt;</span> {copySuccess ? 'copied_to_clipboard' : 'copy_graph_data'}
+                    </button>
+                </div>
+            </div>
+
             {/* Add Distribution Tracking Section */}
             {poolData?.[1]?.icp_swap_canister_id && (
                 <Suspense fallback={<UnifiedSkeleton variant="card" rows={10} />}>
