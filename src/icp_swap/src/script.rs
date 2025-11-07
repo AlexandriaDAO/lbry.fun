@@ -16,6 +16,7 @@ use crate::{
     ARCHIVED_TRANSACTION_LOG,
     CONFIGS,
     DISTRIBUTION_INTERVALS,
+    DISTRIBUTION_INTERVAL_SECONDS,
     LAUNCH_TIME,
     SECONDARY_RATIO,
     STAKES,
@@ -105,12 +106,6 @@ fn initialize_globals(args: InitArgs) {
         });
     }
 
-    if let Some(distribution_intervals) = args.distribution_intervals {
-        DISTRIBUTION_INTERVALS.with(|m| {
-            m.borrow_mut().insert((), distribution_intervals);
-        });
-    }
-
     if let Some(logs) = args.archived_transaction_log {
         ARCHIVED_TRANSACTION_LOG.with(|m| {
             let mut log_map = m.borrow_mut();
@@ -157,7 +152,7 @@ fn initialize_globals(args: InitArgs) {
         m.borrow_mut().insert((), configs);
     });
 
-    // Store distribution interval in DISTRIBUTION_INTERVALS if provided
+    // Store distribution interval DURATION (never changes) in separate storage
     if let Some(interval_seconds) = args.distribution_interval_seconds {
         // Add lower bound check to prevent DoS attacks
         if interval_seconds < 60 {
@@ -167,9 +162,40 @@ fn initialize_globals(args: InitArgs) {
         if interval_seconds > u32::MAX as u64 {
             panic!("Distribution interval exceeds maximum allowed value of {} seconds", u32::MAX);
         }
-        DISTRIBUTION_INTERVALS.with(|m| {
-            m.borrow_mut().insert((), interval_seconds as u32);
+
+        // Store in the NEW storage location (not in counter!)
+        DISTRIBUTION_INTERVAL_SECONDS.with(|m| {
+            m.borrow_mut().insert((), interval_seconds);
         });
+
+        register_info_log(
+            caller(),
+            "initialize_globals",
+            &format!("Distribution interval duration stored: {} seconds", interval_seconds)
+        );
+    }
+
+    // Initialize counter to 0 for new tokens (or use provided value for migration)
+    if let Some(counter_value) = args.distribution_intervals {
+        // Migration path: Allow setting initial counter value
+        DISTRIBUTION_INTERVALS.with(|m| {
+            m.borrow_mut().insert((), counter_value);
+        });
+        register_info_log(
+            caller(),
+            "initialize_globals",
+            &format!("Distribution counter initialized: {}", counter_value)
+        );
+    } else {
+        // New tokens: Start counter at 0
+        DISTRIBUTION_INTERVALS.with(|m| {
+            m.borrow_mut().insert((), 0);
+        });
+        register_info_log(
+            caller(),
+            "initialize_globals",
+            "Distribution counter initialized to 0"
+        );
     }
 }
 
@@ -278,12 +304,18 @@ fn init(args: Option<InitArgs>) {
 
 #[post_upgrade]
 fn post_upgrade() {
-    // Get distribution interval from storage, default to 1 hour
-    let distribution_interval = DISTRIBUTION_INTERVALS.with(|m| {
-        m.borrow().get(&()).unwrap_or(3600) as u64
+    // Read distribution interval DURATION from proper storage
+    let distribution_interval = DISTRIBUTION_INTERVAL_SECONDS.with(|m| {
+        m.borrow().get(&()).unwrap_or(3600) // Default to 1 hour if not set
     });
+
     setup_timers(distribution_interval);
-    register_info_log(caller(), "post_upgrade", "Post-upgrade timer setup completed");
+
+    register_info_log(
+        caller(),
+        "post_upgrade",
+        &format!("Post-upgrade timer setup completed with interval: {} seconds", distribution_interval)
+    );
 }
 
 fn setup_timers(distribution_interval_seconds: u64) {

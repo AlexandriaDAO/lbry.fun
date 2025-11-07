@@ -103,6 +103,24 @@ pub fn get_distribution_interval() -> u32 {
     result.get(&()).unwrap_or(0)
 }
 
+/// Get the configured distribution interval duration in seconds
+/// This is the time between reward distributions (e.g., 3600 = 1 hour)
+#[query]
+pub fn get_distribution_interval_seconds() -> u64 {
+    DISTRIBUTION_INTERVAL_SECONDS.with(|m| {
+        m.borrow().get(&()).unwrap_or(3600)
+    })
+}
+
+/// Get the total number of distributions that have occurred
+/// This counter increments by 1 with each distribution
+#[query]
+pub fn get_distribution_count() -> u32 {
+    DISTRIBUTION_INTERVALS.with(|m| {
+        m.borrow().get(&()).unwrap_or(0)
+    })
+}
+
 #[query]
 pub fn get_all_apy_values() -> Vec<(u32, u128)> {
     APY.with(|apy| {

@@ -129,6 +129,8 @@ service : (opt InitArgs) -> {
   get_current_secondary_ratio : () -> (opt nat64) query;
   get_current_staking_reward_percentage : () -> (text) query;
   get_distribution_interval : () -> (nat32) query;
+  get_distribution_interval_seconds : () -> (nat64) query;
+  get_distribution_count : () -> (nat32) query;
   get_launch_status : () -> (bool, opt nat64) query;
   get_logs : (opt nat64, opt nat64) -> (PaginatedLogs) query;
   get_reconciliation_status : () -> (ReconciliationStatus);

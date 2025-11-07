@@ -1,5 +1,29 @@
 # ICP Swap Change Log
 
+## 2025-11-07: Distribution Interval Storage Bug Fix
+
+### Fixed
+- **Distribution Interval Storage Bug**: Fixed DISTRIBUTION_INTERVALS being initialized with interval duration instead of 0
+  - Root cause: Line 171 stored interval_seconds (3600) in counter storage
+  - Impact: Counter showed incorrect values (e.g., 5398 instead of 1798 after 1798 distributions)
+  - Solution: Added separate DISTRIBUTION_INTERVAL_SECONDS storage for interval duration
+  - DISTRIBUTION_INTERVALS now properly tracks distribution count starting at 0
+  - Fixed post_upgrade to read interval from DISTRIBUTION_INTERVAL_SECONDS
+  - Locations: src/storage.rs, src/script.rs, src/queries.rs, icp_swap.did
+  - Migration: Counter can be corrected for existing tokens via InitArgs.distribution_intervals
+  - Memory ID: 19 (DISTRIBUTION_INTERVAL_SECONDS)
+
+### Added
+- **New Storage**: DISTRIBUTION_INTERVAL_SECONDS for storing interval duration (Memory ID 19)
+- **Query Functions**:
+  - `get_distribution_interval_seconds()`: Returns configured interval duration in seconds
+  - `get_distribution_count()`: Returns total number of distributions that have occurred
+
+### Changed
+- **initialize_globals**: Now stores interval duration in DISTRIBUTION_INTERVAL_SECONDS and initializes counter to 0
+- **post_upgrade**: Reads interval from DISTRIBUTION_INTERVAL_SECONDS instead of DISTRIBUTION_INTERVALS
+- **InitArgs**: Added support for migration path to correct counter values on existing tokens
+
 ## 2025-01-XX: Surplus Sweep Mechanism
 
 ### Update (Critical Fixes after Code Review - Round 1)

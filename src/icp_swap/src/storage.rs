@@ -46,6 +46,9 @@ pub const TOTAL_CLAIMED_REWARDS_MEM_ID: MemoryId = MemoryId::new(16);
 pub const LAST_SWEEP_TIMESTAMP_MEM_ID: MemoryId = MemoryId::new(17);
 pub const SWEEP_HISTORY_MEM_ID: MemoryId = MemoryId::new(18);
 
+// Memory ID for distribution interval duration storage
+pub const DISTRIBUTION_INTERVAL_SECONDS_MEM_ID: MemoryId = MemoryId::new(19);
+
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
         MemoryManager::init(DefaultMemoryImpl::default())
@@ -122,6 +125,11 @@ thread_local! {
 
     pub static SWEEP_HISTORY: RefCell<StableBTreeMap<u64, SweepRecord, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(SWEEP_HISTORY_MEM_ID)))
+    );
+
+    // Storage for distribution interval duration in seconds (separate from counter)
+    pub static DISTRIBUTION_INTERVAL_SECONDS: RefCell<StableBTreeMap<(), u64, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(DISTRIBUTION_INTERVAL_SECONDS_MEM_ID)))
     );
 }
 
