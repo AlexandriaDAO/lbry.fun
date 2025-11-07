@@ -63,7 +63,7 @@ const Insights: React.FC = () => {
     }, [insights]);
 
     const copyToClipboard = () => {
-        if (!insights) return;
+        if (!insights || !summaryData) return;
 
         const formattedTime = formatTime(insights.time);
         const insightsData = {
@@ -261,11 +261,11 @@ const Insights: React.FC = () => {
 
             {/* Copy Graph Data Button */}
             <div className="bg-black border border-white/30 p-3 font-mono mt-8">
-                <div className="flex justify-between items-center py-0.5 justify-end">
+                <div className="flex items-center py-0.5 justify-end">
                     <button
                         type="button"
                         onClick={copyToClipboard}
-                        className="bg-black border border-white/30 text-white font-mono text-sm px-4 py-2 hover:bg-white/10 text-xs px-3 py-1"
+                        className="bg-black border border-white/30 text-white font-mono text-xs px-3 py-1 hover:bg-white/10"
                     >
                         <span className="text-pink-500">&gt;</span> {copySuccess ? 'copied_to_clipboard' : 'copy_graph_data'}
                     </button>
