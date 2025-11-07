@@ -12,13 +12,9 @@ import { toast } from "sonner";
 import {
   LbryFunContext,
   IcpLedgerContext,
-  IcpSwapContext,
-  TokenomicsContext,
 } from "@/contexts/actors";
 import { idlFactory as lbryFunIdlFactory } from "../../../declarations/lbry_fun/lbry_fun.did.js";
 import { idlFactory as icpLedgerIdlFactory } from "../../../declarations/icp_ledger_canister/icp_ledger_canister.did.js";
-import { idlFactory as icpSwapIdlFactory } from "../../../declarations/icp_swap/icp_swap.did.js";
-import { idlFactory as tokenomicsIdlFactory } from "../../../declarations/tokenomics/tokenomics.did.js";
 import { getIcHost } from "@/utils/getIcHost";
 
 interface ActorProviderProps {
@@ -92,31 +88,7 @@ export default function ActorProvider({ children }: ActorProviderProps) {
         onRequestError={onRequestError}
         onResponseError={onResponseError}
       >
-        <IcUseActorProvider
-          canisterId={process.env.CANISTER_ID_ICP_SWAP!}
-          context={IcpSwapContext}
-          identity={identity}
-          idlFactory={icpSwapIdlFactory}
-          httpAgentOptions={httpAgentOptions}
-          onRequest={onRequest}
-          onResponse={onResponse}
-          onRequestError={onRequestError}
-          onResponseError={onResponseError}
-        >
-          <IcUseActorProvider
-            canisterId={process.env.CANISTER_ID_TOKENOMICS!}
-            context={TokenomicsContext}
-            identity={identity}
-            idlFactory={tokenomicsIdlFactory}
-            httpAgentOptions={httpAgentOptions}
-            onRequest={onRequest}
-            onResponse={onResponse}
-            onRequestError={onRequestError}
-            onResponseError={onResponseError}
-          >
-            {children}
-          </IcUseActorProvider>
-        </IcUseActorProvider>
+        {children}
       </IcUseActorProvider>
     </IcUseActorProvider>
   );
