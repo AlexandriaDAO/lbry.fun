@@ -61,7 +61,7 @@ pub fn get_total_unclaimed_icp_reward() -> u128 {
 
 #[query]
 pub fn get_current_staking_reward_percentage() -> String {
-    format!("Staking percentage {}%", STAKING_REWARD_PERCENTAGE / 100)
+    format!("Stakers receive 99% of distributions (Platform: 1%)")
 }
 
 #[query]

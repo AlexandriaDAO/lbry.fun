@@ -1,5 +1,15 @@
 # ICP Swap Change Log
 
+## 2025-11-07: Staking Percentage Display Message Fix
+
+### Fixed
+- **Staking Percentage Message**: Clarified confusing display message in `get_current_staking_reward_percentage()`
+  - Previous message: "Staking percentage 1%" (misleading - sounded like stakers only get 1%)
+  - New message: "Stakers receive 99% of distributions (Platform: 1%)"
+  - Impact: Cosmetic/UX improvement - no functional change
+  - Location: src/queries.rs line 64
+  - Resolves: Issue #4 in tokenomics_audit_fixes.md
+
 ## 2025-11-07: Distribution Interval Storage Bug Fix
 
 ### Fixed
