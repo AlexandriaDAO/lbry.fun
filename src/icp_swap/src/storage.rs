@@ -207,6 +207,10 @@ pub fn get_last_sweep_timestamp() -> u64 {
 
 pub fn record_sweep(record: SweepRecord) -> u64 {
     let sweep_id = record.timestamp; // Use timestamp from record (already captured in caller)
+
+    // Validate timestamp is reasonable (non-zero)
+    assert!(sweep_id > 0, "Sweep record timestamp must be non-zero");
+
     SWEEP_HISTORY.with(|h| {
         h.borrow_mut().insert(sweep_id, record);
     });

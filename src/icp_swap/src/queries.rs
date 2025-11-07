@@ -9,7 +9,7 @@ use crate::{
     UNCOLLECTED_ALEX_FEES,
     REWARD_POOL,
     ReconciliationStatus,
-    ALLOWED_DISCREPANCY_E8S,
+    // Use NEGATIVE_DISCREPANCY_TOLERANCE_E8S and POSITIVE_DISCREPANCY_TOLERANCE_E8S instead of old ALLOWED_DISCREPANCY_E8S
 };
 use candid::{CandidType, Principal};
 use ic_cdk::{api::caller, query, update};

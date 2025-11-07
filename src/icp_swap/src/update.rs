@@ -1892,8 +1892,11 @@ pub async fn sweep_surplus_to_revshare() -> Result<String, ExecutionError> {
     // Calculate sweep amount (keep operational buffer + account for transfer fee)
     const ICP_TRANSFER_FEE: u64 = 10_000; // 0.0001 ICP
 
-    let sweep_amount = if surplus > OPERATIONAL_BUFFER_E8S + ICP_TRANSFER_FEE {
-        surplus - OPERATIONAL_BUFFER_E8S - ICP_TRANSFER_FEE
+    // Use checked arithmetic to prevent underflow
+    let total_reserve = OPERATIONAL_BUFFER_E8S.saturating_add(ICP_TRANSFER_FEE);
+
+    let sweep_amount = if surplus > total_reserve {
+        surplus.saturating_sub(total_reserve)
     } else {
         // This shouldn't happen given threshold check, but safety first
         register_info_log(
@@ -1919,13 +1922,17 @@ pub async fn sweep_surplus_to_revshare() -> Result<String, ExecutionError> {
     let now = ic_cdk::api::time();
     let one_hour_nanos = 3_600_000_000_000u64; // 1 hour in nanoseconds
 
-    if last_sweep > 0 && now >= last_sweep && now - last_sweep < one_hour_nanos {
-        register_info_log(
-            Principal::anonymous(),
-            "sweep_surplus_to_revshare",
-            &format!("Last sweep was {} ago (< 1 hour). Skipping to prevent rapid sweeps.", now - last_sweep)
-        );
-        return Ok("Too soon since last sweep".to_string());
+    if last_sweep > 0 && now >= last_sweep {
+        // Use saturating arithmetic to prevent underflow
+        let time_since = now.saturating_sub(last_sweep);
+        if time_since < one_hour_nanos {
+            register_info_log(
+                Principal::anonymous(),
+                "sweep_surplus_to_revshare",
+                &format!("Last sweep was {} nanos ago (< 1 hour). Skipping to prevent rapid sweeps.", time_since)
+            );
+            return Ok("Too soon since last sweep".to_string());
+        }
     }
 
     register_info_log(

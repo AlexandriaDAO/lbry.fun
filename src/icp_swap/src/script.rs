@@ -317,8 +317,11 @@ async fn distribute_reward_wrapper() {
     match distribute_reward().await {
         Ok(_) => (),
         Err(e) => {
-            register_info_log(caller(), "distribute_reward_wrapper",
-                &format!("Error distributing rewards: {}", e));
+            register_info_log(
+                caller(),
+                "distribute_reward_wrapper",
+                &format!("Distribution failed: {}. Skipping surplus sweep to maintain state consistency.", e)
+            );
             // If distribution fails, skip sweep to avoid inconsistent state
             return;
         }
