@@ -106,12 +106,6 @@ fn initialize_globals(args: InitArgs) {
         });
     }
 
-    if let Some(distribution_intervals) = args.distribution_intervals {
-        DISTRIBUTION_INTERVALS.with(|m| {
-            m.borrow_mut().insert((), distribution_intervals);
-        });
-    }
-
     if let Some(logs) = args.archived_transaction_log {
         ARCHIVED_TRANSACTION_LOG.with(|m| {
             let mut log_map = m.borrow_mut();
