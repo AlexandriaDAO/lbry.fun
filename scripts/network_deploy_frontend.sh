@@ -36,14 +36,25 @@ rm -rf local/canisters/
 cp -r ic/canisters/ local/
 cd ..
 
+# Create directories for external canisters only (lbry_fun_frontend is already copied above)
 mkdir -p .dfx/local/canisters/LBRY
 mkdir -p .dfx/local/canisters/ALEX
-mkdir -p .dfx/local/canisters/lbry_fun_frontend/
 mkdir -p src/icp_swap_factory && dfx canister --network ic metadata ggzvv-5qaaa-aaaag-qck7a-cai candid:service > src/icp_swap_factory/icp_swap_factory.did
 
 wget https://raw.githubusercontent.com/dfinity/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/rs/rosetta-api/icrc1/ledger/ledger.did -O .dfx/local/canisters/ALEX/ALEX.did
 wget https://raw.githubusercontent.com/dfinity/ic/b9a0f18dd5d6019e3241f205de797bca0d9cc3f8/rs/rosetta-api/icrc1/ledger/ledger.did -O .dfx/local/canisters/LBRY/LBRY.did
 
+# ✨ CLEAN FRONTEND BUILD - Force fresh rebuild
+echo "🧹 Cleaning frontend build artifacts..."
+rm -rf dist/lbry_fun_frontend/
+rm -rf node_modules/.cache/
+# Note: Don't delete .dfx canisters - they contain assetstorage.did needed by dfx generate
+
+echo "🔨 Forcing fresh frontend build..."
+dfx generate  # Regenerate type declarations
+npm run build # Force webpack rebuild with clean output
+
+# Deploy only frontend canister
 dfx identity use alex
 dfx deploy lbry_fun_frontend --network ic
 
