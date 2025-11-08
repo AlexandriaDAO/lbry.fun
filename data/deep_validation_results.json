@@ -1,0 +1,98 @@
+{
+  "totalMintingEvents": 86,
+  "detectedEpochs": 8,
+  "expectedEpochs": 24,
+  "epochs": [
+    {
+      "epochNumber": 1,
+      "eventsCount": 1,
+      "totalPrimaryMinted": 704209.9931000001,
+      "totalSecondaryBurned": 704210,
+      "avgRatio": 1.0000000097982136,
+      "projectedMinted": 1000000,
+      "variance": -29.57900068999999
+    },
+    {
+      "epochNumber": 2,
+      "eventsCount": 1,
+      "totalPrimaryMinted": 590103.4969999999,
+      "totalSecondaryBurned": 622805,
+      "avgRatio": 1.0554165551742192,
+      "projectedMinted": 450000,
+      "variance": 31.134110444444413
+    },
+    {
+      "epochNumber": 3,
+      "eventsCount": 1,
+      "totalPrimaryMinted": 330053.57470000023,
+      "totalSecondaryBurned": 388253,
+      "avgRatio": 1.1763332675699687,
+      "projectedMinted": 607500,
+      "variance": -45.67019346502054
+    },
+    {
+      "epochNumber": 4,
+      "eventsCount": 1,
+      "totalPrimaryMinted": 655883.2391999997,
+      "totalSecondaryBurned": 840288,
+      "avgRatio": 1.2811548607720549,
+      "projectedMinted": 820125,
+      "variance": -20.0264302149063
+    },
+    {
+      "epochNumber": 5,
+      "eventsCount": 5,
+      "totalPrimaryMinted": 507778.3761,
+      "totalSecondaryBurned": 696541,
+      "avgRatio": 1.3717421473316653,
+      "projectedMinted": 1107168.75,
+      "variance": -54.13721927212992
+    },
+    {
+      "epochNumber": 6,
+      "eventsCount": 1,
+      "totalPrimaryMinted": 170948.09230000013,
+      "totalSecondaryBurned": 246896,
+      "avgRatio": 1.4442746723766733,
+      "projectedMinted": 1494677.8125,
+      "variance": -88.56288018258115
+    },
+    {
+      "epochNumber": 7,
+      "eventsCount": 28,
+      "totalPrimaryMinted": 1026278.6188999992,
+      "totalSecondaryBurned": 1564289,
+      "avgRatio": 1.524234229566878,
+      "projectedMinted": 2017815.046875,
+      "variance": -49.13911359272487
+    },
+    {
+      "epochNumber": 8,
+      "eventsCount": 48,
+      "totalPrimaryMinted": 354410.60819999827,
+      "totalSecondaryBurned": 600289,
+      "avgRatio": 1.6937670208258822,
+      "projectedMinted": 2724050.31328125,
+      "variance": -86.98957187126645
+    }
+  ],
+  "validationPassed": false,
+  "issues": [
+    "Epoch 1: -29.58% variance from projection",
+    "Epoch 2: 31.13% variance from projection",
+    "Epoch 3: -45.67% variance from projection",
+    "Epoch 4: -20.03% variance from projection",
+    "Epoch 5: -54.14% variance from projection",
+    "Epoch 6: -88.56% variance from projection",
+    "Epoch 7: -49.14% variance from projection",
+    "Epoch 8: -86.99% variance from projection",
+    "Epoch 1->2: Halving ratio 83.80% instead of 95%",
+    "Epoch 2->3: Halving ratio 55.93% instead of 95%",
+    "Epoch 3->4: Halving ratio 198.72% instead of 95%",
+    "Epoch 4->5: Halving ratio 77.42% instead of 95%",
+    "Epoch 5->6: Halving ratio 33.67% instead of 95%",
+    "Epoch 6->7: Halving ratio 600.35% instead of 95%",
+    "Epoch 7->8: Halving ratio 34.53% instead of 95%",
+    "Epoch count: 8 detected vs 24 expected"
+  ]
+}
