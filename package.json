@@ -38,7 +38,13 @@
 
     "test:watch": "jest --watch",
 
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+
+    "validate:tokenomics": "node scripts/tokenomics_validator.js",
+
+    "validate:superficial": "node scripts/compare_data.js",
+
+    "validate:legacy-deep": "node scripts/deep_validation.js"
 
   },
 
