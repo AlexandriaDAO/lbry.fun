@@ -40,7 +40,7 @@
 
     "test:coverage": "jest --coverage",
 
-    "validate:tokenomics": "node scripts/tokenomics_validator.js",
+    "validate:tokenomics": "node validation/tools/tokenomics_validator.js",
 
     "validate:superficial": "node scripts/compare_data.js",
 

@@ -21,7 +21,12 @@ function parseArgs(args) {
     canisterId: args[0],
     network: 'ic',
     projectionFile: path.join(__dirname, '../data/zero_tokenomics_data.md'),
-    insightsFile: path.join(__dirname, '../data/zero_insights_data.md')
+    insightsFile: path.join(__dirname, '../data/zero_insights_data.md'),
+    // Token configuration (can be overridden via CLI)
+    halvingStep: null,
+    thresholdMultiplier: null,
+    initialSecondaryBurn: null,
+    initialRewardPerBurnUnit: null
   };
 
   // Parse optional arguments
@@ -34,6 +39,18 @@ function parseArgs(args) {
       i++;
     } else if (args[i] === '--insights' && i + 1 < args.length) {
       config.insightsFile = args[i + 1];
+      i++;
+    } else if (args[i] === '--halving-step' && i + 1 < args.length) {
+      config.halvingStep = parseFloat(args[i + 1]);
+      i++;
+    } else if (args[i] === '--threshold-multiplier' && i + 1 < args.length) {
+      config.thresholdMultiplier = parseFloat(args[i + 1]);
+      i++;
+    } else if (args[i] === '--initial-secondary-burn' && i + 1 < args.length) {
+      config.initialSecondaryBurn = parseInt(args[i + 1], 10);
+      i++;
+    } else if (args[i] === '--initial-reward' && i + 1 < args.length) {
+      config.initialRewardPerBurnUnit = parseInt(args[i + 1], 10);
       i++;
     } else if (args[i] === 'local' || args[i] === 'ic') {
       config.network = args[i];
@@ -63,6 +80,13 @@ Options:
                      Default: ../data/zero_tokenomics_data.md
   --insights <file>  Path to insights data file
                      Default: ../data/zero_insights_data.md
+
+Token Configuration (optional, defaults to Pool 1):
+  --halving-step <percent>          Halving percentage (e.g., 90 for 90%)
+  --threshold-multiplier <mult>     Threshold growth multiplier (e.g., 1.5)
+  --initial-secondary-burn <amount> Initial secondary burn threshold (E8S)
+  --initial-reward <amount>         Initial reward per burn unit (E8S)
+
   -h, --help         Show this help message
 
 Examples:
@@ -83,17 +107,15 @@ Exit Codes:
 }
 
 /**
- * Extract token configuration from data
- * For now, using known Pool 1 configuration
+ * Extract token configuration from CLI args or use defaults
  */
-function extractTokenConfig(projectionData, insightsData) {
-  // Pool 1 configuration (from creation parameters)
-  // These should ideally be stored in the data files or passed as CLI args
+function extractTokenConfig(cliConfig, projectionData, insightsData) {
+  // Use CLI values if provided, otherwise default to Pool 1 configuration
   return {
-    halving_step: 95,                          // 95% halving per epoch
-    threshold_multiplier: 1.5,                 // 1.5x threshold growth
-    initial_secondary_burn: 1000000,           // 1M tokens (E8S)
-    initial_reward_per_burn_unit: 1000000      // 1M tokens (E8S)
+    halving_step: cliConfig.halvingStep || 90,                          // 90% halving per epoch (Pool 1)
+    threshold_multiplier: cliConfig.thresholdMultiplier || 1.5,         // 1.5x threshold growth
+    initial_secondary_burn: cliConfig.initialSecondaryBurn || 1000000,  // 1M tokens (E8S)
+    initial_reward_per_burn_unit: cliConfig.initialRewardPerBurnUnit || 1000000  // 1M tokens (E8S)
   };
 }
 
@@ -133,12 +155,13 @@ async function main() {
     const reportGenerator = new ReportGenerator();
 
     // Get token configuration
-    const tokenConfig = extractTokenConfig(projectionData, insightsData);
+    const tokenConfig = extractTokenConfig(config, projectionData, insightsData);
     console.log('⚙️  Token Configuration:');
     console.log(`   Halving Step: ${tokenConfig.halving_step}%`);
     console.log(`   Threshold Multiplier: ${tokenConfig.threshold_multiplier}x`);
     console.log(`   Initial Secondary Burn: ${tokenConfig.initial_secondary_burn.toLocaleString()} E8S`);
-    console.log(`   Initial Reward: ${tokenConfig.initial_reward_per_burn_unit.toLocaleString()} E8S\n`);
+    console.log(`   Initial Reward: ${tokenConfig.initial_reward_per_burn_unit.toLocaleString()} E8S`);
+    console.log(`   ${config.halvingStep ? '(from CLI)' : '(defaults)'}\n`);
 
     // Run validation
     console.log('🔍 Running comprehensive validation...\n');
@@ -156,7 +179,12 @@ async function main() {
 
     // Markdown file
     const markdownReport = reportGenerator.generateMarkdownReport(results, metadata);
-    const reportPath = path.join(__dirname, '../data/comprehensive_validation_report.md');
+    const reportDir = path.join(__dirname, '../reports');
+    if (!fs.existsSync(reportDir)) {
+      fs.mkdirSync(reportDir, { recursive: true });
+    }
+    const reportFilename = `pool_${insightsData.poolId}_validation_${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
+    const reportPath = path.join(reportDir, reportFilename);
     fs.writeFileSync(reportPath, markdownReport);
     console.log(`📝 Detailed report saved to: ${reportPath}\n`);
 

@@ -7,6 +7,19 @@ const execPromise = util.promisify(exec);
  */
 class TokenomicsCanisterClient {
   constructor(canisterId, network = 'ic') {
+    // Validate canister ID format (Principal format: lowercase alphanumeric with hyphens)
+    if (!canisterId || typeof canisterId !== 'string') {
+      throw new Error('Canister ID is required and must be a string');
+    }
+    if (!/^[a-z0-9-]+$/.test(canisterId)) {
+      throw new Error(`Invalid canister ID format: ${canisterId}. Must contain only lowercase letters, numbers, and hyphens.`);
+    }
+
+    // Validate network
+    if (!['ic', 'local'].includes(network)) {
+      throw new Error(`Invalid network: ${network}. Must be 'ic' or 'local'.`);
+    }
+
     this.canisterId = canisterId;
     this.network = network;
   }
