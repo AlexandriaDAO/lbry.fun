@@ -1867,7 +1867,16 @@ pub async fn process_surplus() -> Result<String, ExecutionError> {
     });
     let archived_balance = crate::queries::get_total_archived_balance();
 
-    let expected_balance = reward_pool + uncollected_alex + total_staked + archived_balance;
+    // Use checked arithmetic to prevent overflow
+    let expected_balance = reward_pool
+        .checked_add(uncollected_alex)
+        .and_then(|sum| sum.checked_add(total_staked))
+        .and_then(|sum| sum.checked_add(archived_balance))
+        .ok_or_else(|| ExecutionError::AdditionOverflow {
+            operation: "Calculating expected balance".to_string(),
+            details: format!("reward_pool: {}, uncollected_alex: {}, total_staked: {}, archived_balance: {}",
+                           reward_pool, uncollected_alex, total_staked, archived_balance)
+        })?;
 
     // Calculate surplus (positive discrepancy only)
     if actual_balance <= expected_balance {
@@ -1881,14 +1890,13 @@ pub async fn process_surplus() -> Result<String, ExecutionError> {
 
     let surplus = actual_balance - expected_balance;
 
-    // Check if surplus exceeds threshold (lowered to 0.01 ICP for internal ops)
-    const SURPLUS_THRESHOLD_E8S: u64 = 1_000_000; // 0.01 ICP (was 1 ICP)
-
-    if surplus < SURPLUS_THRESHOLD_E8S {
+    // Check if surplus exceeds threshold (using MIN_SWEEP_AMOUNT_E8S for internal ops)
+    // This is lowered to 0.01 ICP since internal accounting has no transfer fees
+    if surplus < MIN_SWEEP_AMOUNT_E8S {
         register_info_log(
             Principal::anonymous(),
             "process_surplus",
-            &format!("Surplus {} below threshold {}. Will process when threshold met.", surplus, SURPLUS_THRESHOLD_E8S)
+            &format!("Surplus {} below threshold {}. Will process when threshold met.", surplus, MIN_SWEEP_AMOUNT_E8S)
         );
         return Ok(format!("Surplus {} below threshold", surplus));
     }
@@ -1943,7 +1951,7 @@ pub async fn process_surplus() -> Result<String, ExecutionError> {
         amount_swept: surplus,
         surplus_before: surplus,
         operational_buffer_kept: 0, // No buffer needed for internal accounting
-        transfer_block_index: 0, // No transfer, internal state update
+        transfer_block_index: u64::MAX, // u64::MAX indicates no external transfer (internal state update only)
         success: true,
         error_message: None,
     };
