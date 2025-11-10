@@ -9,6 +9,7 @@ interface UseTokenomicsDataParams {
   initialSecondaryBurn: string;
   halvingStep: string;
   initialRewardPerBurnUnit: string;
+  thresholdMultiplier?: string;  // Optional with default value
 }
 
 interface UseTokenomicsDataResult {
@@ -61,12 +62,15 @@ export const useTokenomicsData = (params: UseTokenomicsDataParams): UseTokenomic
         const tge_allocation = BigInt(params.tgeAllocation || '0') * E8S_MULTIPLIER;
 
         const result = await dispatch(previewTokenomicsSchedule({
-          actor: lbryFunActor,
-          primary_per_threshold,
-          max_primary_supply,
-          initial_secondary_burn,
-          halving_step,
-          tge_allocation,
+          args: {
+            primary_per_threshold,
+            max_primary_supply,
+            initial_secondary_burn,
+            halving_step,
+            tge_allocation,
+            threshold_multiplier: parseFloat(params.thresholdMultiplier || '2.0'),
+          },
+          lbryFunActor: lbryFunActor,
         })).unwrap();
 
         setData(result);
@@ -85,6 +89,7 @@ export const useTokenomicsData = (params: UseTokenomicsDataParams): UseTokenomic
     params.initialSecondaryBurn,
     params.halvingStep,
     params.initialRewardPerBurnUnit,
+    params.thresholdMultiplier,
     dispatch,
     lbryFunActor
   ]);
