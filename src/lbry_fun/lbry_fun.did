@@ -130,7 +130,6 @@ service : () -> {
   get_live : () -> (vec record { nat64; TokenRecord }) query;
   // Query deployment status and history
   get_my_deployments : () -> (vec DeploymentInfo) query;
-  get_swap_stats : () -> (nat64, nat64, nat64) query;
   get_token_detail : (nat64) -> (opt TokenStatusDetail) query;
   get_token_status : (nat64) -> (Result_3) query;
   get_tokenomics_graphs : (nat64) -> (Result_4) query;

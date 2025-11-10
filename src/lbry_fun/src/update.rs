@@ -676,9 +676,6 @@ fn init() {
             let _ = _process_fee_treasury().await;
         });
     });
-    
-    // Initialize the swap timer for ALEX rewards
-    crate::collection::init_swap_timer();
 }
 
 #[ic_cdk::post_upgrade]
@@ -691,7 +688,4 @@ fn post_upgrade() {
             let _ = _process_fee_treasury().await;
         });
     });
-    
-    // Initialize the swap timer for ALEX rewards
-    crate::collection::init_swap_timer();
 }

@@ -4,8 +4,6 @@ mod storage;
 pub use storage::*;
 mod deployment;
 pub use deployment::*;
-mod collection;
-pub use collection::*;
 mod deployment_updates;
 pub use deployment_updates::{
     initiate_token_deployment, execute_token_deployment, 
