@@ -5,9 +5,10 @@ use std::time::Duration;
 // Configuration constants
 const MIN_ICP_BALANCE: u64 = 100_000_000;  // 1 ICP minimum to trigger forward
 const ICP_RESERVE: u64 = 10_000_000;       // 0.1 ICP reserve for fees
-const CHECK_INTERVAL: u64 = 3600;          // Check every hour
+const MIN_FORWARD_AMOUNT: u64 = 10_000_000; // 0.1 ICP minimum to forward
+const CHECK_INTERVAL: u64 = 1800;          // Check every 30 minutes (staggered from treasury timer)
 
-// Initialize hourly forward timer
+// Initialize forward timer (runs every 30 minutes, offset from hourly treasury timer)
 pub fn init_forward_timer() {
     set_timer_interval(
         Duration::from_secs(CHECK_INTERVAL),
@@ -42,8 +43,9 @@ async fn check_and_forward() -> Result<String, String> {
     let icp_balance = match icp_balance_result {
         Ok((tokens,)) => tokens.e8s(),
         Err(e) => {
-            ic_cdk::println!("FORWARD_TIMER: Failed to check balance: {:?}", e);
-            return Ok("Could not check balance".to_string());
+            let error_msg = format!("Failed to check ICP balance: {:?}", e);
+            ic_cdk::println!("FORWARD_TIMER: {}", error_msg);
+            return Err(error_msg);
         }
     };
 
@@ -57,6 +59,12 @@ async fn check_and_forward() -> Result<String, String> {
 
     // Calculate forward amount (leave reserve for fees)
     let forward_amount = icp_balance.saturating_sub(ICP_RESERVE + 10_000);
+
+    // Validate minimum forward amount to avoid dust transfers
+    if forward_amount < MIN_FORWARD_AMOUNT {
+        ic_cdk::println!("FORWARD_TIMER: Forward amount {} below minimum {}", forward_amount, MIN_FORWARD_AMOUNT);
+        return Ok(format!("Forward amount {} too small", forward_amount));
+    }
 
     ic_cdk::println!("FORWARD_TIMER: Forwarding {} E8S of ICP to alex_revshare", forward_amount);
 
