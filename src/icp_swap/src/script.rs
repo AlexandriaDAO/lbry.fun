@@ -26,7 +26,7 @@ use crate::{
 };
 
 pub const PRICE_FETCH_INTERVAL: Duration = Duration::from_secs(1 * 24 * 60 * 60); // 1 days in seconds
-pub const ALEX_FEE_PUSH_INTERVAL: Duration = Duration::from_secs(4 * 60 * 60); // 4 hours- push platform fees to lbry_fun
+pub const ALEX_FEE_PUSH_INTERVAL: Duration = Duration::from_secs(24 * 60 * 60); // 4 hours- push platform fees to lbry_fun
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct InitArgs {
