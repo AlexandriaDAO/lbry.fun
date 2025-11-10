@@ -124,13 +124,15 @@ const UnifiedTokenomicsGraphsV2: React.FC<UnifiedTokenomicsGraphsV2Props> = ({
         setError(null);
         
         dispatch(previewTokenomicsSchedule({
-            actor: lbryFunActor,
-            primary_per_threshold,
-            max_primary_supply,
-            initial_secondary_burn,
-            halving_step,
-            tge_allocation,
-            threshold_multiplier,
+            args: {
+                primary_per_threshold,
+                max_primary_supply,
+                initial_secondary_burn,
+                halving_step,
+                tge_allocation,
+                threshold_multiplier,
+            },
+            lbryFunActor: lbryFunActor,
         }))
         .unwrap()
         .then((result) => {

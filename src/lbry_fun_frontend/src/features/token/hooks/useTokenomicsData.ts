@@ -61,12 +61,15 @@ export const useTokenomicsData = (params: UseTokenomicsDataParams): UseTokenomic
         const tge_allocation = BigInt(params.tgeAllocation || '0') * E8S_MULTIPLIER;
 
         const result = await dispatch(previewTokenomicsSchedule({
-          actor: lbryFunActor,
-          primary_per_threshold,
-          max_primary_supply,
-          initial_secondary_burn,
-          halving_step,
-          tge_allocation,
+          args: {
+            primary_per_threshold,
+            max_primary_supply,
+            initial_secondary_burn,
+            halving_step,
+            tge_allocation,
+            threshold_multiplier: 2.0,
+          },
+          lbryFunActor: lbryFunActor,
         })).unwrap();
 
         setData(result);
