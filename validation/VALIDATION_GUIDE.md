@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-This guide explains how to validate tokenomics for **any** token launch on lbry.fun.
+This guide explains how to validate tokenomics for **any** token launch on caffeinelauncher.com.
 
 ### Prerequisites
 
@@ -477,4 +477,4 @@ Include git commit hash in validation reports to track which code version was us
 
 ---
 
-*This validation system ensures mathematical correctness and on-chain accuracy for all lbry.fun tokenomics.*
+*This validation system ensures mathematical correctness and on-chain accuracy for all caffeinelauncher.com tokenomics.*
