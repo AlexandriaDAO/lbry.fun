@@ -9,7 +9,8 @@ use std::{borrow::Cow, cell::RefCell};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
-// Launch delay constant (24 hours hardcoded)
+/// Launch delay enforced for all tokens to prevent bot sniping and ensure fair launch.
+/// Fixed at 24 hours (86400 seconds) to give all users equal opportunity to participate.
 pub const LAUNCH_DELAY_SECONDS: u64 = 86400;
 
 // Memory IDs for stable structures

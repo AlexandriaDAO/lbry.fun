@@ -291,7 +291,7 @@ fn default_params() -> CreateTokenParams {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, candid::CandidType, candid::Deserialize)]
 struct CreateTokenParams {
     pub primary_token_name: String,
     pub primary_token_symbol: String,
