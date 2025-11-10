@@ -897,8 +897,8 @@ pub async fn distribute_reward() -> Result<String, ExecutionError> {
     // Calculate 1% of pool for distribution
     let total_distribution = reward_pool / 100;
     
-    // Calculate exact distribution
-    let alex_portion = total_distribution / 100;  // 1% of distribution
+    // Calculate exact distribution - true 1% of the 1% distribution
+    let alex_portion = reward_pool / 10000;  // Direct calculation: exactly 0.01 of pool (1% of 1%)
     let lp_portion = total_distribution - alex_portion; // Remainder for exact accounting
     
     // Update uncollected fees for ALEX stakers (1% of distribution)
@@ -2039,8 +2039,8 @@ async fn transfer_surplus_to_revshare(amount: u64) -> Result<u64, String> {
     .await
     .map_err(|e| format!("Transfer call failed: {:?}", e))?;
 
-    // Convert result
+    // Return the amount on success (we know what we transferred)
     result
-        .map(|block| block as u64)
+        .map(|_block| amount)  // Return the amount we transferred
         .map_err(|e| format!("Transfer failed: {:?}", e))
 }

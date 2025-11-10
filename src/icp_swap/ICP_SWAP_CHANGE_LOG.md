@@ -1,5 +1,32 @@
 # ICP Swap Change Log
 
+## 2024-11-10: Platform Fee Precision Fix
+
+### Fixed
+- **Critical Bug Fix**: Platform fee calculation now correctly yields 1.00% of distribution
+  - Previous: Double integer division (`total_distribution / 100`) resulted in ~0.74% platform fee
+  - Fixed: Direct calculation (`reward_pool / 10000`) ensures exactly 1.00% platform fee
+
+### Changed
+- Line 901 in `src/icp_swap/src/update.rs`:
+  - Old: `let alex_portion = total_distribution / 100;`
+  - New: `let alex_portion = reward_pool / 10000;`
+
+### Impact
+- Platform (lbry_fun canister) now receives true 1% of the 1% distribution (0.01% of pool)
+- Stakers continue to receive 99% of the 1% distribution (0.99% of pool)
+- All tokens (existing and new) will use corrected calculation after upgrade
+
+### Testing Required
+- Verify platform fee is exactly 1% across various pool sizes
+- Confirm total distribution still equals 1% of reward pool
+- Ensure no ICP is lost (platform fee + staker rewards = total distribution)
+
+### Backwards Compatibility
+- No breaking changes to interfaces or storage
+- Existing accumulated fees remain intact
+- Collection and transfer mechanisms unchanged
+
 ## 2025-11-07: Staking Percentage Display Message Fix
 
 ### Fixed

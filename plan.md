@@ -1,9 +1,7 @@
 
 Change between testing/mainnet:
 - Admin principal during launch
-- distribution constants: 
-  - lbry_fun/collections.rs | const CHECK_INTERVAL: u64 = 3600;          // Check every hour
-  - icp_swap/script.rs | pub const ALEX_FEE_PUSH_INTERVAL: Duration = Duration::from_secs(4 * 60 * 60); // 4 hours - push platform fees to lbry_fun
+
 
 
 
@@ -12,6 +10,25 @@ Change between testing/mainnet:
 // Before v1
 - Show 'my holdings'/stakes. Need a scalable plan for this.
 - Change the creation interval minimums so there's at least 1 hour notice.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -30,12 +47,6 @@ dfx canister call kong_backend force_add_token '("ryjl3-tyaaa-aaaaa-aaaba-cai")'
 
 dfx canister call kong_backend tokens '(opt "ICP")'
 
-
-
-# Claude Commands wrth trying.: 
-- Background agent: claude -p "<prompt>"
-- Slash commands: ./claude/commands/command1.md
-- claude --continue/resume // for old chats
 
 # Change Launch Times:
   For local testing with different countdowns:
