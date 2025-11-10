@@ -4,252 +4,162 @@ use ic_cdk_timers::set_timer_interval;
 use std::cell::RefCell;
 use std::time::Duration;
 
-// Constants
-const MIN_ICP_BALANCE: u64 = 100_000_000;  // 1 ICP threshold
+// Configuration constants
+const MIN_ICP_BALANCE: u64 = 100_000_000;  // 1 ICP minimum to trigger forward
 const ICP_RESERVE: u64 = 10_000_000;       // 0.1 ICP reserve for fees
 const CHECK_INTERVAL: u64 = 3600;          // Check every hour
-const CORE_ICP_SWAP_CANISTER: &str = "54fqz-5iaaa-aaaap-qkmqa-cai"; // Core LBRY swap
-const LBRY_CANISTER_ID: &str = "y33wz-myaaa-aaaap-qkmna-cai";
-const LBRY_BURN_PRINCIPAL: &str = "54fqz-5iaaa-aaaap-qkmqa-cai"; // Same as core swap (minting account)
 
-// Main state
+// Simple state tracking
 thread_local! {
-    static TOTAL_BURNED: RefCell<u64> = RefCell::new(0);
-    static LAST_SWAP_TIME: RefCell<u64> = RefCell::new(0);
-    static LAST_SWAP_AMOUNT: RefCell<u64> = RefCell::new(0);
+    static TOTAL_FORWARDED: RefCell<u64> = RefCell::new(0);
+    static LAST_FORWARD_TIME: RefCell<u64> = RefCell::new(0);
+    static LAST_FORWARD_AMOUNT: RefCell<u64> = RefCell::new(0);
 }
 
 // Initialize simple check timer
 pub fn init_swap_timer() {
     set_timer_interval(
-        Duration::from_secs(CHECK_INTERVAL), 
+        Duration::from_secs(CHECK_INTERVAL),
         || {
             ic_cdk::spawn(async {
-                let _ = check_and_swap().await;
+                let _ = check_and_forward().await;
             });
         }
     );
 }
 
-// Simple check and swap function
-async fn check_and_swap() -> Result<String, String> {
+// Simple check and forward function
+async fn check_and_forward() -> Result<String, String> {
     use ic_ledger_types::{AccountBalanceArgs, AccountIdentifier, MAINNET_LEDGER_CANISTER_ID};
-    
-    ic_cdk::println!("SWAP_TIMER: Checking balance for swap...");
-    
+
+    ic_cdk::println!("FORWARD_TIMER: Checking balance for forwarding...");
+
     // Check ICP balance
     let canister_id = ic_cdk::api::id();
     let account_id = AccountIdentifier::new(&canister_id, &ic_ledger_types::DEFAULT_SUBACCOUNT);
-    
+
     let balance_args = AccountBalanceArgs { account: account_id };
     let icp_balance_result: Result<(ic_ledger_types::Tokens,), _> = ic_cdk::call(
         MAINNET_LEDGER_CANISTER_ID,
         "account_balance",
         (balance_args,),
     ).await;
-    
+
     let icp_balance = match icp_balance_result {
         Ok((tokens,)) => tokens.e8s(),
         Err(e) => {
-            ic_cdk::println!("SWAP_TIMER: Failed to check balance: {:?}", e);
+            ic_cdk::println!("FORWARD_TIMER: Failed to check balance: {:?}", e);
             return Ok("Could not check balance".to_string());
         }
     };
-    
-    ic_cdk::println!("SWAP_TIMER: Balance check - {} E8S", icp_balance);
-    
+
+    ic_cdk::println!("FORWARD_TIMER: Balance check - {} E8S", icp_balance);
+
     // Only proceed if we have more than 1 ICP
     if icp_balance < MIN_ICP_BALANCE {
-        ic_cdk::println!("SWAP_TIMER: Balance {} below threshold {}", icp_balance, MIN_ICP_BALANCE);
+        ic_cdk::println!("FORWARD_TIMER: Balance {} below threshold {}", icp_balance, MIN_ICP_BALANCE);
         return Ok(format!("Balance {} below threshold", icp_balance));
     }
-    
-    ic_cdk::println!("SWAP_TIMER: Proceeding with swap, balance {} exceeds minimum", icp_balance);
-    
-    // Execute swap and burn
-    execute_swap_and_burn().await
+
+    ic_cdk::println!("FORWARD_TIMER: Proceeding with forward, balance {} exceeds minimum", icp_balance);
+
+    // Execute forward to alex_revshare
+    execute_forward().await
 }
 
-// Execute swap and burn - simplified balance-based approach
-async fn execute_swap_and_burn() -> Result<String, String> {
+// Execute ICP transfer to alex_revshare canister
+async fn execute_forward() -> Result<String, String> {
     use icrc_ledger_types::icrc1::account::Account;
+    use icrc_ledger_types::icrc1::transfer::{TransferArg, TransferError};
     use ic_ledger_types::{AccountBalanceArgs, AccountIdentifier, MAINNET_LEDGER_CANISTER_ID};
-    
-    ic_cdk::println!("SWAP_TIMER: Starting execute_swap_and_burn...");
-    
-    // Step 1: Check ICP balance
+    use crate::constants::ALEX_REVSHARE_CANISTER_ID;
+
+    ic_cdk::println!("FORWARD_TIMER: Starting execute_forward...");
+
+    // Get current ICP balance
     let canister_id = ic_cdk::api::id();
     let account_id = AccountIdentifier::new(&canister_id, &ic_ledger_types::DEFAULT_SUBACCOUNT);
-    
+
     let balance_args = AccountBalanceArgs { account: account_id };
     let icp_balance_result: Result<(ic_ledger_types::Tokens,), _> = ic_cdk::call(
         MAINNET_LEDGER_CANISTER_ID,
         "account_balance",
         (balance_args,),
     ).await;
-    
+
     let icp_balance = match icp_balance_result {
         Ok((tokens,)) => tokens.e8s(),
         Err(e) => return Err(format!("Failed to get ICP balance: {:?}", e)),
     };
-    
+
     // Only proceed if balance is above minimum threshold
     if icp_balance < MIN_ICP_BALANCE {
         return Ok(format!("ICP balance {} below minimum {}", icp_balance, MIN_ICP_BALANCE));
     }
-    
-    // Calculate swap amount (leave some reserve for fees)
-    // Need to account for approval fee (10_000) and transfer fee (10_000)
-    let swap_amount = icp_balance.saturating_sub(ICP_RESERVE + 20_000);
-    
-    ic_cdk::println!("SWAP_TIMER: Attempting to swap {} E8S of ICP", swap_amount);
-    
-    // Get the core swap canister principal
-    let core_swap_canister = Principal::from_text(CORE_ICP_SWAP_CANISTER)
-        .map_err(|e| format!("Invalid core ICP swap canister ID: {}", e))?;
-    
-    // First approve the core swap canister to spend our ICP
-    use icrc_ledger_types::icrc2::approve::{ApproveArgs, ApproveError};
-    
-    let approve_args = ApproveArgs {
-        from_subaccount: None,
-        spender: Account {
-            owner: core_swap_canister,
-            subaccount: None,
-        },
-        amount: candid::Nat::from(swap_amount + 10_000), // Amount plus transfer fee
-        expected_allowance: None,
-        expires_at: None,
-        fee: None,
-        memo: None,
-        created_at_time: None,
-    };
-    
-    let approve_result: Result<(Result<candid::Nat, ApproveError>,), _> = ic_cdk::call(
-        MAINNET_LEDGER_CANISTER_ID,
-        "icrc2_approve",
-        (approve_args,),
-    ).await;
-    
-    match approve_result {
-        Ok((Ok(block_index),)) => {
-            ic_cdk::println!("SWAP_TIMER: Approved core swap to spend {} ICP, block: {}", swap_amount, block_index);
-        }
-        Ok((Err(e),)) => {
-            return Err(format!("Approval failed: {:?}", e));
-        }
-        Err(e) => {
-            return Err(format!("Approval call failed: {:?}", e));
-        }
-    }
-    
-    // Now call the swap function on the core project's ICP_SWAP canister
-    // The swap function returns Result<String, ExecutionError> on success
-    let swap_result: Result<(String,), _> = ic_cdk::call(
-        core_swap_canister,
-        "swap",
-        (swap_amount, None::<[u8; 32]>),
-    ).await;
-    
-    match swap_result {
-        Ok((success_msg,)) => {
-            ic_cdk::println!("Successfully swapped {} ICP: {}", swap_amount, success_msg);
-        }
-        Err(e) => {
-            // The call failed - either rejected by the canister or network error
-            return Err(format!("Swap call failed: {:?}", e));
-        }
-    }
-    
-    // Check actual LBRY balance and burn all of it
-    let lbry_principal = Principal::from_text(LBRY_CANISTER_ID)
-        .map_err(|e| format!("Invalid LBRY canister ID: {}", e))?;
-    
-    let lbry_account = Account {
-        owner: canister_id,
-        subaccount: None,
-    };
-    
-    // Check LBRY balance
-    let balance_result: Result<(candid::Nat,), _> = ic_cdk::call(
-        lbry_principal,
-        "icrc1_balance_of",
-        (lbry_account,),
-    ).await;
-    
-    let lbry_balance = match balance_result {
-        Ok((balance,)) => {
-            // Convert Nat to u64
-            let balance_str = balance.to_string();
-            balance_str.parse::<u64>().unwrap_or(0)
-        }
-        Err(e) => {
-            // Non-fatal: LBRY may not have arrived yet
-            return Ok(format!("Swap completed but couldn't check LBRY balance: {:?}", e));
-        }
-    };
-    
-    if lbry_balance == 0 {
-        return Ok("Swap completed but no LBRY balance to burn".to_string());
-    }
-    
-    // Burn ALL LBRY tokens
-    let burn_principal = Principal::from_text(LBRY_BURN_PRINCIPAL)
-        .map_err(|e| format!("Invalid burn principal: {}", e))?;
-    
-    let burn_args = icrc_ledger_types::icrc1::transfer::TransferArg {
+
+    // Calculate forward amount (leave reserve for fees)
+    // Account for transfer fee (10_000)
+    let forward_amount = icp_balance.saturating_sub(ICP_RESERVE + 10_000);
+
+    ic_cdk::println!("FORWARD_TIMER: Forwarding {} E8S of ICP to alex_revshare", forward_amount);
+
+    // Get alex_revshare canister principal
+    let alex_revshare = Principal::from_text(ALEX_REVSHARE_CANISTER_ID)
+        .map_err(|e| format!("Invalid alex_revshare canister ID: {}", e))?;
+
+    // Execute transfer to alex_revshare
+    let transfer_args = TransferArg {
         from_subaccount: None,
         to: Account {
-            owner: burn_principal,
+            owner: alex_revshare,
             subaccount: None,
         },
         fee: None,
         created_at_time: None,
         memo: None,
-        amount: candid::Nat::from(lbry_balance),
+        amount: candid::Nat::from(forward_amount),
     };
-    
-    // Execute burn transfer
-    let burn_result: Result<(Result<candid::Nat, icrc_ledger_types::icrc1::transfer::TransferError>,), _> = ic_cdk::call(
-        lbry_principal,
+
+    let transfer_result: Result<(Result<candid::Nat, TransferError>,), _> = ic_cdk::call(
+        MAINNET_LEDGER_CANISTER_ID,
         "icrc1_transfer",
-        (burn_args,),
+        (transfer_args,),
     ).await;
-    
-    match burn_result {
-        Ok((Ok(_block_index),)) => {
-            // Update total burned tracking
-            TOTAL_BURNED.with(|total| {
-                *total.borrow_mut() = total.borrow().saturating_add(lbry_balance);
+
+    // Handle result and update tracking
+    match transfer_result {
+        Ok((Ok(block_index),)) => {
+            // Update tracking state
+            TOTAL_FORWARDED.with(|total| {
+                *total.borrow_mut() = total.borrow().saturating_add(forward_amount);
             });
-            
-            LAST_SWAP_TIME.with(|t| *t.borrow_mut() = ic_cdk::api::time());
-            LAST_SWAP_AMOUNT.with(|a| *a.borrow_mut() = swap_amount);
-            
+
+            LAST_FORWARD_TIME.with(|t| *t.borrow_mut() = ic_cdk::api::time());
+            LAST_FORWARD_AMOUNT.with(|a| *a.borrow_mut() = forward_amount);
+
             Ok(format!(
-                "Successfully swapped {} ICP and burned {} LBRY. Total burned: {} LBRY",
-                swap_amount,
-                lbry_balance,
-                TOTAL_BURNED.with(|t| *t.borrow())
+                "Successfully forwarded {} ICP to alex_revshare at block {}. Total forwarded: {} ICP",
+                forward_amount,
+                block_index,
+                TOTAL_FORWARDED.with(|t| *t.borrow())
             ))
         }
         Ok((Err(e),)) => {
-            // Non-fatal: LBRY will be burned in next cycle
-            Ok(format!("Swap succeeded, burn will retry next cycle: {:?}", e))
+            Err(format!("Transfer to alex_revshare failed: {:?}", e))
         }
         Err(e) => {
-            // Non-fatal: LBRY will be burned in next cycle
-            Ok(format!("Swap succeeded, burn will retry next cycle: {:?}", e))
+            Err(format!("Transfer call to alex_revshare failed: {:?}", e))
         }
     }
 }
 
-// Query functions
+// Query functions - simplified to reflect forwarding instead of burning
 #[query]
 pub fn get_swap_stats() -> (u64, u64, u64) {
+    // Returns: (total_forwarded_to_revshare, last_forward_time, last_forward_amount)
     (
-        TOTAL_BURNED.with(|t| *t.borrow()),
-        LAST_SWAP_TIME.with(|t| *t.borrow()),
-        LAST_SWAP_AMOUNT.with(|a| *a.borrow()),
+        TOTAL_FORWARDED.with(|t| *t.borrow()),
+        LAST_FORWARD_TIME.with(|t| *t.borrow()),
+        LAST_FORWARD_AMOUNT.with(|a| *a.borrow()),
     )
 }
