@@ -89,6 +89,7 @@ export const useTokenomicsData = (params: UseTokenomicsDataParams): UseTokenomic
     params.initialSecondaryBurn,
     params.halvingStep,
     params.initialRewardPerBurnUnit,
+    params.thresholdMultiplier,
     dispatch,
     lbryFunActor
   ]);
