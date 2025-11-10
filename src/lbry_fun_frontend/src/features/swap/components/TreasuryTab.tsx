@@ -72,27 +72,10 @@ const TreasuryTab: React.FC = () => {
           console.error('Failed to fetch reconciliation data:', err);
           setError('Failed to fetch treasury reconciliation data');
         });
-      
-      // Get swap stats from lbry_fun canister for collection metrics
-      if (lbryFunActor) {
-        lbryFunActor.get_swap_stats()
-        .then(([totalBurned, lastSwapTime, lastSwapAmount]) => {
-          // Convert to collection metrics format
-          const metrics: CollectionMetrics = {
-            total_accumulated_icp: BigInt(0), // Not tracked in new system
-            total_burned_lbry: totalBurned,
-            collection_efficiency_basis_points: BigInt(10000), // 100% in new system
-            last_successful_collection: lastSwapTime,
-            failed_collections_24h: BigInt(0), // Not tracked in new system
-          };
-          setCollectionMetrics(metrics);
-          setDataLoadStatus(prev => ({ ...prev, metrics: true }));
-        })
-        .catch(err => {
-          console.error('Failed to fetch swap stats:', err);
-        });
-      }
-      
+
+      // Collection metrics removed - get_swap_stats() deleted from backend
+      // This data was volatile and always showed zeros in production
+
       setIsLoading(false);
     } catch (err) {
       console.error('Failed to get actors:', err);
@@ -282,70 +265,12 @@ const TreasuryTab: React.FC = () => {
           </div>
         </div>
       )}
-      
-      {/* Distribution Metrics - Priority 2 */}
-      {dataLoadStatus.metrics && collectionMetrics && (
-        <div className="border-t border-white/30 mt-2 pt-1">
-          <div className="font-mono font-bold text-white mb-1 text-sm uppercase mb-3">
-            <span className="text-pink-500">&gt;&gt;</span> DISTRIBUTION METRICS
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs flex items-center">
-                Total ICP Distributed:
-                <TooltipIcon text="Lifetime ICP paid out to stakers. This shows the protocol's total yield generation. Higher = more rewards have been earned by stakers over time." />
-              </span>
-              <span className="text-white text-sm">
-                {formatE8sToICP(collectionMetrics.total_accumulated_icp)} ICP
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs flex items-center">
-                Total LBRY Burned:
-                <TooltipIcon text="Amount of $LBRY (parent project token) bought and burned using platform fees. This creates deflationary pressure on $LBRY, benefiting all holders." />
-              </span>
-              <span className="text-white text-sm">
-                {formatE8sToICP(collectionMetrics.total_burned_lbry)} LBRY
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs flex items-center">
-                Platform Fee Rate:
-                <TooltipIcon text="Percentage of total reward pool collected as platform fees. Target is 1% - this shows the actual collection rate achieved." />
-              </span>
-              <span className={`terminal-value ${
-                collectionMetrics.collection_efficiency_basis_points > 50 && 
-                collectionMetrics.collection_efficiency_basis_points < 150
-                  ? 'text-lime-400' 
-                  : 'text-amber-400'
-              }`}>
-                {formatBasisPoints(collectionMetrics.collection_efficiency_basis_points)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-0.5">
-              <span className="text-gray-400 text-xs flex items-center">
-                Next Distribution:
-                <TooltipIcon text="Countdown to next reward payout. When this hits zero, 1% of the reward pool gets distributed to stakers. Set your watch and compound those gains!" />
-              </span>
-              <span className="text-white text-sm">
-                {calculateTimeUntilNextDistribution(
-                  collectionMetrics.last_successful_collection,
-                  distributionInterval || 3600
-                )}
-              </span>
-            </div>
-            {collectionMetrics.failed_collections_24h > 0 && (
-              <div className="flex justify-between items-center py-0.5">
-                <span className="text-gray-400 text-xs">Failed Collections (24h):</span>
-                <span className="text-white text-sm text-amber-400">
-                  {collectionMetrics.failed_collections_24h}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      
+
+      {/* Distribution Metrics - REMOVED */}
+      {/* This section was removed as part of nuclear cleanup of get_swap_stats() */}
+      {/* The data was volatile (reset on upgrade) and always showed zeros in production */}
+      {/* Platform fees now forwarded directly to alex_revshare canister for buy/burn */}
+
       {/* Accounting Validation - Priority 3 */}
       {activeSwapPool && activeSwapPool[1]?.icp_swap_canister_id && (
         <ValidationStatus tokenId={activeSwapPool[1].icp_swap_canister_id} />
