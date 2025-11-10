@@ -11,10 +11,11 @@ use std::collections::{ BTreeSet, HashMap };
 use crate::utils::DEFAULT_SECONDARY_RATIO;
 use crate::ExecutionError;
 
-// Surplus sweep configuration
-pub const SURPLUS_SWEEP_THRESHOLD_E8S: u64 = 100_000_000;  // 1 ICP
-pub const OPERATIONAL_BUFFER_E8S: u64 = 10_000_000;        // 0.1 ICP
-pub const MIN_SWEEP_AMOUNT_E8S: u64 = 1_000_000;           // 0.01 ICP
+// Surplus processing configuration
+// Note: Threshold lowered to 0.01 ICP since internal accounting has no transfer fees
+pub const SURPLUS_SWEEP_THRESHOLD_E8S: u64 = 100_000_000;  // 1 ICP (unused - see process_surplus)
+pub const OPERATIONAL_BUFFER_E8S: u64 = 10_000_000;        // 0.1 ICP (unused - no buffer for internal ops)
+pub const MIN_SWEEP_AMOUNT_E8S: u64 = 1_000_000;           // 0.01 ICP (minimum surplus to process)
 
 // Reconciliation thresholds (SECURITY-FOCUSED)
 // Negative discrepancy: ALWAYS flagged (missing funds is critical)

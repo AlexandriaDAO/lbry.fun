@@ -1839,21 +1839,24 @@ async fn transfer_icp_to_lbry_fun(amount: u64) -> Result<BlockIndex, String> {
     result.map_err(|e| format!("Transfer failed: {:?}", e))
 }
 
-/// Sweeps surplus ICP to alex-revshare canister when threshold exceeded
+/// Processes surplus ICP by adding it to the reward pool for staker distribution
+///
+/// This function detects positive discrepancies between actual and expected ICP balance
+/// and adds the surplus to REWARD_POOL. External deposits (e.g., from parent companies)
+/// automatically flow to stakers in the next distribution cycle.
 ///
 /// Safety guarantees:
-/// - CEI pattern enforced
-/// - Atomic state updates
-/// - Rollback on failure
+/// - Checked arithmetic prevents overflow
 /// - Comprehensive logging
-/// - Minimum buffer maintained
-pub async fn sweep_surplus_to_revshare() -> Result<String, ExecutionError> {
+/// - Lower threshold (0.01 ICP) appropriate for internal accounting
+/// - No transfer fees since this is internal state update
+pub async fn process_surplus() -> Result<String, ExecutionError> {
     // 1. CHECK PHASE - Gather state and validate conditions
 
     // Get actual balance from ledger
     let actual_balance = fetch_canister_icp_balance().await
         .map_err(|e| ExecutionError::StateError(
-            format!("Failed to fetch balance for sweep: {:?}", e)
+            format!("Failed to fetch balance for surplus processing: {:?}", e)
         ))?;
 
     // Calculate expected balance (all tracked obligations)
@@ -1868,179 +1871,84 @@ pub async fn sweep_surplus_to_revshare() -> Result<String, ExecutionError> {
 
     // Calculate surplus (positive discrepancy only)
     if actual_balance <= expected_balance {
-        // No surplus or negative discrepancy - nothing to sweep
         register_info_log(
             Principal::anonymous(),
-            "sweep_surplus_to_revshare",
-            &format!("No surplus to sweep. Actual: {} <= Expected: {}", actual_balance, expected_balance)
+            "process_surplus",
+            &format!("No surplus to process. Actual: {} <= Expected: {}", actual_balance, expected_balance)
         );
-        return Ok("No surplus to sweep".to_string());
+        return Ok("No surplus to process".to_string());
     }
 
     let surplus = actual_balance - expected_balance;
 
-    // Check if surplus exceeds threshold
-    if surplus < SURPLUS_SWEEP_THRESHOLD_E8S {
+    // Check if surplus exceeds threshold (lowered to 0.01 ICP for internal ops)
+    const SURPLUS_THRESHOLD_E8S: u64 = 1_000_000; // 0.01 ICP (was 1 ICP)
+
+    if surplus < SURPLUS_THRESHOLD_E8S {
         register_info_log(
             Principal::anonymous(),
-            "sweep_surplus_to_revshare",
-            &format!("Surplus {} below threshold {}. No sweep needed.", surplus, SURPLUS_SWEEP_THRESHOLD_E8S)
+            "process_surplus",
+            &format!("Surplus {} below threshold {}. Will process when threshold met.", surplus, SURPLUS_THRESHOLD_E8S)
         );
         return Ok(format!("Surplus {} below threshold", surplus));
     }
 
-    // Calculate sweep amount (keep operational buffer + account for transfer fee)
-    const ICP_TRANSFER_FEE: u64 = 10_000; // 0.0001 ICP
-
-    // Use checked arithmetic to prevent underflow
-    let total_reserve = OPERATIONAL_BUFFER_E8S.saturating_add(ICP_TRANSFER_FEE);
-
-    let sweep_amount = if surplus > total_reserve {
-        surplus.saturating_sub(total_reserve)
-    } else {
-        // This shouldn't happen given threshold check, but safety first
-        register_info_log(
-            Principal::anonymous(),
-            "sweep_surplus_to_revshare",
-            &format!("Surplus {} not enough above buffer + fee. No sweep.", surplus)
-        );
-        return Ok("Surplus insufficient above buffer + fee".to_string());
-    };
-
-    // Validate minimum sweep amount (avoid tiny transfers)
-    if sweep_amount < MIN_SWEEP_AMOUNT_E8S {
-        register_info_log(
-            Principal::anonymous(),
-            "sweep_surplus_to_revshare",
-            &format!("Sweep amount {} below minimum {}. Waiting for more surplus.", sweep_amount, MIN_SWEEP_AMOUNT_E8S)
-        );
-        return Ok(format!("Sweep amount {} below minimum", sweep_amount));
-    }
-
-    // Check time since last sweep (prevent rapid repeated sweeps - 1 hour minimum)
-    let last_sweep = get_last_sweep_timestamp();
+    // Check time since last processing (prevent rapid repeated processing - 1 hour minimum)
+    let last_process = get_last_sweep_timestamp(); // Reuse existing timestamp tracker
     let now = ic_cdk::api::time();
     let one_hour_nanos = 3_600_000_000_000u64; // 1 hour in nanoseconds
 
-    if last_sweep > 0 && now >= last_sweep {
-        // Use saturating arithmetic to prevent underflow
-        let time_since = now.saturating_sub(last_sweep);
+    if last_process > 0 && now >= last_process {
+        let time_since = now.saturating_sub(last_process);
         if time_since < one_hour_nanos {
             register_info_log(
                 Principal::anonymous(),
-                "sweep_surplus_to_revshare",
-                &format!("Last sweep was {} nanos ago (< 1 hour). Skipping to prevent rapid sweeps.", time_since)
+                "process_surplus",
+                &format!("Last processing was {} nanos ago (< 1 hour). Skipping to prevent rapid processing.", time_since)
             );
-            return Ok("Too soon since last sweep".to_string());
+            return Ok("Too soon since last processing".to_string());
         }
     }
 
     register_info_log(
         Principal::anonymous(),
-        "sweep_surplus_to_revshare",
-        &format!("Sweep conditions met. Surplus: {} E8S, Sweep amount: {} E8S, Buffer kept: {} E8S",
-                 surplus, sweep_amount, OPERATIONAL_BUFFER_E8S)
+        "process_surplus",
+        &format!("Processing {} E8S surplus by adding to reward pool", surplus)
     );
 
-    // 2. EFFECT PHASE - Update state BEFORE external interaction
-    // (No state to update pre-transfer - surplus isn't tracked in state)
-
-    // 3. INTERACT PHASE - External transfer
-    let transfer_result = transfer_surplus_to_revshare(sweep_amount).await;
-
-    // 4. RECORD PHASE - Log outcome
-    let sweep_record = match transfer_result {
-        Ok(block_index) => {
-            register_info_log(
-                Principal::anonymous(),
-                "sweep_surplus_to_revshare",
-                &format!("Successfully swept {} E8S to revshare. Block: {}", sweep_amount, block_index)
-            );
-
-            SweepRecord {
-                timestamp: now,
-                amount_swept: sweep_amount,
-                surplus_before: surplus,
-                operational_buffer_kept: OPERATIONAL_BUFFER_E8S,
-                transfer_block_index: block_index,
-                success: true,
-                error_message: None,
+    // 2. EFFECT PHASE - Update REWARD_POOL with checked arithmetic
+    REWARD_POOL.with(|p| -> Result<(), ExecutionError> {
+        let current = p.borrow().get(&()).unwrap_or(0);
+        let new_total = current.checked_add(surplus).ok_or_else(||
+            ExecutionError::AdditionOverflow {
+                operation: "Adding surplus to reward pool".to_string(),
+                details: format!("Current pool: {}, Surplus: {}", current, surplus)
             }
-        }
-        Err(e) => {
-            register_error_log(
-                Principal::anonymous(),
-                "sweep_surplus_to_revshare",
-                ExecutionError::TransferFailed {
-                    source: "icp_swap".to_string(),
-                    dest: "revshare".to_string(),
-                    token: "ICP".to_string(),
-                    amount: sweep_amount,
-                    details: e.clone(),
-                    reason: "Surplus sweep transfer failed".to_string(),
-                }
-            );
+        )?;
+        p.borrow_mut().insert((), new_total);
+        Ok(())
+    })?;
 
-            SweepRecord {
-                timestamp: now,
-                amount_swept: sweep_amount,
-                surplus_before: surplus,
-                operational_buffer_kept: OPERATIONAL_BUFFER_E8S,
-                transfer_block_index: 0,
-                success: false,
-                error_message: Some(e.clone()),
-            }
-        }
+    register_info_log(
+        Principal::anonymous(),
+        "process_surplus",
+        &format!("Successfully added {} E8S to reward pool. New pool balance: {}",
+                 surplus,
+                 REWARD_POOL.with(|p| p.borrow().get(&()).unwrap_or(0)))
+    );
+
+    // 3. RECORD PHASE - Track for historical purposes
+    let process_record = SweepRecord {
+        timestamp: now,
+        amount_swept: surplus,
+        surplus_before: surplus,
+        operational_buffer_kept: 0, // No buffer needed for internal accounting
+        transfer_block_index: 0, // No transfer, internal state update
+        success: true,
+        error_message: None,
     };
 
-    // Record sweep in history (always record, success or failure)
-    record_sweep(sweep_record.clone());
+    record_sweep(process_record); // Reuse existing tracking mechanism
 
-    // Return result
-    if sweep_record.success {
-        Ok(format!("Swept {} E8S to revshare (block: {})", sweep_amount, sweep_record.transfer_block_index))
-    } else {
-        Err(ExecutionError::StateError(
-            format!("Sweep failed: {}", sweep_record.error_message.unwrap_or_default())
-        ))
-    }
-}
-
-/// Helper function to transfer surplus ICP to lbry_fun (alex-revshare)
-async fn transfer_surplus_to_revshare(amount: u64) -> Result<u64, String> {
-    // Get lbry_fun canister ID (hardcoded - same as ALEX fee destination)
-    let revshare_canister = Principal::from_text("oni4e-oyaaa-aaaap-qp2pq-cai")
-        .map_err(|e| format!("Invalid revshare canister ID: {}", e))?;
-
-    // Get ICP ledger ID from config
-    let icp_ledger_id = CONFIGS.with(|configs| {
-        configs.borrow()
-            .get(&())
-            .map(|c| c.icp_ledger_id)
-            .unwrap_or(MAINNET_LEDGER_CANISTER_ID)
-    });
-
-    // Prepare transfer args
-    let transfer_args = TransferArg {
-        from_subaccount: None,
-        to: revshare_canister.into(),
-        fee: None, // Let ledger use default (10,000 E8S)
-        created_at_time: None,
-        memo: None,
-        amount: Nat::from(amount),
-    };
-
-    // Execute transfer
-    let (result,) = ic_cdk::call::<(TransferArg,), (Result<BlockIndex, TransferError>,)>(
-        icp_ledger_id,
-        "icrc1_transfer",
-        (transfer_args,)
-    )
-    .await
-    .map_err(|e| format!("Transfer call failed: {:?}", e))?;
-
-    // Return the amount on success (we know what we transferred)
-    result
-        .map(|_block| amount)  // Return the amount we transferred
-        .map_err(|e| format!("Transfer failed: {:?}", e))
+    Ok(format!("Processed {} E8S surplus to reward pool", surplus))
 }
