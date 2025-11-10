@@ -1,5 +1,8 @@
 import { Principal } from '@dfinity/principal';
 
+// Launch delay constant (24 hours hardcoded)
+export const LAUNCH_DELAY_SECONDS = 86400n;
+
 // Token creation parameters
 export interface CreateTokenParams {
   primary_token_name: string;
@@ -17,7 +20,6 @@ export interface CreateTokenParams {
   threshold_multiplier: number;
   initial_reward_per_burn_unit: bigint;
   distribution_interval_seconds: bigint;
-  launch_delay_seconds: bigint;
 }
 
 // Backend deployment info (from get_my_deployments)

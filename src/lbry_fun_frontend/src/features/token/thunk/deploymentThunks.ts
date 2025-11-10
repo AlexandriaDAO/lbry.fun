@@ -44,8 +44,7 @@ const persistDeployment = (deployment: DeploymentRecord) => {
         initial_secondary_burn: deployment.params.initial_secondary_burn.toString(),
         halving_step: deployment.params.halving_step.toString(),
         initial_reward_per_burn_unit: deployment.params.initial_reward_per_burn_unit.toString(),
-        distribution_interval_seconds: deployment.params.distribution_interval_seconds.toString(),
-        launch_delay_seconds: deployment.params.launch_delay_seconds.toString()
+        distribution_interval_seconds: deployment.params.distribution_interval_seconds.toString()
       }
     },
     expires: Date.now() + DEPLOYMENT_TTL
@@ -79,8 +78,7 @@ const loadPersistedDeployments = (): DeploymentRecord[] => {
             initial_secondary_burn: BigInt(deployment.params.initial_secondary_burn),
             halving_step: BigInt(deployment.params.halving_step),
             initial_reward_per_burn_unit: BigInt(deployment.params.initial_reward_per_burn_unit),
-            distribution_interval_seconds: BigInt(deployment.params.distribution_interval_seconds),
-            launch_delay_seconds: BigInt(deployment.params.launch_delay_seconds)
+            distribution_interval_seconds: BigInt(deployment.params.distribution_interval_seconds)
           }
         });
       } else {

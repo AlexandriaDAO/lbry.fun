@@ -4,7 +4,6 @@ type CreateTokenParams = record {
   secondary_token_description : text;
   secondary_token_name : text;
   primary_token_symbol : text;
-  launch_delay_seconds : nat64;
   primary_logo : text;
   halving_step : nat64;
   primary_token_description : text;
@@ -118,7 +117,6 @@ service : () -> {
       nat64,
       nat64,
       float64,
-      nat64,
       nat64,
       nat64,
     ) -> (Result);
