@@ -404,18 +404,7 @@ async fn validate_deployment_params(params: &CreateTokenParams) -> Result<(), St
     if params.threshold_multiplier < 1.0 || params.threshold_multiplier > 10.0 {
         return Err("Threshold multiplier must be between 1.0 and 10.0".to_string());
     }
-    
-    // Launch delay validation (sent as seconds: 1 second to 30 days)
-    const MIN_LAUNCH_DELAY: u64 = 1;
-    const MAX_LAUNCH_DELAY: u64 = 2_592_000; // 30 days in seconds
-    
-    if params.launch_delay_seconds < MIN_LAUNCH_DELAY {
-        return Err("Launch delay must be at least 1 second".to_string());
-    }
-    if params.launch_delay_seconds > MAX_LAUNCH_DELAY {
-        return Err("Launch delay cannot exceed 30 days".to_string());
-    }
-    
+
     // Distribution interval validation (sent as seconds, min 60)
     if params.distribution_interval_seconds < 60 {
         return Err("Distribution interval must be at least 60 seconds".to_string());

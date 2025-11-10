@@ -231,9 +231,9 @@ const TokenomicsTab: React.FC = () => {
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400 flex items-center gap-1">
                                 launch_delay:
-                                <TooltipIcon text="Time after creation before minting/burning becomes active. Allows time for initial liquidity setup." />
+                                <TooltipIcon text="Time after creation before minting/burning becomes active. Fixed at 24 hours to prevent bot sniping." />
                             </span>
-                            <span className="text-white">{formatTimeInterval(tokenConfig.launch_delay_seconds)}</span>
+                            <span className="text-white">{formatTimeInterval(tokenConfig.launch_delay_seconds)} [fixed]</span>
                         </div>
                         
                         {/* Metadata */}

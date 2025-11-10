@@ -44,7 +44,6 @@ async fn create_token(
     threshold_multiplier: f64,
     initial_reward_per_burn_unit: u64,
     distribution_interval_seconds: u64,
-    launch_delay_seconds: u64,
 ) -> Result<String, String> {
     // Use the new two-phase deployment system internally
     let params = CreateTokenParams {
@@ -63,7 +62,6 @@ async fn create_token(
         threshold_multiplier,
         initial_reward_per_burn_unit,
         distribution_interval_seconds,
-        launch_delay_seconds,
     };
     
     // Phase 1: Initiate deployment
@@ -217,12 +215,13 @@ pub async fn install_icp_swap_wasm_on_existing_canister(
     secondary_token_id: Option<Principal>,
     tokenomics_canister_id: Option<Principal>,
     distribution_interval_seconds: u64,
-    launch_delay_seconds: u64,
     token_id: Option<u64>,  // Add token_id parameter
 ) -> Result<(), String> {
-    // Calculate launch_time from current time + delay
-    let launch_time = if launch_delay_seconds > 0 {
-        Some(ic_cdk::api::time() / 1_000_000_000 + launch_delay_seconds)
+    // Use hardcoded 24-hour launch delay
+    use crate::deployment::LAUNCH_DELAY_SECONDS;
+
+    let launch_time = if LAUNCH_DELAY_SECONDS > 0 {
+        Some(ic_cdk::api::time() / 1_000_000_000 + LAUNCH_DELAY_SECONDS)
     } else {
         None
     };

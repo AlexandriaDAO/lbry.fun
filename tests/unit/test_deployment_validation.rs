@@ -190,25 +190,7 @@ fn test_deployment_parameter_validation() {
             },
             "Threshold multiplier must be between 1.0 and 10.0"
         ),
-        
-        // Launch delay validation tests
-        (
-            "launch_delay_too_low",
-            CreateTokenParams {
-                launch_delay_seconds: 0, // Less than 1 second
-                ..default_params()
-            },
-            "Launch delay must be at least 1 second"
-        ),
-        (
-            "launch_delay_too_high",
-            CreateTokenParams {
-                launch_delay_seconds: 2_592_001, // More than 30 days
-                ..default_params()
-            },
-            "Launch delay cannot exceed 30 days"
-        ),
-        
+
         // Distribution interval validation tests
         (
             "distribution_interval_too_low",
@@ -306,7 +288,6 @@ fn default_params() -> CreateTokenParams {
         threshold_multiplier: 1.5,
         initial_reward_per_burn_unit: 100_000_000, // 1 token in E8S
         distribution_interval_seconds: 3600,
-        launch_delay_seconds: 86400,
     }
 }
 
@@ -327,5 +308,4 @@ struct CreateTokenParams {
     pub threshold_multiplier: f64,
     pub initial_reward_per_burn_unit: u64,
     pub distribution_interval_seconds: u64,
-    pub launch_delay_seconds: u64,
 }

@@ -41,7 +41,6 @@ export interface TokenFormValues {
   threshold_multiplier: string;
   initial_reward_per_burn_unit: string;
   distribution_interval_seconds: string;
-  launch_delay_seconds: string;
 }
 
 interface FormErrors {
@@ -91,7 +90,6 @@ const TerminalCreateToken: React.FC = () => {
     threshold_multiplier: '1.5',
     initial_reward_per_burn_unit: '1',
     distribution_interval_seconds: '3600',
-    launch_delay_seconds: '86400',
   });
 
   // Validation logic
@@ -176,16 +174,6 @@ const TerminalCreateToken: React.FC = () => {
       newErrors.threshold_multiplier = 'Must be a valid number';
     } else if (multiplier < 1 || multiplier > 10) {
       newErrors.threshold_multiplier = 'Must be between 1 and 10';
-    }
-
-    // Validate launch delay
-    const launchDelay = parseInt(form.launch_delay_seconds);
-    if (!form.launch_delay_seconds || isNaN(launchDelay)) {
-      newErrors.launch_delay_seconds = 'Launch delay is required';
-    } else if (launchDelay < 1) {
-      newErrors.launch_delay_seconds = 'Launch delay must be at least 1 second';
-    } else if (launchDelay > 2592000) { // 30 days in seconds
-      newErrors.launch_delay_seconds = 'Launch delay cannot exceed 30 days';
     }
 
     setErrors(newErrors);
@@ -300,7 +288,6 @@ const TerminalCreateToken: React.FC = () => {
       threshold_multiplier: parseFloat(form.threshold_multiplier),
       initial_reward_per_burn_unit: BigInt(Math.floor(parseFloat(form.initial_reward_per_burn_unit) * Number(TokenConversionService.getE8S()))),
       distribution_interval_seconds: BigInt(form.distribution_interval_seconds),
-      launch_delay_seconds: BigInt(form.launch_delay_seconds)
     };
     
     // Phase 1: Initiate deployment
@@ -338,25 +325,6 @@ const TerminalCreateToken: React.FC = () => {
     { value: '28800', label: '8_hours' },
     { value: '43200', label: '12_hours' },
     { value: '86400', label: '24_hours' },
-  ];
-
-  const launchDelayOptions = [
-    { value: '1', label: '1_second' },
-    { value: '60', label: '1_minute' },
-    { value: '300', label: '5_minutes' },
-    { value: '900', label: '15_minutes' },
-    { value: '1800', label: '30_minutes' },
-    { value: '3600', label: '1_hour' },
-    { value: '7200', label: '2_hours' },
-    { value: '14400', label: '4_hours' },
-    { value: '28800', label: '8_hours' },
-    { value: '43200', label: '12_hours' },
-    { value: '86400', label: '24_hours [default]' },
-    { value: '172800', label: '2_days' },
-    { value: '259200', label: '3_days' },
-    { value: '604800', label: '7_days' },
-    { value: '1209600', label: '14_days' },
-    { value: '2592000', label: '30_days' },
   ];
 
   return (
@@ -689,20 +657,15 @@ const TerminalCreateToken: React.FC = () => {
                   options={distributionIntervalOptions}
                 />
                 <div className="text-gray-600 text-xs mt-1 font-mono mt-1">Cannot be changed after creation.</div>
-                
-                <div className="flex items-center mb-1 mt-4">
-                  <span className="text-gray-400 text-xs">launch_delay</span>
-                  <TooltipIcon
-                    text="Time delay before trading opens after token creation. During this period, only the creator can view token details. DEFAULT: 24 hours. Min: 1 second, Max: 30 days."
-                  />
+
+                <div className="text-gray-400 text-xs mt-4 font-mono">
+                  <div className="flex items-center mb-1">
+                    <span>launch_delay</span>
+                    <TooltipIcon text="Time delay before trading opens after token creation. Fixed at 24 hours to prevent bot sniping." />
+                  </div>
+                  <div className="text-white">24_hours [fixed]</div>
+                  <div className="text-gray-600 text-xs mt-1">Trading will be enabled 24 hours after creation.</div>
                 </div>
-                <TerminalSelect
-                  label=""
-                  value={form.launch_delay_seconds}
-                  onChange={(v) => updateForm('launch_delay_seconds', v)}
-                  options={launchDelayOptions}
-                />
-                <div className="text-gray-600 text-xs mt-1 font-mono mt-1">[INFO] Trading will be enabled after this delay. Default (24 hours) prevents bot sniping.</div>
               </div>
             )}
           </div>

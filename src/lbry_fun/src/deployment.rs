@@ -9,6 +9,9 @@ use std::{borrow::Cow, cell::RefCell};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
+// Launch delay constant (24 hours hardcoded)
+pub const LAUNCH_DELAY_SECONDS: u64 = 86400;
+
 // Memory IDs for stable structures
 pub const DEPLOYMENTS_MEM_ID: MemoryId = MemoryId::new(10);
 pub const USER_ACTIVE_DEPLOYMENTS_MEM_ID: MemoryId = MemoryId::new(11);
@@ -39,7 +42,6 @@ pub struct CreateTokenParams {
     pub threshold_multiplier: f64,
     pub initial_reward_per_burn_unit: u64,
     pub distribution_interval_seconds: u64,
-    pub launch_delay_seconds: u64,
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]

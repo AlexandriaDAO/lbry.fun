@@ -172,7 +172,6 @@ pub async fn execute_deployment_safe(deployment_id: u64) -> Result<u64, String> 
         Some(get_principal(&secondary_token_id)),
         Some(tokenomics_canister_id),
         params.distribution_interval_seconds,
-        params.launch_delay_seconds,
         Some(token_id),  // Pass the correct token_id
     )
     .await?;
@@ -237,10 +236,10 @@ pub async fn execute_deployment_safe(deployment_id: u64) -> Result<u64, String> 
         threshold_multiplier: params.threshold_multiplier,
         initial_reward_per_burn_unit: params.initial_reward_per_burn_unit,
         distribution_interval_seconds: params.distribution_interval_seconds,
-        launch_delay_seconds: params.launch_delay_seconds,
+        launch_delay_seconds: crate::deployment::LAUNCH_DELAY_SECONDS,
         caller,
         created_time: ic_cdk::api::time(),
-        launched_at: ic_cdk::api::time() + params.launch_delay_seconds * 1_000_000_000,
+        launched_at: ic_cdk::api::time() + crate::deployment::LAUNCH_DELAY_SECONDS * 1_000_000_000,
         codebase_version: crate::CODEBASE_VERSION.to_string(),
     };
     
