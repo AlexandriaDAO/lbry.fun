@@ -9,6 +9,7 @@ interface UseTokenomicsDataParams {
   initialSecondaryBurn: string;
   halvingStep: string;
   initialRewardPerBurnUnit: string;
+  thresholdMultiplier?: string;  // Optional with default value
 }
 
 interface UseTokenomicsDataResult {
@@ -67,7 +68,7 @@ export const useTokenomicsData = (params: UseTokenomicsDataParams): UseTokenomic
             initial_secondary_burn,
             halving_step,
             tge_allocation,
-            threshold_multiplier: 2.0,
+            threshold_multiplier: parseFloat(params.thresholdMultiplier || '2.0'),
           },
           lbryFunActor: lbryFunActor,
         })).unwrap();
