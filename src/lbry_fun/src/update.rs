@@ -2,7 +2,7 @@ use candid::{Encode, Nat, Principal};
 use ic_cdk::{
     api::management_canister::main::{
         canister_status, create_canister, install_code, CanisterInstallMode, CreateCanisterArgument,
-        InstallCodeArgument, CanisterIdRecord,
+        InstallCodeArgument, CanisterIdRecord, CanisterSettings,
     },
     update,
 };
@@ -21,6 +21,7 @@ use crate::{
     TokenInfo, TokenomicsCanisterInitArgs, TxId, CHAIN_ID, E8S, ICP_CANISTER_ID, ICP_TRANSFER_FEE,
     KONG_BACKEND_CANISTER, TOKENS,
     CreateTokenParams, initiate_token_deployment, execute_token_deployment,
+    BACKUP_CONTROLLER,
 };
 
 const ICP_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
@@ -86,7 +87,23 @@ pub async fn create_icrc1_canister(
     logo: String,
     cycles: u128,
 ) -> Result<String, String> {
-    let create_args = CreateCanisterArgument { settings: None };
+    // Parse backup controller principal
+    let backup_controller = Principal::from_text(BACKUP_CONTROLLER)
+        .map_err(|e| format!("Failed to parse backup controller: {:?}", e))?;
+
+    // Get self (lbry_fun canister) as primary controller
+    let self_principal = ic_cdk::api::id();
+
+    // Create canister with TWO controllers: self + backup
+    let settings = Some(CanisterSettings {
+        controllers: Some(vec![self_principal, backup_controller]),
+        compute_allocation: None,
+        memory_allocation: None,
+        freezing_threshold: None,
+        reserved_cycles_limit: None,
+    });
+
+    let create_args = CreateCanisterArgument { settings };
     let canister_id_record = create_canister(create_args, cycles)
         .await
         .map_err(|e| format!("Failed to create canister: {:?}", e))?;
@@ -158,7 +175,23 @@ pub async fn create_icrc1_canister(
 }
 
 pub async fn create_a_canister(cycles: u128) -> Result<Principal, String> {
-    let create_args = CreateCanisterArgument { settings: None };
+    // Parse backup controller principal
+    let backup_controller = Principal::from_text(BACKUP_CONTROLLER)
+        .map_err(|e| format!("Failed to parse backup controller: {:?}", e))?;
+
+    // Get self (lbry_fun canister) as primary controller
+    let self_principal = ic_cdk::api::id();
+
+    // Create canister with TWO controllers: self + backup
+    let settings = Some(CanisterSettings {
+        controllers: Some(vec![self_principal, backup_controller]),
+        compute_allocation: None,
+        memory_allocation: None,
+        freezing_threshold: None,
+        reserved_cycles_limit: None,
+    });
+
+    let create_args = CreateCanisterArgument { settings };
     let canister_id_record = create_canister(create_args, cycles)
         .await
         .map_err(|e| format!("Failed to create canister: {:?}", e))?;
