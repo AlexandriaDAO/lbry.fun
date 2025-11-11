@@ -116,6 +116,24 @@ type Result = variant { Ok : text; Err : ExecutionError };
 type Result_1 = variant { Ok : text; Err : text };
 type SecondaryRatio = record { time : nat64; ratio : nat64 };
 type Stake = record { time : nat64; reward_icp : nat; amount : nat64 };
+type SurplusStatus = record {
+  operational_buffer : nat64;
+  estimated_surplus : opt nat64;
+  can_sweep_now : bool;
+  time_since_last_sweep : nat64;
+  sweep_threshold : nat64;
+  last_sweep_timestamp : nat64;
+  would_sweep_amount : opt nat64;
+};
+type SweepRecord = record {
+  transfer_block_index : nat64;
+  surplus_before : nat64;
+  error_message : opt text;
+  amount_swept : nat64;
+  operational_buffer_kept : nat64;
+  timestamp : nat64;
+  success : bool;
+};
 service : (opt InitArgs) -> {
   burn_secondary : (nat64, opt blob) -> (Result);
   caller_subaccount : () -> (text) query;
@@ -128,9 +146,14 @@ service : (opt InitArgs) -> {
   get_config : () -> (opt Configs) query;
   get_current_secondary_ratio : () -> (opt nat64) query;
   get_current_staking_reward_percentage : () -> (text) query;
-  get_distribution_interval : () -> (nat32) query;
-  get_distribution_interval_seconds : () -> (nat64) query;
+  // Get the total number of distributions that have occurred
+  // This counter increments by 1 with each distribution
   get_distribution_count : () -> (nat32) query;
+  get_distribution_interval : () -> (nat32) query;
+  // Get the configured distribution interval duration in seconds
+  // This is the time between reward distributions (e.g., 3600 = 1 hour)
+  get_distribution_interval_seconds : () -> (nat64) query;
+  get_last_sweep_info : () -> (opt record { nat64; SweepRecord }) query;
   get_launch_status : () -> (bool, opt nat64) query;
   get_logs : (opt nat64, opt nat64) -> (PaginatedLogs) query;
   get_reconciliation_status : () -> (ReconciliationStatus);
@@ -138,6 +161,8 @@ service : (opt InitArgs) -> {
   get_scaling_factor : () -> (nat) query;
   get_stake : (principal) -> (opt Stake) query;
   get_stakers_count : () -> (nat64) query;
+  get_surplus_status : () -> (SurplusStatus) query;
+  get_sweep_history : (opt nat64) -> (vec record { nat64; SweepRecord }) query;
   get_total_archived_balance : () -> (nat64) query;
   get_total_claimed_rewards : () -> (nat64) query;
   get_total_unclaimed_icp_reward : () -> (nat) query;

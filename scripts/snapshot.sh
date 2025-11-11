@@ -13,9 +13,13 @@ dfx identity use mainnet
 
 # lbry_fun_frontend
 dfx canister stop lbry_fun_frontend --network ic
-dfx canister snapshot create lbry_fun_frontend --replace 000000000000000b0000000001f0531c0101 --network ic
+dfx canister snapshot create lbry_fun_frontend --replace 00000000000000000000000001f07ea00101 --network ic
 dfx canister start lbry_fun_frontend --network ic
 
+# lbry_fun
+dfx canister stop lbry_fun --network ic
+dfx canister snapshot create lbry_fun --network ic
+dfx canister start lbry_fun --network ic
 
 
 
@@ -23,4 +27,5 @@ dfx canister start lbry_fun_frontend --network ic
 
 
 
-
+#lbry_fun_frontend taken Nov 11: 00000000000000010000000001f07ea00101
+#lbry_fun taken Nov 11: 00000000000000000000000001f07e9f0101 

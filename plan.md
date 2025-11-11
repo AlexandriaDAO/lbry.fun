@@ -1,7 +1,8 @@
 
 Change between testing/mainnet:
 - Admin principal during launch
-
+- Need a way for ICP swap to directly convert its own ICP into staking rewards.
+- Double the fee and give ZERO stakers 1/2 of revenue.
 
 
 
@@ -15,6 +16,11 @@ Change between testing/mainnet:
 
 
 
+
+ -Concept: Funny crash game.
+ - House is seeded with 100 ICP. 
+
+CRASH/LAND
 
 
 
