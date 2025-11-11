@@ -345,32 +345,37 @@ fn setup_timers(distribution_interval_seconds: u64) {
 }
 
 async fn distribute_reward_wrapper() {
-    // Distribution FIRST - let it complete and settle state
-    match distribute_reward().await {
-        Ok(_) => (),
-        Err(e) => {
-            register_info_log(
-                caller(),
-                "distribute_reward_wrapper",
-                &format!("Distribution failed: {}. Skipping surplus sweep to maintain state consistency.", e)
-            );
-            // If distribution fails, skip sweep to avoid inconsistent state
-            return;
-        }
-    }
+    // SURPLUS PROCESSING FIRST - add any external deposits to pool
+    use crate::update::process_surplus; // Updated import
 
-    // Only sweep if distribution succeeded
-    use crate::update::sweep_surplus_to_revshare;
-    match sweep_surplus_to_revshare().await {
+    match process_surplus().await {
         Ok(msg) => {
             register_info_log(
                 Principal::anonymous(),
                 "distribute_reward_wrapper",
-                &format!("Sweep result: {}", msg)
+                &format!("Surplus processing: {}", msg)
             );
         }
         Err(e) => {
-            // Log but don't fail - sweep is opportunistic
+            // Log but don't fail - surplus processing is opportunistic
+            register_error_log(
+                Principal::anonymous(),
+                "distribute_reward_wrapper",
+                e
+            );
+        }
+    }
+
+    // DISTRIBUTION SECOND - includes any just-processed surplus
+    match distribute_reward().await {
+        Ok(_) => {
+            register_info_log(
+                Principal::anonymous(),
+                "distribute_reward_wrapper",
+                "Distribution completed successfully"
+            );
+        }
+        Err(e) => {
             register_error_log(
                 Principal::anonymous(),
                 "distribute_reward_wrapper",

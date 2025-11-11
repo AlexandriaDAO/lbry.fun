@@ -11,10 +11,13 @@ use std::collections::{ BTreeSet, HashMap };
 use crate::utils::DEFAULT_SECONDARY_RATIO;
 use crate::ExecutionError;
 
-// Surplus sweep configuration
-pub const SURPLUS_SWEEP_THRESHOLD_E8S: u64 = 100_000_000;  // 1 ICP
-pub const OPERATIONAL_BUFFER_E8S: u64 = 10_000_000;        // 0.1 ICP
-pub const MIN_SWEEP_AMOUNT_E8S: u64 = 1_000_000;           // 0.01 ICP
+// Surplus processing configuration
+// Note: Threshold lowered to 0.01 ICP since internal accounting has no transfer fees
+pub const MIN_SWEEP_AMOUNT_E8S: u64 = 1_000_000;           // 0.01 ICP (minimum surplus to process)
+
+// Deprecated constants - kept for historical record reading but no longer used
+// pub const SURPLUS_SWEEP_THRESHOLD_E8S: u64 = 100_000_000;  // 1 ICP (deprecated - was used for external transfers)
+// pub const OPERATIONAL_BUFFER_E8S: u64 = 10_000_000;        // 0.1 ICP (deprecated - was used for external transfers)
 
 // Reconciliation thresholds (SECURITY-FOCUSED)
 // Negative discrepancy: ALWAYS flagged (missing funds is critical)
@@ -331,7 +334,7 @@ pub struct SweepRecord {
     pub amount_swept: u64,
     pub surplus_before: u64,
     pub operational_buffer_kept: u64,
-    pub transfer_block_index: u64,
+    pub transfer_block_index: Option<u64>,  // None = internal pool update, Some(index) = external transfer
     pub success: bool,
     pub error_message: Option<String>,
 }
