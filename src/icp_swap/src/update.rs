@@ -1946,17 +1946,12 @@ pub async fn process_surplus() -> Result<String, ExecutionError> {
     );
 
     // 3. RECORD PHASE - Track for historical purposes
-    // Note: u64::MAX is used as a sentinel value to indicate no external transfer occurred.
-    // This distinguishes internal pool updates from actual ICP transfers to external canisters.
-    // A valid block index will never reach u64::MAX in practice (would take billions of years
-    // at current transaction rates). This preserves backward compatibility with existing
-    // SweepRecord structure while clearly marking internal-only operations.
     let process_record = SweepRecord {
         timestamp: now,
         amount_swept: surplus,
         surplus_before: surplus,
         operational_buffer_kept: 0, // No buffer needed for internal accounting
-        transfer_block_index: u64::MAX, // Sentinel value: no external transfer (internal state update only)
+        transfer_block_index: None, // None indicates internal state update (no external transfer)
         success: true,
         error_message: None,
     };

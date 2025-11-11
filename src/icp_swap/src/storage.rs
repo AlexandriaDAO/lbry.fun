@@ -328,17 +328,13 @@ pub struct ReconciliationStatus {
     pub operational_balance_suspicious: bool,
 }
 
-// TODO: Consider refactoring transfer_block_index to Option<u64> for better type safety.
-// This would eliminate the magic u64::MAX sentinel value but requires migration logic
-// for existing sweep records. Since backward compatibility is not a concern per CLAUDE.md,
-// this could be done in a future refactor for cleaner, more idiomatic Rust code.
 #[derive(CandidType, Deserialize, Clone)]
 pub struct SweepRecord {
     pub timestamp: u64,
     pub amount_swept: u64,
     pub surplus_before: u64,
     pub operational_buffer_kept: u64,
-    pub transfer_block_index: u64,  // u64::MAX = no external transfer, otherwise = block index
+    pub transfer_block_index: Option<u64>,  // None = internal pool update, Some(index) = external transfer
     pub success: bool,
     pub error_message: Option<String>,
 }
