@@ -13,9 +13,11 @@ use crate::ExecutionError;
 
 // Surplus processing configuration
 // Note: Threshold lowered to 0.01 ICP since internal accounting has no transfer fees
-pub const SURPLUS_SWEEP_THRESHOLD_E8S: u64 = 100_000_000;  // 1 ICP (unused - see process_surplus)
-pub const OPERATIONAL_BUFFER_E8S: u64 = 10_000_000;        // 0.1 ICP (unused - no buffer for internal ops)
 pub const MIN_SWEEP_AMOUNT_E8S: u64 = 1_000_000;           // 0.01 ICP (minimum surplus to process)
+
+// Deprecated constants - kept for historical record reading but no longer used
+// pub const SURPLUS_SWEEP_THRESHOLD_E8S: u64 = 100_000_000;  // 1 ICP (deprecated - was used for external transfers)
+// pub const OPERATIONAL_BUFFER_E8S: u64 = 10_000_000;        // 0.1 ICP (deprecated - was used for external transfers)
 
 // Reconciliation thresholds (SECURITY-FOCUSED)
 // Negative discrepancy: ALWAYS flagged (missing funds is critical)
@@ -326,13 +328,17 @@ pub struct ReconciliationStatus {
     pub operational_balance_suspicious: bool,
 }
 
+// TODO: Consider refactoring transfer_block_index to Option<u64> for better type safety.
+// This would eliminate the magic u64::MAX sentinel value but requires migration logic
+// for existing sweep records. Since backward compatibility is not a concern per CLAUDE.md,
+// this could be done in a future refactor for cleaner, more idiomatic Rust code.
 #[derive(CandidType, Deserialize, Clone)]
 pub struct SweepRecord {
     pub timestamp: u64,
     pub amount_swept: u64,
     pub surplus_before: u64,
     pub operational_buffer_kept: u64,
-    pub transfer_block_index: u64,
+    pub transfer_block_index: u64,  // u64::MAX = no external transfer, otherwise = block index
     pub success: bool,
     pub error_message: Option<String>,
 }
